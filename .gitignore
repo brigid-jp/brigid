@@ -1,3 +1,5 @@
+*.o
+*.so
 .*.swp
 /docs/decrypted.txt
 /docs/encrypted.dat
