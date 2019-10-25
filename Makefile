@@ -4,6 +4,7 @@ LDFLAGS += -L$(LUA_LIBDIR) $(LIBFLAG)
 LDLIBS += -lssl -lcrypto -ldl
 
 OBJS = \
+	evp.o \
 	module.o
 TARGET = brigid_core.so
 
