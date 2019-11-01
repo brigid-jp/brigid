@@ -5,4 +5,6 @@ if not brigid_core.evp then
 end
 
 print(brigid_core.evp)
-print(brigid_core.evp.encrypt)
+print(brigid_core.evp.encrypt_string)
+
+brigid_core.evp.encrypt_string("", "", "")

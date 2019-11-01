@@ -1,6 +1,5 @@
 CPPFLAGS += -I$(LUA_INCDIR)
-CXXFLAGS += -Wall -W $(CFLAGS)
-LDFLAGS += -L$(LUA_LIBDIR) $(LIBFLAG)
+CXXFLAGS += -std=c++11 -Wall -W $(CFLAGS)
 LDLIBS += -lssl -lcrypto -ldl
 
 OBJS = \
@@ -17,7 +16,7 @@ check:
 	./test.sh
 
 brigid_core.so: $(OBJS)
-	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
+	$(CXX) $(LDFLAGS) $(LIBFLAG) $^ $(LDLIBS) -o $@
 
 .cpp.o:
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
