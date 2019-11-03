@@ -36,7 +36,7 @@ namespace brigid {
       const auto iv = checklstring(L, 3); // 128bit 8byte
 
       try {
-        if (std::unique_ptr<EVP_CIPHER_CTX, void(*)(EVP_CIPHER_CTX*)> ctx { EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free }) {
+        if (std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)> ctx { EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free }) {
           if (!EVP_EncryptInit_ex(ctx.get(), EVP_aes_256_cbc(), nullptr, reinterpret_cast<const uint8_t*>(key.data), reinterpret_cast<const uint8_t*>(iv.data))) {
             impl_throw_error();
           }
