@@ -5,19 +5,14 @@
 #include <openssl/err.h>
 
 #include <exception>
+#include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace brigid {
   namespace {
-    int impl_error(lua_State* L) {
-      unsigned long e = ERR_get_error();
-      char buffer[128] = { '\0' };
-      ERR_error_string(e, buffer);
-      return luaL_error(L, "%s", buffer);
-    }
-
-    void impl_throw_error() {
+    [[noreturn]] void impl_throw_error() {
       unsigned long e = ERR_get_error();
       char buffer[128] = { '\0' };
       ERR_error_string(e, buffer);
@@ -36,30 +31,32 @@ namespace brigid {
     }
 
     int impl_encrypt_string(lua_State* L) {
-      int top = lua_gettop(L);
+      const auto source = checklstring(L, 1);
+      const auto key = checklstring(L, 2); // 256bit 16byte
+      const auto iv = checklstring(L, 3); // 128bit 8byte
 
-      EVP_CIPHER_CTX* ctx = nullptr;
       try {
-        const auto source = checklstring(L, 1);
-        const auto key = checklstring(L, 2);
-        const auto iv = checklstring(L, 3);
-
-        if (ctx = EVP_CIPHER_CTX_new()) {
-          // if (EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), 0, key_data, iv_data)) {
-          // } else {
-          // }
-          EVP_CIPHER_CTX_free(ctx);
-          return 0;
+        if (std::unique_ptr<EVP_CIPHER_CTX, void(*)(EVP_CIPHER_CTX*)> ctx { EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free }) {
+          if (!EVP_EncryptInit_ex(ctx.get(), EVP_aes_256_cbc(), nullptr, reinterpret_cast<const uint8_t*>(key.data), reinterpret_cast<const uint8_t*>(iv.data))) {
+            impl_throw_error();
+          }
+          std::vector<char> buffer(source.size + 16);
+          int size1 = buffer.size();
+          if (!EVP_EncryptUpdate(ctx.get(), reinterpret_cast<uint8_t*>(buffer.data()), &size1, reinterpret_cast<const uint8_t*>(source.data), source.size)) {
+            impl_throw_error();
+          }
+          int size2 = buffer.size() - size1;
+          if (!EVP_EncryptFinal_ex(ctx.get(), reinterpret_cast<uint8_t*>(buffer.data()) + size1, &size2)) {
+            impl_throw_error();
+          }
+          lua_pushlstring(L, buffer.data(), size1 + size2);
+          return 1;
         } else {
           impl_throw_error();
         }
       } catch (const std::exception& e) {
-        if (ctx) {
-          EVP_CIPHER_CTX_free(ctx);
-        }
-        luaL_error(L, "%s", e.what());
+        return luaL_error(L, "%s", e.what());
       }
-      return lua_gettop(L) - top;
     }
   }
 
