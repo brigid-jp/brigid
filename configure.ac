@@ -8,8 +8,15 @@ AC_CONFIG_HEADER([config.h])
 AC_CONFIG_FILES([Makefile])
 
 AC_PROG_CXX
+AX_CXX_COMPILE_STDCXX(11)
 
 AX_PROG_LUA([5.1], [], [], [AC_MSG_ERROR([could not find lua])])
 AX_LUA_HEADERS([], [AC_MSG_ERROR([could not find lua])])
+
+AX_CHECK_OPENSSL([have_openssl=yes])
+LDFLAGS="$LDFLAGS $OPENSSL_LDFLAGS"
+LIBS="$OPENSSL_LIBS $LIBS"
+CPPFLAGS="$OPENSSL_INCLUDES $CPPFLAGS"
+AM_CONDITIONAL([HAVE_OPENSSL], [test "X$have_openssl" = Xyes])
 
 AC_OUTPUT
