@@ -15,9 +15,6 @@ AX_LUA_HEADERS([], [AC_MSG_ERROR([could not find lua])])
 
 AX_CHECK_OPENSSL([
   AC_DEFINE(HAVE_OPENSSL, 1, [Define to 1 if using OpenSSL.])
-  LDFLAGS="$LDFLAGS $OPENSSL_LDFLAGS"
-  LIBS="$OPENSSL_LIBS $LIBS"
-  CPPFLAGS="$OPENSSL_INCLUDES $CPPFLAGS"
   have_openssl=yes
 ])
 
