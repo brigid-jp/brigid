@@ -5,13 +5,17 @@
 #include "common.hpp"
 
 namespace brigid {
-#ifdef HAVE_OPENSSL
+#if defined(HAVE_OPENSSL)
   void initialize_evp(lua_State*);
+#elif defined(HAVE_COMMONCRYPTO_COMMONCRYPTO_H)
+  void initialize_ccrypt(lua_State*);
 #endif
 
   void initialize(lua_State* L) {
-#ifdef HAVE_OPENSSL
+#if defined(HAVE_OPENSSL)
     initialize_evp(L);
+#elif defined(HAVE_COMMONCRYPTO_COMMONCRYPTO_H)
+    initialize_ccrypt(L);
 #endif
   }
 }
