@@ -11,14 +11,7 @@ description = {
   maintainer = "dev@brigid.jp";
 }
 build = {
-  type = "make";
-  build_variables = {
-    CFLAGS = "$(CFLAGS)";
-    LIBFLAG = "$(LIBFLAG)";
-    LUA_INCDIR = "$(LUA_INCDIR)";
-    LUA_LIBDIR = "$(LUA_LIBDIR)";
-  };
-  install_variables = {
-    LIBDIR = "$(LIBDIR)";
-  };
+  type = "command";
+  build_command = [[env PATH="$(LUA_BINDIR):$PATH" CPPFLAGS="$CPPFLAGS -I$(LUA_INCDIR)" CXXFLAGS="$CXXFLAGS -Wall -W -Wno-missing-field-initializers $(CFLAGS)" LUA="$(LUA)" ./configure --prefix="$(PREFIX)" && make]];
+  install_command = [[make luadir="$(LUADIR)" luaexecdir="$(LIBDIR)" install]];
 }
