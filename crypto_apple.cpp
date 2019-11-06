@@ -9,7 +9,7 @@ namespace brigid {
     }
   }
 
-  void initialize_ccrypt(lua_State* L) {
+  void initialize_crypt(lua_State* L) {
     lua_newtable(L);
     lua_pushstring(L, "ccrypt");
     lua_pushvalue(L, -2);

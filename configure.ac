@@ -14,15 +14,16 @@ AX_PROG_LUA([5.1], [], [], [AC_MSG_ERROR([could not find lua])])
 AX_LUA_HEADERS([], [AC_MSG_ERROR([could not find lua])])
 
 AX_CHECK_OPENSSL([
-  AC_DEFINE(HAVE_OPENSSL, 1, [Define to 1 if using OpenSSL.])
-  have_openssl=yes
+  AC_DEFINE(CRYPTO_OPENSSL, 1, [Define to 1 if using OpenSSL.])
+  crypto_openssl=yes
 ])
 
 AC_CHECK_HEADERS([CommonCrypto/CommonCrypto.h], [
-  have_commoncrypto=yes
+  AC_DEFINE(CRYPTO_APPLE, 1, [Define to 1 if using CommonCrypto.])
+  crypto_apple=yes
 ])
 
-AM_CONDITIONAL([HAVE_OPENSSL], [test "X$have_openssl" = Xyes])
-AM_CONDITIONAL([HAVE_COMMONCRYPTO], [test "X$have_commoncrypto" = Xyes])
+AM_CONDITIONAL([CRYPTO_OPENSSL], [test "X$crypto_openssl" = Xyes])
+AM_CONDITIONAL([CRYPTO_APPLE], [test "X$crypto_apple" = Xyes])
 
 AC_OUTPUT

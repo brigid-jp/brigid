@@ -7,13 +7,13 @@ brigid_core_la_SOURCES = \
 	common.cpp \
 	module.cpp
 
-if HAVE_OPENSSL
+if CRYPTO_OPENSSL
 brigid_core_la_LDFLAGS += $(OPENSSL_LDFLAGS)
 brigid_core_la_CPPFLAGS += $(OPENSSL_INCLUDES)
 brigid_core_la_LIBADD += $(OPENSSL_LIBS)
-brigid_core_la_SOURCES += evp.cpp
+brigid_core_la_SOURCES += crypto_openssl.cpp
 else
-if HAVE_COMMONCRYPTO
-brigid_core_la_SOURCES += ccrypt.cpp
+if CRYPTO_APPLE
+brigid_core_la_SOURCES += crypto_apple.cpp
 endif
 endif

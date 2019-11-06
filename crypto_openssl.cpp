@@ -49,9 +49,9 @@ namespace brigid {
     }
   }
 
-  void initialize_evp(lua_State* L) {
+  void initialize_crypto(lua_State* L) {
     lua_newtable(L);
-    lua_pushstring(L, "evp");
+    lua_pushstring(L, "crypto");
     lua_pushvalue(L, -2);
     lua_settable(L, -4);
 
