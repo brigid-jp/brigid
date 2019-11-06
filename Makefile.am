@@ -5,4 +5,8 @@ brigid_core_la_SOURCES = module.cpp
 
 if HAVE_OPENSSL
 brigid_core_la_SOURCES += evp.cpp
+else
+if HAVE_COMMONCRYPTO
+brigid_core_la_SOURCES += ccrypt.cpp
+endif
 endif
