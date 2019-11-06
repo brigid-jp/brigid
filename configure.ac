@@ -13,7 +13,10 @@ AX_CXX_COMPILE_STDCXX(11)
 AX_PROG_LUA([5.1], [], [], [AC_MSG_ERROR([could not find lua])])
 AX_LUA_HEADERS([], [AC_MSG_ERROR([could not find lua])])
 
-AX_CHECK_OPENSSL([have_openssl=yes])
+AX_CHECK_OPENSSL([
+  AC_DEFINE(HAVE_OPENSSL, 1, [Define to 1 if using OpenSSL.])
+  have_openssl=yes
+])
 LDFLAGS="$LDFLAGS $OPENSSL_LDFLAGS"
 LIBS="$OPENSSL_LIBS $LIBS"
 CPPFLAGS="$OPENSSL_INCLUDES $CPPFLAGS"
