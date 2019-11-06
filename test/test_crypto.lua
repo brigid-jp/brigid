@@ -1,16 +1,10 @@
 local brigid_core = require "brigid_core"
 
-if not brigid_core.ccrypt then
-  os.exit()
-end
-
-print(brigid_core.ccrypt)
-print(brigid_core.ccrypt.encrypt_string)
-
-os.exit()
+print(brigid_core.crypto)
+print(brigid_core.crypto.encrypt_string)
 
 -- https://wiki.openssl.org/index.php/EVP_Symmetric_Encryption_and_Decryption
-local result = brigid_core.evp.encrypt_string(
+local result = brigid_core.crypto.encrypt_string(
     "The quick brown fox jumps over the lazy dog",
     "01234567890123456789012345678901",
     "0123456789012345")
