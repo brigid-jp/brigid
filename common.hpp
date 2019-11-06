@@ -6,4 +6,11 @@ extern "C" {
 #include <lauxlib.h>
 }
 
+#include <cstddef>
+#include <tuple>
+
+namespace brigid {
+  std::tuple<const void*, std::size_t> check_data(lua_State*, int);
+}
+
 #endif

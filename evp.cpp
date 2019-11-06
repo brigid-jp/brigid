@@ -19,30 +19,19 @@ namespace brigid {
       throw std::runtime_error(buffer);
     }
 
-    struct string_reference {
-      const char* data;
-      size_t size;
-    };
-
-    inline string_reference checklstring(lua_State* L, int arg) {
-      size_t size = 0;
-      const char* data = luaL_checklstring(L, arg, &size);
-      return { data, size };
-    }
-
     int impl_encrypt_string(lua_State* L) {
-      const auto source = checklstring(L, 1);
-      const auto key = checklstring(L, 2); // 256bit 16byte
-      const auto iv = checklstring(L, 3); // 128bit 8byte
+      const auto source = check_data(L, 1);
+      const auto key = check_data(L, 2); // 256bit 16byte
+      const auto iv = check_data(L, 3); // 128bit 8byte
 
       try {
         if (std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)> ctx { EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free }) {
-          if (!EVP_EncryptInit_ex(ctx.get(), EVP_aes_256_cbc(), nullptr, reinterpret_cast<const uint8_t*>(key.data), reinterpret_cast<const uint8_t*>(iv.data))) {
+          if (!EVP_EncryptInit_ex(ctx.get(), EVP_aes_256_cbc(), nullptr, static_cast<const uint8_t*>(std::get<0>(key)), static_cast<const uint8_t*>(std::get<0>(iv)))) {
             impl_throw_error();
           }
-          std::vector<char> buffer(source.size + 16);
+          std::vector<char> buffer(std::get<1>(source) + 16);
           int size1 = buffer.size();
-          if (!EVP_EncryptUpdate(ctx.get(), reinterpret_cast<uint8_t*>(buffer.data()), &size1, reinterpret_cast<const uint8_t*>(source.data), source.size)) {
+          if (!EVP_EncryptUpdate(ctx.get(), reinterpret_cast<uint8_t*>(buffer.data()), &size1, static_cast<const uint8_t*>(std::get<0>(source)), std::get<1>(source))) {
             impl_throw_error();
           }
           int size2 = buffer.size() - size1;
