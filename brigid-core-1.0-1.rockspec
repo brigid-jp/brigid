@@ -22,6 +22,7 @@ build = {
           sources = {
             "common.cpp";
             "module.cpp";
+            "crypto_windows.cpp";
           };
         };
       };
