@@ -58,15 +58,11 @@
   </tr>
 </table>
 
-<h2>Windows開発環境</h2>
-
-<ul>
-  <li><a href="http://luabinaries.sourceforge.net/download.html">LuaBinaries</a></li>
-  <li><a href="https://luarocks.github.io/luarocks/releases/">LuaRocks</a></li>
-</ul>
+<h2>L&ouml;VE互換のWindows開発環境</h2>
 
 <p>
-<a href="https://love2d.org/">L&Ouml;VE</a>のWindowsバイナリはVisual Studio 2013でビルドされています。これに合わせた開発環境を用意しました。
+<a href="https://love2d.org/">L&Ouml;VE</a>のWindowsバイナリはVisual Studio 2013でビルドされています。
+L&Ouml;VEが配布するDLL（lua51.dllとmsvcp120.dllとmsvcr120.dll）を共用したいので、これに合わせた開発環境を用意します。
 </p>
 
 <ul>
@@ -75,40 +71,67 @@
       <li>Microsoft Visual Studio Community 2013 with Update 5</li>
     </ul>
   </li>
-  <li>LuaBinaries
+  <li><a href="http://luabinaries.sourceforge.net/download.html">LuaBinaries</a>
     <ul>
       <li><a href="https://sourceforge.net/projects/luabinaries/files/5.1.5/Tools%20Executables/lua-5.1.5_Win64_bin.zip/download">lua-5.1.5_Win64_bin.zip</a></li>
       <li><a href="https://sourceforge.net/projects/luabinaries/files/5.1.5/Windows%20Libraries/Dynamic/lua-5.1.5_Win64_dll12_lib.zip/download">lua-5.1.5_Win64_dll12_lib.zip</a></li>
     </ul>
   </li>
-  <li>LuaRocks
+  <li><a href="https://luarocks.github.io/luarocks/releases/">LuaRocks</a>
     <ul>
       <li><a href="https://luarocks.github.io/luarocks/releases/luarocks-3.2.1-windows-32.zip">luarocks-3.2.1-windows-32.zip</a></li>
     </ul>
   </li>
 </ul>
 
+<p>
+LuaBinariesの配布物のライブラリ依存関係は下記のようになっています。
+</p>
+
 <pre>
-c:/opt/lua/bin
-c:/opt/lua/bin/lua5.1.dll
-c:/opt/lua/bin/lua5.1.exe
-c:/opt/lua/bin/luarocks-admin.exe
-c:/opt/lua/bin/luarocks.exe
-c:/opt/lua/include
-c:/opt/lua/include/luaconf.h
-c:/opt/lua/include/lua.hpp
-c:/opt/lua/include/lualib.h
-c:/opt/lua/include/lauxlib.h
-c:/opt/lua/include/lua.h
-c:/opt/lua/lib
-c:/opt/lua/lib/lua5.1.lib
-c:/opt/lua/lib/lua5.1.dll
+lua5.1.exe
+  ↓
+lua5.1.dll ← lua5.1.lib
+  ↑
+lua51.dll ← lua51.lib
+</pre>
+
+<p>
+これに対してL&Ouml;VEのライブラリ依存関係は下記のようになっています。
+</p>
+
+<pre>
+love.exe
+  ↓
+lua51.dll
+</pre>
+
+<p>
+L&Ouml;VEでも使えるモジュールはlua51.dll（とmsvcp120.dllとmsvcr120.dll）に依存するべきです。
+LuaRocksの探索は癖が強いので、下記のような構成にしました。
+バイナリ一式を<a href="lua-x64.zip">lua-x64.zip</a>にまとめました。
+</p>
+
+<pre>
+c:/opt/lua-x64/bin/lua5.1.dll
+c:/opt/lua-x64/bin/lua5.1.exe
+c:/opt/lua-x64/bin/luarocks-admin.exe
+c:/opt/lua-x64/bin/lua51.dll
+c:/opt/lua-x64/bin/luarocks.exe
+
+c:/opt/lua-x64/include/luaconf.h
+c:/opt/lua-x64/include/lua.hpp
+c:/opt/lua-x64/include/lualib.h
+c:/opt/lua-x64/include/lauxlib.h
+c:/opt/lua-x64/include/lua.h
+
+-- lua51.libをlua5.1.libに名前変更
+c:/opt/lua-x64/lib/lua5.1.lib
 </pre>
 
 <pre>
-set PATH=c:/opt/lua/bin;%PATH%
-lua5.1 -v
-luarocks --lua-version 5.1 --lua-dir c:/opt/lua config
+set PATH=c:\opt\lua-x64\bin;%PATH%
+luarocks --lua-version 5.1 config
 </pre>
 
 </div>
