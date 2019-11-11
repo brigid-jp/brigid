@@ -1,7 +1,12 @@
+*.def
+*.dll
+*.exp
 *.in
 *.la
+*.lib
 *.lo
 *.o
+*.obj
 *.so
 *~
 .*.swp
