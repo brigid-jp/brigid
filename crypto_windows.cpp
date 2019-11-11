@@ -1,17 +1,21 @@
 #include "common.hpp"
 
 #include <windows.h>
-#include <wincrypt.h>
+#include <bcrypt.h>
 
-#pragma comment(lib, "advapi32.lib")
-// #pragma comment(lib, "crypt32.lib")
+#pragma comment(lib, "bcrypt.lib")
 
 namespace brigid {
   namespace {
     int impl_encrypt_string(lua_State* L) {
-      HCRYPTPROV prov = 0;
-      if (!CryptAcquireContext(&prov, nullptr, MS_ENH_RSA_AES_PROV, PROV_RSA_AES, CRYPT_NEWKEYSET)) {
-      }
+      BCRYPT_ALG_HANDLE algorithm = nullptr;
+      NTSTATUS result = -1;
+
+      result = BCryptOpenAlgorithmProvider(
+          &algorithm,
+          BCRYPT_AES_ALGORITHM,
+          nullptr,
+          0);
 
       return 0;
     }
