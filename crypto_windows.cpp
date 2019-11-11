@@ -3,6 +3,7 @@
 namespace brigid {
   namespace {
     int impl_encrypt_string(lua_State* L) {
+      return 0;
     }
   }
 
