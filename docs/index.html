@@ -58,7 +58,7 @@
   </tr>
 </table>
 
-<h2>L&ouml;VE互換のWindows開発環境</h2>
+<h2 id="luarocks-for-windows">L&ouml;VE互換のWindows開発環境</h2>
 
 <p>
 <a href="https://love2d.org/">L&Ouml;VE</a>のWindowsバイナリはVisual Studio 2013でビルドされています。
@@ -97,7 +97,7 @@ lua51.dll ← lua51.lib
 </pre>
 
 <p>
-これに対してL&Ouml;VEのライブラリ依存関係は下記のようになっています。
+L&Ouml;VEのライブラリ依存関係は下記のようになっています。
 </p>
 
 <pre>
@@ -107,31 +107,36 @@ lua51.dll
 </pre>
 
 <p>
-L&Ouml;VEでも使えるモジュールはlua51.dll（とmsvcp120.dllとmsvcr120.dll）に依存するべきです。
-LuaRocksの探索は癖が強いので、下記のような構成にしました。
-バイナリ一式を<a href="lua-x64.zip">lua-x64.zip</a>にまとめました。
+つまり、lua51.dllに依存するモジュールを作成すればL&Ouml;VEでも使うことができます。
+LuaRocksの探索は癖が強いので、以下のような構成にしました（<a href="lua-x64.zip">lua-x64.zip</a>にまとめてあります）。
 </p>
 
 <pre>
 c:/opt/lua-x64/bin/lua5.1.dll
 c:/opt/lua-x64/bin/lua5.1.exe
-c:/opt/lua-x64/bin/luarocks-admin.exe
 c:/opt/lua-x64/bin/lua51.dll
+c:/opt/lua-x64/bin/luarocks-admin.exe
 c:/opt/lua-x64/bin/luarocks.exe
 
-c:/opt/lua-x64/include/luaconf.h
-c:/opt/lua-x64/include/lua.hpp
-c:/opt/lua-x64/include/lualib.h
 c:/opt/lua-x64/include/lauxlib.h
 c:/opt/lua-x64/include/lua.h
+c:/opt/lua-x64/include/lua.hpp
+c:/opt/lua-x64/include/luaconf.h
+c:/opt/lua-x64/include/lualib.h
 
--- lua51.libをlua5.1.libに名前変更
+-- lua-5.1.5_Win64_dll12_lib.zipのlua51.libをlua5.1.libに名前変更
 c:/opt/lua-x64/lib/lua5.1.lib
 </pre>
+
+<p>
+これでluarocksが利用できます。
+私が確認した環境では、Windows 10ではAdministratorユーザでないとうまく動きませんでした。
+</p>
 
 <pre>
 set PATH=c:\opt\lua-x64\bin;%PATH%
 luarocks --lua-version 5.1 config
+luarocks --lua-version 5.1 make
 </pre>
 
 </div>
