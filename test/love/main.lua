@@ -1,5 +1,5 @@
 local love = love
-local t
+local t = {}
 
 local expect = {
   0xE0, 0x6F, 0x63, 0xA7, 0x11, 0xE8, 0xB7, 0xAA, 0x9F, 0x94, 0x40, 0x10, 0x7D, 0x46, 0x80, 0xA1,
@@ -8,9 +8,11 @@ local expect = {
 }
 
 function love.load()
+  t[#t + 1] = ("package.path = %s\n"):format(package.path)
+  t[#t + 1] = ("package.cpath = %s\n"):format(package.cpath)
+
   local a, b = pcall(require, "brigid_core")
 
-  t = {}
   if not a then
     t[#t + 1] = ("[FAIL] could not load module: %s\n"):format(b)
     return
