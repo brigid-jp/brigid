@@ -12,7 +12,7 @@ function love.load()
 
   t = {}
   if not a then
-    t[#t + 1] = ("[FAIL] could not load module: %s"):format(b)
+    t[#t + 1] = ("[FAIL] could not load module: %s\n"):format(b)
     return
   end
 
@@ -23,10 +23,17 @@ function love.load()
       "01234567890123456789012345678901",
       "0123456789012345")
 
+  if not a then
+    t[#t + 1] = ("[FAIL] could not load encrypt_string: %s\n"):format(b)
+    return
+  end
+
+  local result = b
+
   local check = #expect == #result
   for i = 1, #result do
     local byte = result:byte(i)
-    t[#t + 1] ("%02X"):format(byte)
+    t[#t + 1] = ("%02X"):format(byte)
     if i % 16 == 0 then
       t[#t + 1] = "\n"
     else
@@ -37,10 +44,14 @@ function love.load()
     end
   end
 
-  t[#t + 1] = ("check %s"):format(check)
+  if check then
+    t[#t + 1] = "check ok\n"
+  else
+    t[#t + 1] = "check error\n"
+  end
 end
 
 function love.draw()
   local width = love.window.getMode()
-  g.printf(table.concat(t), 50, 100, width - 100)
+  love.graphics.printf(table.concat(t), 50, 50, width - 100)
 end
