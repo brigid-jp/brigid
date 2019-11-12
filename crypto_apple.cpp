@@ -19,8 +19,8 @@ namespace brigid {
 
     int impl_encrypt_string(lua_State* L) {
       const auto source = check_data(L, 1);
-      const auto key = check_data(L, 2); // 256bit 16byte
-      const auto iv = check_data(L, 3); // 128bit 8byte
+      const auto key = check_data(L, 2); // 256bit 32byte
+      const auto iv = check_data(L, 3); // 128bit 16byte
 
       try {
         CCCryptorRef cryptor_ref = nullptr;
