@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "module.hpp"
 
 namespace brigid {
   void initialize_crypto(lua_State*);
