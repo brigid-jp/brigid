@@ -1,3 +1,4 @@
+*.class
 *.def
 *.dll
 *.exp
