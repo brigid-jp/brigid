@@ -11,16 +11,16 @@ function love.load()
   t[#t + 1] = ("package.path = %s\n"):format(package.path)
   t[#t + 1] = ("package.cpath = %s\n"):format(package.cpath)
 
-  local a, b = pcall(require, "brigid_core")
+  local a, b = pcall(require, "brigid")
 
   if not a then
     t[#t + 1] = ("[FAIL] could not load module: %s\n"):format(b)
     return
   end
 
-  local brigid_core = b
+  local brigid = b
 
-  local a, b = pcall(brigid_core.crypto.encrypt_string,
+  local a, b = pcall(brigid.crypto.encrypt_string,
       "The quick brown fox jumps over the lazy dog",
       "01234567890123456789012345678901",
       "0123456789012345")

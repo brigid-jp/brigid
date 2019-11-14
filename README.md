@@ -1,1 +1,1 @@
-# brigid-core
+# brigid

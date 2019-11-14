@@ -1,4 +1,4 @@
-package jp.brigid.core;
+package jp.brigid;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;

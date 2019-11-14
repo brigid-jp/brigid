@@ -18,7 +18,7 @@ namespace brigid {
       const auto iv = check_data(L, 3); // 128bit 16byte
       try {
         JNIEnv* env = static_cast<JNIEnv*>(SDL_AndroidGetJNIEnv());
-        if (jclass c = env->FindClass("jp/brigid/core/Crypto")) {
+        if (jclass c = env->FindClass("jp/brigid/Crypto")) {
           if (jmethodID m = env->GetStaticMethodID(c, "encryptString", "([B[B[B)[B")) {
             jbyteArray source_buffer = env->NewByteArray(std::get<1>(source));
             jbyte* source_ptr = env->GetByteArrayElements(source_buffer, nullptr);

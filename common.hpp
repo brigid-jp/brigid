@@ -1,5 +1,5 @@
-#ifndef BRIGID_CORE_COMMON_HPP
-#define BRIGID_CORE_COMMON_HPP
+#ifndef BRIGID_COMMON_HPP
+#define BRIGID_COMMON_HPP
 
 extern "C" {
 #include <lua.h>

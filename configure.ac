@@ -1,5 +1,5 @@
 m4_include([version.m4])
-AC_INIT([brigid-core], DROMOZOA_UNIX_VERSION, [dev@brigid.jp], [], [https://github.com/brigid-jp/brigid-core/])
+AC_INIT([brigid], DROMOZOA_UNIX_VERSION, [dev@brigid.jp], [], [https://github.com/brigid-jp/brigid/])
 AM_INIT_AUTOMAKE([foreign])
 LT_INIT
 

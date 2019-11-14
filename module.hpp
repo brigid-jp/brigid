@@ -1,5 +1,5 @@
-#ifndef BRIGID_CORE_MODULE_HPP
-#define BRIGID_CORE_MODULE_HPP
+#ifndef BRIGID_MODULE_HPP
+#define BRIGID_MODULE_HPP
 
 #ifdef __cplusplus
 extern "C" {
@@ -7,7 +7,7 @@ extern "C" {
 
 #include <lua.h>
 
-int luaopen_brigid_core(lua_State*);
+int luaopen_brigid(lua_State*);
 
 #ifdef __cplusplus
 }
