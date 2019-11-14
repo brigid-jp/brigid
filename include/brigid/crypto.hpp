@@ -5,7 +5,8 @@
 #ifndef BRIGID_CRYPTO_HPP
 #define BRIGID_CRYPTO_HPP
 
-#include <cstddef>
+#include <stddef.h>
+
 #include <memory>
 #include <string>
 
@@ -13,18 +14,15 @@ namespace brigid {
   class encryptor_impl {
   public:
     virtual ~encryptor_impl() = 0;
-    virtual std::size_t key_size() const = 0;
-    virtual std::size_t block_size() const = 0;
-    virtual void open(const char*, std::size_t, const char*, std::size_t) = 0;
+    virtual size_t update(const char*, size_t, char*, size_t, bool) = 0;
   };
 
-  std::unique_ptr<encryptor_impl> make_encryptor_impl(const std::string&);
+  std::unique_ptr<encryptor_impl> make_encryptor_impl(const std::string&, const char*, size_t, const char*, size_t);
 
   class encryptor {
   public:
-    encryptor(const std::string&, const char*, std::size_t, const char*, std::size_t);
-    std::size_t key_size() const;
-    std::size_t block_size() const;
+    encryptor(const std::string&, const char*, size_t, const char*, size_t);
+    size_t update(const char*, size_t, char*, size_t, bool);
   private:
     std::unique_ptr<encryptor_impl> impl_;
   };

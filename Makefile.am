@@ -1,5 +1,5 @@
 ACLOCAL_AMFLAGS = -I m4
-SUBDIRS = src/lib
+SUBDIRS = src/lib test/lib
 
 luaexec_LTLIBRARIES = brigid.la
 
