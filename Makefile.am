@@ -1,3 +1,6 @@
+ACLOCAL_AMFLAGS = -I m4
+SUBDIRS = src/lib
+
 luaexec_LTLIBRARIES = brigid.la
 
 brigid_la_LDFLAGS = -module -avoid-version -shared

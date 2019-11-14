@@ -11,8 +11,8 @@
 *.so
 *~
 .*.swp
-/.deps
-/.libs
+.deps
+.libs
 /aclocal.m4
 /autom4te.cache
 /compile
