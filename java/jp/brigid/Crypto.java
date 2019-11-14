@@ -10,7 +10,7 @@ public class Crypto {
     try {
       SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
       IvParameterSpec ivSpec = new IvParameterSpec(iv);
-      Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+      Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
       cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
       return cipher.doFinal(source);
     } catch (Exception e) {
