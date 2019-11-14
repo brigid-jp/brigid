@@ -6,7 +6,6 @@
 #define BRIGID_CRYPTO_HPP
 
 #include <stddef.h>
-
 #include <memory>
 #include <string>
 
