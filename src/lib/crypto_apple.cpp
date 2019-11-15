@@ -22,9 +22,9 @@ namespace brigid {
 
     using cryptor_pointer_t = std::unique_ptr<typename std::remove_pointer<CCCryptorRef>::type, decltype(&CCCryptorRelease)>;
 
-    class aes_encryptor_impl : public encryptor_impl {
+    class aes_cbc_encryptor_impl : public encryptor_impl {
     public:
-      aes_encryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t)
+      aes_cbc_encryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t)
         : cryptor_(create_cryptor(key_data, key_size, iv_data)) {}
 
       virtual size_t block_bytes() const {
@@ -46,7 +46,7 @@ namespace brigid {
 
       static cryptor_pointer_t create_cryptor(const char* key_data, size_t key_size, const char* iv_data) {
         CCCryptorRef cryptor = nullptr;
-        check(CCCryptorCreate(kCCEncrypt, kCCAlgorithmAES, kCCOptionPKCS7Padding, key_data, key_size, iv_data, &cryptor));
+        check(CCCryptorCreateWithMode(kCCEncrypt, kCCModeCBC, kCCAlgorithmAES, kCCOptionPKCS7Padding, iv_data, key_data, key_size, nullptr, 0, 0, 0, &cryptor));
         return cryptor_pointer_t(cryptor, &CCCryptorRelease);
       }
     };
@@ -54,7 +54,7 @@ namespace brigid {
 
   std::unique_ptr<encryptor_impl> make_encryptor_impl(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
     if (cipher == "aes-256-cbc") {
-      return std::unique_ptr<encryptor_impl>(new aes_encryptor_impl(key_data, key_size, iv_data, iv_size));
+      return std::unique_ptr<encryptor_impl>(new aes_cbc_encryptor_impl(key_data, key_size, iv_data, iv_size));
     } else {
       throw std::runtime_error("unsupported cipher");
     }
