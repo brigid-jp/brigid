@@ -6,8 +6,8 @@
 
 #include <CommonCrypto/CommonCrypto.h>
 
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
 #include <type_traits>
 
 namespace brigid {
@@ -42,7 +42,7 @@ namespace brigid {
       }
 
     private:
-      std::unique_ptr<typename std::remove_pointer<CCCryptorRef>::type, decltype(&CCCryptorRelease)> cryptor_;
+      cryptor_pointer_t cryptor_;
 
       static cryptor_pointer_t create_cryptor(const char* key_data, size_t key_size, const char* iv_data) {
         CCCryptorRef cryptor = nullptr;
