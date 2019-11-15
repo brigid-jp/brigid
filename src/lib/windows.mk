@@ -16,4 +16,4 @@ $(TARGET): $(OBJS)
 	lib $** /OUT:$@
 
 .cpp.obj:
-	$(CC) /MD /O2 /EHsc /I..\..\include /c $<
+	$(CC) /MD /O2 /W3 /EHsc /I..\..\include /c $<

@@ -12,6 +12,10 @@
 
 #include <brigid/crypto.hpp>
 
+#ifdef _MSC_VER
+#pragma comment(lib, "bcrypt.lib")
+#endif
+
 static const std::string data { "The quick brown fox jumps over the lazy dog" };
 static const std::string key { "01234567890123456789012345678901" };
 static const std::string iv { "01234567890123456" };
@@ -30,6 +34,8 @@ void test1() {
   assert(result == expect_size);
   buffer.resize(result);
   assert(std::equal(buffer.begin(), buffer.end(), expect_data));
+
+  std::cout << "test1 ok\n";
 }
 
 void test2() {
@@ -55,6 +61,8 @@ void test2() {
 
   buffer.resize(48);
   assert(std::equal(buffer.begin(), buffer.end(), expect_data));
+
+  std::cout << "test2 ok\n";
 }
 
 int main(int, char*[]) {
