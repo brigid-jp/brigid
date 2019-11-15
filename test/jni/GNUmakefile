@@ -25,5 +25,5 @@ Test.h: Test.java
 libtest.dylib: Test.h $(OBJS)
 	$(CXX) $(LDFLAGS) $(OBJS) ../../src/lib/libbrigid.a -o $@
 
-%.o: %.cpp
+.cpp.o:
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
