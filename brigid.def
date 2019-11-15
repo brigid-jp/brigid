@@ -1,0 +1,3 @@
+LIBRARY brigid
+EXPORTS
+  luaopen_brigid

@@ -16,15 +16,17 @@ build = {
   install_command = [[make luadir="$(LUADIR)" luaexecdir="$(LIBDIR)" install]];
   platforms = {
     windows = {
-      type = "builtin";
-      modules = {
-        brigid = {
-          sources = {
-            "common.cpp";
-            "module.cpp";
-            "crypto_windows.cpp";
-          };
-        };
+      type = "make";
+      makefile = "windows.mk";
+      build_variables = {
+        CFLAGS = "$(CFLAGS)";
+        LIBFLAG = "$(LIBFLAG)";
+        LUA_INCDIR = "$(LUA_INCDIR)";
+        LUA_LIBDIR = "$(LUA_LIBDIR)";
+        LUALIB = "$(LUALIB)";
+      };
+      install_variables = {
+        LIBDIR = "$(LIBDIR)";
       };
     };
   };
