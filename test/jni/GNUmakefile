@@ -5,11 +5,11 @@
 JAVA_HOME = /Library/Java/JavaVirtualMachines/jdk1.8.0_131.jdk/Contents/Home
 CPPFLAGS = -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/darwin
 CXXFLAGS = -Wall -W -O2 -std=c++11
-LDFLAGS = -dynamiclib
+LDFLAGS = -shared
 
 OBJS = \
 	test.o
-TARGET = test.dylib
+TARGET = libtest.dylib
 
 all:: $(TARGET)
 
@@ -19,10 +19,10 @@ clean::
 check::
 	java -Djava.library.path=. Test
 
-Test.class: Test.java
+Test.h: Test.java
 	javac -h . Test.java
 
-test.dylib: $(OBJS) Test.class
+libtest.dylib: Test.h $(OBJS)
 	$(CXX) $(LDFLAGS) $(OBJS) -o $@
 
 %.o: %.cpp
