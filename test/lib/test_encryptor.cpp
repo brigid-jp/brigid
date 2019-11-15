@@ -58,7 +58,12 @@ void test2() {
 }
 
 int main(int, char*[]) {
-  test1();
-  test2();
-  return 0;
+  try {
+    test1();
+    test2();
+    return 0;
+  } catch (std::exception& e) {
+    std::cerr << "caught exception " << e.what() << "\n";
+    return 1;
+  }
 }
