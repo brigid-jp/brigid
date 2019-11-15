@@ -1,11 +1,11 @@
 m4_include([version.m4])
-AC_INIT([brigid-core], DROMOZOA_UNIX_VERSION, [dev@brigid.jp], [], [https://github.com/brigid-jp/brigid-core/])
+AC_INIT([brigid], DROMOZOA_UNIX_VERSION, [dev@brigid.jp], [], [https://github.com/brigid-jp/brigid/])
 AM_INIT_AUTOMAKE([foreign])
 LT_INIT
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADER([config.h])
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile src/lib/Makefile test/lib/Makefile])
 
 AC_PROG_CXX
 AX_CXX_COMPILE_STDCXX(11)

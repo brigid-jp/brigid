@@ -9,7 +9,7 @@ namespace brigid {
   }
 }
 
-extern "C" int luaopen_brigid_core(lua_State* L) {
+extern "C" int luaopen_brigid(lua_State* L) {
   lua_newtable(L);
   brigid::initialize(L);
   return 1;

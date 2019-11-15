@@ -1,10 +1,10 @@
-local brigid_core = require "brigid_core"
+local brigid = require "brigid"
 
-print(brigid_core.crypto)
-print(brigid_core.crypto.encrypt_string)
+print(brigid.crypto)
+print(brigid.crypto.encrypt_string)
 
 -- https://wiki.openssl.org/index.php/EVP_Symmetric_Encryption_and_Decryption
-local result = brigid_core.crypto.encrypt_string(
+local result = brigid.crypto.encrypt_string(
     "The quick brown fox jumps over the lazy dog",
     "01234567890123456789012345678901",
     "0123456789012345")

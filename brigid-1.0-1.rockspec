@@ -1,13 +1,13 @@
-package = "brigid-core"
+package = "brigid"
 version = "1.0-1"
 source = {
-  url = "https://github.com/brigid-jp/brigid-core/archive/v1.0.tar.gz";
-  file = "brigid-core-1.0.tar.gz";
+  url = "https://github.com/brigid-jp/brigid/archive/v1.0.tar.gz";
+  file = "brigid-1.0.tar.gz";
 }
 description = {
-  summary = "brigid-core";
+  summary = "brigid";
   license = "MIT";
-  homepage = "https://github.com/brigid-jp/brigid-core/";
+  homepage = "https://github.com/brigid-jp/brigid/";
   maintainer = "dev@brigid.jp";
 }
 build = {
@@ -18,7 +18,7 @@ build = {
     windows = {
       type = "builtin";
       modules = {
-        brigid_core = {
+        brigid = {
           sources = {
             "common.cpp";
             "module.cpp";

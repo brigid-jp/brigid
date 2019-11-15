@@ -11,8 +11,8 @@
 *.so
 *~
 .*.swp
-/.deps
-/.libs
+.deps
+.libs
 /aclocal.m4
 /autom4te.cache
 /compile
@@ -35,4 +35,8 @@
 /m4/lt~obsolete.m4
 /missing
 /stamp-h1
+/test-driver
 Makefile
+test*.exe
+test*.log
+test*.trs

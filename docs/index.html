@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>brigid-core</title>
+<title>brigid</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/3.0.1/github-markdown.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css">
 <style>
@@ -27,34 +27,71 @@
 <body>
 <div class="markdown-body">
 
-<h1>brigid-core</h1>
+<h1>brigid</h1>
 
-<h2>crypto実装</h2>
+<h2 id="crypto-impl">crypto実装</h2>
 
 <table>
   <tr>
     <th>実装名</th>
     <th>バックエンド</th>
+    <td>環境</td>
   </tr>
 
   <tr>
     <td>crypto_openssl</td>
-    <td>OpenSSL</td>
+    <td>OpenSSL EVP</td>
+    <td>UNIX or UNIX like systems</td>
   </tr>
 
   <tr>
     <td>crypto_apple</td>
     <td>CommonCrypto</td>
+    <td>macOS and iOS</td>
   </tr>
 
   <tr>
     <td>crypto_windows</td>
     <td>CNG (Cryptography API: Next Generation)</td>
+    <td>Windows</td>
   </tr>
 
   <tr>
-    <td>crypto_android</td>
+    <td>crypto_java</td>
     <td>JCE (Java Cryptographic Extension)</td>
+    <td>Android</td>
+  </tr>
+</table>
+
+<h3>AES-256の指定</h3>
+
+<table>
+  <tr>
+    <th>Backend</th>
+    <th>Cipher</th>
+    <th>Mode</th>
+    <th>Padding</th>
+  </tr>
+  <tr>
+    <td>OpenSSL EVP</td>
+    <td colspan="2"><code>EVP_aes256_cbc()</code></td>
+    <td>padding is enabled (the default)</td>
+  </tr>
+  <tr>
+    <td>CommonCrypto</td>
+    <td><code>kCCAlgorithmAES</code></td>
+    <td><code>kCCModeCBC</code></td>
+    <td><code>kCCOptionPKCS7Padding</code></td>
+  </tr>
+  <tr>
+    <td>CNG</td>
+    <td><code>BCRYPT_AES_ALGORITHM</code></td>
+    <td><code>BCRYPT_CHAIN_MODE_CBC</code></td>
+    <td><code>BCRYPT_BLOCK_PADDING</code></td>
+  </tr>
+  <tr>
+    <td>JCE</td>
+    <td colspan="3"><code>AES/CBC/PKCS7Padding</code></td>
   </tr>
 </table>
 
