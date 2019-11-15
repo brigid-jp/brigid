@@ -5,25 +5,19 @@
 JAVA_HOME = /Library/Java/JavaVirtualMachines/jdk1.8.0_131.jdk/Contents/Home
 CPPFLAGS = -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/darwin -I../../include
 CXXFLAGS = -Wall -W -O2 -std=c++11
-LDFLAGS = -shared
 
 OBJS = \
-	test.o
-TARGET = libtest.dylib
+	crypto.o \
+	crypto_java.o
+TARGET = libbrigid.a
 
-all:: $(TARGET)
+all: $(TARGET)
 
-clean::
-	rm -f *.o Test.h Test.class $(TARGET)
+clean:
+	rm -f *.o $(TARGET)
 
-check::
-	java -Djava.library.path=. Test
+$(TARGET): $(OBJS)
+	ar cr $@ $^
 
-Test.h: Test.java
-	javac -h . Test.java
-
-libtest.dylib: Test.h $(OBJS)
-	$(CXX) $(LDFLAGS) $(OBJS) ../../src/lib/libbrigid.a -o $@
-
-%.o: %.cpp
+.cpp.o:
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
