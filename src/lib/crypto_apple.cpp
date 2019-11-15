@@ -31,11 +31,11 @@ namespace brigid {
         return 16;
       }
 
-      virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool do_final) {
+      virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
         size_t size1 = 0;
         size_t size2 = 0;
         check(CCCryptorUpdate(cryptor_.get(), in_data, in_size, out_data, out_size, &size1));
-        if (do_final) {
+        if (padding) {
           check(CCCryptorFinal(cryptor_.get(), out_data + size1, out_size - size1, &size2));
         }
         return size1 + size2;
