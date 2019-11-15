@@ -2,9 +2,9 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-public class Test {
+public class JNITest {
   static {
-    System.loadLibrary("test");
+    System.loadLibrary("jnitest");
   }
 
   private native static void test();

@@ -8,21 +8,21 @@ CXXFLAGS = -Wall -W -O2 -std=c++11
 LDFLAGS = -shared
 
 OBJS = \
-	test.o
-TARGET = libtest.dylib
+	jnitest.o
+TARGET = libjnitest.dylib
 
 all:: $(TARGET)
 
 clean::
-	rm -f *.o Test.h Test.class $(TARGET)
+	rm -f *.o JNITest.h JNITest.class $(TARGET)
 
 check::
-	java -Djava.library.path=. Test
+	java -Djava.library.path=. JNITest
 
-Test.h: Test.java
-	javac -h . Test.java
+JNITest.h: JNITest.java
+	javac -h . JNITest.java
 
-libtest.dylib: Test.h $(OBJS)
+libjnitest.dylib: JNITest.h $(OBJS)
 	$(CXX) $(LDFLAGS) $(OBJS) ../../src/lib/libbrigid.a -o $@
 
 .cpp.o:

@@ -2,7 +2,7 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include "Test.h"
+#include "JNITest.h"
 
 #include <iostream>
 #include <memory>
@@ -21,7 +21,7 @@ static const std::string data { "The quick brown fox jumps over the lazy dog" };
 static const std::string key { "01234567890123456789012345678901" };
 static const std::string iv { "01234567890123456" };
 
-JNIEXPORT void JNICALL Java_Test_test(JNIEnv* env, jclass) {
+JNIEXPORT void JNICALL Java_JNITest_test(JNIEnv* env, jclass) {
   jni_env = env;
   std::cout << "test...\n";
   std::cout << "env: " << env << "\n";
