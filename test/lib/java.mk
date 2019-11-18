@@ -17,12 +17,12 @@ clean::
 	rm -f *.o JNITest.h JNITest.class $(TARGET)
 
 check::
-	java -Djava.library.path=. JNITest
+	java -classpath ../../src/java:. -Djava.library.path=. -Xcheck:jni -verbose:jni JNITest
 
 JNITest.h: JNITest.java
 	javac -h . JNITest.java
 
-libjnitest.dylib: JNITest.h $(OBJS)
+libjnitest.dylib: JNITest.h $(OBJS) ../../src/lib/libbrigid.a
 	$(CXX) $(LDFLAGS) $(OBJS) ../../src/lib/libbrigid.a -o $@
 
 .cpp.o:

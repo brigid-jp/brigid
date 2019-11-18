@@ -11,10 +11,16 @@
 
 #include <brigid/crypto.hpp>
 
-static void* jni_env = nullptr;
+void* access_jnienv(void* set_env = 0) {
+  thread_local void* env = 0;
+  if (set_env) {
+    env = set_env;
+  }
+  return env;
+}
 
 extern "C" void* SDL_AndroidGetJNIEnv() {
-  return jni_env;
+  return access_jnienv();
 }
 
 static const std::string data { "The quick brown fox jumps over the lazy dog" };
@@ -22,14 +28,15 @@ static const std::string key { "01234567890123456789012345678901" };
 static const std::string iv { "01234567890123456" };
 
 JNIEXPORT void JNICALL Java_JNITest_test(JNIEnv* env, jclass) {
-  jni_env = env;
+  access_jnienv(env);
   std::cout << "test...\n";
   std::cout << "env: " << env << "\n";
   try {
     std::vector<char> buffer(data.size() + 16);
     brigid::encryptor encryptor { "aes-256-cbc", key.data(), key.size(), iv.data(), iv.size() };
-    size_t result = encryptor.update(data.data(), data.size(), buffer.data(), buffer.size(), true);
+    // size_t result = encryptor.update(data.data(), data.size(), buffer.data(), buffer.size(), true);
   } catch (const std::exception& e) {
-    std::cerr << e.what() << "\n";
+    std::cerr << "caught exception " << e.what() << "\n";
   }
+  std::cout << "done";
 }
