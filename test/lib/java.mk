@@ -13,12 +13,12 @@ OBJS = \
 	jnitest.o
 TARGET = libjnitest.dylib
 
-all:: $(TARGET)
+all: $(TARGET)
 
-clean::
+clean:
 	rm -f *.o JNITest.h JNITest.class $(TARGET)
 
-check::
+check:
 	java -classpath ../../src/java:. -Djava.library.path=. -Xcheck:jni JNITest
 
 JNITest.h: JNITest.java
