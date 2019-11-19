@@ -3,12 +3,12 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/crypto.hpp>
+#include <brigid/type_traits.hpp>
 
 #include <CommonCrypto/CommonCrypto.h>
 
 #include <sstream>
 #include <stdexcept>
-#include <type_traits>
 
 namespace brigid {
   namespace {
@@ -20,12 +20,20 @@ namespace brigid {
       }
     }
 
-    using cryptor_pointer_t = std::unique_ptr<typename std::remove_pointer<CCCryptorRef>::type, decltype(&CCCryptorRelease)>;
+    using cryptor_ref_t = std::unique_ptr<remove_pointer_t<CCCryptorRef>, decltype(&CCCryptorRelease)>;
 
-    class aes_cbc_encryptor_impl : public encryptor_impl {
+    cryptor_ref_t make_cryptor_ref(CCCryptorRef cryptor = nullptr) {
+      return { cryptor, &CCCryptorRelease };
+    }
+
+    class aes_encryptor_impl : public encryptor_impl {
     public:
-      aes_cbc_encryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t)
-        : cryptor_(create_cryptor(key_data, key_size, iv_data)) {}
+      aes_encryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t)
+        : cryptor_(make_cryptor_ref()) {
+        CCCryptorRef cryptor = nullptr;
+        check(CCCryptorCreateWithMode(kCCEncrypt, kCCModeCBC, kCCAlgorithmAES, kCCOptionPKCS7Padding, iv_data, key_data, key_size, nullptr, 0, 0, 0, &cryptor));
+        cryptor_ = make_cryptor_ref(cryptor);
+      }
 
       virtual size_t block_bytes() const {
         return 16;
@@ -42,19 +50,19 @@ namespace brigid {
       }
 
     private:
-      cryptor_pointer_t cryptor_;
-
-      static cryptor_pointer_t create_cryptor(const char* key_data, size_t key_size, const char* iv_data) {
-        CCCryptorRef cryptor = nullptr;
-        check(CCCryptorCreateWithMode(kCCEncrypt, kCCModeCBC, kCCAlgorithmAES, kCCOptionPKCS7Padding, iv_data, key_data, key_size, nullptr, 0, 0, 0, &cryptor));
-        return cryptor_pointer_t(cryptor, &CCCryptorRelease);
-      }
+      cryptor_ref_t cryptor_;
     };
   }
 
   std::unique_ptr<encryptor_impl> make_encryptor_impl(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
     if (cipher == "aes-256-cbc") {
-      return std::unique_ptr<encryptor_impl>(new aes_cbc_encryptor_impl(key_data, key_size, iv_data, iv_size));
+      if (key_size != 32) {
+        throw std::runtime_error("invalid key size");
+      }
+      if (iv_size != 16) {
+        throw std::runtime_error("invalid iv size");
+      }
+      return std::unique_ptr<encryptor_impl>(new aes_encryptor_impl(key_data, key_size, iv_data, iv_size));
     } else {
       throw std::runtime_error("unsupported cipher");
     }

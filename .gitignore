@@ -1,3 +1,4 @@
+*.a
 *.class
 *.dll
 *.exp
@@ -35,6 +36,8 @@
 /missing
 /stamp-h1
 /test-driver
+/test/lib/JNITest.h
+/test/lib/libjnitest.dylib
 Makefile
 test*.exe
 test*.log

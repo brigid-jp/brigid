@@ -2,76 +2,49 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <stddef.h>
-#include <assert.h>
+#include "test.hpp"
+#include <brigid/crypto.hpp>
 
 #include <algorithm>
 #include <iostream>
-#include <string>
 #include <vector>
-
-#include <brigid/crypto.hpp>
-
-#ifdef _MSC_VER
-#pragma comment(lib, "bcrypt.lib")
-#endif
 
 static const std::string data { "The quick brown fox jumps over the lazy dog" };
 static const std::string key { "01234567890123456789012345678901" };
-static const std::string iv { "01234567890123456" };
-
-static const char* expect_data =
+static const std::string iv { "0123456789012345" };
+static const std::string expect = {
   "\xE0\x6F\x63\xA7\x11\xE8\xB7\xAA\x9F\x94\x40\x10\x7D\x46\x80\xA1"
   "\x17\x99\x43\x80\xEA\x31\xD2\xA2\x99\xB9\x53\x02\xD4\x39\xB9\x70"
-  "\x2C\x8E\x65\xA9\x92\x36\xEC\x92\x07\x04\x91\x5C\xF1\xA9\x8A\x44";
-static const size_t expect_size = 48;
+  "\x2C\x8E\x65\xA9\x92\x36\xEC\x92\x07\x04\x91\x5C\xF1\xA9\x8A\x44"
+};
 
-void test1() {
+void test_encryptor1() {
   std::vector<char> buffer(data.size() + 16);
   brigid::encryptor encryptor { "aes-256-cbc", key.data(), key.size(), iv.data(), iv.size() };
   size_t result = encryptor.update(data.data(), data.size(), buffer.data(), buffer.size(), true);
 
-  assert(result == expect_size);
+  BRIGID_CHECK(result == expect.size());
   buffer.resize(result);
-  assert(std::equal(buffer.begin(), buffer.end(), expect_data));
-
-  std::cout << "test1 ok\n";
+  BRIGID_CHECK(std::equal(buffer.begin(), buffer.end(), expect.begin()));
 }
 
-void test2() {
+brigid::make_test_case make_test_encryptor1 { "test_encryptor1", test_encryptor1 };
+
+void test_encryptor2() {
   std::vector<char> buffer(data.size() + 16);
   brigid::encryptor encryptor { "aes-256-cbc", key.data(), key.size(), iv.data(), iv.size() };
 
-  size_t result = 0;
-
-  size_t i = 0;
-  size_t j = 0;
-  for (; i < data.size(); i += 16) {
-    j += result;
-  }
-
-  result = encryptor.update(data.data(), 16, buffer.data(), buffer.size(), false);
-  assert(result == 16);
+  size_t result = encryptor.update(data.data(), 16, buffer.data(), buffer.size(), false);
+  BRIGID_CHECK(result == expect.size() / 3);
 
   result = encryptor.update(data.data() + 16, 16, buffer.data() + 16, buffer.size() - 16, false);
-  assert(result == 16);
+  BRIGID_CHECK(result == expect.size() / 3);
 
   result = encryptor.update(data.data() + 32, data.size() - 32, buffer.data() + 32, buffer.size() - 32, true);
-  assert(result == 16);
+  BRIGID_CHECK(result == expect.size() / 3);
 
-  buffer.resize(48);
-  assert(std::equal(buffer.begin(), buffer.end(), expect_data));
-
-  std::cout << "test2 ok\n";
+  buffer.resize(expect.size());
+  BRIGID_CHECK(std::equal(buffer.begin(), buffer.end(), expect.begin()));
 }
 
-int main(int, char*[]) {
-  try {
-    test1();
-    test2();
-    return 0;
-  } catch (std::exception& e) {
-    std::cerr << "caught exception " << e.what() << "\n";
-    return 1;
-  }
-}
+brigid::make_test_case make_test_encryptor2 { "test_encryptor2", test_encryptor2 };
