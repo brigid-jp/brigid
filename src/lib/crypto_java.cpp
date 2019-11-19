@@ -99,9 +99,9 @@ namespace brigid {
       return that;
     }
 
-    class encryptor_java_impl : public encryptor_impl {
+    class aes_encryptor_impl : public encryptor_impl {
     public:
-      encryptor_java_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
+      aes_encryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
         : Encryptor_(jni_make_global_ref<jclass>()),
           Encryptor_instance_(jni_make_global_ref<jobject>()),
           Encryptor_update_(nullptr) {
@@ -156,7 +156,7 @@ namespace brigid {
       if (iv_size != 16) {
         throw std::runtime_error("invalid iv size");
       }
-      return std::unique_ptr<encryptor_impl>(new encryptor_java_impl(key_data, key_size, iv_data, iv_size));
+      return std::unique_ptr<encryptor_impl>(new aes_encryptor_impl(key_data, key_size, iv_data, iv_size));
     } else {
       throw std::runtime_error("unsupported cipher");
     }
