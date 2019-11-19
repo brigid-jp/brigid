@@ -2,6 +2,8 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include "test.hpp"
+
 #include <stddef.h>
 #include <assert.h>
 
@@ -11,10 +13,6 @@
 #include <vector>
 
 #include <brigid/crypto.hpp>
-
-#ifdef _MSC_VER
-#pragma comment(lib, "bcrypt.lib")
-#endif
 
 static const std::string data { "The quick brown fox jumps over the lazy dog" };
 static const std::string key { "01234567890123456789012345678901" };
@@ -31,12 +29,12 @@ void test1() {
   brigid::encryptor encryptor { "aes-256-cbc", key.data(), key.size(), iv.data(), iv.size() };
   size_t result = encryptor.update(data.data(), data.size(), buffer.data(), buffer.size(), true);
 
-  assert(result == expect_size);
+  BRIGID_CHECK(result == expect_size);
   buffer.resize(result);
-  assert(std::equal(buffer.begin(), buffer.end(), expect_data));
-
-  std::cout << "test1 ok\n";
+  BRIGID_CHECK(std::equal(buffer.begin(), buffer.end(), expect_data));
 }
+
+brigid::test_case add_test1 { "test1", test1 };
 
 void test2() {
   std::vector<char> buffer(data.size() + 16);
@@ -51,27 +49,16 @@ void test2() {
   }
 
   result = encryptor.update(data.data(), 16, buffer.data(), buffer.size(), false);
-  assert(result == 16);
+  BRIGID_CHECK(result == 16);
 
   result = encryptor.update(data.data() + 16, 16, buffer.data() + 16, buffer.size() - 16, false);
-  assert(result == 16);
+  BRIGID_CHECK(result == 16);
 
   result = encryptor.update(data.data() + 32, data.size() - 32, buffer.data() + 32, buffer.size() - 32, true);
-  assert(result == 16);
+  BRIGID_CHECK(result == 16);
 
   buffer.resize(48);
-  assert(std::equal(buffer.begin(), buffer.end(), expect_data));
-
-  std::cout << "test2 ok\n";
+  BRIGID_CHECK(std::equal(buffer.begin(), buffer.end(), expect_data));
 }
 
-int main(int, char*[]) {
-  try {
-    test1();
-    test2();
-    return 0;
-  } catch (std::exception& e) {
-    std::cerr << "caught exception " << e.what() << "\n";
-    return 1;
-  }
-}
+brigid::test_case add_test2 { "test2", test2 };

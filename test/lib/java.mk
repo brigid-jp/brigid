@@ -8,6 +8,8 @@ CXXFLAGS = -Wall -W -O2 -std=c++11
 LDFLAGS = -shared
 
 OBJS = \
+	test.o \
+	test_encryptor.o \
 	jnitest.o
 TARGET = libjnitest.dylib
 

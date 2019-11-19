@@ -7,9 +7,9 @@ public class JNITest {
     System.loadLibrary("jnitest");
   }
 
-  private native static void test();
+  private native static int test();
 
   public static void main(String[] args) {
-    test();
+    System.exit(test());
   }
 }

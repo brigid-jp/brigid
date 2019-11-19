@@ -5,12 +5,15 @@
 TESTS = $(check_PROGRAMS)
 
 check_PROGRAMS = \
-	test_encryptor.exe
+	test.exe
 
-test_encryptor_exe_CPPFLAGS = -I$(top_srcdir)/include
-test_encryptor_exe_LDADD = $(top_srcdir)/src/lib/libbrigid.la
-test_encryptor_exe_SOURCES = test_encryptor.cpp
+test_exe_CPPFLAGS = -I$(top_srcdir)/include
+test_exe_LDADD = $(top_srcdir)/src/lib/libbrigid.la
+test_exe_SOURCES = \
+	test.cpp \
+	test_encryptor.cpp \
+	test_main.cpp
 
 if CRYPTO_OPENSSL
-test_encryptor_exe_LDADD += $(OPENSSL_LIBS)
+test_exe_LDADD += $(OPENSSL_LIBS)
 endif
