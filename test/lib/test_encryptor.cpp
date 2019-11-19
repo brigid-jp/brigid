@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <vector>
 
+// https://wiki.openssl.org/index.php/EVP_Symmetric_Encryption_and_Decryption
 static const std::string data = "The quick brown fox jumps over the lazy dog";
 static const std::string key = "01234567890123456789012345678901";
 static const std::string iv = "0123456789012345";
