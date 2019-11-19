@@ -3,6 +3,7 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/crypto.hpp>
+#include <brigid/type_traits.hpp>
 
 #include <jni.h>
 
@@ -11,8 +12,6 @@ extern "C" void* SDL_AndroidGetJNIEnv();
 #include <memory>
 #include <stdexcept>
 #include <vector>
-
-#include <brigid/type_traits.hpp>
 
 namespace brigid {
   namespace {
