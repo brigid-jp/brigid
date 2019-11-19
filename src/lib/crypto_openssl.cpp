@@ -26,12 +26,16 @@ namespace brigid {
       return result;
     }
 
-    using cipher_ctx_pointer_t = std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)>;
+    using cipher_ctx_t = std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)>;
 
-    class aes_256_cbc_encryptor_impl : public encryptor_impl {
+    cipher_ctx_t make_cipher_ctx(EVP_CIPHER_CTX* ctx) {
+      return { ctx, &EVP_CIPHER_CTX_free };
+    }
+
+    class aes_encryptor_impl : public encryptor_impl {
     public:
-      aes_256_cbc_encryptor_impl(const char* key_data, size_t, const char* iv_data, size_t)
-        : ctx_(check(EVP_CIPHER_CTX_new()), EVP_CIPHER_CTX_free) {
+      aes_encryptor_impl(const char* key_data, const char* iv_data)
+        : ctx_(make_cipher_ctx(check(EVP_CIPHER_CTX_new()))) {
         check(EVP_EncryptInit_ex(ctx_.get(), EVP_aes_256_cbc(), nullptr, reinterpret_cast<const unsigned char*>(key_data), reinterpret_cast<const unsigned char*>(iv_data)));
       }
 
@@ -51,13 +55,19 @@ namespace brigid {
       }
 
     private:
-      cipher_ctx_pointer_t ctx_;
+      cipher_ctx_t ctx_;
     };
   }
 
   std::unique_ptr<encryptor_impl> make_encryptor_impl(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
     if (cipher == "aes-256-cbc") {
-      return std::unique_ptr<encryptor_impl>(new aes_256_cbc_encryptor_impl(key_data, key_size, iv_data, iv_size));
+      if (key_size != 32) {
+        throw std::runtime_error("invalid key size");
+      }
+      if (iv_size != 16) {
+        throw std::runtime_error("invalid iv size");
+      }
+      return std::unique_ptr<encryptor_impl>(new aes_encryptor_impl(key_data, iv_data));
     } else {
       throw std::runtime_error("unsupported cipher");
     }

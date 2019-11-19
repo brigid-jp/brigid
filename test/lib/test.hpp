@@ -5,6 +5,7 @@
 #ifndef BRIGID_TEST_HPP
 #define BRIGID_TEST_HPP
 
+#include <functional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
