@@ -34,9 +34,9 @@ namespace brigid {
 
     class aes_encryptor_impl : public encryptor_impl {
     public:
-      aes_encryptor_impl(const char* key_data, const char* iv_data)
+      aes_encryptor_impl(const EVP_CIPHER* cipher, const char* key_data, const char* iv_data)
         : ctx_(make_cipher_ctx(check(EVP_CIPHER_CTX_new()))) {
-        check(EVP_EncryptInit_ex(ctx_.get(), EVP_aes_256_cbc(), nullptr, reinterpret_cast<const unsigned char*>(key_data), reinterpret_cast<const unsigned char*>(iv_data)));
+        check(EVP_EncryptInit_ex(ctx_.get(), cipher, nullptr, reinterpret_cast<const unsigned char*>(key_data), reinterpret_cast<const unsigned char*>(iv_data)));
       }
 
       virtual size_t block_bytes() const {
@@ -59,15 +59,13 @@ namespace brigid {
     };
   }
 
-  std::unique_ptr<encryptor_impl> make_encryptor_impl(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-    if (cipher == "aes-256-cbc") {
-      if (key_size != 32) {
-        throw std::runtime_error("invalid key size");
-      }
-      if (iv_size != 16) {
-        throw std::runtime_error("invalid iv size");
-      }
-      return std::unique_ptr<encryptor_impl>(new aes_encryptor_impl(key_data, iv_data));
+  std::unique_ptr<encryptor_impl> make_encryptor_impl(const std::string& cipher, const char* key_data, size_t, const char* iv_data, size_t) {
+    if (cipher == "aes-128-cbc") {
+      return std::unique_ptr<encryptor_impl>(new aes_encryptor_impl(EVP_aes_128_cbc(), key_data, iv_data));
+    } else if (cipher == "aes-192-cbc") {
+      return std::unique_ptr<encryptor_impl>(new aes_encryptor_impl(EVP_aes_192_cbc(), key_data, iv_data));
+    } else if (cipher == "aes-256-cbc") {
+      return std::unique_ptr<encryptor_impl>(new aes_encryptor_impl(EVP_aes_256_cbc(), key_data, iv_data));
     } else {
       throw std::runtime_error("unsupported cipher");
     }
