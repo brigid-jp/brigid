@@ -1,5 +1,9 @@
 #! /bin/sh -e
 
+# Copyright (c) 2019 <dev@brigid.jp>
+# This software is released under the MIT License.
+# https://opensource.org/licenses/mit-license.php
+
 # https://wiki.openssl.org/index.php/EVP_Symmetric_Encryption_and_Decryption
 plain="The quick brown fox jumps over the lazy dog"
 # "0123456789012345"
