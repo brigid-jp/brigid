@@ -29,6 +29,10 @@ namespace brigid {
   int run_test_cases();
 }
 
+#ifdef _MSC_VER
+#define BRIGID_CHECK(expression) brigid::check_impl((expression), #expression, __FILE__, __LINE__, __FUNCTION__)
+#else
 #define BRIGID_CHECK(expression) brigid::check_impl((expression), #expression, __FILE__, __LINE__, __func__)
+#endif
 
 #endif
