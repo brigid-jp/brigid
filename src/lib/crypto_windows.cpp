@@ -3,17 +3,14 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/crypto.hpp>
+#include <brigid/type_traits.hpp>
 
 #include <windows.h>
 #include <bcrypt.h>
 
-#pragma comment(lib, "bcrypt.lib")
-
-#include <string.h>
-
+#include <algorithm>
 #include <sstream>
 #include <stdexcept>
-#include <type_traits>
 #include <vector>
 
 namespace brigid {
@@ -30,33 +27,62 @@ namespace brigid {
       BCryptCloseAlgorithmProvider(handle, 0);
     }
 
-    using algorithm_provider_pointer_t = std::unique_ptr<typename std::remove_pointer<BCRYPT_ALG_HANDLE>::type, decltype(&close_algorithm_provider)>;
-    using key_pointer_t = std::unique_ptr<typename std::remove_pointer<BCRYPT_KEY_HANDLE>::type, decltype(&BCryptDestroyKey)>;
+    using alg_handle_t = std::unique_ptr<remove_pointer_t<BCRYPT_ALG_HANDLE>, decltype(&close_algorithm_provider)>;
+
+    alg_handle_t make_alg_handle(BCRYPT_ALG_HANDLE handle = nullptr) {
+      return alg_handle_t(handle, &close_algorithm_provider);
+    }
+
+    using key_handle_t = std::unique_ptr<remove_pointer_t<BCRYPT_KEY_HANDLE>, decltype(&BCryptDestroyKey)>;
+
+    key_handle_t make_key_handle(BCRYPT_KEY_HANDLE handle = nullptr) {
+      return key_handle_t(handle, &BCryptDestroyKey);
+    }
 
     class aes_256_cbc_encryptor_impl : public encryptor_impl {
     public:
-      aes_256_cbc_encryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t)
-        : alg_(nullptr, &close_algorithm_provider),
-          key_(nullptr, &BCryptDestroyKey),
-          iv_(16) {
-
+      aes_256_cbc_encryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
+        : alg_(make_alg_handle()),
+          key_(make_key_handle()),
+          iv_(iv_size) {
         BCRYPT_ALG_HANDLE alg = nullptr;
-        check(BCryptOpenAlgorithmProvider(&alg, BCRYPT_AES_ALGORITHM, nullptr, 0));
-        alg_ = algorithm_provider_pointer_t(alg, &close_algorithm_provider);
+        check(BCryptOpenAlgorithmProvider(
+            &alg,
+            BCRYPT_AES_ALGORITHM,
+            nullptr,
+            0));
+        alg_ = make_alg_handle(alg);
 
-        check(BCryptSetProperty(alg_.get(), BCRYPT_CHAINING_MODE, reinterpret_cast<PUCHAR>(BCRYPT_CHAIN_MODE_CBC), sizeof(BCRYPT_CHAIN_MODE_CBC), 0));
+        check(BCryptSetProperty(
+            alg_.get(),
+            BCRYPT_CHAINING_MODE,
+            reinterpret_cast<PUCHAR>(BCRYPT_CHAIN_MODE_CBC),
+            sizeof(BCRYPT_CHAIN_MODE_CBC),
+            0));
 
         DWORD size = 0;
         DWORD result = 0;
-
-        check(BCryptGetProperty(alg_.get(), BCRYPT_OBJECT_LENGTH, reinterpret_cast<PUCHAR>(&size), sizeof(size), &result, 0));
-        key_storage_.resize(size);
+        check(BCryptGetProperty(
+            alg_.get(),
+            BCRYPT_OBJECT_LENGTH,
+            reinterpret_cast<PUCHAR>(&size),
+            sizeof(size),
+            &result,
+            0));
+        buffer_.resize(size);
 
         BCRYPT_KEY_HANDLE key = nullptr;
-        check(BCryptGenerateSymmetricKey(alg_.get(), &key, key_storage_.data(), key_storage_.size(), reinterpret_cast<PUCHAR>(const_cast<char*>(key_data)), key_size, 0));
-        key_ = key_pointer_t(key, &BCryptDestroyKey);
+        check(BCryptGenerateSymmetricKey(
+            alg_.get(),
+            &key,
+            buffer_.data(),
+            static_cast<ULONG>(buffer_.size()),
+            reinterpret_cast<PUCHAR>(const_cast<char*>(key_data)),
+            static_cast<ULONG>(key_size),
+            0));
+        key_ = make_key_handle(key);
 
-        memmove(iv_.data(), iv_data, 16);
+        std::copy(iv_data, iv_data + iv_size, iv_.begin());
       }
 
       virtual size_t block_bytes() const {
@@ -68,21 +94,21 @@ namespace brigid {
         check(BCryptEncrypt(
             key_.get(),
             reinterpret_cast<PUCHAR>(const_cast<char*>(in_data)),
-            in_size,
+            static_cast<ULONG>(in_size),
             nullptr,
             iv_.data(),
-            iv_.size(),
+            static_cast<ULONG>(iv_.size()),
             reinterpret_cast<PUCHAR>(out_data),
-            out_size,
+            static_cast<ULONG>(out_size),
             &result,
             padding ? BCRYPT_BLOCK_PADDING : 0));
         return result;
       }
 
     private:
-      algorithm_provider_pointer_t alg_;
-      std::vector<UCHAR> key_storage_;
-      key_pointer_t key_;
+      alg_handle_t alg_;
+      std::vector<UCHAR> buffer_;
+      key_handle_t key_;
       std::vector<UCHAR> iv_;
     };
   }
