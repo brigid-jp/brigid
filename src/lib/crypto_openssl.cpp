@@ -29,7 +29,7 @@ namespace brigid {
     using cipher_ctx_t = std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)>;
 
     cipher_ctx_t make_cipher_ctx(EVP_CIPHER_CTX* ctx) {
-      return { ctx, &EVP_CIPHER_CTX_free };
+      return cipher_ctx_t(ctx, &EVP_CIPHER_CTX_free);
     }
 
     class aes_encryptor_impl : public encryptor_impl {
