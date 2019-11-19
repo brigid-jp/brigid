@@ -1,12 +1,23 @@
 package jp.brigid;
 
+import java.nio.ByteBuffer;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
 public class Encryptor {
-  public Encryptor(String cipher, byte[] key, byte[] iv) {
-    System.out.println("Encryptor(" + cipher + ")");
+  public Encryptor(byte[] key, byte[] iv) throws Exception{
+    cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+    cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv));
   }
 
-  public long update(byte[] in, byte[] out, boolean padding) {
-    System.out.println("Encryptor.update()");
-    return 0;
+  public int update(ByteBuffer in, ByteBuffer out, boolean padding) throws Exception {
+    if (padding) {
+      return cipher.doFinal(in, out);
+    } else {
+      return cipher.update(in, out);
+    }
   }
+
+  private Cipher cipher;
 }

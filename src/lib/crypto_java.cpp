@@ -8,9 +8,9 @@
 
 extern "C" void* SDL_AndroidGetJNIEnv();
 
-#include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <vector>
 
 #include <brigid/type_traits.hpp>
 
@@ -20,122 +20,111 @@ namespace brigid {
       return static_cast<JNIEnv*>(SDL_AndroidGetJNIEnv());
     }
 
-    struct global_ref_deleter {
-      JNIEnv* env;
-
-      void operator()(jobject that) const {
-        std::cout << "deleter " << env << " " << that << "\n";
-        env->DeleteGlobalRef(that);
-      }
-    };
-
-    template <class T>
-    using global_ref_t = std::unique_ptr<remove_pointer_t<T>, global_ref_deleter>;
-
-    template <class T>
-    global_ref_t<T> make_global_ref(T that) {
-      return global_ref_t<T> { that, global_ref_deleter { jni_env() } };
+    void jni_delete_local_ref(jobject that) {
+      jni_env()->DeleteLocalRef(that);
     }
 
-    struct local_ref_deleter {
-      JNIEnv* env;
-
-      void operator()(jobject that) const {
-        env->DeleteLocalRef(that);
-      }
-    };
+    template <class T>
+    using jni_local_ref_t = std::unique_ptr<remove_pointer_t<T>, decltype(&jni_delete_local_ref)>;
 
     template <class T>
-    using local_ref_t = std::unique_ptr<remove_pointer_t<T>, local_ref_deleter>;
-
-    template <class T>
-    local_ref_t<T> make_local_ref(T that) {
-      return local_ref_t<T>(that, local_ref_deleter{ jni_env() });
+    jni_local_ref_t<T> jni_make_local_ref(T that = nullptr) {
+      return { that, &jni_delete_local_ref };
     }
 
-    struct string_utf_chars_deleter {
-      JNIEnv* env;
-      jstring self;
+    void jni_delete_global_ref(jobject that) {
+      jni_env()->DeleteGlobalRef(that);
+    }
 
-      void operator()(const char* that) const {
-        env->ReleaseStringUTFChars(self, that);
-      }
-    };
+    template <class T>
+    using jni_global_ref_t = std::unique_ptr<remove_pointer_t<T>, decltype(&jni_delete_global_ref)>;
 
-    using string_utf_chars_t = std::unique_ptr<const char, string_utf_chars_deleter>;
+    template <class T>
+    jni_global_ref_t<T> jni_make_global_ref(T that = nullptr) {
+      return { that, &jni_delete_global_ref };
+    }
 
-    void jni_check_exception() {
+    void jni_check() {
+      static const char* what = "java exception";
+
       JNIEnv* env = jni_env();
+      if (!env->ExceptionCheck()) {
+        return;
+      }
+      jni_local_ref_t<jthrowable> exception = jni_make_local_ref(env->ExceptionOccurred());
+      env->ExceptionClear();
+
+      jni_local_ref_t<jclass> Throwable = jni_make_local_ref(env->FindClass("java/lang/Throwable"));
       if (env->ExceptionCheck()) {
-        local_ref_t<jthrowable> e = make_local_ref(env->ExceptionOccurred());
         env->ExceptionClear();
+        Throwable.reset();
+      }
+      if (!Throwable) {
+        throw std::runtime_error(what);
+      }
 
-        local_ref_t<jclass> Throwable = make_local_ref(env->FindClass("java/lang/Throwable"));
-        if (env->ExceptionCheck()) {
-          env->ExceptionClear();
-          Throwable.reset();
-        }
+      jmethodID Throwable_toString = env->GetMethodID(Throwable.get(), "toString", "()Ljava/lang/String;");
+      if (env->ExceptionCheck()) {
+        env->ExceptionClear();
+        Throwable_toString = nullptr;
+      }
+      if (!Throwable_toString) {
+        throw std::runtime_error(what);
+      }
 
-        jmethodID Throwable_toString = nullptr;
-        if (Throwable) {
-          Throwable_toString = env->GetMethodID(Throwable.get(), "toString", "()Ljava/lang/String;");
-          if (env->ExceptionCheck()) {
-            env->ExceptionClear();
-            Throwable_toString = nullptr;
-          }
-        }
+      jni_local_ref_t<jstring> message = jni_make_local_ref(reinterpret_cast<jstring>(env->CallObjectMethod(exception.get(), Throwable_toString)));
+      if (env->ExceptionCheck()) {
+        env->ExceptionClear();
+        message.reset();
+      }
+      if (!message) {
+        throw std::runtime_error(what);
+      }
 
-        if (Throwable_toString) {
-          local_ref_t<jstring> result = make_local_ref(reinterpret_cast<jstring>(env->CallObjectMethod(e.get(), Throwable_toString)));
-          if (env->ExceptionCheck()) {
-            env->ExceptionClear();
-            result.reset();
-          }
-          if (result) {
-            string_utf_chars_t data { env->GetStringUTFChars(result.get(), nullptr), string_utf_chars_deleter { env, result.get() } };
-            if (env->ExceptionCheck()) {
-              env->ExceptionClear();
-              data.reset();
-            }
-            if (data) {
-              jsize size = env->GetStringUTFLength(result.get());
-              if (env->ExceptionCheck()) {
-                env->ExceptionClear();
-              } else {
-                throw std::runtime_error("java exception " + std::string(data.get(), data.get() + size));
-              }
-            }
-          }
-        }
+      std::vector<char> buffer(env->GetStringUTFLength(message.get()));
+      env->GetStringUTFRegion(message.get(), 0, env->GetStringLength(message.get()), buffer.data());
+      if (env->ExceptionCheck()) {
+        env->ExceptionClear();
+        throw std::runtime_error(what);
+      }
+
+      throw std::runtime_error("java exception " + std::string(buffer.begin(), buffer.end()));
+    }
+
+    template <class T>
+    T* jni_check(T* that) {
+      jni_check();
+      if (!that) {
         throw std::runtime_error("java exception");
       }
+      return that;
     }
 
     class encryptor_java_impl : public encryptor_impl {
     public:
-      encryptor_java_impl(const char* cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
-        : Encryptor_(make_global_ref<jclass>(nullptr)),
-          Encryptor_constructor_(nullptr),
+      encryptor_java_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
+        : Encryptor_(jni_make_global_ref<jclass>()),
+          Encryptor_instance_(jni_make_global_ref<jobject>()),
           Encryptor_update_(nullptr) {
         JNIEnv* env = jni_env();
-        jclass Encryptor = env->FindClass("jp/brigid/Encryptor");
-        jni_check_exception();
-        if (!Encryptor) {
-          throw std::runtime_error("cannot FindClass");
-        }
-        std::cout << "lEncryptor " << Encryptor << "\n";
-        jclass gEncryptor = reinterpret_cast<jclass>(env->NewGlobalRef(Encryptor));
-        std::cout << "gEncryptor " << gEncryptor << "\n";
-        if (!gEncryptor) {
-          throw std::runtime_error("cannot NewGlobalRef");
-        }
-        Encryptor_ = make_global_ref(gEncryptor);
+        env->EnsureLocalCapacity(256);
 
-        Encryptor_constructor_ = env->GetMethodID(Encryptor_.get(), "<init>", "(Ljava/lang/String;[B[B)V");
-        jni_check_exception();
+        jni_local_ref_t<jclass> Encryptor = jni_make_local_ref(jni_check(env->FindClass("jp/brigid/Encryptor")));
+        Encryptor_ = jni_make_global_ref(jni_check(reinterpret_cast<jclass>(env->NewGlobalRef(Encryptor.get()))));
+        Encryptor_update_ = jni_check(env->GetMethodID(Encryptor_.get(), "update", "(Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Z)I"));
 
-        Encryptor_update_ = env->GetMethodID(Encryptor_.get(), "update", "([B[BZ)J");
-        jni_check_exception();
+        jmethodID Encryptor_init = jni_check(env->GetMethodID(Encryptor_.get(), "<init>", "([B[B)V"));
+
+        jni_local_ref_t<jbyteArray> key = jni_make_local_ref(jni_check(env->NewByteArray(key_size)));
+        env->SetByteArrayRegion(key.get(), 0, key_size, reinterpret_cast<const jbyte*>(key_data));
+        jni_check();
+
+        jni_local_ref_t<jbyteArray> iv = jni_make_local_ref(jni_check(env->NewByteArray(iv_size)));
+        env->SetByteArrayRegion(iv.get(), 0, iv_size, reinterpret_cast<const jbyte*>(iv_data));
+        jni_check();
+
+        jni_local_ref_t<jobject> instance = jni_make_local_ref(jni_check(env->NewObject(Encryptor_.get(), Encryptor_init, key.get(), iv.get())));
+        Encryptor_instance_ = jni_make_global_ref(jni_check(env->NewGlobalRef(instance.get())));
       }
 
       virtual size_t block_bytes() const {
@@ -143,19 +132,28 @@ namespace brigid {
       }
 
       virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
-        return 0;
+        JNIEnv* env = jni_env();
+        env->EnsureLocalCapacity(256);
+
+        jni_local_ref_t<jobject> in = jni_make_local_ref(jni_check(env->NewDirectByteBuffer(const_cast<char*>(in_data), in_size)));
+        jni_local_ref_t<jobject> out = jni_make_local_ref(jni_check(env->NewDirectByteBuffer(out_data, out_size)));
+
+        jint result = env->CallIntMethod(Encryptor_instance_.get(), Encryptor_update_, in.get(), out.get(), padding ? JNI_TRUE : JNI_FALSE);
+        jni_check();
+
+        return result;
       }
 
     private:
-      global_ref_t<jclass> Encryptor_;
-      jmethodID Encryptor_constructor_;
+      jni_global_ref_t<jclass> Encryptor_;
+      jni_global_ref_t<jobject> Encryptor_instance_;
       jmethodID Encryptor_update_;
     };
   }
 
   std::unique_ptr<encryptor_impl> make_encryptor_impl(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
     if (cipher == "aes-256-cbc") {
-      return std::unique_ptr<encryptor_impl>(new encryptor_java_impl("AES/CBC/PKCS7Padding", key_data, key_size, iv_data, iv_size));
+      return std::unique_ptr<encryptor_impl>(new encryptor_java_impl(key_data, key_size, iv_data, iv_size));
     } else {
       throw std::runtime_error("unsupported cipher");
     }

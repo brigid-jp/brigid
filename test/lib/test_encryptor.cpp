@@ -18,7 +18,7 @@
 
 static const std::string data { "The quick brown fox jumps over the lazy dog" };
 static const std::string key { "01234567890123456789012345678901" };
-static const std::string iv { "01234567890123456" };
+static const std::string iv { "0123456789012345" };
 
 static const char* expect_data =
   "\xE0\x6F\x63\xA7\x11\xE8\xB7\xAA\x9F\x94\x40\x10\x7D\x46\x80\xA1"

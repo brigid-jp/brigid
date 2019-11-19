@@ -17,7 +17,7 @@ clean::
 	rm -f *.o JNITest.h JNITest.class $(TARGET)
 
 check::
-	java -classpath ../../src/java:. -Djava.library.path=. -Xcheck:jni -verbose:jni JNITest
+	java -classpath ../../src/java:. -Djava.library.path=. -Xcheck:jni JNITest
 
 JNITest.h: JNITest.java
 	javac -h . JNITest.java
