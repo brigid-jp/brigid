@@ -12,7 +12,9 @@ namespace brigid {
   namespace {
     class test_case_impl {
     public:
-      test_case_impl(const std::string& name, std::function<void()> function) : name_(name), function_(function) {}
+      test_case_impl(const std::string& name, std::function<void()> function)
+        : name_(name),
+          function_(function) {}
 
       bool operator()() const {
         try {
