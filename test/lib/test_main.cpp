@@ -5,6 +5,5 @@
 #include "test.hpp"
 
 int main(int, char*[]) {
-  return brigid::run_test_suite();
+  return brigid::run_test_cases();
 }
-

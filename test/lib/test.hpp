@@ -11,23 +11,23 @@
 
 namespace brigid {
   template <class T>
-  T check_impl(T result, const char* file, int line, const char* function) {
+  T check_impl(T result, const char* expression, const char* file, int line, const char* function) {
     if (!result) {
       std::ostringstream out;
-      out << "check failed at " << file << ":" << line << " in " << function;
+      out << "check failed (" << expression << ") at " << file << ":" << line << " in " << function;
       throw std::runtime_error(out.str());
     }
     return result;
   }
 
-  struct test_case {
+  struct make_test_case {
   public:
-    test_case(const std::string&, std::function<void()>);
+    make_test_case(const std::string&, std::function<void()>);
   };
 
-  int run_test_suite();
+  int run_test_cases();
 }
 
-#define BRIGID_CHECK(expression) brigid::check_impl((expression), __FILE__, __LINE__, __func__)
+#define BRIGID_CHECK(expression) brigid::check_impl((expression), #expression, __FILE__, __LINE__, __func__)
 
 #endif
