@@ -114,13 +114,7 @@ namespace brigid {
   }
 
   std::unique_ptr<encryptor_impl> make_encryptor_impl(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-    if (cipher == "aes-256-cbc") {
-      if (key_size != 32) {
-        throw std::runtime_error("invalid key size");
-      }
-      if (iv_size != 16) {
-        throw std::runtime_error("invalid iv size");
-      }
+    if (cipher == "aes-128-cbc" || cipher == "aes-192-cbc" || cipher == "aes-256-cbc") {
       return std::unique_ptr<encryptor_impl>(new aes_encryptor_impl(key_data, key_size, iv_data, iv_size));
     } else {
       throw std::runtime_error("unsupported cipher");
