@@ -22,5 +22,5 @@ extern "C" void* SDL_AndroidGetJNIEnv() {
 
 JNIEXPORT jint JNICALL Java_JNITest_test(JNIEnv* env, jclass) {
   access_jnienv(env);
-  return brigid::run_test_suite();
+  return brigid::run_test_cases();
 }

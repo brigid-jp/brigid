@@ -12,7 +12,9 @@ namespace brigid {
   namespace {
     class test_case_impl {
     public:
-      test_case_impl(const std::string& name, std::function<void()> function) : name_(name), function_(function) {}
+      test_case_impl(const std::string& name, std::function<void()> function)
+        : name_(name),
+          function_(function) {}
 
       bool operator()() const {
         try {
@@ -40,18 +42,16 @@ namespace brigid {
   }
 
   int run_test_cases() {
-    size_t pass_count = 0;
-    size_t fail_count = 0;
+    size_t failed = 0;
 
     for (const auto& test_case : test_cases) {
       if (test_case()) {
-        ++pass_count;
       } else {
-        ++fail_count;
+        ++failed;
       }
     }
 
-    if (fail_count == 0) {
+    if (failed == 0) {
       return 0;
     } else {
       return 1;

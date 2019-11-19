@@ -23,7 +23,7 @@ namespace brigid {
     using cryptor_ref_t = std::unique_ptr<remove_pointer_t<CCCryptorRef>, decltype(&CCCryptorRelease)>;
 
     cryptor_ref_t make_cryptor_ref(CCCryptorRef cryptor = nullptr) {
-      return { cryptor, &CCCryptorRelease };
+      return cryptor_ref_t(cryptor, &CCCryptorRelease);
     }
 
     class aes_encryptor_impl : public encryptor_impl {
