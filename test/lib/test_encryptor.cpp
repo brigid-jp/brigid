@@ -66,7 +66,7 @@ void test_no_such_cipher() {
 brigid::make_test_case make_test1_128("encryptor aes-128-cbc (1)", [](){ test1("aes-128-cbc", key128, expect128); });
 brigid::make_test_case make_test2_128("encryptor aes-128-cbc (2)", [](){ test2("aes-128-cbc", key128, expect128); });
 brigid::make_test_case make_test1_192("encryptor aes-192-cbc (1)", [](){ test1("aes-192-cbc", key192, expect192); });
-brigid::make_test_case make_test2_("encryptor aes-192-cbc (2)", [](){ test2("aes-192-cbc", key192, expect192); });
+brigid::make_test_case make_test2_192("encryptor aes-192-cbc (2)", [](){ test2("aes-192-cbc", key192, expect192); });
 brigid::make_test_case make_test1_256("encryptor aes-256-cbc (1)", [](){ test1("aes-256-cbc", key256, expect256); });
 brigid::make_test_case make_test2_256("encryptor aes-256-cbc (2)", [](){ test2("aes-256-cbc", key256, expect256); });
 brigid::make_test_case make_test_no_such_cipher("encryptor no-such-cipher", &test_no_such_cipher);
