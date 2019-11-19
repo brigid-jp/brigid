@@ -39,9 +39,9 @@ namespace brigid {
       return key_handle_t(handle, &BCryptDestroyKey);
     }
 
-    class aes_256_cbc_encryptor_impl : public encryptor_impl {
+    class aes_encryptor_impl : public encryptor_impl {
     public:
-      aes_256_cbc_encryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
+      aes_encryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
         : alg_(make_alg_handle()),
           key_(make_key_handle()),
           iv_(iv_size) {
@@ -115,7 +115,13 @@ namespace brigid {
 
   std::unique_ptr<encryptor_impl> make_encryptor_impl(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
     if (cipher == "aes-256-cbc") {
-      return std::unique_ptr<encryptor_impl>(new aes_256_cbc_encryptor_impl(key_data, key_size, iv_data, iv_size));
+      if (key_size != 32) {
+        throw std::runtime_error("invalid key size");
+      }
+      if (iv_size != 16) {
+        throw std::runtime_error("invalid iv size");
+      }
+      return std::unique_ptr<encryptor_impl>(new aes_encryptor_impl(key_data, key_size, iv_data, iv_size));
     } else {
       throw std::runtime_error("unsupported cipher");
     }
