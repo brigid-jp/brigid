@@ -16,14 +16,26 @@ namespace brigid {
     virtual size_t update(const char*, size_t, char*, size_t, bool) = 0;
   };
 
-  std::unique_ptr<encryptor_impl> make_encryptor_impl(const std::string&, const char*, size_t, const char*, size_t);
-
   class encryptor {
   public:
     encryptor(const std::string&, const char*, size_t, const char*, size_t);
     size_t update(const char*, size_t, char*, size_t, bool);
   private:
     std::unique_ptr<encryptor_impl> impl_;
+  };
+
+  class decryptor_impl {
+  public:
+    virtual ~decryptor_impl() = 0;
+    virtual size_t update(const char*, size_t, char*, size_t, bool) = 0;
+  };
+
+  class decryptor {
+  public:
+    decryptor(const std::string&, const char*, size_t, const char*, size_t);
+    size_t update(const char*, size_t, char*, size_t, bool);
+  private:
+    std::unique_ptr<decryptor_impl> impl_;
   };
 }
 
