@@ -8,7 +8,7 @@ LDFLAGS =
 
 OBJS = \
 	main.o
-TARGET = exp
+TARGET = test.exe
 
 all: $(TARGET)
 
@@ -16,7 +16,10 @@ clean:
 	rm -f $(OBJS) $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CXX) $(LDFLAGS) $^ -o $@
+	clang++ $(LDFLAGS) $^ -o $@
 
 .cpp.o:
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $<
+
+.mm.o:
+	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $<
