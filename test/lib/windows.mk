@@ -9,10 +9,14 @@ OBJS = \
 
 TARGET = test.exe
 
-all: $(TARGET)
+all: all-recursive $(TARGET)
+
+all-recursive:
+	cd ..\..\src\lib && $(MAKE) /f windows.mk all
 
 clean:
 	del $(OBJS) $(TARGET)
+	cd ..\..\src\lib && $(MAKE) /f windows.mk clean
 
 check:
 	$(TARGET)
