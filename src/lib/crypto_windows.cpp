@@ -86,7 +86,13 @@ namespace brigid {
         std::copy(iv_data, iv_data + iv_size, iv_.begin());
       }
 
-    protected:
+      virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
+        return update_impl(key_.get(), iv_, in_data, in_size, out_data, out_size, padding);
+      }
+
+      virtual size_t update_impl(BCRYPT_KEY_HANDLE, std::vector<UCHAR>&, const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) = 0;
+
+    private:
       alg_handle_t alg_;
       std::vector<UCHAR> buffer_;
       key_handle_t key_;
@@ -98,15 +104,15 @@ namespace brigid {
       aes_encryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
         : aes_cryptor_impl(key_data, key_size, iv_data, iv_size) {}
 
-      virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
+      virtual size_t update_impl(BCRYPT_KEY_HANDLE key, std::vector<UCHAR>& iv, const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
         ULONG result = 0;
         check(BCryptEncrypt(
-            key_.get(),
+            key,
             reinterpret_cast<PUCHAR>(const_cast<char*>(in_data)),
             static_cast<ULONG>(in_size),
             nullptr,
-            iv_.data(),
-            static_cast<ULONG>(iv_.size()),
+            iv.data(),
+            static_cast<ULONG>(iv.size()),
             reinterpret_cast<PUCHAR>(out_data),
             static_cast<ULONG>(out_size),
             &result,
@@ -120,15 +126,15 @@ namespace brigid {
       aes_decryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
         : aes_cryptor_impl(key_data, key_size, iv_data, iv_size) {}
 
-      virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
+      virtual size_t update_impl(BCRYPT_KEY_HANDLE key, std::vector<UCHAR>& iv, const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
         ULONG result = 0;
         check(BCryptDecrypt(
-            key_.get(),
+            key,
             reinterpret_cast<PUCHAR>(const_cast<char*>(in_data)),
             static_cast<ULONG>(in_size),
             nullptr,
-            iv_.data(),
-            static_cast<ULONG>(iv_.size()),
+            iv.data(),
+            static_cast<ULONG>(iv.size()),
             reinterpret_cast<PUCHAR>(out_data),
             static_cast<ULONG>(out_size),
             &result,
