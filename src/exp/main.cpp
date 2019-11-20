@@ -2,6 +2,15 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-int main(int, char*[]) {
+#include "http.hpp"
+
+int main(int argc, char* argv[]) {
+  std::string url = "http://brigid.jp/love2d-excersise/";
+
+  if (argc > 1) {
+    url = argv[1];
+  }
+
+  brigid::http(url);
   return 0;
 }

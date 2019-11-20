@@ -2,11 +2,14 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
+.SUFFIXES: .mm
+
 CPPFLAGS =
 CXXFLAGS = -Wall -W -O2 -std=c++11
-LDFLAGS =
+LDFLAGS = -framework Foundation
 
 OBJS = \
+	http.o \
 	main.o
 TARGET = test.exe
 
