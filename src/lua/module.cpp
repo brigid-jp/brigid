@@ -1,5 +1,8 @@
+// Copyright (c) 2019 <dev@brigid.jp>
+// This software is released under the MIT License.
+// https://opensource.org/licenses/mit-license.php
+
 #include "common.hpp"
-#include "module.hpp"
 
 namespace brigid {
   void initialize_crypto(lua_State*);

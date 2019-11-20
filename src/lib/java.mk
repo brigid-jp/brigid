@@ -18,7 +18,7 @@ clean:
 	rm -f *.o $(TARGET)
 
 $(TARGET): $(OBJS)
-	ar cr $@ $^
+	ar cru $@ $^
 
 .cpp.o:
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
