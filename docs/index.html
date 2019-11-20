@@ -35,7 +35,7 @@
   <tr>
     <th>実装名</th>
     <th>バックエンド</th>
-    <td>環境</td>
+    <th>環境</th>
   </tr>
 
   <tr>
@@ -101,30 +101,35 @@
   <tr>
     <th>実装名</th>
     <th>バックエンド</th>
-    <td>環境</td>
+    <th>非同期</th>
+    <th>環境</th>
   </tr>
 
   <tr>
     <td>http_curl</td>
     <td>curl</td>
+    <td>curl_multi</td>
     <td>UNIX or UNIX like systems</td>
   </tr>
 
   <tr>
     <td>http_apple</td>
     <td>NSURLSession</td>
+    <td>yes</td>
     <td>macOS and iOS</td>
   </tr>
 
   <tr>
     <td>http_windows</td>
     <td>WinHTTP</td>
+    <td>WINHTTP_FLAG_ASYNC</td>
     <td>Windows</td>
   </tr>
 
   <tr>
     <td>http_java</td>
     <td>java.net.HttpUrlConnection</td>
+    <td>no</td>
     <td>Android</td>
   </tr>
 </table>
