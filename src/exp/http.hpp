@@ -8,7 +8,8 @@
 #include <string>
 
 namespace brigid {
-  void http(const std::string);
+  void debug(int, const std::string&);
+  void http(int, const std::string);
 }
 
 #endif

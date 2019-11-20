@@ -7,6 +7,8 @@
 #include <Foundation/Foundation.h>
 
 #include <iostream>
+#include <sstream>
+#include <thread>
 
 namespace brigid {
   NSString* make_string(const std::string& source) {
@@ -21,13 +23,14 @@ namespace brigid {
     return std::string(static_cast<const char*>(data.bytes), data.length);
   }
 
-  void http(const std::string url) {
-    std::cout << url << "\n";
+  void debug(int key, const std::string& message) {
+    std::ostringstream out;
+    out << key << " " << std::this_thread::get_id() << " " << message << "\n";
+    std::cout << out.str();
+  }
 
+  void http(int key, const std::string url) {
     NSURL* u = [[[NSURL alloc] initWithString:make_string(url)] autorelease];
-
-    std::cout << to_string(u.scheme) << "\n";
-    std::cout << to_string(u.host) << "\n";
 
     NSURLSessionConfiguration* configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
     NSURLSession* session = [NSURLSession sessionWithConfiguration:configuration];
@@ -36,10 +39,12 @@ namespace brigid {
 
     NSURLSessionTask* task = [session dataTaskWithURL:u completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
       if (error) {
-        std::cout << "fail " << to_string(error.localizedDescription) << "\n";
+        debug(key, "fail " + to_string(error.localizedDescription));
       } else {
         NSHTTPURLResponse* http_response = (NSHTTPURLResponse*) response;
-        std::cout << "pass " << http_response.statusCode << " " << data.length << "\n";
+        std::ostringstream out;
+        out << "pass " << http_response.statusCode << " " << data.length;
+        debug(key, out.str());
       }
       dispatch_semaphore_signal(semaphore);
     }];
