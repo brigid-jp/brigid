@@ -9,9 +9,9 @@ CXXFLAGS = -Wall -W -O2 -std=c++11
 LDFLAGS = -framework Foundation
 
 OBJS = \
-	http.o \
+	http_apple.o \
 	main.o
-TARGET = test.exe
+TARGET = http.exe
 
 all: $(TARGET)
 
