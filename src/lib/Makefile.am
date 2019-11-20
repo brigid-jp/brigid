@@ -10,12 +10,12 @@ libbrigid_la_SOURCES = \
 	crypto.cpp \
 	crypto_impl.cpp
 
+if CRYPTO_APPLE
+libbrigid_la_SOURCES += crypto_apple.cpp
+else
 if CRYPTO_OPENSSL
 libbrigid_la_LDFLAGS += $(OPENSSL_LDFLAGS)
 libbrigid_la_CPPFLAGS += $(OPENSSL_INCLUDES)
 libbrigid_la_SOURCES += crypto_openssl.cpp
-else
-if CRYPTO_APPLE
-libbrigid_la_SOURCES += crypto_apple.cpp
 endif
 endif
