@@ -4,6 +4,7 @@
 
 OBJS = \
 	src\lib\crypto.obj \
+	src\lib\crypto_impl.obj \
 	src\lib\crypto_windows.obj \
 	common.obj \
 	module.obj \
@@ -16,7 +17,7 @@ clean:
 	del $(OBJS) $(TARGET)
 
 $(TARGET): $(OBJS)
-	link $(LIBFLAG) /DEF:brigid.def $** /OUT:$@ "$(LUA_LIBDIR)\$(LUALIB)"
+	link $(LIBFLAG) /DEF:brigid.def $** "$(LUA_LIBDIR)\$(LUALIB)" bcrypt.lib /OUT:$@
 
 .cpp.obj:
 	$(CC) $(CFLAGS) /EHsc /I$(LUA_INCDIR) /Iinclude /c $< /Fo$@
