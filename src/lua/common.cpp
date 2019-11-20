@@ -17,7 +17,7 @@ namespace brigid {
         return lua_gettop(L) - top;
       } catch (const std::exception& e) {
         lua_settop(L, top);
-        return luaL_error(L, "exception caught %s", e.what());
+        return luaL_error(L, "caught exception %s", e.what());
       }
       lua_settop(L, top);
       return 0;

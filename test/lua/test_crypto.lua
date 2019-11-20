@@ -27,5 +27,11 @@ for i = 1, #ciphers do
   local key = keys[cipher]
   local ciphertext = ciphertexts[cipher]
   assert(brigid.encrypt_string(cipher, plaintext, key, iv) == ciphertext)
+  io.write("PASS encrypt_string ", cipher, "\n")
   assert(brigid.decrypt_string(cipher, ciphertext, key, iv) == plaintext)
+  io.write("PASS decrypt_string ", cipher, "\n")
 end
+
+local result, message = pcall(brigid.encrypt_string, "no-such-algorithm", "", "", "")
+io.write(message, "\n")
+assert(not result)
