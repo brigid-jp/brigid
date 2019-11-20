@@ -25,4 +25,4 @@ $(TARGET): $(OBJS)
 	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 .mm.o:
-	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $<
+	clang++ $(CPPFLAGS) $(CXXFLAGS) -fobjc-arc -c $<

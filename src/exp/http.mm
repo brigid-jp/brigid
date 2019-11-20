@@ -12,7 +12,7 @@
 
 namespace brigid {
   NSString* make_string(const std::string& source) {
-    return [[[NSString alloc] initWithBytes:source.data() length:source.size() encoding:NSUTF8StringEncoding] autorelease];
+    return [[NSString alloc] initWithBytes:source.data() length:source.size() encoding:NSUTF8StringEncoding];
   }
 
   std::string to_string(NSString* source) {
@@ -30,12 +30,18 @@ namespace brigid {
   }
 
   void http(int key, const std::string url) {
-    NSURL* u = [[[NSURL alloc] initWithString:make_string(url)] autorelease];
+    {
+      std::ostringstream out;
+      out << "__has_feature(objc_arc) " << __has_feature(objc_arc);
+      debug(key, out.str());
+    }
+
+    NSURL* u = [[NSURL alloc] initWithString:make_string(url)];
 
     NSURLSessionConfiguration* configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
     NSURLSession* session = [NSURLSession sessionWithConfiguration:configuration];
 
-    dispatch_semaphore_t semaphore = [dispatch_semaphore_create(0) autorelease];
+    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 
     NSURLSessionTask* task = [session dataTaskWithURL:u completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
       if (error) {
@@ -51,5 +57,7 @@ namespace brigid {
     [task resume];
 
     dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+
+    [session invalidateAndCancel];
   }
 }
