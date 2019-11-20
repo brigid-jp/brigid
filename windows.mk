@@ -6,9 +6,9 @@ OBJS = \
 	src\lib\crypto.obj \
 	src\lib\crypto_impl.obj \
 	src\lib\crypto_windows.obj \
-	common.obj \
-	module.obj \
-	crypto_windows.obj
+	src\lua\common.obj \
+	src\lua\crypto.obj \
+	src\lua\module.obj
 TARGET = brigid.dll
 
 all: $(TARGET)
