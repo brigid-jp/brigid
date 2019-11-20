@@ -9,7 +9,6 @@
 #include <iostream>
 #include <vector>
 
-// https://wiki.openssl.org/index.php/EVP_Symmetric_Encryption_and_Decryption
 static const std::string plain = "The quick brown fox jumps over the lazy dog";
 static const std::string key128 = "0123456789012345";
 static const std::string key192 = "012345678901234567890123";
