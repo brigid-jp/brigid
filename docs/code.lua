@@ -8,7 +8,7 @@ local data = io.read "*a"
 local size = #data
 
 if mode == "cxx" then
-  io.write(("static const char* %s_data = {"):format(name))
+  io.write(("static const char %s_data[] = {"):format(name))
 
   for i = 1, size do
     local r = i % 8
