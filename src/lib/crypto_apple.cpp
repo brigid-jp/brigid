@@ -2,8 +2,9 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include "crypto_impl.hpp"
+#include "type_traits.hpp"
 #include <brigid/crypto.hpp>
-#include <brigid/type_traits.hpp>
 
 #include <CommonCrypto/CommonCrypto.h>
 
@@ -26,12 +27,12 @@ namespace brigid {
       return cryptor_ref_t(cryptor, &CCCryptorRelease);
     }
 
-    class aes_encryptor_impl : public encryptor_impl {
+    class aes_cryptor_impl : public cryptor {
     public:
-      aes_encryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t)
+      aes_cryptor_impl(CCOperation operation, const char* key_data, size_t key_size, const char* iv_data, size_t)
         : cryptor_(make_cryptor_ref()) {
         CCCryptorRef cryptor = nullptr;
-        check(CCCryptorCreateWithMode(kCCEncrypt, kCCModeCBC, kCCAlgorithmAES, kCCOptionPKCS7Padding, iv_data, key_data, key_size, nullptr, 0, 0, 0, &cryptor));
+        check(CCCryptorCreateWithMode(operation, kCCModeCBC, kCCAlgorithmAES, kCCOptionPKCS7Padding, iv_data, key_data, key_size, nullptr, 0, 0, 0, &cryptor));
         cryptor_ = make_cryptor_ref(cryptor);
       }
 
@@ -49,7 +50,7 @@ namespace brigid {
       cryptor_ref_t cryptor_;
     };
 
-    class aes_decryptor_impl : public decryptor_impl {
+    class aes_decryptor_impl : public cryptor {
     public:
       aes_decryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t)
         : cryptor_(make_cryptor_ref()) {
@@ -73,17 +74,19 @@ namespace brigid {
     };
   }
 
-  std::unique_ptr<encryptor_impl> make_encryptor_impl(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+  std::unique_ptr<cryptor> make_encryptor(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+    check_cipher(cipher, key_size, iv_size);
     if (cipher == "aes-128-cbc" || cipher == "aes-192-cbc" || cipher == "aes-256-cbc") {
-      return std::unique_ptr<encryptor_impl>(new aes_encryptor_impl(key_data, key_size, iv_data, iv_size));
+      return std::unique_ptr<cryptor>(new aes_cryptor_impl(kCCEncrypt, key_data, key_size, iv_data, iv_size));
     } else {
       throw std::runtime_error("unsupported cipher");
     }
   }
 
-  std::unique_ptr<decryptor_impl> make_decryptor_impl(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+  std::unique_ptr<cryptor> make_decryptor(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+    check_cipher(cipher, key_size, iv_size);
     if (cipher == "aes-128-cbc" || cipher == "aes-192-cbc" || cipher == "aes-256-cbc") {
-      return std::unique_ptr<decryptor_impl>(new aes_decryptor_impl(key_data, key_size, iv_data, iv_size));
+      return std::unique_ptr<cryptor>(new aes_cryptor_impl(kCCDecrypt, key_data, key_size, iv_data, iv_size));
     } else {
       throw std::runtime_error("unsupported cipher");
     }

@@ -30,8 +30,8 @@ static const std::string encrypted256(
 
 void encryptor_test1(const std::string& cipher, const std::string& key, const std::string& encrypted) {
   std::vector<char> buffer(plain.size() + 16);
-  brigid::encryptor encryptor(cipher, key.data(), key.size(), iv.data(), iv.size());
-  size_t result = encryptor.update(plain.data(), plain.size(), buffer.data(), buffer.size(), true);
+  auto encryptor = brigid::make_encryptor(cipher, key.data(), key.size(), iv.data(), iv.size());
+  size_t result = encryptor->update(plain.data(), plain.size(), buffer.data(), buffer.size(), true);
 
   BRIGID_CHECK(result == encrypted.size());
   buffer.resize(result);
@@ -40,15 +40,15 @@ void encryptor_test1(const std::string& cipher, const std::string& key, const st
 
 void encryptor_test2(const std::string& cipher, const std::string& key, const std::string& encrypted) {
   std::vector<char> buffer(plain.size() + 16);
-  brigid::encryptor encryptor(cipher, key.data(), key.size(), iv.data(), iv.size());
+  auto encryptor = brigid::make_encryptor(cipher, key.data(), key.size(), iv.data(), iv.size());
 
-  size_t result = encryptor.update(plain.data(), 16, buffer.data(), buffer.size(), false);
+  size_t result = encryptor->update(plain.data(), 16, buffer.data(), buffer.size(), false);
   BRIGID_CHECK(result == encrypted.size() / 3);
 
-  result = encryptor.update(plain.data() + 16, 16, buffer.data() + 16, buffer.size() - 16, false);
+  result = encryptor->update(plain.data() + 16, 16, buffer.data() + 16, buffer.size() - 16, false);
   BRIGID_CHECK(result == encrypted.size() / 3);
 
-  result = encryptor.update(plain.data() + 32, plain.size() - 32, buffer.data() + 32, buffer.size() - 32, true);
+  result = encryptor->update(plain.data() + 32, plain.size() - 32, buffer.data() + 32, buffer.size() - 32, true);
   BRIGID_CHECK(result == encrypted.size() / 3);
 
   buffer.resize(encrypted.size());
@@ -57,7 +57,7 @@ void encryptor_test2(const std::string& cipher, const std::string& key, const st
 
 void test_encryptor_no_such_cipher() {
   try {
-    brigid::encryptor("no-such-cipher", nullptr, 0, nullptr, 0);
+    brigid::make_encryptor("no-such-cipher", nullptr, 0, nullptr, 0);
   } catch (const std::exception& e) {
     return;
   }
@@ -66,8 +66,8 @@ void test_encryptor_no_such_cipher() {
 
 void decryptor_test1(const std::string& cipher, const std::string& key, const std::string& encrypted) {
   std::vector<char> buffer(encrypted.size());
-  brigid::decryptor decryptor(cipher, key.data(), key.size(), iv.data(), iv.size());
-  size_t result = decryptor.update(encrypted.data(), encrypted.size(), buffer.data(), buffer.size(), true);
+  auto decryptor = brigid::make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size());
+  size_t result = decryptor->update(encrypted.data(), encrypted.size(), buffer.data(), buffer.size(), true);
 
   BRIGID_CHECK(result == plain.size());
   buffer.resize(result);
@@ -76,11 +76,11 @@ void decryptor_test1(const std::string& cipher, const std::string& key, const st
 
 void decryptor_test2(const std::string& cipher, const std::string& key, const std::string& encrypted) {
   std::vector<char> buffer(encrypted.size());
-  brigid::decryptor decryptor(cipher, key.data(), key.size(), iv.data(), iv.size());
+  auto decryptor = brigid::make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size());
 
-  size_t result1 = decryptor.update(encrypted.data(), 16, buffer.data(), buffer.size(), false);
-  size_t result2 = result1 + decryptor.update(encrypted.data() + 16, 16, buffer.data() + result1, buffer.size() - result1, false);
-  size_t result3 = result2 + decryptor.update(encrypted.data() + 32, 16, buffer.data() + result2, buffer.size() - result2, true);
+  size_t result1 = decryptor->update(encrypted.data(), 16, buffer.data(), buffer.size(), false);
+  size_t result2 = result1 + decryptor->update(encrypted.data() + 16, 16, buffer.data() + result1, buffer.size() - result1, false);
+  size_t result3 = result2 + decryptor->update(encrypted.data() + 32, 16, buffer.data() + result2, buffer.size() - result2, true);
   BRIGID_CHECK(result3 == plain.size());
 
   buffer.resize(result3);
