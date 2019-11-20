@@ -14,7 +14,7 @@ void thread_function(int key, const std::string& url) {
 }
 
 int main(int argc, char* argv[]) {
-  std::string url = "http://brigid.jp/love2d-excersise/";
+  std::string url = "https://brigid.jp/love2d-excersise/";
 
   if (argc > 1) {
     url = argv[1];
