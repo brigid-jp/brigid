@@ -9,7 +9,7 @@ LDFLAGS = -shared
 
 OBJS = \
 	test.o \
-	test_encryptor.o \
+	test_crypto.o \
 	jnitest.o
 TARGET = libjnitest.dylib
 

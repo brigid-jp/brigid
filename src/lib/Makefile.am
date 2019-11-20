@@ -7,7 +7,8 @@ noinst_LTLIBRARIES = libbrigid.la
 libbrigid_la_CPPFLAGS = -I$(top_srcdir)/include
 libbrigid_la_LDFLAGS = -static
 libbrigid_la_SOURCES = \
-	crypto.cpp
+	crypto.cpp \
+	crypto_impl.cpp
 
 if CRYPTO_OPENSSL
 libbrigid_la_LDFLAGS += $(OPENSSL_LDFLAGS)

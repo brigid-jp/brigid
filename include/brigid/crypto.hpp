@@ -10,21 +10,14 @@
 #include <string>
 
 namespace brigid {
-  class encryptor_impl {
+  class cryptor {
   public:
-    virtual ~encryptor_impl() = 0;
+    virtual ~cryptor() = 0;
     virtual size_t update(const char*, size_t, char*, size_t, bool) = 0;
   };
 
-  std::unique_ptr<encryptor_impl> make_encryptor_impl(const std::string&, const char*, size_t, const char*, size_t);
-
-  class encryptor {
-  public:
-    encryptor(const std::string&, const char*, size_t, const char*, size_t);
-    size_t update(const char*, size_t, char*, size_t, bool);
-  private:
-    std::unique_ptr<encryptor_impl> impl_;
-  };
+  std::unique_ptr<cryptor> make_encryptor(const std::string&, const char*, size_t, const char*, size_t);
+  std::unique_ptr<cryptor> make_decryptor(const std::string&, const char*, size_t, const char*, size_t);
 }
 
 #endif

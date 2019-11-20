@@ -2,8 +2,9 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include "crypto_impl.hpp"
+#include "type_traits.hpp"
 #include <brigid/crypto.hpp>
-#include <brigid/type_traits.hpp>
 
 #include <jni.h>
 
@@ -107,18 +108,17 @@ namespace brigid {
       }
     }
 
-    class aes_encryptor_impl : public encryptor_impl {
+    class aes_cryptor_impl : public cryptor {
     public:
-      aes_encryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
+      aes_cryptor_impl(const char* name, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
         : klass_(jni_make_global_ref<jclass>()),
           instance_(jni_make_global_ref<jobject>()),
           method_(nullptr) {
         JNIEnv* env = jni_env();
 
-        jni_local_ref_t<jclass> klass = jni_make_local_ref(jni_check(env->FindClass("jp/brigid/AESEncryptor")));
+        jni_local_ref_t<jclass> klass = jni_make_local_ref(jni_check(env->FindClass(name)));
         klass_ = jni_make_global_ref(jni_check(reinterpret_cast<jclass>(env->NewGlobalRef(klass.get()))));
 
-        // new AESEncryptor(key, iv)
         {
           jmethodID method = jni_check(env->GetMethodID(klass.get(), "<init>", "([B[B)V"));
 
@@ -157,9 +157,19 @@ namespace brigid {
     };
   }
 
-  std::unique_ptr<encryptor_impl> make_encryptor_impl(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+  std::unique_ptr<cryptor> make_encryptor(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+    check_cipher(cipher, key_size, iv_size);
     if (cipher == "aes-128-cbc" || cipher == "aes-192-cbc" || cipher == "aes-256-cbc") {
-      return std::unique_ptr<encryptor_impl>(new aes_encryptor_impl(key_data, key_size, iv_data, iv_size));
+      return std::unique_ptr<cryptor>(new aes_cryptor_impl("jp/brigid/AESEncryptor", key_data, key_size, iv_data, iv_size));
+    } else {
+      throw std::runtime_error("unsupported cipher");
+    }
+  }
+
+  std::unique_ptr<cryptor> make_decryptor(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+    check_cipher(cipher, key_size, iv_size);
+    if (cipher == "aes-128-cbc" || cipher == "aes-192-cbc" || cipher == "aes-256-cbc") {
+      return std::unique_ptr<cryptor>(new aes_cryptor_impl("jp/brigid/AESDecryptor", key_data, key_size, iv_data, iv_size));
     } else {
       throw std::runtime_error("unsupported cipher");
     }
