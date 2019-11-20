@@ -13,10 +13,14 @@ OBJS = \
 	jnitest.o
 TARGET = libjnitest.dylib
 
-all: $(TARGET)
+all: all-recursive $(TARGET)
+
+all-recursive:
+	(cd ../../src/lib && $(MAKE) -f java.mk all)
 
 clean:
 	rm -f *.o JNITest.h JNITest.class $(TARGET)
+	(cd ../../src/lib && $(MAKE) -f java.mk clean)
 
 check:
 	java -classpath ../../src/java:. -Djava.library.path=. -Xcheck:jni JNITest

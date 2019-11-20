@@ -12,10 +12,14 @@ OBJS = \
 	crypto_java.o
 TARGET = libbrigid.a
 
-all: $(TARGET)
+all: all-recursive $(TARGET)
+
+all-recursive:
+	(cd ../java && $(MAKE) -f java.mk all)
 
 clean:
 	rm -f *.o $(TARGET)
+	(cd ../java && $(MAKE) -f java.mk clean)
 
 $(TARGET): $(OBJS)
 	ar cru $@ $^
