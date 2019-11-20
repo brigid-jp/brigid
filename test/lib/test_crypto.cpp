@@ -59,6 +59,7 @@ void test_encryptor_no_such_cipher() {
   try {
     brigid::make_encryptor("no-such-cipher", nullptr, 0, nullptr, 0);
   } catch (const std::exception& e) {
+    std::cout << e.what() << "\n";
     return;
   }
   BRIGID_CHECK(!"unreachable");
@@ -82,6 +83,8 @@ void decryptor_test2(const std::string& cipher, const std::string& key, const st
   size_t result2 = result1 + decryptor->update(encrypted.data() + 16, 16, buffer.data() + result1, buffer.size() - result1, false);
   size_t result3 = result2 + decryptor->update(encrypted.data() + 32, 16, buffer.data() + result2, buffer.size() - result2, true);
   BRIGID_CHECK(result3 == plain.size());
+
+  std::cout << result1 << ", " << result2 << ", " << result3 << "\n";
 
   buffer.resize(result3);
   BRIGID_CHECK(std::equal(buffer.begin(), buffer.end(), plain.begin()));
