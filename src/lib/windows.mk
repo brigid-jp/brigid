@@ -4,6 +4,7 @@
 
 OBJS = \
 	crypto.obj \
+	crypto_impl.obj \
 	crypto_windows.obj
 TARGET = brigid.lib
 

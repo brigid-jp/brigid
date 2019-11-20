@@ -4,7 +4,7 @@
 
 OBJS = \
 	test.obj \
-	test_encryptor.obj \
+	test_crypto.obj \
 	test_main.obj
 
 TARGET = test.exe
