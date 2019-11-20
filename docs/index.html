@@ -35,7 +35,7 @@
   <tr>
     <th>実装名</th>
     <th>バックエンド</th>
-    <td>環境</td>
+    <th>環境</th>
   </tr>
 
   <tr>
@@ -74,7 +74,7 @@
   </tr>
   <tr>
     <td>OpenSSL EVP</td>
-    <td colspan="2"><code>EVP_aes256_cbc()</code></td>
+    <td colspan="2"><code>EVP_aes_256_cbc()</code></td>
     <td>padding is enabled (the default)</td>
   </tr>
   <tr>
@@ -94,6 +94,49 @@
     <td colspan="3"><code>AES/CBC/PKCS5Padding</code></td>
   </tr>
 </table>
+
+<h2 id="http-impl">http実装</h2>
+
+<table>
+  <tr>
+    <th>実装名</th>
+    <th>バックエンド</th>
+    <th>非同期</th>
+    <th>環境</th>
+  </tr>
+
+  <tr>
+    <td>http_curl</td>
+    <td>curl</td>
+    <td>curl_multi</td>
+    <td>UNIX or UNIX like systems</td>
+  </tr>
+
+  <tr>
+    <td>http_apple</td>
+    <td>NSURLSession</td>
+    <td>yes</td>
+    <td>macOS and iOS</td>
+  </tr>
+
+  <tr>
+    <td>http_windows</td>
+    <td>WinHTTP</td>
+    <td>WINHTTP_FLAG_ASYNC</td>
+    <td>Windows</td>
+  </tr>
+
+  <tr>
+    <td>http_java</td>
+    <td>java.net.HttpUrlConnection</td>
+    <td>no</td>
+    <td>Android</td>
+  </tr>
+</table>
+
+<ul>
+  <li><a href="https://docs.microsoft.com/en-us/windows/win32/wininet/wininet-vs-winhttp">WinINet vs. WinHTTP</a></li>
+</ul>
 
 <h2 id="luarocks-for-windows">L&ouml;VE互換のWindows開発環境</h2>
 

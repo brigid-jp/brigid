@@ -18,7 +18,7 @@ all-recursive:
 	(cd ../java && $(MAKE) -f java.mk all)
 
 clean:
-	rm -f *.o $(TARGET)
+	rm -f $(OBJS) $(TARGET)
 	(cd ../java && $(MAKE) -f java.mk clean)
 
 $(TARGET): $(OBJS)

@@ -19,7 +19,7 @@ all-recursive:
 	(cd ../../src/lib && $(MAKE) -f java.mk all)
 
 clean:
-	rm -f *.o JNITest.h JNITest.class $(TARGET)
+	rm -f $(OBJS) JNITest.h JNITest.class $(TARGET)
 	(cd ../../src/lib && $(MAKE) -f java.mk clean)
 
 check:
