@@ -6,9 +6,11 @@
 
 #include <Foundation/Foundation.h>
 
+#include <string.h>
 #include <iostream>
 #include <sstream>
 #include <thread>
+#include <vector>
 
 namespace brigid {
   NSString* make_string(const std::string& source) {
@@ -29,35 +31,69 @@ namespace brigid {
     std::cout << out.str();
   }
 
-  void http(int key, const std::string url) {
-    {
-      std::ostringstream out;
-      out << "__has_feature(objc_arc) " << __has_feature(objc_arc);
-      debug(key, out.str());
-    }
+  namespace {
+    class session {
+    public:
+      session()
+        : status_code_() {}
 
-    NSURL* u = [[NSURL alloc] initWithString:make_string(url)];
+      void http(int key, const std::string& url) {
+        {
+          std::ostringstream out;
+          out << "__has_feature(objc_arc) " << __has_feature(objc_arc);
+          debug(key, out.str());
+        }
 
-    NSURLSessionConfiguration* configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
-    NSURLSession* session = [NSURLSession sessionWithConfiguration:configuration];
+        NSURL* u = [[NSURL alloc] initWithString:make_string(url)];
 
-    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+        NSURLSessionConfiguration* configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
+        NSURLSession* session = [NSURLSession sessionWithConfiguration:configuration];
 
-    NSURLSessionTask* task = [session dataTaskWithURL:u completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
-      if (error) {
-        debug(key, "fail " + to_string(error.localizedDescription));
-      } else {
-        NSHTTPURLResponse* http_response = (NSHTTPURLResponse*) response;
-        std::ostringstream out;
-        out << "pass " << http_response.statusCode << " " << data.length;
-        debug(key, out.str());
+        dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+
+        NSURLSessionTask* task = [session dataTaskWithURL:u completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
+          if (error) {
+            debug(key, "fail " + to_string(error.localizedDescription));
+            status_code_ = -1;
+          } else {
+            NSHTTPURLResponse* http_response = (NSHTTPURLResponse*) response;
+            std::ostringstream out;
+            out << "pass " << http_response.statusCode << " " << data.length;
+            debug(key, out.str());
+
+            status_code_ = http_response.statusCode;
+            data_.resize(data.length);
+            memmove(data_.data(), data.bytes, data.length);
+          }
+          dispatch_semaphore_signal(semaphore);
+        }];
+        [task resume];
+
+        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+
+        [session invalidateAndCancel];
       }
-      dispatch_semaphore_signal(semaphore);
-    }];
-    [task resume];
 
-    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+      int status_code() const {
+        return status_code_;
+      }
 
-    [session invalidateAndCancel];
+      const std::vector<char>& data() const {
+        return data_;
+      }
+
+    private:
+      int status_code_;
+      std::vector<char> data_;
+    };
+  }
+
+  void http(int key, const std::string& url) {
+    session s;
+    s.http(key, url);
+
+    std::ostringstream out;
+    out << "done " << s.status_code() << " " << s.data().size();
+    debug(key, out.str());
   }
 }

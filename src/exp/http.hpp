@@ -9,7 +9,7 @@
 
 namespace brigid {
   void debug(int, const std::string&);
-  void http(int, const std::string);
+  void http(int, const std::string&);
 }
 
 #endif
