@@ -5,7 +5,7 @@
 .SUFFIXES: .mm
 
 CPPFLAGS =
-CXXFLAGS = -Wall -W -O2 -std=c++11
+CXXFLAGS = -Wall -W -O2 -std=c++11 -fobjc-arc
 LDFLAGS = -framework Foundation
 
 OBJS = \
@@ -19,10 +19,10 @@ clean:
 	rm -f $(OBJS) $(TARGET)
 
 $(TARGET): $(OBJS)
-	clang++ $(LDFLAGS) $^ -o $@
+	c++ $(LDFLAGS) $^ -o $@
 
 .cpp.o:
-	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $<
+	c++ $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 .mm.o:
-	clang++ $(CPPFLAGS) $(CXXFLAGS) -fobjc-arc -c $<
+	c++ $(CPPFLAGS) $(CXXFLAGS) -c $<
