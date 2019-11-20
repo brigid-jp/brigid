@@ -1,6 +1,9 @@
+-- Copyright (c) 2019 <dev@brigid.jp>
+-- This software is released under the MIT License.
+-- https://opensource.org/licenses/mit-license.php
+
 local brigid = require "brigid"
 
--- https://wiki.openssl.org/index.php/EVP_Symmetric_Encryption_and_Decryption
 local plain = "The quick brown fox jumps over the lazy dog"
 local key = "01234567890123456789012345678901"
 local iv = "0123456789012345"
