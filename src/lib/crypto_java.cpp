@@ -92,7 +92,7 @@ namespace brigid {
     }
 
     template <class T>
-    T* jni_check(T* that) {
+    T jni_check(T that) {
       jni_check();
       if (!that) {
         throw std::runtime_error("crypto_java exception");
