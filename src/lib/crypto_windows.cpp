@@ -2,8 +2,9 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include "crypto_impl.hpp"
+#include "type_traits.hpp"
 #include <brigid/crypto.hpp>
-#include <brigid/type_traits.hpp>
 
 #include <windows.h>
 #include <bcrypt.h>
@@ -39,9 +40,9 @@ namespace brigid {
       return key_handle_t(handle, &BCryptDestroyKey);
     }
 
-    class aes_encryptor_impl : public encryptor_impl {
+    class aes_cryptor_impl : public cryptor {
     public:
-      aes_encryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
+      aes_cryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
         : alg_(make_alg_handle()),
           key_(make_key_handle()),
           iv_(iv_size) {
@@ -85,9 +86,17 @@ namespace brigid {
         std::copy(iv_data, iv_data + iv_size, iv_.begin());
       }
 
-      virtual size_t block_bytes() const {
-        return 16;
-      }
+    protected:
+      alg_handle_t alg_;
+      std::vector<UCHAR> buffer_;
+      key_handle_t key_;
+      std::vector<UCHAR> iv_;
+    };
+
+    class aes_encryptor_impl : public aes_cryptor_impl {
+    public:
+      aes_encryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
+        : aes_cryptor_impl(key_data, key_size, iv_data, iv_size) {}
 
       virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
         ULONG result = 0;
@@ -104,18 +113,44 @@ namespace brigid {
             padding ? BCRYPT_BLOCK_PADDING : 0));
         return result;
       }
+    };
 
-    private:
-      alg_handle_t alg_;
-      std::vector<UCHAR> buffer_;
-      key_handle_t key_;
-      std::vector<UCHAR> iv_;
+    class aes_decryptor_impl : public aes_cryptor_impl {
+    public:
+      aes_decryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
+        : aes_cryptor_impl(key_data, key_size, iv_data, iv_size) {}
+
+      virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
+        ULONG result = 0;
+        check(BCryptDecrypt(
+            key_.get(),
+            reinterpret_cast<PUCHAR>(const_cast<char*>(in_data)),
+            static_cast<ULONG>(in_size),
+            nullptr,
+            iv_.data(),
+            static_cast<ULONG>(iv_.size()),
+            reinterpret_cast<PUCHAR>(out_data),
+            static_cast<ULONG>(out_size),
+            &result,
+            padding ? BCRYPT_BLOCK_PADDING : 0));
+        return result;
+      }
     };
   }
 
-  std::unique_ptr<encryptor_impl> make_encryptor_impl(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+  std::unique_ptr<cryptor> make_encryptor(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+    check_cipher(cipher, key_size, iv_size);
     if (cipher == "aes-128-cbc" || cipher == "aes-192-cbc" || cipher == "aes-256-cbc") {
-      return std::unique_ptr<encryptor_impl>(new aes_encryptor_impl(key_data, key_size, iv_data, iv_size));
+      return std::unique_ptr<cryptor>(new aes_encryptor_impl(key_data, key_size, iv_data, iv_size));
+    } else {
+      throw std::runtime_error("unsupported cipher");
+    }
+  }
+
+  std::unique_ptr<cryptor> make_decryptor(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+    check_cipher(cipher, key_size, iv_size);
+    if (cipher == "aes-128-cbc" || cipher == "aes-192-cbc" || cipher == "aes-256-cbc") {
+      return std::unique_ptr<cryptor>(new aes_decryptor_impl(key_data, key_size, iv_data, iv_size));
     } else {
       throw std::runtime_error("unsupported cipher");
     }
