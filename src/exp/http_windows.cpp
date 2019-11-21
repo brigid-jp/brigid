@@ -62,6 +62,22 @@ namespace brigid {
         throw std::runtime_error("cannot WinHttpCrackUrl");
       }
     }
+
+    template <class T>
+    T check(T result) {
+      if (!result) {
+        std::ostringstream out;
+        out << "http_windows error number " << GetLastError();
+        throw std::runtime_error(out.str());
+      }
+      return result;
+    }
+
+    using internet_handle_t = std::unique_ptr<remove_pointer_t<HINTERNET>, decltype(&WinHttpCloseHandle)>;
+
+    internet_handle_t make_internet_handle(HINTERNET handle = nullptr) {
+      return internet_handle_t(handle, &WinHttpCloseHandle);
+    }
   }
 
   void debug(int key, const std::string& message) {
@@ -75,33 +91,74 @@ namespace brigid {
 
     std::wstring agent = make_string("brigid");
 
-    HINTERNET session_handle = WinHttpOpen(
+    internet_handle_t session = make_internet_handle(check(WinHttpOpen(
         agent.c_str(),
         WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
         WINHTTP_NO_PROXY_NAME,
         WINHTTP_NO_PROXY_BYPASS,
-        0);
-    if (!session_handle) {
-      throw std::runtime_error("cannot WinHttpOpen");
-    }
-    std::unique_ptr<remove_pointer_t<HINTERNET>, decltype(&WinHttpCloseHandle)> session(session_handle, &WinHttpCloseHandle);
+        0)));
 
     URL_COMPONENTS url_c = make_url_components(url);
+    std::wcout << std::wstring(url_c.lpszHostName, url_c.dwHostNameLength) << L"\n";
+    std::wcout << std::wstring(url_c.lpszUrlPath, url_c.dwUrlPathLength) << L"\n";
 
-    std::wcout
-        << url_c.lpszHostName << L"\n"
-        << url_c.nPort << L"\n";
+    debug(key, "connect");
 
-    HINTERNET connection_handle = WinHttpConnect(
+    internet_handle_t connection = make_internet_handle(check(WinHttpConnect(
         session.get(),
-        url_c.lpszHostName,
+        std::wstring(url_c.lpszHostName, url_c.dwHostNameLength).c_str(),
         url_c.nPort,
-        0);
+        0)));
 
-    if (!connection_handle) {
-      throw std::runtime_error("cannot WinHttpConnect");
+    debug(key, "request");
+
+    internet_handle_t request = make_internet_handle(check(WinHttpOpenRequest(
+        connection.get(),
+        make_string("GET").c_str(),
+        std::wstring(url_c.lpszUrlPath, url_c.dwUrlPathLength).c_str(),
+        nullptr,
+        WINHTTP_NO_REFERER,
+        WINHTTP_DEFAULT_ACCEPT_TYPES,
+        url_c.nScheme == INTERNET_SCHEME_HTTPS
+          ? WINHTTP_FLAG_SECURE
+          : 0)));
+
+    debug(key, "send");
+
+    check(WinHttpSendRequest(
+        request.get(),
+        WINHTTP_NO_ADDITIONAL_HEADERS,
+        0,
+        WINHTTP_NO_REQUEST_DATA,
+        0,
+        WINHTTP_IGNORE_REQUEST_TOTAL_LENGTH,
+        0)); // nullptr cause error. why?
+
+    debug(key, "recv");
+
+    check(WinHttpReceiveResponse(
+        request.get(),
+        nullptr));
+
+    debug(key, "read");
+
+    while (true) {
+      DWORD available = 0;
+      check(WinHttpQueryDataAvailable(request.get(), &available));
+      if (!available) {
+        break;
+      }
+      std::vector<char> buffer(available);
+      DWORD size = 0;
+      check(WinHttpReadData(
+          request.get(),
+          buffer.data(),
+          static_cast<DWORD>(buffer.size()),
+          &size));
+
+      buffer.resize(size);
+      std::cout << std::string(buffer.data(), buffer.size()) << "\n";
     }
-    std::unique_ptr<remove_pointer_t<HINTERNET>, decltype(&WinHttpCloseHandle)> connection(connection_handle, &WinHttpCloseHandle);
 
     debug(key, "done");
   }

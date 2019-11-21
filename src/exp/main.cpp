@@ -4,13 +4,18 @@
 
 #include "http.hpp"
 
+#include <exception>
 #include <iostream>
 #include <thread>
 
 void thread_function(int key, const std::string& url) {
-  brigid::debug(key, "start");
-  brigid::http(key, url);
-  brigid::debug(key, "finish");
+  try {
+    brigid::debug(key, "start");
+    brigid::http(key, url);
+    brigid::debug(key, "finish");
+  } catch (std::exception& e) {
+    std::cerr << e.what() << "\n";
+  }
 }
 
 int main(int argc, char* argv[]) {
