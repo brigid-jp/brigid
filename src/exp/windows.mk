@@ -13,7 +13,7 @@ clean:
 	del $(OBJS) $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) /MD /O2 /W3 /EHsc $** /Fe:$@
+	$(CC) /MD /O2 /W3 /EHsc $** winhttp.lib /Fe:$@
 
 .cpp.obj:
 	$(CC) /MD /O2 /W3 /EHsc /c $< /Fo:$@
