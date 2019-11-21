@@ -20,7 +20,7 @@ $(TARGET): $(OBJS)
 	link $(LIBFLAG) /DEF:brigid.def $** "$(LUA_LIBDIR)\$(LUALIB)" bcrypt.lib /OUT:$@
 
 .cpp.obj:
-	$(CC) $(CFLAGS) /EHsc /I$(LUA_INCDIR) /Iinclude /c $< /Fo$@
+	$(CC) $(CFLAGS) /W3 /EHsc /I$(LUA_INCDIR) /Iinclude /c $< /Fo$@
 
 install:
 	xcopy "$(TARGET)" "$(LIBDIR)"
