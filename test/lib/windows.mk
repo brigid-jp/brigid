@@ -22,7 +22,7 @@ check:
 	$(TARGET)
 
 $(TARGET): $(OBJS) ..\..\src\lib\brigid.lib
-	$(CC) /MD /O2 /EHsc /I..\..\include $** bcrypt.lib /Fo$@
+	$(CC) /MD /O2 /W3 /EHsc /I..\..\include $** bcrypt.lib /Fe$@
 
 .cpp.obj:
-	$(CC) /MD /O2 /W3 /EHsc /I..\..\include /c $<
+	$(CC) /MD /O2 /W3 /EHsc /I..\..\include /c $< /Fo$@
