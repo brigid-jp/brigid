@@ -8,7 +8,8 @@ libbrigid_la_CPPFLAGS = -I$(top_srcdir)/include
 libbrigid_la_LDFLAGS = -static
 libbrigid_la_SOURCES = \
 	crypto.cpp \
-	crypto_impl.cpp
+	crypto_impl.cpp \
+	http.cpp
 
 if CRYPTO_APPLE
 libbrigid_la_SOURCES += crypto_apple.cpp
@@ -18,4 +19,9 @@ libbrigid_la_LDFLAGS += $(OPENSSL_LDFLAGS)
 libbrigid_la_CPPFLAGS += $(OPENSSL_INCLUDES)
 libbrigid_la_SOURCES += crypto_openssl.cpp
 endif
+endif
+
+if HTTP_APPLE
+libbrigid_la_OBJCXXFLAGS = -fobjc-arc
+libbrigid_la_SOURCES += http_apple.mm
 endif
