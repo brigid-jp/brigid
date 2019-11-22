@@ -13,6 +13,7 @@ AC_CONFIG_FILES([Makefile src/lib/Makefile src/lua/Makefile test/lib/Makefile])
 
 AC_PROG_CXX
 AX_CXX_COMPILE_STDCXX(11)
+AC_PROG_OBJCXX
 
 AX_PROG_LUA([5.1], [], [], [AC_MSG_ERROR([could not find lua])])
 AX_LUA_HEADERS([], [AC_MSG_ERROR([could not find lua])])
@@ -29,5 +30,14 @@ AX_CHECK_OPENSSL([
 
 AM_CONDITIONAL([CRYPTO_APPLE], [test "X$crypto_apple" = Xyes])
 AM_CONDITIONAL([CRYPTO_OPENSSL], [test "X$crypto_openssl" = Xyes])
+
+AC_LANG_PUSH([Objective C++])
+AC_CHECK_HEADERS([Foundation/Foundation.h], [
+  AC_DEFINE(HTTP_APPLE, 1, [Define to 1 if using NSURLSession.])
+  http_apple=yes
+])
+AC_LANG_POP([Objective C++])
+
+AM_CONDITIONAL([HTTP_APPLE], [test "X$http_apple" = Xyes])
 
 AC_OUTPUT

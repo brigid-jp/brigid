@@ -6,7 +6,9 @@
 
 #include <exception>
 #include <iostream>
+#include <string>
 #include <thread>
+#include <vector>
 
 void thread_function(int key, const std::string& url) {
   try {
@@ -19,23 +21,31 @@ void thread_function(int key, const std::string& url) {
 }
 
 int main(int argc, char* argv[]) {
+  int thread = 0;
   std::string url = "https://brigid.jp/love2d-excersise/";
 
   if (argc > 1) {
-    url = argv[1];
+    thread = std::stoi(argv[1]);
+  }
+  if (argc > 2) {
+    url = argv[2];
   }
 
   brigid::debug(0, "main start");
 
-  std::thread t1(thread_function, 1, url);
-  std::thread t2(thread_function, 2, url);
-  std::thread t3(thread_function, 3, url);
-  std::thread t4(thread_function, 4, url);
+  if (thread <= 0) {
+    thread_function(0, url);
+  } else {
+    std::vector<std::thread> threads;
 
-  t1.join();
-  t2.join();
-  t3.join();
-  t4.join();
+    for (int i = 0; i < thread; ++i) {
+      threads.emplace_back(thread_function, i + 1, url);
+    }
+
+    for (int i = 0; i < thread; ++i) {
+      threads[i].join();
+    }
+  }
 
   brigid::debug(0, "main finish");
 
