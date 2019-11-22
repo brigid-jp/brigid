@@ -7,10 +7,128 @@
 #include <Foundation/Foundation.h>
 
 #include <string.h>
+#include <condition_variable>
 #include <iostream>
+#include <memory>
+#include <mutex>
 #include <sstream>
 #include <thread>
 #include <vector>
+
+namespace brigid {
+  namespace {
+    class http_session_context {
+    public:
+      http_session_context(int key)
+        : key_(key),
+          completed_() {}
+
+      http_session_context(const http_session_context&) = delete;
+
+      http_session_context& operator=(const http_session_context&) = delete;
+
+      void debug(const std::string& message) {
+        std::ostringstream out;
+        out << key_ << " " << std::this_thread::get_id() << " " << message << "\n";
+        std::cout << out.str();
+      }
+
+      void complete() {
+        completed_ = true;
+      }
+
+      bool completed() const {
+        return completed_;
+      }
+
+      std::mutex& mutex() {
+        return mutex_;
+      }
+
+      std::condition_variable& cond() {
+        return cond_;
+      }
+
+      void notify() {
+        cond_.notify_one();
+      }
+
+      int status_code(int status_code) {
+        status_code_ = status_code;
+      }
+
+      int status_code() const {
+        return status_code_;
+      }
+
+      void copy(NSData* data) {
+        size_t n = data_.size();
+        size_t m = data.length;
+        data_.resize(n + m);
+        memcpy(&data_[n], data.bytes, m);
+      }
+
+      const std::vector<char>& data() const {
+        return data_;
+      }
+
+    private:
+      int key_;
+      std::mutex mutex_;
+      std::condition_variable cond_;
+      bool completed_;
+      int status_code_;
+      std::vector<char> data_;
+    };
+  }
+}
+
+@interface BrigidDelegate : NSObject <NSURLSessionDataDelegate>
+
+@end
+
+@implementation BrigidDelegate {
+  std::shared_ptr<brigid::http_session_context> context_;
+}
+
+- (instancetype)initWithContext:(std::shared_ptr<brigid::http_session_context>)context {
+  if (self = [super init]) {
+    context_ = context;
+  }
+  return self;
+}
+
+- (void)URLSession:(NSURLSession *)session
+              task:(NSURLSessionTask *)task
+didCompleteWithError:(NSError *)error {
+  std::lock_guard<std::mutex> lock(context_->mutex());
+  context_->debug("didCompleteWithError");
+  context_->complete();
+  context_->notify();
+}
+
+- (void)URLSession:(NSURLSession *)session
+          dataTask:(NSURLSessionDataTask *)dataTask
+didReceiveResponse:(NSURLResponse *)response
+ completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler {
+  std::lock_guard<std::mutex> lock(context_->mutex());
+  NSHTTPURLResponse* http_response = (NSHTTPURLResponse*) response;
+  context_->debug("didReceiveResponse " + std::to_string(http_response.statusCode));
+  context_->status_code(http_response.statusCode);
+  context_->notify();
+  completionHandler(NSURLSessionResponseAllow);
+}
+
+- (void)URLSession:(NSURLSession *)session
+          dataTask:(NSURLSessionDataTask *)dataTask
+    didReceiveData:(NSData *)data {
+  std::lock_guard<std::mutex> lock(context_->mutex());
+  context_->debug("didReceiveData " + std::to_string(data.length));
+  context_->copy(data);
+  context_->notify();
+}
+
+@end
 
 namespace brigid {
   NSString* make_string(const std::string& source) {
@@ -34,63 +152,50 @@ namespace brigid {
   namespace {
     class session {
     public:
-      session()
-        : status_code_() {}
+      session(int key)
+        : context_(std::make_shared<http_session_context>(key)) {}
 
-      void http(int key, const std::string& url) {
-        {
-          std::ostringstream out;
-          out << "__has_feature(objc_arc) " << __has_feature(objc_arc);
-          debug(key, out.str());
-        }
-
+      void http(const std::string& url) {
         NSURL* u = [[NSURL alloc] initWithString:make_string(url)];
 
+
         NSURLSessionConfiguration* configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
-        NSURLSession* session = [NSURLSession sessionWithConfiguration:configuration];
+        BrigidDelegate* delegate = [[BrigidDelegate alloc] initWithContext:context_];
+        NSURLSession* session = [NSURLSession sessionWithConfiguration:configuration delegate:delegate delegateQueue:nil];
 
-        dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-
-        NSURLSessionTask* task = [session dataTaskWithURL:u completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
-          if (error) {
-            debug(key, "fail " + to_string(error.localizedDescription));
-            status_code_ = -1;
-          } else {
-            NSHTTPURLResponse* http_response = (NSHTTPURLResponse*) response;
-            std::ostringstream out;
-            out << "pass " << http_response.statusCode << " " << data.length;
-            debug(key, out.str());
-
-            status_code_ = http_response.statusCode;
-            data_.resize(data.length);
-            memmove(data_.data(), data.bytes, data.length);
-          }
-          dispatch_semaphore_signal(semaphore);
-        }];
+        NSURLSessionTask* task = [session dataTaskWithURL:u];
         [task resume];
 
-        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+        {
+          std::unique_lock<std::mutex> lock(context_->mutex());
+          while (true) {
+            context_->cond().wait(lock);
+            context_->debug("wait");
+            if (context_->completed()) {
+              break;
+            }
+          }
+        }
 
         [session invalidateAndCancel];
       }
 
       int status_code() const {
-        return status_code_;
+        return context_->status_code();
       }
 
       const std::vector<char>& data() const {
-        return data_;
+        return context_->data();
       }
 
     private:
-      int status_code_;
-      std::vector<char> data_;
+      std::shared_ptr<http_session_context> context_;
     };
   }
 
   void http(int key, const std::string& url) {
-    session s;
-    s.http(key, url);
+    session s(key);
+    s.http(url);
 
     std::ostringstream out;
     out << "done " << s.status_code() << " " << s.data().size();
