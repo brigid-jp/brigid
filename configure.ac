@@ -22,13 +22,12 @@ AC_CHECK_HEADERS([CommonCrypto/CommonCrypto.h], [
   AC_DEFINE(CRYPTO_APPLE, 1, [Define to 1 if using CommonCrypto.])
   crypto_apple=yes
 ])
+AM_CONDITIONAL([CRYPTO_APPLE], [test "X$crypto_apple" = Xyes])
 
 AX_CHECK_OPENSSL([
   AC_DEFINE(CRYPTO_OPENSSL, 1, [Define to 1 if using OpenSSL.])
   crypto_openssl=yes
 ])
-
-AM_CONDITIONAL([CRYPTO_APPLE], [test "X$crypto_apple" = Xyes])
 AM_CONDITIONAL([CRYPTO_OPENSSL], [test "X$crypto_openssl" = Xyes])
 
 AC_LANG_PUSH([Objective C++])
@@ -37,7 +36,6 @@ AC_CHECK_HEADERS([Foundation/Foundation.h], [
   http_apple=yes
 ])
 AC_LANG_POP([Objective C++])
-
 AM_CONDITIONAL([HTTP_APPLE], [test "X$http_apple" = Xyes])
 
 AC_OUTPUT
