@@ -53,7 +53,7 @@ namespace brigid {
         cond_.notify_one();
       }
 
-      int status_code(int status_code) {
+      void status_code(int status_code) {
         status_code_ = status_code;
       }
 
@@ -62,10 +62,14 @@ namespace brigid {
       }
 
       void copy(NSData* data) {
-        size_t n = data_.size();
+        __block size_t n = data_.size();
         size_t m = data.length;
         data_.resize(n + m);
-        memcpy(&data_[n], data.bytes, m);
+        [data enumerateByteRangesUsingBlock:^(const void* bytes, NSRange byteRange, BOOL* stop) {
+          std::cout << byteRange.length << "\n";
+          memcpy(&data_[n], bytes, byteRange.length);
+          n += byteRange.length;
+        }];
       }
 
       const std::vector<char>& data() const {
