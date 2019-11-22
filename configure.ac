@@ -12,8 +12,8 @@ AC_CONFIG_HEADER([config.h])
 AC_CONFIG_FILES([Makefile src/lib/Makefile src/lua/Makefile test/lib/Makefile])
 
 AC_PROG_CXX
-AX_CXX_COMPILE_STDCXX(11)
 AC_PROG_OBJCXX
+AX_CXX_COMPILE_STDCXX(11)
 
 AX_PROG_LUA([5.1], [], [], [AC_MSG_ERROR([could not find lua])])
 AX_LUA_HEADERS([], [AC_MSG_ERROR([could not find lua])])
