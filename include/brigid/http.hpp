@@ -12,13 +12,24 @@
 #include <string>
 
 namespace brigid {
-  class http {
+  enum class http_request_body { none, data, file };
+
+  class http_session {
   public:
-    virtual ~http() = 0;
-    virtual void request(const char*, const char*, const std::map<std::string, std::string>&, const char*, size_t) = 0;
+    virtual ~http_session() = 0;
+    virtual void request(
+        const std::string&,
+        const std::string&,
+        const std::map<std::string, std::string>&,
+        http_request_body,
+        const char*,
+        size_t) = 0;
   };
 
-  std::unique_ptr<http> make_http(std::function<bool (int, const std::map<std::string, std::string>&)>, std::function<void (const char*, size_t)>);
+  std::unique_ptr<http_session> make_http_session(
+      std::function<bool (int, const std::map<std::string, std::string>&)>,
+      std::function<bool (const char*, size_t)>,
+      std::function<bool (size_t, size_t, size_t)> = nullptr);
 }
 
 #endif

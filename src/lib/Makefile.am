@@ -21,6 +21,5 @@ endif
 endif
 
 if HTTP_APPLE
-libbrigid_la_OBJCXXFLAGS = -fobjc-arc
 libbrigid_la_SOURCES += http_apple.mm
 endif

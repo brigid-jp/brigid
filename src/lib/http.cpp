@@ -5,5 +5,5 @@
 #include <brigid/http.hpp>
 
 namespace brigid {
-  http::~http() {}
+  http_session::~http_session() {}
 }
