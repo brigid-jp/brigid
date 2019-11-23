@@ -21,9 +21,9 @@ namespace brigid {
         const std::string&,
         const std::string&,
         const std::map<std::string, std::string>&,
-        http_request_body,
-        const char*,
-        size_t) = 0;
+        http_request_body = http_request_body::none,
+        const char* = nullptr,
+        size_t = 0) = 0;
   };
 
   std::unique_ptr<http_session> make_http_session(
