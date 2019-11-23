@@ -8,6 +8,7 @@ check_PROGRAMS = \
 	test.exe
 
 test_exe_CPPFLAGS = -I$(top_srcdir)/include
+test_exe_LDFLAGS =
 test_exe_LDADD = $(top_srcdir)/src/lib/libbrigid.la
 test_exe_SOURCES = \
 	test.cpp \
@@ -15,5 +16,10 @@ test_exe_SOURCES = \
 	test_main.cpp
 
 if CRYPTO_OPENSSL
+test_exe_LDFLAGS += $(OPENSSL_LDFLAGS)
 test_exe_LDADD += $(OPENSSL_LIBS)
+endif
+
+if HTTP_APPLE
+test_exe_LDFLAGS += -framework Foundation
 endif
