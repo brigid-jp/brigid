@@ -12,7 +12,7 @@
 #include <string>
 
 namespace brigid {
-  enum class http_request_body { none, data, file };
+  enum class http_request_body { data, file };
 
   class http_session {
   public:
@@ -21,7 +21,7 @@ namespace brigid {
         const std::string&,
         const std::string&,
         const std::map<std::string, std::string>&,
-        http_request_body = http_request_body::none,
+        http_request_body = http_request_body::data,
         const char* = nullptr,
         size_t = 0) = 0;
   };
