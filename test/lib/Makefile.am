@@ -13,6 +13,7 @@ test_exe_LDADD = $(top_srcdir)/src/lib/libbrigid.la
 test_exe_SOURCES = \
 	test.cpp \
 	test_crypto.cpp \
+	test_http.cpp \
 	test_main.cpp
 
 if CRYPTO_OPENSSL

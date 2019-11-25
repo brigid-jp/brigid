@@ -24,8 +24,6 @@ case X$HAVE_CXX11 in
 esac
 AC_PROG_OBJCXX
 
-echo "{$brigid_save_CXX} {$CXX} ${HAVE_CXX11}"
-
 AX_PROG_LUA([5.1], [], [], [AC_MSG_ERROR([could not find lua])])
 AX_LUA_HEADERS([], [AC_MSG_ERROR([could not find lua])])
 
