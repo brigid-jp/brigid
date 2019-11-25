@@ -7,60 +7,25 @@
 #include <Foundation/Foundation.h>
 
 #include <condition_variable>
+#include <exception>
 #include <memory>
 #include <mutex>
+#include <stdexcept>
 
 namespace brigid {
   namespace {
     class http_session_context {
     public:
       http_session_context(
-          std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
-          std::function<bool (const char*, size_t)> write_cb,
-          std::function<bool (size_t, size_t, size_t)> progress_cb)
-        : header_cb_(header_cb),
-          write_cb_(write_cb),
-          progress_cb_(progress_cb) {}
+          std::function<bool (int, const std::map<std::string, std::string>&)>,
+          std::function<bool (const char*, size_t)>,
+          std::function<bool (size_t, size_t, size_t)>);
 
-      void send(std::function<bool ()> req) {
-        std::lock_guard<std::mutex> lock(req_mutex_);
-        req_ = req;
-        req_condition_.notify_all();
-      }
+      void complete(NSError*);
+      void send(std::function<bool ()>);
+      bool recv();
+      void wait();
 
-      bool recv() {
-        std::unique_lock<std::mutex> lock(rep_mutex_);
-        rep_condition_.wait(lock);
-        return rep_;
-      }
-
-      void wait() {
-        std::unique_lock<std::mutex> lock(req_mutex_);
-        while (true) {
-          bool rep = false;
-          {
-            req_condition_.wait(lock);
-            try {
-              std::function<bool ()> req;
-              req_.swap(req);
-              if (req) {
-                rep = req();
-              } else {
-                break;
-              }
-            } catch (const std::exception& e) {
-              // save error
-            }
-          }
-          {
-            std::lock_guard<std::mutex> lock(rep_mutex_);
-            rep_ = rep;
-            rep_condition_.notify_all();
-          }
-        }
-      }
-
-      void did_complete(NSError*);
       bool did_send_body_data(int64_t, int64_t, int64_t);
       bool did_receive_response(NSHTTPURLResponse*);
       bool did_receive_data(NSData*);
@@ -73,12 +38,12 @@ namespace brigid {
       std::mutex req_mutex_;
       std::condition_variable req_condition_;
       std::function<bool ()> req_;
-      bool req_error_;
-      std::string req_error_message_;
 
       std::mutex rep_mutex_;
       std::condition_variable rep_condition_;
       bool rep_;
+
+      std::exception_ptr exception_;
     };
   }
 }
@@ -99,7 +64,7 @@ namespace brigid {
 - (void)URLSession:(NSURLSession *)_session
               task:(NSURLSessionTask *)task
 didCompleteWithError:(NSError *)error {
-  context_->did_complete(error);
+  context_->complete(error);
 }
 
 - (void)URLSession:(NSURLSession *)session
@@ -156,17 +121,68 @@ namespace brigid {
       return [[NSString alloc] initWithBytes:data length:size encoding:NSUTF8StringEncoding];
     }
 
-    void http_session_context::did_complete(NSError* error) {
+    http_session_context::http_session_context(
+        std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
+        std::function<bool (const char*, size_t)> write_cb,
+        std::function<bool (size_t, size_t, size_t)> progress_cb)
+      : header_cb_(header_cb),
+        write_cb_(write_cb),
+        progress_cb_(progress_cb) {}
+
+    void http_session_context::complete(NSError* error) {
       std::lock_guard<std::mutex> lock(req_mutex_);
       req_ = nullptr;
-      if (error) {
-        req_error_ = true;
-        req_error_message_ = to_string(error.localizedDescription);
-      } else {
-        req_error_ = false;
-        req_error_message_.clear();
+      if (error && !exception_) {
+        exception_ = std::make_exception_ptr(std::runtime_error(to_string(error.localizedDescription)));
       }
       req_condition_.notify_all();
+    }
+
+    void http_session_context::send(std::function<bool ()> req) {
+      std::lock_guard<std::mutex> lock(req_mutex_);
+      req_ = req;
+      req_condition_.notify_all();
+    }
+
+    bool http_session_context::recv() {
+      std::unique_lock<std::mutex> lock(rep_mutex_);
+      rep_condition_.wait(lock);
+      return rep_;
+    }
+
+    void http_session_context::wait() {
+      {
+        std::unique_lock<std::mutex> lock(req_mutex_);
+        while (true) {
+          bool rep = false;
+          std::exception_ptr exception;
+
+          req_condition_.wait(lock);
+          std::function<bool ()> req = req_;
+          req_ = nullptr;
+          if (req) {
+            try {
+              rep = req();
+            } catch (...) {
+              if (!exception_) {
+                exception_ = std::current_exception();
+              }
+            }
+          } else {
+            break;
+          }
+
+          std::lock_guard<std::mutex> lock(rep_mutex_);
+          rep_ = rep;
+          rep_condition_.notify_all();
+        }
+      }
+
+      if (exception_) {
+        std::exception_ptr exception = exception_;
+        exception_ = nullptr;
+        std::rethrow_exception(exception);
+      }
     }
 
     bool http_session_context::did_send_body_data(int64_t sent, int64_t total, int64_t expected) {
