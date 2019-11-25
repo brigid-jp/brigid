@@ -23,7 +23,7 @@ namespace brigid {
 
   struct make_test_case {
   public:
-    make_test_case(const std::string&, std::function<void()>);
+    make_test_case(const std::string&, std::function<void ()>);
   };
 
   int run_test_cases();

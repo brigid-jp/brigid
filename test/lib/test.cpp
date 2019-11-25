@@ -12,7 +12,7 @@ namespace brigid {
   namespace {
     class test_case_impl {
     public:
-      test_case_impl(const std::string& name, std::function<void()> function)
+      test_case_impl(const std::string& name, std::function<void ()> function)
         : name_(name),
           function_(function) {}
 
@@ -31,13 +31,13 @@ namespace brigid {
 
     private:
       std::string name_;
-      std::function<void()> function_;
+      std::function<void ()> function_;
     };
 
     std::vector<test_case_impl> test_cases;
   }
 
-  make_test_case::make_test_case(const std::string& name, std::function<void()> function) {
+  make_test_case::make_test_case(const std::string& name, std::function<void ()> function) {
     test_cases.emplace_back(name, function);
   }
 
