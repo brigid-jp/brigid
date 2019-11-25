@@ -6,43 +6,25 @@
 #include <brigid/http.hpp>
 
 #include <iostream>
-#include <stdexcept>
+#include <string>
 
 void test1() {
-
-  int count = 0;
+  std::string body;
   auto session = brigid::make_http_session(
-      [&](int code, const std::map<std::string, std::string>& headers) -> bool {
-        std::cout << "code " << code << "\n";
-        for (const auto& header : headers) {
-          std::cout << header.first << ": " << header.second << "\n";
-        }
-        if (++count == 2) {
-          throw std::runtime_error("foo bar baz");
-        }
+      [](int code, const std::map<std::string, std::string>& headers) -> bool {
+        BRIGID_CHECK(code == 200);
+        BRIGID_CHECK(headers.find("Content-Length")->second == "0");
+        BRIGID_CHECK(headers.find("Content-Type")->second == "text/html; charset=UTF-8");
         return true;
       },
-      [](const char* data, size_t size) -> bool {
-        std::cout << std::string(data, size);
+      [&](const char* data, size_t size) -> bool {
+        body += std::string(data, size);
         return true;
-      });
+      },
+      nullptr);
 
   session->request("GET", "https://brigid.jp/", std::map<std::string, std::string>());
-  try {
-    session->request("GET", "https://133.242.153.239/", std::map<std::string, std::string>());
-  } catch (const std::exception& e) {
-    std::cout << "caught " << e.what() << "\n";
-  }
-  try {
-    session->request("GET", "https://brigid.jp/love2d-excersise/", std::map<std::string, std::string>());
-  } catch (const std::exception& e) {
-    std::cout << "caught " << e.what() << "\n";
-  }
-  try {
-    session->request("GET", "https://brigid.jp/love2d-excersise/", std::map<std::string, std::string>());
-  } catch (const std::exception& e) {
-    std::cout << "caught " << e.what() << "\n";
-  }
+  BRIGID_CHECK(body.empty());
 }
 
 brigid::make_test_case make_test1("http test (1)", test1);
