@@ -16,10 +16,11 @@ namespace brigid {
   namespace {
     class http_session_context {
     public:
-      http_session_context(
-          std::function<bool (int, const std::map<std::string, std::string>&)>,
-          std::function<bool (const char*, size_t)>,
-          std::function<bool (size_t, size_t)>);
+      http_session_context();
+
+      void set_progress_cb(std::function<bool (size_t, size_t)>);
+      void set_header_cb(std::function<bool (int, const std::map<std::string, std::string>&)>);
+      void set_write_cb(std::function<bool (const char*, size_t)>);
 
       void complete(NSError*);
       void send(std::function<bool ()>);
@@ -31,9 +32,9 @@ namespace brigid {
       bool did_receive_data(NSData*);
 
     private:
+      std::function<bool (size_t, size_t)> progress_cb_;
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb_;
       std::function<bool (const char*, size_t)> write_cb_;
-      std::function<bool (size_t, size_t)> progress_cb_;
 
       std::mutex req_mutex_;
       std::condition_variable req_condition_;
@@ -121,13 +122,20 @@ namespace brigid {
       return [[NSString alloc] initWithBytes:data length:size encoding:NSUTF8StringEncoding];
     }
 
-    http_session_context::http_session_context(
-        std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
-        std::function<bool (const char*, size_t)> write_cb,
-        std::function<bool (size_t, size_t)> progress_cb)
-      : header_cb_(header_cb),
-        write_cb_(write_cb),
-        progress_cb_(progress_cb) {}
+    http_session_context::http_session_context()
+      : rep_() {}
+
+    void http_session_context::set_progress_cb(std::function<bool (size_t, size_t)> progress_cb) {
+      progress_cb_ = progress_cb;
+    }
+
+    void http_session_context::set_header_cb(std::function<bool (int, const std::map<std::string, std::string>&)> header_cb) {
+      header_cb_ = header_cb;
+    }
+
+    void http_session_context::set_write_cb(std::function<bool (const char*, size_t)> write_cb) {
+      write_cb_ = write_cb;
+    }
 
     void http_session_context::complete(NSError* error) {
       std::lock_guard<std::mutex> lock(req_mutex_);
@@ -222,17 +230,25 @@ namespace brigid {
 
     class http_session_impl : public http_session {
     public:
-      http_session_impl(
-          std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
-          std::function<bool (const char*, size_t)> write_cb,
-          std::function<bool (size_t, size_t)> progress_cb)
-        : context_(std::make_shared<http_session_context>(header_cb, write_cb, progress_cb)),
+      http_session_impl()
+        : context_(std::make_shared<http_session_context>()),
           delegate_([[BrigidSessionDelegate alloc] initWithContext:context_]),
-          session_([NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:delegate_ delegateQueue:nil]) {
-      }
+          session_([NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:delegate_ delegateQueue:nil]) {}
 
       virtual ~http_session_impl() {
         [session_ invalidateAndCancel];
+      }
+
+      virtual void set_progress_cb(std::function<bool (size_t, size_t)> progress_cb) {
+        context_->set_progress_cb(progress_cb);
+      }
+
+      virtual void set_header_cb(std::function<bool (int, const std::map<std::string, std::string>&)> header_cb) {
+        context_->set_header_cb(header_cb);
+      }
+
+      virtual void set_write_cb(std::function<bool (const char*, size_t)> write_cb) {
+        context_->set_write_cb(write_cb);
       }
 
       virtual void request(
@@ -271,10 +287,7 @@ namespace brigid {
     };
   }
 
-  std::unique_ptr<http_session> make_http_session(
-      std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
-      std::function<bool (const char*, size_t)> write_cb,
-      std::function<bool (size_t, size_t)> progress_cb) {
-    return std::unique_ptr<http_session>(new http_session_impl(header_cb, write_cb, progress_cb));
+  std::unique_ptr<http_session> make_http_session() {
+    return std::unique_ptr<http_session>(new http_session_impl());
   }
 }

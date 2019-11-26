@@ -10,18 +10,18 @@
 #include <string>
 
 namespace {
-  using namespace std::placeholders;
-
   static const std::map<std::string, std::string> empty_headers;
 
   class test_client {
   public:
     test_client()
-      : session_(brigid::make_http_session(
-            std::bind(&test_client::header_cb, this, _1, _2),
-            std::bind(&test_client::write_cb, this, _1, _2),
-            std::bind(&test_client::progress_cb, this, _1, _2))),
-        code_() {}
+      : session_(brigid::make_http_session()),
+        code_() {
+      using namespace std::placeholders;
+      session_->set_progress_cb(std::bind(&test_client::progress_cb, this, _1, _2));
+      session_->set_header_cb(std::bind(&test_client::header_cb, this, _1, _2));
+      session_->set_write_cb(std::bind(&test_client::write_cb, this, _1, _2));
+    }
 
     int request(
         const std::string& method,
