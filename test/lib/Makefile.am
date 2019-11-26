@@ -23,4 +23,9 @@ endif
 
 if HTTP_APPLE
 test_exe_LDFLAGS += -framework Foundation
+else
+if HTTP_CURL
+test_exe_LDFLAGS += $(CURL_LDFLAGS)
+test_exe_LDADD += $(CURL_LIBS)
+endif
 endif
