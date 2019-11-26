@@ -22,9 +22,41 @@ void test1() {
         return true;
       },
       nullptr);
-
   session->request("GET", "https://brigid.jp/", std::map<std::string, std::string>());
   BRIGID_CHECK(body.empty());
 }
 
-brigid::make_test_case make_test1("http test (1)", test1);
+void test2() {
+  int status_code = -1;
+  std::string body;
+  auto session = brigid::make_http_session(
+      [&](int code, const std::map<std::string, std::string>&) -> bool {
+        status_code = code;
+        return true;
+      },
+      [&](const char* data, size_t size) -> bool {
+        body += std::string(data, size);
+        return true;
+      },
+      [](size_t sent, size_t total, size_t expected) -> bool {
+        std::cout << "progress " << sent << ", " << total << ", " << expected << "\n";
+        return true;
+      });
+
+  std::string data = "foo\nbar\nbaz\nqux\n";
+  session->request("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", std::map<std::string, std::string>(), brigid::http_request_body::data, data.data(), data.size());
+  BRIGID_CHECK(status_code == 201 || status_code == 204);
+  BRIGID_CHECK(body.empty());
+
+  session->request("GET", "https://brigid.jp/test/dav/auth-none/test.txt", std::map<std::string, std::string>());
+  BRIGID_CHECK(status_code == 200);
+  BRIGID_CHECK(body == data);
+  body.clear();
+
+  session->request("DELETE", "https://brigid.jp/test/dav/auth-none/test.txt", std::map<std::string, std::string>());
+  BRIGID_CHECK(status_code == 204);
+  BRIGID_CHECK(body.empty());
+}
+
+brigid::make_test_case make_test1("http test1", test1);
+brigid::make_test_case make_test2("http test2", test2);
