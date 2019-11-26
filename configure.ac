@@ -47,4 +47,10 @@ AC_CHECK_HEADERS([Foundation/Foundation.h], [
 AC_LANG_POP([Objective C++])
 AM_CONDITIONAL([HTTP_APPLE], [test "X$http_apple" = Xyes])
 
+AX_LIB_CURL([7.17.0], [
+  AC_DEFINE(HTTP_CURL, 1, [Define to 1 if using libcurl.])
+  http_curl=yes
+])
+AM_CONDITIONAL([HTTP_CURL], [test "X$http_curl" = Xyes])
+
 AC_OUTPUT
