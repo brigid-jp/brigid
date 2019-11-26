@@ -20,10 +20,11 @@ namespace brigid {
       void set_progress_cb(std::function<bool (size_t, size_t)>);
       void set_header_cb(std::function<bool (int, const std::map<std::string, std::string>&)>);
       void set_write_cb(std::function<bool (const char*, size_t)>);
+      void set_credential();
       void set_credential(const std::string&, const std::string&);
       void did_complete_with_error(NSError*);
       bool did_send_body_data(size_t, size_t);
-      NSURLCredential* did_receive_challenge();
+      NSURLCredential* did_receive_challenge(NSURLAuthenticationChallenge*);
       bool did_receive_response(NSHTTPURLResponse*);
       bool did_receive_data(NSData*);
       void wait(NSURLSessionTask*);
@@ -32,6 +33,7 @@ namespace brigid {
       std::function<bool (size_t, size_t)> progress_cb_;
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb_;
       std::function<bool (const char*, size_t)> write_cb_;
+      bool credential_;
       std::string username_;
       std::string password_;
       std::mutex req_mutex_;
@@ -81,13 +83,11 @@ totalBytesExpectedToSend:(int64_t)totalBytesExpectedToSend {
               task:(NSURLSessionTask *)task
 didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
  completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completionHandler {
-  if (challenge.previousFailureCount == 0) {
-    if (NSURLCredential* credential = context_->did_receive_challenge()) {
-      completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
-      return;
-    }
+  if (NSURLCredential* credential = context_->did_receive_challenge(challenge)) {
+    completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
+  } else {
+    completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
   }
-  completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
 }
 
 - (void)URLSession:(NSURLSession *)session
@@ -126,7 +126,7 @@ namespace brigid {
     }
 
     http_session_context::http_session_context()
-      : rep_() {}
+      : credential_(), rep_() {}
 
     void http_session_context::set_progress_cb(std::function<bool (size_t, size_t)> progress_cb) {
       progress_cb_ = progress_cb;
@@ -140,7 +140,14 @@ namespace brigid {
       write_cb_ = write_cb;
     }
 
+    void http_session_context::set_credential() {
+      credential_ = false;
+      username_.clear();
+      password_.clear();
+    }
+
     void http_session_context::set_credential(const std::string& username, const std::string& password) {
+      credential_ = true;
       username_ = username;
       password_ = password;
     }
@@ -165,11 +172,12 @@ namespace brigid {
       }
     }
 
-    NSURLCredential* http_session_context::did_receive_challenge() {
-      // if (username_.empty()) {
-      //   return nil;
-      // }
-      return [NSURLCredential credentialWithUser:to_native_string(username_) password:to_native_string(password_) persistence:NSURLCredentialPersistenceForSession];
+    NSURLCredential* http_session_context::did_receive_challenge(NSURLAuthenticationChallenge* challenge) {
+      if (challenge.previousFailureCount == 0 && credential_) {
+        return [NSURLCredential credentialWithUser:to_native_string(username_) password:to_native_string(password_) persistence:NSURLCredentialPersistenceForSession];
+      } else {
+        return nil;
+      }
     }
 
     bool http_session_context::did_receive_response(NSHTTPURLResponse* response) {
@@ -270,6 +278,10 @@ namespace brigid {
 
       virtual void set_write_cb(std::function<bool (const char*, size_t)> write_cb) {
         context_->set_write_cb(write_cb);
+      }
+
+      virtual void set_credential() {
+        context_->set_credential();
       }
 
       virtual void set_credential(const std::string& username, const std::string& password) {
