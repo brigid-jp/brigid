@@ -18,10 +18,10 @@ brigid_la_LIBADD += $(OPENSSL_LIBS)
 endif
 
 if HTTP_APPLE
-brigid_la_LDADD += -framework Foundation
+brigid_la_LDFLAGS += -framework Foundation
 else
 if HTTP_CURL
 brigid_la_LDFLAGS += $(CURL_LDFLAGS)
-brigid_la_LDADD += $(CURL_LIBS)
+brigid_la_LIBADD += $(CURL_LIBS)
 endif
 endif

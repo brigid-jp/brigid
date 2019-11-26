@@ -22,7 +22,7 @@ test_exe_LDADD += $(OPENSSL_LIBS)
 endif
 
 if HTTP_APPLE
-test_exe_LDADD += -framework Foundation
+test_exe_LDFLAGS += -framework Foundation
 else
 if HTTP_CURL
 test_exe_LDFLAGS += $(CURL_LDFLAGS)

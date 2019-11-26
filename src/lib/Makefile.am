@@ -27,3 +27,4 @@ if HTTP_CURL
 libbrigid_la_CPPFLAGS += $(CURL_CFLAGS)
 libbrigid_la_SOURCES += http_curl.cpp
 endif
+endif
