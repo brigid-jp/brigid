@@ -43,9 +43,6 @@ namespace brigid {
       std::condition_variable rep_condition_;
       bool rep_;
       std::exception_ptr exception_;
-
-      void send(std::function<bool ()>);
-      bool recv();
     };
   }
 }
@@ -153,7 +150,7 @@ namespace brigid {
     }
 
     void http_session_context::did_complete_with_error(NSError* error) {
-      std::lock_guard<std::mutex> lock(req_mutex_);
+      std::lock_guard<std::mutex> req_lock(req_mutex_);
       req_ = nullptr;
       if (error && !exception_) {
         exception_ = std::make_exception_ptr(std::runtime_error(to_string(error.localizedDescription)));
@@ -163,10 +160,17 @@ namespace brigid {
 
     bool http_session_context::did_send_body_data(size_t total_bytes_sent, size_t total_bytes_expected_to_send) {
       if (progress_cb_) {
-        send([=]() -> bool {
-          return progress_cb_(total_bytes_sent, total_bytes_expected_to_send);
-        });
-        return recv();
+        std::unique_lock<std::mutex> rep_lock(rep_mutex_, std::defer_lock);
+        {
+          std::lock_guard<std::mutex> req_lock(req_mutex_);
+          req_ = [=]() -> bool {
+            return progress_cb_(total_bytes_sent, total_bytes_expected_to_send);
+          };
+          rep_lock.lock();
+          req_condition_.notify_all();
+        }
+        rep_condition_.wait(rep_lock);
+        return rep_;
       } else {
         return true;
       }
@@ -182,14 +186,21 @@ namespace brigid {
 
     bool http_session_context::did_receive_response(NSHTTPURLResponse* response) {
       if (header_cb_) {
-        send([=]() -> bool {
-          std::map<std::string, std::string> headers;
-          for (NSString* key in response.allHeaderFields) {
-            headers[brigid::to_string(key)] = brigid::to_string(response.allHeaderFields[key]);
-          }
-          return header_cb_(response.statusCode, headers);
-        });
-        return recv();
+        std::unique_lock<std::mutex> rep_lock(rep_mutex_, std::defer_lock);
+        {
+          std::lock_guard<std::mutex> req_lock(req_mutex_);
+          req_ = [=]() -> bool {
+            std::map<std::string, std::string> headers;
+            for (NSString* key in response.allHeaderFields) {
+              headers[brigid::to_string(key)] = brigid::to_string(response.allHeaderFields[key]);
+            }
+            return header_cb_(response.statusCode, headers);
+          };
+          rep_lock.lock();
+          req_condition_.notify_all();
+        }
+        rep_condition_.wait(rep_lock);
+        return rep_;
       } else {
         return true;
       }
@@ -197,41 +208,37 @@ namespace brigid {
 
     bool http_session_context::did_receive_data(NSData* data) {
       if (write_cb_) {
-        send([=]() -> bool {
-          __block bool result = true;
-          [data enumerateByteRangesUsingBlock:^(const void* bytes, NSRange byteRange, BOOL* stop) {
-            result = write_cb_(static_cast<const char*>(bytes), byteRange.length);
-            if (!result) {
-              *stop = YES;
-            }
-          }];
-          return result;
-        });
-        return recv();
+        std::unique_lock<std::mutex> rep_lock(rep_mutex_, std::defer_lock);
+        {
+          std::lock_guard<std::mutex> req_lock(req_mutex_);
+          req_ = [=]() -> bool {
+            __block bool result = true;
+            [data enumerateByteRangesUsingBlock:^(const void* bytes, NSRange byteRange, BOOL* stop) {
+              result = write_cb_(static_cast<const char*>(bytes), byteRange.length);
+              if (!result) {
+                *stop = YES;
+              }
+            }];
+            return result;
+          };
+          rep_lock.lock();
+          req_condition_.notify_all();
+        }
+        rep_condition_.wait(rep_lock);
+        return rep_;
       } else {
         return true;
       }
     }
 
-    void http_session_context::send(std::function<bool ()> req) {
-      std::lock_guard<std::mutex> lock(req_mutex_);
-      req_ = req;
-      req_condition_.notify_all();
-    }
-
-    bool http_session_context::recv() {
-      std::unique_lock<std::mutex> lock(rep_mutex_);
-      rep_condition_.wait(lock);
-      return rep_;
-    }
-
     void http_session_context::wait(NSURLSessionTask* task) {
       {
-        std::unique_lock<std::mutex> lock(req_mutex_);
+        std::unique_lock<std::mutex> req_lock(req_mutex_);
+
         [task resume];
 
         while (true) {
-          req_condition_.wait(lock);
+          req_condition_.wait(req_lock);
           std::function<bool ()> req = req_;
           req_ = nullptr;
           rep_ = false;
@@ -246,6 +253,8 @@ namespace brigid {
           } else {
             break;
           }
+
+          std::lock_guard<std::mutex> rep_lock(rep_mutex_);
           rep_condition_.notify_all();
         }
       }
