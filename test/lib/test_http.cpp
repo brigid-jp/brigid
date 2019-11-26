@@ -5,57 +5,113 @@
 #include "test.hpp"
 #include <brigid/http.hpp>
 
+#include <functional>
 #include <iostream>
 #include <string>
 
+namespace {
+  using namespace std::placeholders;
+
+  static const std::map<std::string, std::string> empty_headers;
+
+  class test_client {
+  public:
+    test_client()
+      : session_(brigid::make_http_session(
+            std::bind(&test_client::header_cb, this, _1, _2),
+            std::bind(&test_client::write_cb, this, _1, _2),
+            std::bind(&test_client::progress_cb, this, _1, _2))),
+        code_() {}
+
+    int request(
+        const std::string& method,
+        const std::string& url,
+        const std::map<std::string, std::string>& headers = empty_headers,
+        brigid::http_request_body body = brigid::http_request_body::data,
+        const char* data = nullptr,
+        size_t size = 0) {
+      code_ = 0;
+      session_->request(method, url, headers, body, data, size);
+      body_ = out_.str();
+      out_.str(std::string());
+      out_.clear();
+      return code_;
+    }
+
+    int code() const {
+      return code_;
+    }
+
+    std::string header(const std::string& key) const {
+      auto iterator = headers_.find(key);
+      if (iterator == headers_.end()) {
+        return std::string();
+      } else {
+        return iterator->second;
+      }
+    }
+
+    const std::map<std::string, std::string>& headers() const {
+      return headers_;
+    }
+
+    const std::string& body() const {
+      return body_;
+    }
+
+  private:
+    std::unique_ptr<brigid::http_session> session_;
+    int code_;
+    std::map<std::string, std::string> headers_;
+    std::ostringstream out_;
+    std::string body_;
+
+    bool header_cb(int code, const std::map<std::string, std::string>& headers) {
+      code_ = code;
+      headers_ = headers;
+      return true;
+    }
+
+    bool write_cb(const char* data, size_t size) {
+      out_.write(data, size);
+      return true;
+    }
+
+    bool progress_cb(size_t now, size_t total) {
+      std::cout << "progress " << now << "/" << total << "\n";
+      return true;
+    }
+  };
+}
+
 void test1() {
-  std::string body;
-  auto session = brigid::make_http_session(
-      [](int code, const std::map<std::string, std::string>& headers) -> bool {
-        BRIGID_CHECK(code == 200);
-        BRIGID_CHECK(headers.find("Content-Length")->second == "0");
-        BRIGID_CHECK(headers.find("Content-Type")->second == "text/html; charset=UTF-8");
-        return true;
-      },
-      [&](const char* data, size_t size) -> bool {
-        body += std::string(data, size);
-        return true;
-      },
-      nullptr);
-  session->request("GET", "https://brigid.jp/", std::map<std::string, std::string>());
-  BRIGID_CHECK(body.empty());
+  test_client client;
+  client.request("GET", "https://brigid.jp/");
+  BRIGID_CHECK(client.code() == 200);
+  BRIGID_CHECK(client.header("Content-Length") == "0");
+  BRIGID_CHECK(client.header("Content-Type") == "text/html; charset=UTF-8");
+  BRIGID_CHECK(client.body().empty());
 }
 
 void test2() {
-  int status_code = -1;
-  std::string body;
-  auto session = brigid::make_http_session(
-      [&](int code, const std::map<std::string, std::string>&) -> bool {
-        status_code = code;
-        return true;
-      },
-      [&](const char* data, size_t size) -> bool {
-        body += std::string(data, size);
-        return true;
-      },
-      [](size_t sent, size_t total, size_t expected) -> bool {
-        std::cout << "progress " << sent << ", " << total << ", " << expected << "\n";
-        return true;
-      });
+  static const std::string data = "foo\nbar\nbaz\nqux\n";
 
-  std::string data = "foo\nbar\nbaz\nqux\n";
-  session->request("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", std::map<std::string, std::string>(), brigid::http_request_body::data, data.data(), data.size());
-  BRIGID_CHECK(status_code == 201 || status_code == 204);
-  BRIGID_CHECK(body.empty());
+  test_client client;
+  client.request("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", empty_headers, brigid::http_request_body::data, data.data(), data.size());
+  BRIGID_CHECK(client.code() == 201 || client.code() == 204);
+  std::cout << "[" << client.body() << "]\n";
 
-  session->request("GET", "https://brigid.jp/test/dav/auth-none/test.txt", std::map<std::string, std::string>());
-  BRIGID_CHECK(status_code == 200);
-  BRIGID_CHECK(body == data);
-  body.clear();
+  client.request("GET", "https://brigid.jp/test/dav/auth-none/test.txt");
+  BRIGID_CHECK(client.code() == 200);
+  BRIGID_CHECK(client.body() == data);
 
-  session->request("DELETE", "https://brigid.jp/test/dav/auth-none/test.txt", std::map<std::string, std::string>());
-  BRIGID_CHECK(status_code == 204);
-  BRIGID_CHECK(body.empty());
+  client.request("DELETE", "https://brigid.jp/test/dav/auth-none/test.txt");
+  BRIGID_CHECK(client.code()== 204);
+  BRIGID_CHECK(client.body().empty());
+
+  client.request("HEAD", "https://brigid.jp/test/dav/auth-none/test.txt");
+  BRIGID_CHECK(client.code() == 404);
+  BRIGID_CHECK(client.body().empty());
 }
 
 brigid::make_test_case make_test1("http test1", test1);

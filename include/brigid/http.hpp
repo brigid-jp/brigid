@@ -21,15 +21,15 @@ namespace brigid {
         const std::string&,
         const std::string&,
         const std::map<std::string, std::string>&,
-        http_request_body = http_request_body::data,
-        const char* = nullptr,
-        size_t = 0) = 0;
+        http_request_body,
+        const char*,
+        size_t) = 0;
   };
 
   std::unique_ptr<http_session> make_http_session(
       std::function<bool (int, const std::map<std::string, std::string>&)>,
       std::function<bool (const char*, size_t)>,
-      std::function<bool (size_t, size_t, size_t)> = nullptr);
+      std::function<bool (size_t, size_t)>);
 }
 
 #endif
