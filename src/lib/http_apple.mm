@@ -17,34 +17,29 @@ namespace brigid {
     class http_session_context {
     public:
       http_session_context();
-
       void set_progress_cb(std::function<bool (size_t, size_t)>);
       void set_header_cb(std::function<bool (int, const std::map<std::string, std::string>&)>);
       void set_write_cb(std::function<bool (const char*, size_t)>);
-
-      void complete(NSError*);
-      void send(std::function<bool ()>);
-      bool recv();
-      void wait();
-
-      bool did_send_body_data(int64_t, int64_t, int64_t);
+      void did_complete(NSError*);
+      bool did_send_body_data(size_t, size_t);
       bool did_receive_response(NSHTTPURLResponse*);
       bool did_receive_data(NSData*);
+      void wait(NSURLSessionTask*);
 
     private:
       std::function<bool (size_t, size_t)> progress_cb_;
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb_;
       std::function<bool (const char*, size_t)> write_cb_;
-
       std::mutex req_mutex_;
       std::condition_variable req_condition_;
       std::function<bool ()> req_;
-
       std::mutex rep_mutex_;
       std::condition_variable rep_condition_;
       bool rep_;
-
       std::exception_ptr exception_;
+
+      void send(std::function<bool ()>);
+      bool recv();
     };
   }
 }
@@ -65,7 +60,7 @@ namespace brigid {
 - (void)URLSession:(NSURLSession *)_session
               task:(NSURLSessionTask *)task
 didCompleteWithError:(NSError *)error {
-  context_->complete(error);
+  context_->did_complete(error);
 }
 
 - (void)URLSession:(NSURLSession *)session
@@ -73,10 +68,7 @@ didCompleteWithError:(NSError *)error {
    didSendBodyData:(int64_t)bytesSent
     totalBytesSent:(int64_t)totalBytesSent
 totalBytesExpectedToSend:(int64_t)totalBytesExpectedToSend {
-  context_->send([=]() -> bool {
-    return context_->did_send_body_data(bytesSent, totalBytesSent, totalBytesExpectedToSend);
-  });
-  if (!context_->recv()) {
+  if (!context_->did_send_body_data(totalBytesSent, totalBytesExpectedToSend)) {
     [task cancel];
   }
 }
@@ -85,10 +77,7 @@ totalBytesExpectedToSend:(int64_t)totalBytesExpectedToSend {
           dataTask:(NSURLSessionDataTask *)dataTask
 didReceiveResponse:(NSURLResponse *)response
  completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler {
-  context_->send([=]() -> bool {
-    return context_->did_receive_response((NSHTTPURLResponse*) response);
-  });
-  if (context_->recv()) {
+  if (context_->did_receive_response((NSHTTPURLResponse*) response)) {
     completionHandler(NSURLSessionResponseAllow);
   } else {
     completionHandler(NSURLSessionResponseCancel);
@@ -98,10 +87,7 @@ didReceiveResponse:(NSURLResponse *)response
 - (void)URLSession:(NSURLSession *)session
           dataTask:(NSURLSessionDataTask *)dataTask
     didReceiveData:(NSData *)data {
-  context_->send([=]() -> bool {
-    return context_->did_receive_data(data);
-  });
-  if (!context_->recv()) {
+  if (!context_->did_receive_data(data)) {
     [dataTask cancel];
   }
 }
@@ -137,13 +123,57 @@ namespace brigid {
       write_cb_ = write_cb;
     }
 
-    void http_session_context::complete(NSError* error) {
+    void http_session_context::did_complete(NSError* error) {
       std::lock_guard<std::mutex> lock(req_mutex_);
       req_ = nullptr;
       if (error && !exception_) {
         exception_ = std::make_exception_ptr(std::runtime_error(to_string(error.localizedDescription)));
       }
       req_condition_.notify_all();
+    }
+
+    bool http_session_context::did_send_body_data(size_t total_bytes_sent, size_t total_bytes_expected_to_send) {
+      if (progress_cb_) {
+        send([=]() -> bool {
+          return progress_cb_(total_bytes_sent, total_bytes_expected_to_send);
+        });
+        return recv();
+      } else {
+        return true;
+      }
+    }
+
+    bool http_session_context::did_receive_response(NSHTTPURLResponse* response) {
+      if (header_cb_) {
+        send([=]() -> bool {
+          std::map<std::string, std::string> headers;
+          for (NSString* key in response.allHeaderFields) {
+            headers[brigid::to_string(key)] = brigid::to_string(response.allHeaderFields[key]);
+          }
+          return header_cb_(response.statusCode, headers);
+        });
+        return recv();
+      } else {
+        return true;
+      }
+    }
+
+    bool http_session_context::did_receive_data(NSData* data) {
+      if (write_cb_) {
+        send([=]() -> bool {
+          __block bool result = true;
+          [data enumerateByteRangesUsingBlock:^(const void* bytes, NSRange byteRange, BOOL* stop) {
+            result = write_cb_(static_cast<const char*>(bytes), byteRange.length);
+            if (!result) {
+              *stop = YES;
+            }
+          }];
+          return result;
+        });
+        return recv();
+      } else {
+        return true;
+      }
     }
 
     void http_session_context::send(std::function<bool ()> req) {
@@ -158,19 +188,19 @@ namespace brigid {
       return rep_;
     }
 
-    void http_session_context::wait() {
+    void http_session_context::wait(NSURLSessionTask* task) {
       {
         std::unique_lock<std::mutex> lock(req_mutex_);
-        while (true) {
-          bool rep = false;
-          std::exception_ptr exception;
+        [task resume];
 
+        while (true) {
           req_condition_.wait(lock);
           std::function<bool ()> req = req_;
           req_ = nullptr;
+          rep_ = false;
           if (req) {
             try {
-              rep = req();
+              rep_ = req();
             } catch (...) {
               if (!exception_) {
                 exception_ = std::current_exception();
@@ -179,9 +209,6 @@ namespace brigid {
           } else {
             break;
           }
-
-          std::lock_guard<std::mutex> lock(rep_mutex_);
-          rep_ = rep;
           rep_condition_.notify_all();
         }
       }
@@ -190,41 +217,6 @@ namespace brigid {
         std::exception_ptr exception = exception_;
         exception_ = nullptr;
         std::rethrow_exception(exception);
-      }
-    }
-
-    bool http_session_context::did_send_body_data(int64_t, int64_t now, int64_t total) {
-      if (progress_cb_) {
-        return progress_cb_(now, total);
-      } else {
-        return true;
-      }
-    }
-
-    bool http_session_context::did_receive_response(NSHTTPURLResponse* response) {
-      if (header_cb_) {
-        std::map<std::string, std::string> headers;
-        for (NSString* key in response.allHeaderFields) {
-          headers[brigid::to_string(key)] = brigid::to_string(response.allHeaderFields[key]);
-        }
-        return header_cb_(response.statusCode, headers);
-      } else {
-        return true;
-      }
-    }
-
-    bool http_session_context::did_receive_data(NSData* data) {
-      if (write_cb_) {
-        __block bool result = true;
-        [data enumerateByteRangesUsingBlock:^(const void* bytes, NSRange byteRange, BOOL* stop) {
-          result = write_cb_(static_cast<const char*>(bytes), byteRange.length);
-          if (!result) {
-            *stop = YES;
-          }
-        }];
-        return result;
-      } else {
-        return true;
       }
     }
 
@@ -275,9 +267,7 @@ namespace brigid {
             task = [session_ uploadTaskWithRequest:request fromFile:[NSURL fileURLWithPath:to_native_string(data, size)]];
             break;
         }
-        [task resume];
-
-        context_->wait();
+        context_->wait(task);
       }
 
     private:

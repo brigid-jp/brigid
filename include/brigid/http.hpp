@@ -20,7 +20,6 @@ namespace brigid {
     virtual void set_progress_cb(std::function<bool (size_t, size_t)>) = 0;
     virtual void set_header_cb(std::function<bool (int, const std::map<std::string, std::string>&)>) = 0;
     virtual void set_write_cb(std::function<bool (const char*, size_t)>) = 0;
-
     virtual void request(
         const std::string&,
         const std::string&,
