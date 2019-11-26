@@ -9,7 +9,8 @@ CXXFLAGS = -Wall -W -O2 -std=c++11
 OBJS = \
 	crypto.o \
 	crypto_impl.o \
-	crypto_java.o
+	crypto_java.o \
+	http_java.o
 TARGET = libbrigid.a
 
 all: all-recursive $(TARGET)
