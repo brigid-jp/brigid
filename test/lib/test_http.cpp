@@ -27,6 +27,10 @@ namespace {
       session_->set_write_cb(std::bind(&test_client::write_cb, this, _1, _2));
     }
 
+    void set_credential(const std::string& username, const std::string& password) {
+      session_->set_credential(username, password);
+    }
+
     int request(
         const std::string& method,
         const std::string& url,
@@ -166,7 +170,41 @@ void test4() {
   BRIGID_CHECK(client.body() == "ok\n");
 }
 
+void test5() {
+  test_client client;
+  std::map<std::string, std::string> headers {
+    { "Depth", "1" },
+  };
+  client.request("PROPFIND", "https://brigid.jp/test/dav/auth-none/", headers);
+  BRIGID_CHECK(client.progress() == 0);
+  BRIGID_CHECK(client.code() == 207);
+  std::cout << "[" << client.body() << "]\n";
+
+  client.request("PROPFIND", "https://brigid.jp/test/dav/auth-basic/", headers);
+  BRIGID_CHECK(client.progress() == 0);
+  BRIGID_CHECK(client.code() == 401);
+  std::cout << "[" << client.body() << "]\n";
+
+  client.set_credential("brigid", "O6jIOchrWCGuOSB4");
+  client.request("PROPFIND", "https://brigid.jp/test/dav/auth-basic/", headers);
+  BRIGID_CHECK(client.progress() == 0);
+  BRIGID_CHECK(client.code() == 207);
+  std::cout << "[" << client.body() << "]\n";
+
+  client.request("PROPFIND", "https://brigid.jp/test/dav/auth-digest/", headers);
+  BRIGID_CHECK(client.progress() == 0);
+  BRIGID_CHECK(client.code() == 401);
+  std::cout << "[" << client.body() << "]\n";
+
+  client.set_credential("brigid", "YlrMTunTORZvrgSt");
+  client.request("PROPFIND", "https://brigid.jp/test/dav/auth-digest/", headers);
+  BRIGID_CHECK(client.progress() == 0);
+  BRIGID_CHECK(client.code() == 207);
+  std::cout << "[" << client.body() << "]\n";
+}
+
 brigid::make_test_case make_test1("http test1", test1);
 brigid::make_test_case make_test2("http test2", test2);
 brigid::make_test_case make_test3("http test3", test3);
 brigid::make_test_case make_test4("http test4", test4);
+brigid::make_test_case make_test5("http test5", test5);

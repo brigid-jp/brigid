@@ -20,8 +20,10 @@ namespace brigid {
       void set_progress_cb(std::function<bool (size_t, size_t)>);
       void set_header_cb(std::function<bool (int, const std::map<std::string, std::string>&)>);
       void set_write_cb(std::function<bool (const char*, size_t)>);
-      void did_complete(NSError*);
+      void set_credential(const std::string&, const std::string&);
+      void did_complete_with_error(NSError*);
       bool did_send_body_data(size_t, size_t);
+      NSURLCredential* did_receive_challenge();
       bool did_receive_response(NSHTTPURLResponse*);
       bool did_receive_data(NSData*);
       void wait(NSURLSessionTask*);
@@ -30,6 +32,8 @@ namespace brigid {
       std::function<bool (size_t, size_t)> progress_cb_;
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb_;
       std::function<bool (const char*, size_t)> write_cb_;
+      std::string username_;
+      std::string password_;
       std::mutex req_mutex_;
       std::condition_variable req_condition_;
       std::function<bool ()> req_;
@@ -60,7 +64,7 @@ namespace brigid {
 - (void)URLSession:(NSURLSession *)_session
               task:(NSURLSessionTask *)task
 didCompleteWithError:(NSError *)error {
-  context_->did_complete(error);
+  context_->did_complete_with_error(error);
 }
 
 - (void)URLSession:(NSURLSession *)session
@@ -71,6 +75,19 @@ totalBytesExpectedToSend:(int64_t)totalBytesExpectedToSend {
   if (!context_->did_send_body_data(totalBytesSent, totalBytesExpectedToSend)) {
     [task cancel];
   }
+}
+
+- (void)URLSession:(NSURLSession *)session
+              task:(NSURLSessionTask *)task
+didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
+ completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completionHandler {
+  if (challenge.previousFailureCount == 0) {
+    if (NSURLCredential* credential = context_->did_receive_challenge()) {
+      completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
+      return;
+    }
+  }
+  completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
 }
 
 - (void)URLSession:(NSURLSession *)session
@@ -123,7 +140,12 @@ namespace brigid {
       write_cb_ = write_cb;
     }
 
-    void http_session_context::did_complete(NSError* error) {
+    void http_session_context::set_credential(const std::string& username, const std::string& password) {
+      username_ = username;
+      password_ = password;
+    }
+
+    void http_session_context::did_complete_with_error(NSError* error) {
       std::lock_guard<std::mutex> lock(req_mutex_);
       req_ = nullptr;
       if (error && !exception_) {
@@ -141,6 +163,13 @@ namespace brigid {
       } else {
         return true;
       }
+    }
+
+    NSURLCredential* http_session_context::did_receive_challenge() {
+      // if (username_.empty()) {
+      //   return nil;
+      // }
+      return [NSURLCredential credentialWithUser:to_native_string(username_) password:to_native_string(password_) persistence:NSURLCredentialPersistenceForSession];
     }
 
     bool http_session_context::did_receive_response(NSHTTPURLResponse* response) {
@@ -241,6 +270,10 @@ namespace brigid {
 
       virtual void set_write_cb(std::function<bool (const char*, size_t)> write_cb) {
         context_->set_write_cb(write_cb);
+      }
+
+      virtual void set_credential(const std::string& username, const std::string& password) {
+        context_->set_credential(username, password);
       }
 
       virtual void request(
