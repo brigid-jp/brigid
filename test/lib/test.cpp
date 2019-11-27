@@ -12,24 +12,26 @@ namespace brigid {
   namespace {
     class test_case_impl {
     public:
-      test_case_impl(const std::string& name, std::function<void ()> function)
-        : name_(name),
+      test_case_impl(const std::string& file, const std::string& name, std::function<void ()> function)
+        : file_(file),
+          name_(name),
           function_(function) {}
 
       bool operator()() const {
         try {
           function_();
-          std::cout << "PASS " << name_ << "\n";
+          std::cout << "PASS " << file_ << ":" << name_ << "\n";
           return true;
         } catch (const std::exception& e) {
-          std::cout << "FAIL " << name_ << " " << e.what() << "\n";
+          std::cout << "FAIL " << file_ << ":" << name_ << " " << e.what() << "\n";
         } catch (...) {
-          std::cout << "FAIL " << name_ << "\n";
+          std::cout << "FAIL " << file_ << ":" << name_ << "\n";
         }
         return false;
       }
 
     private:
+      std::string file_;
       std::string name_;
       std::function<void ()> function_;
     };
@@ -38,11 +40,7 @@ namespace brigid {
   }
 
   make_test_case::make_test_case(const std::string& file, const std::string& name, std::function<void ()> function) {
-    test_cases.emplace_back(file + ":" + name, function);
-  }
-
-  make_test_case::make_test_case(const std::string& name, std::function<void ()> function) {
-    test_cases.emplace_back(name, function);
+    test_cases.emplace_back(file, name, function);
   }
 
   int run_test_cases() {
