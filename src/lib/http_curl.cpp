@@ -269,33 +269,20 @@ namespace brigid {
     public:
       friend class http_task;
 
-      http_session_impl()
+      http_session_impl(
+          std::function<bool (size_t, size_t)> progress_cb,
+          std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
+          std::function<bool (const char*, size_t)> write_cb,
+          bool credential,
+          const std::string& username,
+          const std::string& password)
         : handle_(make_easy(check(curl_easy_init()))),
-          credential_() {}
-
-      virtual void set_progress_cb(std::function<bool (size_t, size_t)> progress_cb) {
-        progress_cb_ = progress_cb;
-      }
-
-      virtual void set_header_cb(std::function<bool (int, const std::map<std::string, std::string>&)> header_cb) {
-        header_cb_ = header_cb;
-      }
-
-      virtual void set_write_cb(std::function<bool (const char*, size_t)> write_cb) {
-        write_cb_ = write_cb;
-      }
-
-      virtual void set_credential() {
-        credential_ = false;
-        username_.clear();
-        password_.clear();
-      }
-
-      virtual void set_credential(const std::string& username, const std::string& password) {
-        credential_ = true;
-        username_ = username;
-        password_ = password;
-      }
+          progress_cb_(progress_cb),
+          header_cb_(header_cb),
+          write_cb_(write_cb),
+          credential_(credential),
+          username_(username),
+          password_(password) {}
 
       virtual void request(const std::string&, const std::string&, const std::map<std::string, std::string>&, http_request_body, const char*, size_t);
 
@@ -561,7 +548,13 @@ namespace brigid {
     }
   }
 
-  std::unique_ptr<http_session> make_http_session() {
-    return std::unique_ptr<http_session>(new http_session_impl());
+  std::unique_ptr<http_session> make_http_session(
+      std::function<bool (size_t, size_t)> progress_cb,
+      std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
+      std::function<bool (const char*, size_t)> write_cb,
+      bool credential,
+      const std::string& username,
+      const std::string& password) {
+    return std::unique_ptr<http_session>(new http_session_impl(progress_cb, header_cb, write_cb, credential, username, password));
   }
 }

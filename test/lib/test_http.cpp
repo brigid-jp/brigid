@@ -13,28 +13,24 @@
 #include <string>
 
 namespace {
+  using namespace std::placeholders;
+
   static const std::map<std::string, std::string> empty_headers;
 
   class test_client {
   public:
-    test_client()
-      : session_(brigid::make_http_session()),
+    explicit test_client(bool credential = false, const std::string& username = std::string(), const std::string& password = std::string())
+      : session_(brigid::make_http_session(
+            std::bind(&test_client::progress_cb, this, _1, _2),
+            std::bind(&test_client::header_cb, this, _1, _2),
+            std::bind(&test_client::write_cb, this, _1, _2),
+            credential,
+            username,
+            password)),
         progress_count_(),
         header_count_(),
         write_count_(),
         code_() {
-      using namespace std::placeholders;
-      session_->set_progress_cb(std::bind(&test_client::progress_cb, this, _1, _2));
-      session_->set_header_cb(std::bind(&test_client::header_cb, this, _1, _2));
-      session_->set_write_cb(std::bind(&test_client::write_cb, this, _1, _2));
-    }
-
-    void set_credential() {
-      session_->set_credential();
-    }
-
-    void set_credential(const std::string& username, const std::string& password) {
-      session_->set_credential(username, password);
     }
 
     int request(
@@ -209,38 +205,39 @@ namespace {
   }
 
   void test5() {
-    test_client client;
     std::map<std::string, std::string> headers {
       { "Depth", "1" },
     };
-    client.request("PROPFIND", "https://brigid.jp/test/dav/auth-none/", headers);
-    BRIGID_CHECK(client.code() == 207);
-    std::cout << "[" << client.body() << "]\n";
 
-    client.request("PROPFIND", "https://brigid.jp/test/dav/auth-basic/", headers);
-    BRIGID_CHECK(client.code() == 401);
-    std::cout << "[" << client.body() << "]\n";
+    {
+      test_client client;
+      client.request("PROPFIND", "https://brigid.jp/test/dav/auth-none/", headers);
+      BRIGID_CHECK(client.code() == 207);
+      std::cout << "[" << client.body() << "]\n";
 
-    client.set_credential("brigid", "O6jIOchrWCGuOSB4");
-    client.request("PROPFIND", "https://brigid.jp/test/dav/auth-basic/", headers);
-    BRIGID_CHECK(client.code() == 207);
-    std::cout << "[" << client.body() << "]\n";
+      client.request("PROPFIND", "https://brigid.jp/test/dav/auth-basic/", headers);
+      BRIGID_CHECK(client.code() == 401);
+      std::cout << "[" << client.body() << "]\n";
+    }
+
+    {
+      test_client client(true, "brigid", "O6jIOchrWCGuOSB4");
+      client.request("PROPFIND", "https://brigid.jp/test/dav/auth-none/", headers);
+      BRIGID_CHECK(client.code() == 207);
+      std::cout << "[" << client.body() << "]\n";
+
+      client.request("PROPFIND", "https://brigid.jp/test/dav/auth-basic/", headers);
+      BRIGID_CHECK(client.code() == 207);
+      std::cout << "[" << client.body() << "]\n";
+    }
   }
 
   void test6() {
-    test_client client;
     std::map<std::string, std::string> headers {
       { "Depth", "1" },
     };
 
-    // curl does not clear state.authproblem
-
-    // client.set_credential();
-    // client.request("PROPFIND", "https://brigid.jp/test/dav/auth-digest/", headers);
-    // BRIGID_CHECK(client.code() == 401);
-    // std::cout << "[" << client.body() << "]\n";
-
-    client.set_credential("brigid", "YlrMTunTORZvrgSt");
+    test_client client(true, "brigid", "YlrMTunTORZvrgSt");
     client.request("PROPFIND", "https://brigid.jp/test/dav/auth-digest/", headers);
     BRIGID_CHECK(client.code() == 207);
     std::cout << "[" << client.body() << "]\n";
