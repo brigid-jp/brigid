@@ -14,7 +14,7 @@
 
 namespace brigid {
   namespace {
-    template <typename T>
+    template <class T>
     T check(T result) {
       if (!result) {
         auto code = ERR_get_error();
