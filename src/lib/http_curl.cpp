@@ -408,6 +408,9 @@ namespace brigid {
         check(curl_easy_setopt(handle, CURLOPT_VERBOSE, 1));
 
         check(curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, method.c_str()));
+        if (method == "HEAD") {
+          check(curl_easy_setopt(handle, CURLOPT_NOBODY, 1));
+        }
         check(curl_easy_setopt(handle, CURLOPT_URL, url.c_str()));
 
         if (header_) {

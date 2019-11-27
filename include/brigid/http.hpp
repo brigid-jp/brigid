@@ -6,9 +6,9 @@
 #define BRIGID_HTTP_HPP
 
 #include <stddef.h>
+#include <functional>
 #include <map>
 #include <memory>
-#include <functional>
 #include <string>
 
 namespace brigid {

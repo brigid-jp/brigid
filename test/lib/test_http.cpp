@@ -19,7 +19,9 @@ namespace {
   public:
     test_client()
       : session_(brigid::make_http_session()),
-        progress_(),
+        progress_count_(),
+        header_count_(),
+        write_count_(),
         code_() {
       using namespace std::placeholders;
       session_->set_progress_cb(std::bind(&test_client::progress_cb, this, _1, _2));
@@ -42,7 +44,9 @@ namespace {
         brigid::http_request_body body = brigid::http_request_body::data,
         const char* data = nullptr,
         size_t size = 0) {
-      progress_ = 0;
+      progress_count_ = 0;
+      header_count_ = 0;
+      write_count_ = 0;
       code_ = 0;
       session_->request(method, url, headers, body, data, size);
       body_ = out_.str();
@@ -51,8 +55,16 @@ namespace {
       return code_;
     }
 
-    size_t progress() const {
-      return progress_;
+    size_t progress_count() const {
+      return progress_count_;
+    }
+
+    size_t header_count() const {
+      return header_count_;
+    }
+
+    size_t write_count() const {
+      return write_count_;
     }
 
     int code() const {
@@ -78,19 +90,22 @@ namespace {
 
   private:
     std::unique_ptr<brigid::http_session> session_;
-    size_t progress_;
+    size_t progress_count_;
+    size_t header_count_;
+    size_t write_count_;
     int code_;
     std::map<std::string, std::string> headers_;
     std::ostringstream out_;
     std::string body_;
 
     bool progress_cb(size_t now, size_t total) {
-      ++progress_;
+      ++progress_count_;
       std::cout << "progress " << now << "/" << total << "\n";
       return true;
     }
 
     bool header_cb(int code, const std::map<std::string, std::string>& headers) {
+      ++header_count_;
       code_ = code;
       headers_ = headers;
       std::cout << "header " << code_ << "\n";
@@ -98,6 +113,7 @@ namespace {
     }
 
     bool write_cb(const char* data, size_t size) {
+      ++write_count_;
       out_.write(data, size);
       return true;
     }
@@ -107,6 +123,8 @@ namespace {
     test_client client;
     client.request("GET", "https://brigid.jp/");
     BRIGID_CHECK(client.code() == 200);
+    BRIGID_CHECK(client.progress_count() == 0);
+    BRIGID_CHECK(client.write_count() == 0);
     BRIGID_CHECK(client.header("Content-Length") == "0");
     BRIGID_CHECK(client.header("Content-Type") == "text/html; charset=UTF-8");
     BRIGID_CHECK(client.body().empty());
@@ -117,18 +135,39 @@ namespace {
 
     test_client client;
     client.request("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", empty_headers, brigid::http_request_body::data, data.data(), data.size());
+    BRIGID_CHECK(client.progress_count() > 0);
     BRIGID_CHECK(client.code() == 201 || client.code() == 204);
-    std::cout << "[" << client.body() << "]\n";
+    if (client.code() == 204) {
+      BRIGID_CHECK(client.write_count() == 0);
+      BRIGID_CHECK(client.body().empty());
+    }
 
     client.request("GET", "https://brigid.jp/test/dav/auth-none/test.txt");
+    BRIGID_CHECK(client.progress_count() == 0);
+    BRIGID_CHECK(client.write_count() > 0);
     BRIGID_CHECK(client.code() == 200);
     BRIGID_CHECK(client.body() == data);
 
+    client.request("HEAD", "https://brigid.jp/test/dav/auth-none/test.txt");
+    BRIGID_CHECK(client.progress_count() == 0);
+    BRIGID_CHECK(client.write_count() == 0);
+    BRIGID_CHECK(client.code() == 200);
+    BRIGID_CHECK(client.body().empty());
+
     client.request("DELETE", "https://brigid.jp/test/dav/auth-none/test.txt");
+    BRIGID_CHECK(client.progress_count() == 0);
+    BRIGID_CHECK(client.write_count() == 0);
     BRIGID_CHECK(client.code()== 204);
     BRIGID_CHECK(client.body().empty());
 
+    client.request("GET", "https://brigid.jp/test/dav/auth-none/test.txt");
+    BRIGID_CHECK(client.progress_count() == 0);
+    BRIGID_CHECK(client.write_count() > 0);
+    BRIGID_CHECK(client.code() == 404);
+
     client.request("HEAD", "https://brigid.jp/test/dav/auth-none/test.txt");
+    BRIGID_CHECK(client.progress_count() == 0);
+    BRIGID_CHECK(client.write_count() == 0);
     BRIGID_CHECK(client.code() == 404);
     BRIGID_CHECK(client.body().empty());
   }
@@ -144,11 +183,12 @@ namespace {
 
     test_client client;
     client.request("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", empty_headers, brigid::http_request_body::file, filename.data(), filename.size());
-    BRIGID_CHECK(client.progress() > 0);
+    BRIGID_CHECK(client.progress_count() > 0);
     BRIGID_CHECK(client.code() == 201 || client.code() == 204);
     std::cout << "[" << client.body() << "]\n";
 
     client.request("DELETE", "https://brigid.jp/test/dav/auth-none/test.txt");
+    BRIGID_CHECK(client.progress_count() == 0);
     BRIGID_CHECK(client.code()== 204);
     BRIGID_CHECK(client.body().empty());
 
@@ -160,10 +200,12 @@ namespace {
     client.request("GET", "https://brigid.jp/test/lua/redirect.lua?count=1");
     BRIGID_CHECK(client.code() == 200);
     BRIGID_CHECK(client.body() == "ok\n");
+    BRIGID_CHECK(client.header("Location") == "");
 
     client.request("GET", "https://brigid.jp/test/lua/redirect.lua?count=16");
     BRIGID_CHECK(client.code() == 200);
     BRIGID_CHECK(client.body() == "ok\n");
+    BRIGID_CHECK(client.header("Location") == "");
   }
 
   void test5() {
@@ -204,10 +246,24 @@ namespace {
     std::cout << "[" << client.body() << "]\n";
   }
 
+  void test7() {
+    static const std::string data = R"({"foo":42})";
+
+    test_client client;
+    std::map<std::string, std::string> headers {
+      { "Content-Type", "application/json; charset=UTF-8" },
+    };
+
+    client.request("POST", "https://brigid.jp/test/lua/echo.lua?keys=Content-Type,Content-Length,Expect", headers, brigid::http_request_body::data, data.data(), data.size());
+    BRIGID_CHECK(client.code() == 200);
+    std::cout << "[" << client.body() << "]\n";
+  }
+
   brigid::make_test_case make_test1("http test1", test1);
   brigid::make_test_case make_test2("http test2", test2);
   brigid::make_test_case make_test3("http test3", test3);
   brigid::make_test_case make_test4("http test4", test4);
   brigid::make_test_case make_test5("http test5", test5);
   brigid::make_test_case make_test6("http test6", test6);
+  brigid::make_test_case make_test7("http test7", test7);
 }
