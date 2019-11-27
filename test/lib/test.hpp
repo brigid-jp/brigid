@@ -12,24 +12,24 @@
 
 namespace brigid {
   template <class T>
-  T check_impl(T result, const char* expression, const char* file, int line, const char* function) {
+  T check_impl(T result, const char* expression, const char* file, int line) {
     if (!result) {
       std::ostringstream out;
-      out << "check failed (" << expression << ") at " << file << ":" << line << " in " << function;
+      out << "check failed (" << expression << ") at " << file << ":" << line;
       throw std::runtime_error(out.str());
     }
     return result;
   }
 
   template <class T>
-  void check_throw_impl(T fn, const char* expression, const char* file, int line, const char* function) {
+  void check_throw_impl(T fn, const char* expression, const char* file, int line) {
     try {
       fn();
     } catch (...) {
       return;
     }
     std::ostringstream out;
-    out << "check throw failed (" << expression << ") at " << file << ":" << line << " in " << function;
+    out << "check throw failed (" << expression << ") at " << file << ":" << line;
     throw std::runtime_error(out.str());
   }
 
@@ -41,13 +41,8 @@ namespace brigid {
   int run_test_cases();
 }
 
-#ifdef _MSC_VER
-#define BRIGID_CHECK(expression) brigid::check_impl((expression), #expression, __FILE__, __LINE__, __FUNCTION__)
-#define BRIGID_CHECK_THROW(expression) brigid::check_throw_impl((expression), #expression, __FILE__, __LINE__, __FUNCTION__)
-#else
-#define BRIGID_CHECK(expression) brigid::check_impl((expression), #expression, __FILE__, __LINE__, __func__)
-#define BRIGID_CHECK_THROW(expression) brigid::check_throw_impl((expression), #expression, __FILE__, __LINE__, __func__)
-#endif
+#define BRIGID_CHECK(expression) brigid::check_impl((expression), #expression, __FILE__, __LINE__)
+#define BRIGID_CHECK_THROW(expression) brigid::check_throw_impl((expression), #expression, __FILE__, __LINE__)
 
 #define BRIGID_MAKE_TEST_CASE_NAME_IMPL(a, b) a ## b
 #define BRIGID_MAKE_TEST_CASE_NAME(a, b) BRIGID_MAKE_TEST_CASE_NAME_IMPL(a, b)

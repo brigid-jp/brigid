@@ -3,10 +3,12 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/http.hpp>
+#include "error.hpp"
 #include "http_curl.hpp"
 
 #include <curl/curl.h>
 
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -117,7 +119,7 @@ namespace brigid {
     }
 
     if (!p1 || !p2) {
-      throw std::runtime_error("parser error");
+      throw BRIGID_ERROR("cannot parse header");
     }
 
     if (p1 == pb) {
@@ -213,7 +215,7 @@ namespace brigid {
     }
 
     if (!p1 || p3) {
-      throw std::runtime_error("parser error");
+      throw BRIGID_ERROR("cannot parse header");
     }
 
     if (p2) {
@@ -226,7 +228,7 @@ namespace brigid {
   namespace {
     void check(CURLcode code) {
       if (code != CURLE_OK) {
-        throw std::runtime_error(curl_easy_strerror(code));
+        throw BRIGID_ERROR(curl_easy_strerror(code), code);
       }
     }
 
@@ -321,7 +323,7 @@ namespace brigid {
           now_(),
           total_() {
         if (!handle_) {
-          throw std::runtime_error("fopen error");
+          throw BRIGID_ERROR("cannot fopen", errno);
         }
 
         fseek(handle_, 0, SEEK_END);
@@ -429,7 +431,7 @@ namespace brigid {
         if (curl_slist* header = curl_slist_append(header_, value.c_str())) {
           header_ = header;
         } else {
-          throw std::runtime_error("slist error");
+          throw BRIGID_ERROR("cannot curl_slist_append");
         }
       }
 

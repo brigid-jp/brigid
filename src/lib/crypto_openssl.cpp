@@ -2,14 +2,13 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include "crypto_impl.hpp"
 #include <brigid/crypto.hpp>
+#include "crypto_impl.hpp"
+#include "error.hpp"
 
 #include <openssl/err.h>
 #include <openssl/evp.h>
 
-#include <sstream>
-#include <stdexcept>
 #include <vector>
 
 namespace brigid {
@@ -20,9 +19,7 @@ namespace brigid {
         auto code = ERR_get_error();
         std::vector<char> buffer(256);
         ERR_error_string_n(code, buffer.data(), buffer.size());
-        std::ostringstream out;
-        out << "crypto_openssl error " << buffer.data();
-        throw std::runtime_error(out.str());
+        throw BRIGID_ERROR(buffer.data(), code);
       }
       return result;
     }
@@ -87,7 +84,7 @@ namespace brigid {
     } else if (cipher == "aes-256-cbc") {
       return std::unique_ptr<cryptor>(new aes_encryptor_impl(EVP_aes_256_cbc(), key_data, iv_data));
     } else {
-      throw std::runtime_error("unsupported cipher");
+      throw BRIGID_ERROR("unsupported cipher");
     }
   }
 
@@ -100,7 +97,7 @@ namespace brigid {
     } else if (cipher == "aes-256-cbc") {
       return std::unique_ptr<cryptor>(new aes_decryptor_impl(EVP_aes_256_cbc(), key_data, iv_data));
     } else {
-      throw std::runtime_error("unsupported cipher");
+      throw BRIGID_ERROR("unsupported cipher");
     }
   }
 }
