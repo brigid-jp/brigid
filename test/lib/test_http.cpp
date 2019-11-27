@@ -253,11 +253,11 @@ namespace {
     std::cout << "[" << client.body() << "]\n";
   }
 
-  brigid::make_test_case make_test1("http test1", test1);
-  brigid::make_test_case make_test2("http test2", test2);
-  brigid::make_test_case make_test3("http test3", test3);
-  brigid::make_test_case make_test4("http test4", test4);
-  brigid::make_test_case make_test5("http test5", test5);
-  brigid::make_test_case make_test6("http test6", test6);
-  brigid::make_test_case make_test7("http test7", test7);
+  BRIGID_MAKE_TEST_CASE(test1);
+  BRIGID_MAKE_TEST_CASE(test2);
+  BRIGID_MAKE_TEST_CASE(test3);
+  BRIGID_MAKE_TEST_CASE(test4);
+  BRIGID_MAKE_TEST_CASE(test5);
+  BRIGID_MAKE_TEST_CASE(test6);
+  BRIGID_MAKE_TEST_CASE(test7);
 }

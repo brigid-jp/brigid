@@ -83,6 +83,6 @@ namespace {
     BRIGID_CHECK_THROW([&](){ parse(parser, "\r\n"); });
   }
 
-  brigid::make_test_case make_test1("http_curl test1", test1);
-  brigid::make_test_case make_test2("http_curl test2", test2);
+  BRIGID_MAKE_TEST_CASE(test1);
+  BRIGID_MAKE_TEST_CASE(test2);
 }

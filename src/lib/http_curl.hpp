@@ -19,7 +19,7 @@ namespace brigid {
   private:
     int state_;
     std::string buffer_;
-    std::map<std::string, std::string> headers_;
+    std::map<std::string, std::string> header_;
     void parse_impl();
   };
 }

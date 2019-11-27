@@ -21,7 +21,6 @@ namespace brigid {
 
   http_initializer::http_initializer() {
     if (++http_initializer_counter == 1) {
-      // how to check error?
       curl_global_init(CURL_GLOBAL_ALL);
     }
   }
@@ -71,7 +70,7 @@ namespace brigid {
     if (state_ == 0) {
       state_ = 1;
       buffer_.clear();
-      headers_.clear();
+      header_.clear();
     }
 
     if (state_ == 1) {
@@ -165,7 +164,7 @@ namespace brigid {
   }
 
   const std::map<std::string, std::string>& http_header_parser::get() const {
-    return headers_;
+    return header_;
   }
 
   void http_header_parser::parse_impl() {
@@ -218,9 +217,9 @@ namespace brigid {
     }
 
     if (p2) {
-      headers_[std::string(pb, p1)] = std::string(p2, pe);
+      header_[std::string(pb, p1)] = std::string(p2, pe);
     } else {
-      headers_[std::string(pb, p1)] = std::string();
+      header_[std::string(pb, p1)] = std::string();
     }
   }
 
@@ -396,7 +395,7 @@ namespace brigid {
         CURL* handle = session_->handle_.get();
 
         check(curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1));
-        check(curl_easy_setopt(handle, CURLOPT_VERBOSE, 1));
+        // check(curl_easy_setopt(handle, CURLOPT_VERBOSE, 1));
 
         check(curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, method.c_str()));
         if (method == "HEAD") {
@@ -530,7 +529,7 @@ namespace brigid {
     void http_session_impl::request(
         const std::string& method,
         const std::string& url,
-        const std::map<std::string, std::string>& headers,
+        const std::map<std::string, std::string>& header,
         http_request_body body,
         const char* data,
         size_t size) {
@@ -547,7 +546,7 @@ namespace brigid {
           break;
       }
 
-      http_task task(this, move(reader), headers);
+      http_task task(this, move(reader), header);
       task.request(method, url);
     }
   }

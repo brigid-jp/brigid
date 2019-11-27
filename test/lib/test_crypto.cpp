@@ -105,18 +105,18 @@ namespace {
     BRIGID_CHECK(std::equal(buffer.begin(), buffer.end(), plaintext.begin()));
   }
 
-  brigid::make_test_case make_encryptor_test1_128("encryptor aes-128-cbc (1)", [](){ encryptor_test1("aes-128-cbc", key128, ciphertext128); });
-  brigid::make_test_case make_encryptor_test2_128("encryptor aes-128-cbc (2)", [](){ encryptor_test2("aes-128-cbc", key128, ciphertext128); });
-  brigid::make_test_case make_encryptor_test1_192("encryptor aes-192-cbc (1)", [](){ encryptor_test1("aes-192-cbc", key192, ciphertext192); });
-  brigid::make_test_case make_encryptor_test2_192("encryptor aes-192-cbc (2)", [](){ encryptor_test2("aes-192-cbc", key192, ciphertext192); });
-  brigid::make_test_case make_encryptor_test1_256("encryptor aes-256-cbc (1)", [](){ encryptor_test1("aes-256-cbc", key256, ciphertext256); });
-  brigid::make_test_case make_encryptor_test2_256("encryptor aes-256-cbc (2)", [](){ encryptor_test2("aes-256-cbc", key256, ciphertext256); });
-  brigid::make_test_case make_test_encryptor_no_such_cipher("encryptor no-such-cipher", &test_encryptor_no_such_cipher);
+  BRIGID_MAKE_TEST_CASE([](){ encryptor_test1("aes-128-cbc", key128, ciphertext128); });
+  BRIGID_MAKE_TEST_CASE([](){ encryptor_test2("aes-128-cbc", key128, ciphertext128); });
+  BRIGID_MAKE_TEST_CASE([](){ encryptor_test1("aes-192-cbc", key192, ciphertext192); });
+  BRIGID_MAKE_TEST_CASE([](){ encryptor_test2("aes-192-cbc", key192, ciphertext192); });
+  BRIGID_MAKE_TEST_CASE([](){ encryptor_test1("aes-256-cbc", key256, ciphertext256); });
+  BRIGID_MAKE_TEST_CASE([](){ encryptor_test2("aes-256-cbc", key256, ciphertext256); });
+  BRIGID_MAKE_TEST_CASE(&test_encryptor_no_such_cipher);
 
-  brigid::make_test_case make_decryptor_test1_128("decryptor aes-128-cbc (1)", [](){ decryptor_test1("aes-128-cbc", key128, ciphertext128); });
-  brigid::make_test_case make_decryptor_test2_128("decryptor aes-128-cbc (2)", [](){ decryptor_test2("aes-128-cbc", key128, ciphertext128); });
-  brigid::make_test_case make_decryptor_test1_192("decryptor aes-192-cbc (1)", [](){ decryptor_test1("aes-192-cbc", key192, ciphertext192); });
-  brigid::make_test_case make_decryptor_test2_192("decryptor aes-192-cbc (2)", [](){ decryptor_test2("aes-192-cbc", key192, ciphertext192); });
-  brigid::make_test_case make_decryptor_test1_256("decryptor aes-256-cbc (1)", [](){ decryptor_test1("aes-256-cbc", key256, ciphertext256); });
-  brigid::make_test_case make_decryptor_test2_256("decryptor aes-256-cbc (2)", [](){ decryptor_test2("aes-256-cbc", key256, ciphertext256); });
+  BRIGID_MAKE_TEST_CASE([](){ decryptor_test1("aes-128-cbc", key128, ciphertext128); });
+  BRIGID_MAKE_TEST_CASE([](){ decryptor_test2("aes-128-cbc", key128, ciphertext128); });
+  BRIGID_MAKE_TEST_CASE([](){ decryptor_test1("aes-192-cbc", key192, ciphertext192); });
+  BRIGID_MAKE_TEST_CASE([](){ decryptor_test2("aes-192-cbc", key192, ciphertext192); });
+  BRIGID_MAKE_TEST_CASE([](){ decryptor_test1("aes-256-cbc", key256, ciphertext256); });
+  BRIGID_MAKE_TEST_CASE([](){ decryptor_test2("aes-256-cbc", key256, ciphertext256); });
 }

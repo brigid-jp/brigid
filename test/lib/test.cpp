@@ -37,6 +37,10 @@ namespace brigid {
     std::vector<test_case_impl> test_cases;
   }
 
+  make_test_case::make_test_case(const std::string& file, const std::string& name, std::function<void ()> function) {
+    test_cases.emplace_back(file + ":" + name, function);
+  }
+
   make_test_case::make_test_case(const std::string& name, std::function<void ()> function) {
     test_cases.emplace_back(name, function);
   }

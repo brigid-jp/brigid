@@ -36,6 +36,7 @@ namespace brigid {
   struct make_test_case {
   public:
     make_test_case(const std::string&, std::function<void ()>);
+    make_test_case(const std::string&, const std::string&, std::function<void ()>);
   };
 
   int run_test_cases();
@@ -48,5 +49,9 @@ namespace brigid {
 #define BRIGID_CHECK(expression) brigid::check_impl((expression), #expression, __FILE__, __LINE__, __func__)
 #define BRIGID_CHECK_THROW(expression) brigid::check_throw_impl((expression), #expression, __FILE__, __LINE__, __func__)
 #endif
+
+#define BRIGID_MAKE_TEST_CASE_NAME_IMPL(a, b) a ## b
+#define BRIGID_MAKE_TEST_CASE_NAME(a, b) BRIGID_MAKE_TEST_CASE_NAME_IMPL(a, b)
+#define BRIGID_MAKE_TEST_CASE(expression) brigid::make_test_case BRIGID_MAKE_TEST_CASE_NAME(brigid_make_test_case_, __LINE__)(__FILE__, #expression, (expression))
 
 #endif
