@@ -16,6 +16,23 @@
 
 namespace brigid {
   namespace {
+    int http_initializer_counter = 0;
+  }
+
+  http_initializer::http_initializer() {
+    if (++http_initializer_counter == 1) {
+      // how to check error?
+      curl_global_init(CURL_GLOBAL_ALL);
+    }
+  }
+
+  http_initializer::~http_initializer() {
+    if (--http_initializer_counter == 0) {
+      curl_global_cleanup();
+    }
+  }
+
+  namespace {
     // https://tools.ietf.org/html/rfc7230#section-3.2
     bool is_tchar(uint8_t c) {
       switch (c) {

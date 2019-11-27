@@ -12,6 +12,16 @@
 #include <string>
 
 namespace brigid {
+  class http_initializer {
+  public:
+    http_initializer();
+    ~http_initializer();
+  };
+
+  namespace {
+    http_initializer http_initializer_;
+  }
+
   enum class http_request_body { data, file };
 
   class http_session {
