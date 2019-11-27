@@ -311,7 +311,7 @@ namespace brigid {
         NSURLSessionTask* task = nil;
         switch (body) {
           case http_request_body::data:
-            if (size != 0) {
+            if (data) {
               request.HTTPBody = [NSData dataWithBytes:data length:size];
             }
             task = [session_ dataTaskWithRequest:request];
