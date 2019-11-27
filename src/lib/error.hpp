@@ -14,14 +14,14 @@ namespace brigid {
   public:
     error(const char* file, int line, const char* message) {
       std::ostringstream out;
-      out << "brigid::error " << message << " at " << file << ":" << line;
+      out << message << " at " << file << ":" << line;
       what_ = out.str();
     }
 
     template <class T>
     error(const char* file, int line, const char* message, T code) {
       std::ostringstream out;
-      out << "brigid::error " << message << " (error number " << code << ") at " << file << ":" << line;
+      out << message << " (error number " << code << ") at " << file << ":" << line;
       what_ = out.str();
     }
 

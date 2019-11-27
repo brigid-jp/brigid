@@ -252,6 +252,11 @@ namespace {
     std::cout << "[" << client.body() << "]\n";
   }
 
+  void test8() {
+    test_client client;
+    BRIGID_CHECK_THROW([&](){ client.request("GET", "https://133.242.153.239/"); });
+  }
+
   BRIGID_MAKE_TEST_CASE(test1);
   BRIGID_MAKE_TEST_CASE(test2);
   BRIGID_MAKE_TEST_CASE(test3);
@@ -259,4 +264,5 @@ namespace {
   BRIGID_MAKE_TEST_CASE(test5);
   BRIGID_MAKE_TEST_CASE(test6);
   BRIGID_MAKE_TEST_CASE(test7);
+  BRIGID_MAKE_TEST_CASE(test8);
 }

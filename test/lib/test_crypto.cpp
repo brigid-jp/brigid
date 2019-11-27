@@ -71,13 +71,7 @@ namespace {
   }
 
   void test_encryptor_no_such_cipher() {
-    try {
-      brigid::make_encryptor("no-such-cipher", nullptr, 0, nullptr, 0);
-    } catch (const std::exception& e) {
-      std::cout << e.what() << "\n";
-      return;
-    }
-    BRIGID_CHECK(!"unreachable");
+    BRIGID_CHECK_THROW([](){ brigid::make_encryptor("no-such-cipher", nullptr, 0, nullptr, 0); });
   }
 
   void decryptor_test1(const std::string& cipher, const std::string& key, const std::string& encrypted) {

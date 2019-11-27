@@ -6,6 +6,7 @@
 #define BRIGID_TEST_HPP
 
 #include <functional>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -25,7 +26,11 @@ namespace brigid {
   void check_throw_impl(T fn, const char* expression, const char* file, int line) {
     try {
       fn();
+    } catch (const std::exception& e) {
+      std::cout << "caught exception " << e.what() << "\n";
+      return;
     } catch (...) {
+      std::cout << "caught unknown exception\n";
       return;
     }
     std::ostringstream out;
