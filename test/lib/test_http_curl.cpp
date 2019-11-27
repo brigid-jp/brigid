@@ -5,7 +5,6 @@
 #include "test.hpp"
 #include <http_curl.hpp>
 
-#include <iostream>
 #include <vector>
 
 namespace {
