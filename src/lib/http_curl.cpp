@@ -213,11 +213,15 @@ namespace brigid {
       }
     }
 
-    if (!p1 || !p2 || p3) {
+    if (!p1 || p3) {
       throw std::runtime_error("parser error");
     }
 
-    headers_[std::string(pb, p1)] = std::string(p2, pe);
+    if (p2) {
+      headers_[std::string(pb, p1)] = std::string(p2, pe);
+    } else {
+      headers_[std::string(pb, p1)] = std::string();
+    }
   }
 
   namespace {

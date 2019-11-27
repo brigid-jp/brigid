@@ -5,12 +5,9 @@
 #include "test.hpp"
 #include <brigid/http.hpp>
 
-#include <stdio.h>
 #include <fstream>
-#include <functional>
 #include <iostream>
 #include <sstream>
-#include <string>
 
 namespace {
   using namespace std::placeholders;
