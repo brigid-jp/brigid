@@ -15,7 +15,7 @@
 namespace {
   using namespace std::placeholders;
 
-  static const std::map<std::string, std::string> empty_headers;
+  static const std::map<std::string, std::string> empty_header;
 
   class test_client {
   public:
@@ -36,7 +36,7 @@ namespace {
     int request(
         const std::string& method,
         const std::string& url,
-        const std::map<std::string, std::string>& headers = empty_headers,
+        const std::map<std::string, std::string>& header = empty_header,
         brigid::http_request_body body = brigid::http_request_body::data,
         const char* data = nullptr,
         size_t size = 0) {
@@ -44,7 +44,7 @@ namespace {
       header_count_ = 0;
       write_count_ = 0;
       code_ = 0;
-      session_->request(method, url, headers, body, data, size);
+      session_->request(method, url, header, body, data, size);
       body_ = out_.str();
       out_.str(std::string());
       out_.clear();
@@ -68,16 +68,16 @@ namespace {
     }
 
     std::string header(const std::string& key) const {
-      auto iterator = headers_.find(key);
-      if (iterator == headers_.end()) {
+      auto iterator = header_.find(key);
+      if (iterator == header_.end()) {
         return std::string();
       } else {
         return iterator->second;
       }
     }
 
-    const std::map<std::string, std::string>& headers() const {
-      return headers_;
+    const std::map<std::string, std::string>& header() const {
+      return header_;
     }
 
     const std::string& body() const {
@@ -90,7 +90,7 @@ namespace {
     size_t header_count_;
     size_t write_count_;
     int code_;
-    std::map<std::string, std::string> headers_;
+    std::map<std::string, std::string> header_;
     std::ostringstream out_;
     std::string body_;
 
@@ -100,10 +100,10 @@ namespace {
       return true;
     }
 
-    bool header_cb(int code, const std::map<std::string, std::string>& headers) {
+    bool header_cb(int code, const std::map<std::string, std::string>& header) {
       ++header_count_;
       code_ = code;
-      headers_ = headers;
+      header_ = header;
       std::cout << "header " << code_ << "\n";
       return true;
     }
@@ -130,7 +130,7 @@ namespace {
     static const std::string data = "foo\nbar\nbaz\nqux\n";
 
     test_client client;
-    client.request("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", empty_headers, brigid::http_request_body::data, data.data(), data.size());
+    client.request("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", empty_header, brigid::http_request_body::data, data.data(), data.size());
     BRIGID_CHECK(client.progress_count() > 0);
     BRIGID_CHECK(client.code() == 201 || client.code() == 204);
     if (client.code() == 204) {
@@ -178,7 +178,7 @@ namespace {
     }
 
     test_client client;
-    client.request("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", empty_headers, brigid::http_request_body::file, filename.data(), filename.size());
+    client.request("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", empty_header, brigid::http_request_body::file, filename.data(), filename.size());
     BRIGID_CHECK(client.progress_count() > 0);
     BRIGID_CHECK(client.code() == 201 || client.code() == 204);
     std::cout << "[" << client.body() << "]\n";
@@ -205,40 +205,40 @@ namespace {
   }
 
   void test5() {
-    std::map<std::string, std::string> headers {
+    std::map<std::string, std::string> header {
       { "Depth", "1" },
     };
 
     {
       test_client client;
-      client.request("PROPFIND", "https://brigid.jp/test/dav/auth-none/", headers);
+      client.request("PROPFIND", "https://brigid.jp/test/dav/auth-none/", header);
       BRIGID_CHECK(client.code() == 207);
       std::cout << "[" << client.body() << "]\n";
 
-      client.request("PROPFIND", "https://brigid.jp/test/dav/auth-basic/", headers);
+      client.request("PROPFIND", "https://brigid.jp/test/dav/auth-basic/", header);
       BRIGID_CHECK(client.code() == 401);
       std::cout << "[" << client.body() << "]\n";
     }
 
     {
       test_client client(true, "brigid", "O6jIOchrWCGuOSB4");
-      client.request("PROPFIND", "https://brigid.jp/test/dav/auth-none/", headers);
+      client.request("PROPFIND", "https://brigid.jp/test/dav/auth-none/", header);
       BRIGID_CHECK(client.code() == 207);
       std::cout << "[" << client.body() << "]\n";
 
-      client.request("PROPFIND", "https://brigid.jp/test/dav/auth-basic/", headers);
+      client.request("PROPFIND", "https://brigid.jp/test/dav/auth-basic/", header);
       BRIGID_CHECK(client.code() == 207);
       std::cout << "[" << client.body() << "]\n";
     }
   }
 
   void test6() {
-    std::map<std::string, std::string> headers {
+    std::map<std::string, std::string> header {
       { "Depth", "1" },
     };
 
     test_client client(true, "brigid", "YlrMTunTORZvrgSt");
-    client.request("PROPFIND", "https://brigid.jp/test/dav/auth-digest/", headers);
+    client.request("PROPFIND", "https://brigid.jp/test/dav/auth-digest/", header);
     BRIGID_CHECK(client.code() == 207);
     std::cout << "[" << client.body() << "]\n";
   }
@@ -247,11 +247,11 @@ namespace {
     static const std::string data = R"({"foo":42})";
 
     test_client client;
-    std::map<std::string, std::string> headers {
+    std::map<std::string, std::string> header {
       { "Content-Type", "application/json; charset=UTF-8" },
     };
 
-    client.request("POST", "https://brigid.jp/test/lua/echo.lua?keys=Content-Type,Content-Length,Expect", headers, brigid::http_request_body::data, data.data(), data.size());
+    client.request("POST", "https://brigid.jp/test/lua/echo.lua?keys=Content-Type,Content-Length,Expect", header, brigid::http_request_body::data, data.data(), data.size());
     BRIGID_CHECK(client.code() == 200);
     std::cout << "[" << client.body() << "]\n";
   }
