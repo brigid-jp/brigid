@@ -7,7 +7,6 @@
 
 #include <fstream>
 #include <iostream>
-#include <sstream>
 
 namespace {
   using namespace std::placeholders;

@@ -243,31 +243,6 @@ namespace brigid {
       return easy_t(easy, &curl_easy_cleanup);
     }
 
-    class string_list {
-    public:
-      string_list()
-        : slist_() {}
-
-      ~string_list() {
-        curl_slist_free_all(slist_);
-      }
-
-      void append(const std::string& value) {
-        if (curl_slist* slist = curl_slist_append(slist_, value.c_str())) {
-          slist_ = slist;
-        } else {
-          throw std::runtime_error("slist error");
-        }
-      }
-
-      curl_slist* get() const {
-        return slist_;
-      }
-
-    private:
-      curl_slist* slist_;
-    };
-
     class http_session_impl : public http_session {
     public:
       friend class http_task;
