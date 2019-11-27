@@ -7,7 +7,7 @@ TESTS = $(check_PROGRAMS)
 check_PROGRAMS = \
 	test.exe
 
-test_exe_CPPFLAGS = -I$(top_srcdir)/include
+test_exe_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/lib
 test_exe_LDFLAGS =
 test_exe_LDADD = $(top_srcdir)/src/lib/libbrigid.la
 test_exe_SOURCES = \
@@ -27,5 +27,6 @@ else
 if HTTP_CURL
 test_exe_LDFLAGS += $(CURL_LDFLAGS)
 test_exe_LDADD += $(CURL_LIBS)
+test_exe_SOURCES += test_http_curl.cpp
 endif
 endif

@@ -102,112 +102,112 @@ namespace {
       return true;
     }
   };
-}
 
-void test1() {
-  test_client client;
-  client.request("GET", "https://brigid.jp/");
-  BRIGID_CHECK(client.code() == 200);
-  BRIGID_CHECK(client.header("Content-Length") == "0");
-  BRIGID_CHECK(client.header("Content-Type") == "text/html; charset=UTF-8");
-  BRIGID_CHECK(client.body().empty());
-}
-
-void test2() {
-  static const std::string data = "foo\nbar\nbaz\nqux\n";
-
-  test_client client;
-  client.request("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", empty_headers, brigid::http_request_body::data, data.data(), data.size());
-  BRIGID_CHECK(client.code() == 201 || client.code() == 204);
-  std::cout << "[" << client.body() << "]\n";
-
-  client.request("GET", "https://brigid.jp/test/dav/auth-none/test.txt");
-  BRIGID_CHECK(client.code() == 200);
-  BRIGID_CHECK(client.body() == data);
-
-  client.request("DELETE", "https://brigid.jp/test/dav/auth-none/test.txt");
-  BRIGID_CHECK(client.code()== 204);
-  BRIGID_CHECK(client.body().empty());
-
-  client.request("HEAD", "https://brigid.jp/test/dav/auth-none/test.txt");
-  BRIGID_CHECK(client.code() == 404);
-  BRIGID_CHECK(client.body().empty());
-}
-
-void test3() {
-  std::string filename = "test.dat";
-  {
-    std::ofstream out(filename.c_str(), std::ios::out | std::ios::binary);
-    for (size_t i = 0; i < 1024 * 1024 / 16; ++i) {
-      out << "0123456789ABCDE\n";
-    }
+  void test1() {
+    test_client client;
+    client.request("GET", "https://brigid.jp/");
+    BRIGID_CHECK(client.code() == 200);
+    BRIGID_CHECK(client.header("Content-Length") == "0");
+    BRIGID_CHECK(client.header("Content-Type") == "text/html; charset=UTF-8");
+    BRIGID_CHECK(client.body().empty());
   }
 
-  test_client client;
-  client.request("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", empty_headers, brigid::http_request_body::file, filename.data(), filename.size());
-  BRIGID_CHECK(client.progress() > 0);
-  BRIGID_CHECK(client.code() == 201 || client.code() == 204);
-  std::cout << "[" << client.body() << "]\n";
+  void test2() {
+    static const std::string data = "foo\nbar\nbaz\nqux\n";
 
-  client.request("DELETE", "https://brigid.jp/test/dav/auth-none/test.txt");
-  BRIGID_CHECK(client.code()== 204);
-  BRIGID_CHECK(client.body().empty());
+    test_client client;
+    client.request("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", empty_headers, brigid::http_request_body::data, data.data(), data.size());
+    BRIGID_CHECK(client.code() == 201 || client.code() == 204);
+    std::cout << "[" << client.body() << "]\n";
 
-  remove("test.dat");
+    client.request("GET", "https://brigid.jp/test/dav/auth-none/test.txt");
+    BRIGID_CHECK(client.code() == 200);
+    BRIGID_CHECK(client.body() == data);
+
+    client.request("DELETE", "https://brigid.jp/test/dav/auth-none/test.txt");
+    BRIGID_CHECK(client.code()== 204);
+    BRIGID_CHECK(client.body().empty());
+
+    client.request("HEAD", "https://brigid.jp/test/dav/auth-none/test.txt");
+    BRIGID_CHECK(client.code() == 404);
+    BRIGID_CHECK(client.body().empty());
+  }
+
+  void test3() {
+    std::string filename = "test.dat";
+    {
+      std::ofstream out(filename.c_str(), std::ios::out | std::ios::binary);
+      for (size_t i = 0; i < 1024 * 1024 / 16; ++i) {
+        out << "0123456789ABCDE\n";
+      }
+    }
+
+    test_client client;
+    client.request("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", empty_headers, brigid::http_request_body::file, filename.data(), filename.size());
+    BRIGID_CHECK(client.progress() > 0);
+    BRIGID_CHECK(client.code() == 201 || client.code() == 204);
+    std::cout << "[" << client.body() << "]\n";
+
+    client.request("DELETE", "https://brigid.jp/test/dav/auth-none/test.txt");
+    BRIGID_CHECK(client.code()== 204);
+    BRIGID_CHECK(client.body().empty());
+
+    remove("test.dat");
+  }
+
+  void test4() {
+    test_client client;
+    client.request("GET", "https://brigid.jp/test/lua/redirect.lua?count=1");
+    BRIGID_CHECK(client.code() == 200);
+    BRIGID_CHECK(client.body() == "ok\n");
+
+    client.request("GET", "https://brigid.jp/test/lua/redirect.lua?count=16");
+    BRIGID_CHECK(client.code() == 200);
+    BRIGID_CHECK(client.body() == "ok\n");
+  }
+
+  void test5() {
+    test_client client;
+    std::map<std::string, std::string> headers {
+      { "Depth", "1" },
+    };
+    client.request("PROPFIND", "https://brigid.jp/test/dav/auth-none/", headers);
+    BRIGID_CHECK(client.code() == 207);
+    std::cout << "[" << client.body() << "]\n";
+
+    client.request("PROPFIND", "https://brigid.jp/test/dav/auth-basic/", headers);
+    BRIGID_CHECK(client.code() == 401);
+    std::cout << "[" << client.body() << "]\n";
+
+    client.set_credential("brigid", "O6jIOchrWCGuOSB4");
+    client.request("PROPFIND", "https://brigid.jp/test/dav/auth-basic/", headers);
+    BRIGID_CHECK(client.code() == 207);
+    std::cout << "[" << client.body() << "]\n";
+  }
+
+  void test6() {
+    test_client client;
+    std::map<std::string, std::string> headers {
+      { "Depth", "1" },
+    };
+
+    // curl does not clear state.authproblem
+
+    // client.set_credential();
+    // client.request("PROPFIND", "https://brigid.jp/test/dav/auth-digest/", headers);
+    // BRIGID_CHECK(client.code() == 401);
+    // std::cout << "[" << client.body() << "]\n";
+
+    client.set_credential("brigid", "YlrMTunTORZvrgSt");
+    client.request("PROPFIND", "https://brigid.jp/test/dav/auth-digest/", headers);
+    BRIGID_CHECK(client.code() == 207);
+    std::cout << "[" << client.body() << "]\n";
+  }
+
+  // brigid::make_test_case make_test1("http test1", test1);
+  // brigid::make_test_case make_test2("http test2", test2);
+  // brigid::make_test_case make_test3("http test3", test3);
+  // brigid::make_test_case make_test4("http test4", test4);
+  // brigid::make_test_case make_test5("http test5", test5);
+  // brigid::make_test_case make_test6("http test6", test6);
 }
-
-void test4() {
-  test_client client;
-  client.request("GET", "https://brigid.jp/test/lua/redirect.lua?count=1");
-  BRIGID_CHECK(client.code() == 200);
-  BRIGID_CHECK(client.body() == "ok\n");
-
-  client.request("GET", "https://brigid.jp/test/lua/redirect.lua?count=16");
-  BRIGID_CHECK(client.code() == 200);
-  BRIGID_CHECK(client.body() == "ok\n");
-}
-
-void test5() {
-  test_client client;
-  std::map<std::string, std::string> headers {
-    { "Depth", "1" },
-  };
-  client.request("PROPFIND", "https://brigid.jp/test/dav/auth-none/", headers);
-  BRIGID_CHECK(client.code() == 207);
-  std::cout << "[" << client.body() << "]\n";
-
-  client.request("PROPFIND", "https://brigid.jp/test/dav/auth-basic/", headers);
-  BRIGID_CHECK(client.code() == 401);
-  std::cout << "[" << client.body() << "]\n";
-
-  client.set_credential("brigid", "O6jIOchrWCGuOSB4");
-  client.request("PROPFIND", "https://brigid.jp/test/dav/auth-basic/", headers);
-  BRIGID_CHECK(client.code() == 207);
-  std::cout << "[" << client.body() << "]\n";
-}
-
-void test6() {
-  test_client client;
-  std::map<std::string, std::string> headers {
-    { "Depth", "1" },
-  };
-
-  // curl does not clear state.authproblem
-
-  // client.set_credential();
-  // client.request("PROPFIND", "https://brigid.jp/test/dav/auth-digest/", headers);
-  // BRIGID_CHECK(client.code() == 401);
-  // std::cout << "[" << client.body() << "]\n";
-
-  client.set_credential("brigid", "YlrMTunTORZvrgSt");
-  client.request("PROPFIND", "https://brigid.jp/test/dav/auth-digest/", headers);
-  BRIGID_CHECK(client.code() == 207);
-  std::cout << "[" << client.body() << "]\n";
-}
-
-brigid::make_test_case make_test1("http test1", test1);
-brigid::make_test_case make_test2("http test2", test2);
-brigid::make_test_case make_test3("http test3", test3);
-brigid::make_test_case make_test4("http test4", test4);
-brigid::make_test_case make_test5("http test5", test5);
-brigid::make_test_case make_test6("http test6", test6);

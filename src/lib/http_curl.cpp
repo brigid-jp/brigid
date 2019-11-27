@@ -3,14 +3,204 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/http.hpp>
+#include "http_curl.hpp"
 
 #include <curl/curl.h>
 
 #include <stdio.h>
+#include <stdint.h>
 #include <iostream>
 #include <vector>
 
 namespace brigid {
+  namespace {
+    // https://tools.ietf.org/html/rfc7230#section-3.2
+    bool is_tchar(char c) {
+      switch (c) {
+        case '!':
+        case '#':
+        case '$':
+        case '%':
+        case '&':
+        case '\'':
+        case '*':
+        case '+':
+        case '-':
+        case '.':
+        case '^':
+        case '_':
+        case '`':
+        case '|':
+        case '~':
+          return true;
+      }
+      return (0x30 <= c && c <= 0x39)
+          || (0x41 <= c && c <= 0x5A)
+          || (0x61 <= c && c <= 0x7A);
+    }
+
+    bool is_vchar(uint8_t c) {
+      return (0x21 <= c && c <= 0x7E)
+          || 0x80 <= c;
+    }
+  }
+
+  http_header_parser::http_header_parser()
+    : state_(1) {}
+
+  bool http_header_parser::parse(const char* pb, size_t n) {
+    if (state_ == 0) {
+      state_ = 1;
+      buffer_.clear();
+      headers_.clear();
+    }
+
+    if (state_ == 1) {
+      state_ = 2;
+      return false;
+    }
+
+    const char* pe = pb + n;
+    const char* p1 = nullptr;
+    const char* p2 = nullptr;
+    int s = 1;
+    const char* p = pe;
+    while (p != pb) {
+      --p;
+      char c = *p;
+      switch (s) {
+        case 1:
+          if (c == '\n') {
+            s = 2;
+          } else {
+            s = 0;
+          }
+          break;
+        case 2:
+          if (c == '\r') {
+            p1 = p;
+            p2 = p;
+            s = 3;
+          } else {
+            s = 0;
+          }
+          break;
+        case 3:
+          if (c == ' ' || c == '\t') {
+            p2 = p;
+          } else {
+            s = 0;
+          }
+          break;
+      }
+      if (s == 0) {
+        break;
+      }
+    }
+
+    if (!p1 || !p2) {
+      throw std::runtime_error("parser error");
+    }
+
+    if (p1 == pb) {
+      if (state_ == 3) {
+        parse_impl();
+      }
+      state_ = 0;
+      return true;
+    }
+
+    const char* p3 = nullptr;
+    s = 1;
+    for (const char* p = pb; p != pe; ++p) {
+      char c = *p;
+      switch (s) {
+        case 1:
+          if (c == ' ' || c == '\t') {
+            p3 = p;
+          } else {
+            s = 0;
+          }
+          break;
+      }
+      if (s == 0) {
+        break;
+      }
+    }
+
+    if (p3) {
+      if (p3 < p2) {
+        buffer_.append(" ");
+        buffer_.append(p3 + 1, p2);
+      }
+      return false;
+    }
+
+    if (state_ == 2) {
+      state_ = 3;
+    } else {
+      parse_impl();
+    }
+    buffer_.assign(pb, p2);
+    return false;
+  }
+
+  const std::map<std::string, std::string>& http_header_parser::get() const {
+    return headers_;
+  }
+
+  void http_header_parser::parse_impl() {
+    const char* pb = buffer_.data();
+    const char* pe = pb + buffer_.size();
+    int s = 1;
+
+    const char* p1 = nullptr;
+    const char* p2 = nullptr;
+    const char* p3 = nullptr;
+    for (const char* p = pb; p != pe; ++p) {
+      char c = *p;
+      switch (s) {
+        case 1:
+          if (is_tchar(c)) {
+            s = 2;
+          } else {
+            s = 0;
+          }
+          break;
+        case 2:
+          if (c == ':') {
+            p1 = p;
+            s = 3;
+          } else if (!is_tchar(c)) {
+            s = 0;
+          }
+          break;
+        case 3:
+          if (is_vchar(c)) {
+            p2 = p;
+            s = 4;
+          } else if (c != ' ' && c != '\t') {
+            s = 0;
+          }
+          break;
+        case 4:
+          if (!is_vchar(c) && c != ' ' && c != '\t') {
+            p3 = p;
+            s = 0;
+          }
+      }
+      if (s == 0) {
+        break;
+      }
+    }
+
+    if (!p1 || !p2 || p3) {
+      throw std::runtime_error("parser error");
+    }
+
+    headers_[std::string(pb, p1)] = std::string(p2, pe);
+  }
+
   namespace {
     void check(CURLcode code) {
       if (code != CURLE_OK) {
@@ -55,6 +245,47 @@ namespace brigid {
     private:
       curl_slist* slist_;
     };
+
+    /*
+    class http_task {
+    public:
+    private:
+      std::exception_ptr exception_;
+
+      static size_t read_cb(char* data, size_t m, size_t n, void* self) {
+        static_cast<http_task*>(self)->read(data, m * n);
+      }
+
+      static size_t header_cb(char* data, size_t m, size_t n, void* self) {
+        return static_cast<http_session_impl*>(self)->header(data, m * n);
+      }
+
+      static size_t write_cb(char* data, size_t m, size_t n, void* self) {
+        return static_cast<http_session_impl*>(self)->write(data, m * n);
+      }
+
+      size_t read(char* data, size_t size) {
+        try {
+          if (reader_) {
+            return reader_->read(data, size);
+          }
+        } catch (...) {
+          if (!exception_) {
+            exception_ = std::current_exception();
+          }
+        }
+        return CURL_READFUNC_ABORT;
+      }
+
+      size_t header(const char* data, size_t size) {
+        return 0;
+      }
+
+      size_t write(const char* data, size_t size) {
+        return 0;
+      }
+    };
+    */
 
     class http_session_impl : public http_session {
     public:
