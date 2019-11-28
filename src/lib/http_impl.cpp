@@ -11,6 +11,8 @@
 #include <algorithm>
 
 namespace brigid {
+  http_reader::~http_reader() {}
+
   namespace {
     FILE* check(FILE* handle) {
       if (!handle) {
