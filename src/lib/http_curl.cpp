@@ -323,7 +323,7 @@ namespace brigid {
 
         if (reader_) {
           setopt(CURLOPT_UPLOAD, 1);
-          setopt(CURLOPT_INFILESIZE_LARGE, reader_->total);
+          setopt(CURLOPT_INFILESIZE_LARGE, reader_->total());
           setopt(CURLOPT_READFUNCTION, &http_task::read_cb);
           setopt(CURLOPT_READDATA, this);
         }
@@ -384,7 +384,7 @@ namespace brigid {
           if (reader_) {
             size_t result = reader_->read(data, size);
             if (session_.progress_cb) {
-              if (!session_.progress_cb(reader_->now, reader_->total)) {
+              if (!session_.progress_cb(reader_->now(), reader_->total())) {
                 return CURL_READFUNC_ABORT;
               }
             }
