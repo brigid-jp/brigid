@@ -268,7 +268,7 @@ namespace brigid {
           const std::string& password)
         : context_(std::make_shared<http_session_context>(progress_cb, header_cb, write_cb, credential, username, password)),
           delegate_([[BrigidSessionDelegate alloc] initWithContext:context_]),
-          session_([NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:delegate_ delegateQueue:nil]) {}
+          session_([NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration ephemeralSessionConfiguration] delegate:delegate_ delegateQueue:nil]) {}
 
       virtual ~http_session_impl() {
         [session_ invalidateAndCancel];
