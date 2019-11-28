@@ -17,7 +17,7 @@ namespace brigid {
     template <class T>
     T check(T result) {
       if (!result) {
-        auto code = ERR_get_error();
+        unsigned long code = ERR_get_error();
         std::vector<char> buffer(256);
         ERR_error_string_n(code, buffer.data(), buffer.size());
         throw BRIGID_ERROR(buffer.data(), code);
