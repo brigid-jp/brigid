@@ -3,35 +3,289 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/http.hpp>
+#include <brigid/noncopyable.hpp>
+#include "error.hpp"
+#include "http_curl.hpp"
 
 #include <curl/curl.h>
 
+#include <errno.h>
+#include <stdint.h>
 #include <stdio.h>
-#include <iostream>
-#include <vector>
+#include <string.h>
+#include <algorithm>
 
 namespace brigid {
   namespace {
-    void check(CURLcode code) {
-      if (code != CURLE_OK) {
-        throw std::runtime_error(curl_easy_strerror(code));
+    int http_initializer_counter = 0;
+  }
+
+  http_initializer::http_initializer() {
+    if (++http_initializer_counter == 1) {
+      curl_global_init(CURL_GLOBAL_ALL);
+    }
+  }
+
+  http_initializer::~http_initializer() {
+    if (--http_initializer_counter == 0) {
+      curl_global_cleanup();
+    }
+  }
+
+  namespace {
+    // https://tools.ietf.org/html/rfc7230#section-3.2
+    bool is_tchar(uint8_t c) {
+      switch (c) {
+        case '!':
+        case '#':
+        case '$':
+        case '%':
+        case '&':
+        case '\'':
+        case '*':
+        case '+':
+        case '-':
+        case '.':
+        case '^':
+        case '_':
+        case '`':
+        case '|':
+        case '~':
+          return true;
+      }
+      return (0x30 <= c && c <= 0x39)
+          || (0x41 <= c && c <= 0x5A)
+          || (0x61 <= c && c <= 0x7A);
+    }
+
+    bool is_vchar(uint8_t c) {
+      return (0x21 <= c && c <= 0x7E)
+          || 0x80 <= c;
+    }
+  }
+
+  http_header_parser::http_header_parser()
+    : state_(1) {}
+
+  bool http_header_parser::parse(const char* pb, size_t n) {
+    if (state_ == 0) {
+      state_ = 1;
+      buffer_.clear();
+      header_.clear();
+    }
+
+    if (state_ == 1) {
+      state_ = 2;
+      return false;
+    }
+
+    const char* pe = pb + n;
+    const char* p1 = nullptr;
+    const char* p2 = nullptr;
+    int s = 1;
+    const char* p = pe;
+    while (p != pb) {
+      --p;
+      char c = *p;
+      switch (s) {
+        case 1:
+          if (c == '\n') {
+            s = 2;
+          } else {
+            s = 0;
+          }
+          break;
+        case 2:
+          if (c == '\r') {
+            p1 = p;
+            p2 = p;
+            s = 3;
+          } else {
+            s = 0;
+          }
+          break;
+        case 3:
+          if (c == ' ' || c == '\t') {
+            p2 = p;
+          } else {
+            s = 0;
+          }
+          break;
+      }
+      if (s == 0) {
+        break;
       }
     }
 
-    CURL* check(CURL* result) {
-      if (!result) {
+    if (!p1 || !p2) {
+      throw BRIGID_ERROR("cannot parse header");
+    }
+
+    if (p1 == pb) {
+      if (state_ == 3) {
+        parse_impl();
+      }
+      state_ = 0;
+      return true;
+    }
+
+    const char* p3 = nullptr;
+    s = 1;
+    for (const char* p = pb; p != pe; ++p) {
+      char c = *p;
+      switch (s) {
+        case 1:
+          if (c == ' ' || c == '\t') {
+            p3 = p;
+          } else {
+            s = 0;
+          }
+          break;
+      }
+      if (s == 0) {
+        break;
+      }
+    }
+
+    if (p3) {
+      if (p3 < p2) {
+        buffer_.append(" ");
+        buffer_.append(p3 + 1, p2);
+      }
+      return false;
+    }
+
+    if (state_ == 2) {
+      state_ = 3;
+    } else {
+      parse_impl();
+    }
+    buffer_.assign(pb, p2);
+    return false;
+  }
+
+  const std::map<std::string, std::string>& http_header_parser::get() const {
+    return header_;
+  }
+
+  void http_header_parser::parse_impl() {
+    const char* pb = buffer_.data();
+    const char* pe = pb + buffer_.size();
+    int s = 1;
+
+    const char* p1 = nullptr;
+    const char* p2 = nullptr;
+    const char* p3 = nullptr;
+    for (const char* p = pb; p != pe; ++p) {
+      char c = *p;
+      switch (s) {
+        case 1:
+          if (is_tchar(c)) {
+            s = 2;
+          } else {
+            s = 0;
+          }
+          break;
+        case 2:
+          if (c == ':') {
+            p1 = p;
+            s = 3;
+          } else if (!is_tchar(c)) {
+            s = 0;
+          }
+          break;
+        case 3:
+          if (is_vchar(c)) {
+            p2 = p;
+            s = 4;
+          } else if (c != ' ' && c != '\t') {
+            s = 0;
+          }
+          break;
+        case 4:
+          if (!is_vchar(c) && c != ' ' && c != '\t') {
+            p3 = p;
+            s = 0;
+          }
+      }
+      if (s == 0) {
+        break;
+      }
+    }
+
+    if (!p1 || p3) {
+      throw BRIGID_ERROR("cannot parse header");
+    }
+
+    if (p2) {
+      header_[std::string(pb, p1)] = std::string(p2, pe);
+    } else {
+      header_[std::string(pb, p1)] = std::string();
+    }
+  }
+
+  namespace {
+    void check(CURLcode code) {
+      if (code != CURLE_OK) {
+        throw BRIGID_ERROR(curl_easy_strerror(code), code);
+      }
+    }
+
+    CURL* check(CURL* handle) {
+      if (!handle) {
         check(CURLE_FAILED_INIT);
       }
-      return result;
+      return handle;
+    }
+
+    FILE* check(FILE* handle) {
+      if (!handle) {
+        throw BRIGID_ERROR("cannot fopen", errno);
+      }
+      return handle;
     }
 
     using easy_t = std::unique_ptr<CURL, decltype(&curl_easy_cleanup)>;
 
-    easy_t make_easy(CURL* easy) {
-      return easy_t(easy, &curl_easy_cleanup);
+    easy_t make_easy(CURL* handle) {
+      return easy_t(handle, &curl_easy_cleanup);
     }
 
-    class string_list {
+    using file_t = std::unique_ptr<FILE, decltype(&fclose)>;
+
+    file_t make_file(FILE* handle) {
+      return file_t(handle, &fclose);
+    }
+
+    class http_session_impl : public http_session, private noncopyable {
+    public:
+      http_session_impl(
+          std::function<bool (size_t, size_t)> progress_cb,
+          std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
+          std::function<bool (const char*, size_t)> write_cb,
+          bool credential,
+          const std::string& username,
+          const std::string& password)
+        : handle(make_easy(check(curl_easy_init()))),
+          progress_cb(progress_cb),
+          header_cb(header_cb),
+          write_cb(write_cb),
+          credential(credential),
+          username(username),
+          password(password) {}
+
+      virtual void request(const std::string&, const std::string&, const std::map<std::string, std::string>&, http_request_body, const char*, size_t);
+
+      easy_t handle;
+      std::function<bool (size_t, size_t)> progress_cb;
+      std::function<bool (int, const std::map<std::string, std::string>&)> header_cb;
+      std::function<bool (const char*, size_t)> write_cb;
+      bool credential;
+      std::string username;
+      std::string password;
+    };
+
+    class string_list : private noncopyable {
     public:
       string_list()
         : slist_() {}
@@ -40,11 +294,11 @@ namespace brigid {
         curl_slist_free_all(slist_);
       }
 
-      void append(const std::string& value) {
-        if (curl_slist* slist = curl_slist_append(slist_, value.c_str())) {
+      void append(const std::string& string) {
+        if (curl_slist* slist = curl_slist_append(slist_, string.c_str())) {
           slist_ = slist;
         } else {
-          throw std::runtime_error("slist error");
+          throw BRIGID_ERROR("cannot curl_slist_append");
         }
       }
 
@@ -56,161 +310,171 @@ namespace brigid {
       curl_slist* slist_;
     };
 
-    class http_session_impl : public http_session {
+    class http_reader {
     public:
-      http_session_impl()
-        : handle_(make_easy(check(curl_easy_init()))),
-          credential_(),
-          file_(nullptr) {}
+      http_reader()
+        : now(),
+          total() {}
 
-      virtual void set_progress_cb(std::function<bool (size_t, size_t)> progress_cb) {
-        progress_cb_ = progress_cb;
+      virtual ~http_reader() {}
+      virtual size_t read(char*, size_t) = 0;
+
+      size_t now;
+      size_t total;
+    };
+
+    class http_data_reader : public http_reader, private noncopyable {
+    public:
+      http_data_reader(const char* data, size_t size)
+        : data_(data),
+          size_(size) {
+        total = size;
       }
 
-      virtual void set_header_cb(std::function<bool (int, const std::map<std::string, std::string>&)> header_cb) {
-        header_cb_ = header_cb;
-      }
-
-      virtual void set_write_cb(std::function<bool (const char*, size_t)> write_cb) {
-        write_cb_ = write_cb;
-      }
-
-      virtual void set_credential() {
-        credential_ = false;
-        username_.clear();
-        password_.clear();
-      }
-
-      virtual void set_credential(const std::string& username, const std::string& password) {
-        credential_ = true;
-        username_ = username;
-        password_ = password;
-      }
-
-      virtual void request(
-          const std::string& method,
-          const std::string& url,
-          const std::map<std::string, std::string>& headers,
-          http_request_body body,
-          const char* data,
-          size_t size) {
-        curl_easy_reset(handle_.get());
-        check(curl_easy_setopt(handle_.get(), CURLOPT_VERBOSE, 1));
-        check(curl_easy_setopt(handle_.get(), CURLOPT_CUSTOMREQUEST, method.c_str()));
-        check(curl_easy_setopt(handle_.get(), CURLOPT_URL, url.c_str()));
-
-        string_list headers_list;
-        if (!headers.empty()) {
-          for (const auto& header : headers) {
-            headers_list.append(header.first + ": " + header.second);
-          }
-          check(curl_easy_setopt(handle_.get(), CURLOPT_HTTPHEADER, headers_list.get()));
-        }
-
-        switch (body) {
-          case http_request_body::data:
-            if (data) {
-              check(curl_easy_setopt(handle_.get(), CURLOPT_POSTFIELDS, data));
-              check(curl_easy_setopt(handle_.get(), CURLOPT_POSTFIELDSIZE_LARGE, size));
-            }
-            break;
-          case http_request_body::file:
-            if (file_) {
-              fclose(file_);
-              file_ = nullptr;
-
-            }
-            file_ = fopen(data, "rb");
-            if (!file_) {
-              throw std::runtime_error("could not open");
-            }
-            fseek(file_, 0, SEEK_END);
-            progress_now_ = 0;
-            progress_total_ = ftell(file_);
-            check(curl_easy_setopt(handle_.get(), CURLOPT_UPLOAD, 1));
-            check(curl_easy_setopt(handle_.get(), CURLOPT_INFILESIZE_LARGE, progress_total_));
-            check(curl_easy_setopt(handle_.get(), CURLOPT_READFUNCTION, &http_session_impl::read_cb));
-            check(curl_easy_setopt(handle_.get(), CURLOPT_READDATA, this));
-            fseek(file_, 0, SEEK_SET);
-            break;
-        }
-
-        if (header_cb_) {
-          header_data_.clear();
-          check(curl_easy_setopt(handle_.get(), CURLOPT_HEADERFUNCTION, &http_session_impl::header_cb));
-          check(curl_easy_setopt(handle_.get(), CURLOPT_HEADERDATA, this));
-        }
-        if (write_cb_) {
-          check(curl_easy_setopt(handle_.get(), CURLOPT_WRITEFUNCTION, &http_session_impl::write_cb));
-          check(curl_easy_setopt(handle_.get(), CURLOPT_WRITEDATA, this));
-        }
-
-        curl_easy_setopt(handle_.get(), CURLOPT_FOLLOWLOCATION, 1);
-
-        if (credential_) {
-          std::cerr << "credential " << username_ << " " << password_ << "\n";
-          curl_easy_setopt(handle_.get(), CURLOPT_HTTPAUTH, CURLAUTH_ANY);
-          curl_easy_setopt(handle_.get(), CURLOPT_USERNAME, username_.c_str());
-          curl_easy_setopt(handle_.get(), CURLOPT_PASSWORD, password_.c_str());
-        }
-
-        CURLcode code = curl_easy_perform(handle_.get());
-
-        if (file_) {
-          fclose(file_);
-          file_ = nullptr;
-        }
-
-        if (exception_) {
-          std::exception_ptr exception = exception_;
-          exception_ = nullptr;
-          std::rethrow_exception(exception);
-        }
-        check(code);
-
-        curl_easy_reset(handle_.get());
+      virtual size_t read(char* data, size_t size) {
+        size_t result = std::min(size, size_);
+        memmove(data, data_, result);
+        data_ += result;
+        size_ -= result;
+        now += result;
+        return result;
       }
 
     private:
-      easy_t handle_;
-      std::function<bool (size_t, size_t)> progress_cb_;
-      std::function<bool (int, const std::map<std::string, std::string>&)> header_cb_;
-      std::function<bool (const char*, size_t)> write_cb_;
-      bool credential_;
-      std::string username_;
-      std::string password_;
-      FILE* file_;
-      size_t progress_now_;
-      size_t progress_total_;
-      std::vector<std::string> header_data_;
+      const char* data_;
+      size_t size_;
+    };
+
+    class http_file_reader : public http_reader, private noncopyable {
+    public:
+      http_file_reader(const char* path)
+        : handle_(make_file(check(fopen(path, "rb")))) {
+        fseek(handle_.get(), 0, SEEK_END);
+        total = ftell(handle_.get());
+        fseek(handle_.get(), 0, SEEK_SET);
+      }
+
+      virtual size_t read(char* data, size_t size) {
+        size_t result = fread(data, 1, size, handle_.get());
+        now += result;
+        return result;
+      }
+
+    private:
+      file_t handle_;
+    };
+
+    std::unique_ptr<http_reader> make_reader(http_request_body body, const char* data, size_t size) {
+      switch (body) {
+        case http_request_body::data:
+          if (data) {
+            return std::unique_ptr<http_reader>(new http_data_reader(data, size));
+          }
+          break;
+        case http_request_body::file:
+          return std::unique_ptr<http_reader>(new http_file_reader(data));
+      }
+      return std::unique_ptr<http_reader>();
+    }
+
+    class http_task : private noncopyable {
+    public:
+      http_task(
+          http_session_impl& session,
+          const std::string& method,
+          const std::string& url,
+          const std::map<std::string, std::string>& header,
+          http_request_body body,
+          const char* data,
+          size_t size)
+        : session_(session),
+          method_(method),
+          url_(url),
+          reader_(make_reader(body, data, size)) {
+        for (const auto& field : header) {
+          header_.append(field.first + ": " + field.second);
+        }
+
+        setopt(CURLOPT_FOLLOWLOCATION, 1);
+        setopt(CURLOPT_CUSTOMREQUEST, method_.c_str());
+        if (method_ == "HEAD") {
+          setopt(CURLOPT_NOBODY, 1);
+        }
+        setopt(CURLOPT_URL, url_.c_str());
+        setopt(CURLOPT_HTTPHEADER, header_.get());
+
+        if (reader_) {
+          setopt(CURLOPT_UPLOAD, 1);
+          setopt(CURLOPT_INFILESIZE_LARGE, reader_->total);
+          setopt(CURLOPT_READFUNCTION, &http_task::read_cb);
+          setopt(CURLOPT_READDATA, this);
+        }
+
+        if (session_.header_cb) {
+          setopt(CURLOPT_HEADERFUNCTION, &http_task::header_cb);
+          setopt(CURLOPT_HEADERDATA, this);
+        }
+
+        if (session_.write_cb) {
+          setopt(CURLOPT_WRITEFUNCTION, &http_task::write_cb);
+          setopt(CURLOPT_WRITEDATA, this);
+        }
+
+        if (session_.credential) {
+          setopt(CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+          setopt(CURLOPT_USERNAME, session_.username.c_str());
+          setopt(CURLOPT_PASSWORD, session_.password.c_str());
+        }
+      }
+
+      void request() {
+        CURLcode code = curl_easy_perform(session_.handle.get());
+        if (exception_) {
+          std::rethrow_exception(exception_);
+        }
+        check(code);
+      }
+
+    private:
+      http_session_impl& session_;
+      std::string method_;
+      std::string url_;
+      string_list header_;
+      std::unique_ptr<http_reader> reader_;
+      http_header_parser parser_;
       std::exception_ptr exception_;
 
-      static size_t read_cb(char* data, size_t m, size_t n, void* self) {
-        return static_cast<http_session_impl*>(self)->read(data, m, n);
+      static size_t read_cb(char* data, size_t size, size_t count, void* self) {
+        return static_cast<http_task*>(self)->read(data, size * count);
       }
 
-      static size_t header_cb(char* data, size_t m, size_t n, void* self) {
-        return static_cast<http_session_impl*>(self)->header(data, m * n);
+      static size_t header_cb(char* data, size_t size, size_t count, void* self) {
+        return static_cast<http_task*>(self)->header(data, size * count);
       }
 
-      static size_t write_cb(char* data, size_t m, size_t n, void* self) {
-        return static_cast<http_session_impl*>(self)->write(data, m * n);
+      static size_t write_cb(char* data, size_t size, size_t count, void* self) {
+        return static_cast<http_task*>(self)->write(data, size * count);
       }
 
-      size_t read(char* data, size_t m, size_t n) {
-        if (file_) {
-          size_t result = fread(data, m, n, file_);
-          try {
-            if (progress_cb_) {
-              progress_now_ += result;
-              if (progress_cb_(progress_now_, progress_total_)) {
-                return result;
+      template <class T>
+      void setopt(CURLoption option, T parameter) {
+        check(curl_easy_setopt(session_.handle.get(), option, parameter));
+      }
+
+      size_t read(char* data, size_t size) {
+        try {
+          if (reader_) {
+            size_t result = reader_->read(data, size);
+            if (session_.progress_cb) {
+              if (!session_.progress_cb(reader_->now, reader_->total)) {
+                return CURL_READFUNC_ABORT;
               }
             }
-          } catch (...) {
-            if (!exception_) {
-              exception_ = std::current_exception();
-            }
+            return result;
+          }
+        } catch (...) {
+          if (!exception_) {
+            exception_ = std::current_exception();
           }
         }
         return CURL_READFUNC_ABORT;
@@ -218,65 +482,16 @@ namespace brigid {
 
       size_t header(const char* data, size_t size) {
         try {
-          // should parse strictly
-          {
-            std::string line(data, size);
-            // std::cout << "[" << line << "]";
-
-            if (line != "\r\n") {
-              size_t n = line.size();
-              if (n > 2) {
-                line.resize(n - 2);
-              }
-              size_t i = 0;
-              for (; i < line.size(); ++i) {
-                if (line[i] != ' ' && line[i] != '\t') {
-                  break;
-                }
-              }
-              if (i > 0) {
-                line.resize(i);
-                header_data_.back() += " " + line;
-              } else {
-                header_data_.push_back(line);
-              }
-              return size;
-            }
-          }
-
-          std::map<std::string, std::string> headers;
-
-          for (size_t i = 1; i < header_data_.size(); ++i) {
-            std::string header = header_data_[i];
-            size_t p = 0;
-            for (size_t i = 0; i < header.size(); ++i) {
-              if (header[i] == ':') {
-                p = i;
-                break;
+          if (session_.header_cb) {
+            if (parser_.parse(data, size)) {
+              long code = 0;
+              check(curl_easy_getinfo(session_.handle.get(), CURLINFO_RESPONSE_CODE, &code));
+              if (!session_.header_cb(code, parser_.get())) {
+                return 0;
               }
             }
-            if (p > 0) {
-              size_t q = p + 1;
-              for (; q < header.size(); ++q) {
-                if (header[q] != ' ') {
-                  break;
-                }
-              }
-
-              std::string key = header.substr(0, p);
-              std::string value = header.substr(q);
-              // std::cout << "[" << key << "]={" << value << "}\n";
-              headers[key] = value;
-            }
           }
-
-          long code = 0;
-          curl_easy_getinfo(handle_.get(), CURLINFO_RESPONSE_CODE, &code);
-          // std::cout << "CODE " << code << "\n";
-
-          if (header_cb_(code, headers)) {
-            return size;
-          }
+          return size;
         } catch (...) {
           if (!exception_) {
             exception_ = std::current_exception();
@@ -287,9 +502,12 @@ namespace brigid {
 
       size_t write(const char* data, size_t size) {
         try {
-          if (write_cb_(data, size)) {
-            return size;
+          if (session_.write_cb) {
+            if (!session_.write_cb(data, size)) {
+              return 0;
+            }
           }
+          return size;
         } catch (...) {
           if (!exception_) {
             exception_ = std::current_exception();
@@ -298,9 +516,32 @@ namespace brigid {
         return 0;
       }
     };
+
+    void http_session_impl::request(
+        const std::string& method,
+        const std::string& url,
+        const std::map<std::string, std::string>& header,
+        http_request_body body,
+        const char* data,
+        size_t size) {
+      try {
+        http_task task(*this, method, url, header, body, data, size);
+        task.request();
+        curl_easy_reset(handle.get());
+      } catch (...) {
+        curl_easy_reset(handle.get());
+        throw;
+      }
+    }
   }
 
-  std::unique_ptr<http_session> make_http_session() {
-    return std::unique_ptr<http_session>(new http_session_impl());
+  std::unique_ptr<http_session> make_http_session(
+      std::function<bool (size_t, size_t)> progress_cb,
+      std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
+      std::function<bool (const char*, size_t)> write_cb,
+      bool credential,
+      const std::string& username,
+      const std::string& password) {
+    return std::unique_ptr<http_session>(new http_session_impl(progress_cb, header_cb, write_cb, credential, username, password));
   }
 }
