@@ -2,22 +2,18 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include <brigid/crypto.hpp>
+#include "error.hpp"
 #include "crypto_impl.hpp"
 #include "type_traits.hpp"
-#include <brigid/crypto.hpp>
 
 #include <CommonCrypto/CommonCrypto.h>
-
-#include <sstream>
-#include <stdexcept>
 
 namespace brigid {
   namespace {
     void check(CCCryptorStatus status) {
       if (status != kCCSuccess) {
-        std::ostringstream out;
-        out << "crypto_apple error number " << status;
-        throw std::runtime_error(out.str());
+        throw BRIGID_ERROR(status);
       }
     }
 
@@ -29,7 +25,7 @@ namespace brigid {
 
     class aes_cryptor_impl : public cryptor {
     public:
-      aes_cryptor_impl(CCOperation operation, const char* key_data, size_t key_size, const char* iv_data, size_t)
+      aes_cryptor_impl(CCOperation operation, const char* key_data, size_t key_size, const char* iv_data)
         : cryptor_(make_cryptor_ref()) {
         CCCryptorRef cryptor = nullptr;
         check(CCCryptorCreateWithMode(operation, kCCModeCBC, kCCAlgorithmAES, kCCOptionPKCS7Padding, iv_data, key_data, key_size, nullptr, 0, 0, 0, &cryptor));
@@ -54,7 +50,7 @@ namespace brigid {
   std::unique_ptr<cryptor> make_encryptor(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
     check_cipher(cipher, key_size, iv_size);
     if (cipher == "aes-128-cbc" || cipher == "aes-192-cbc" || cipher == "aes-256-cbc") {
-      return std::unique_ptr<cryptor>(new aes_cryptor_impl(kCCEncrypt, key_data, key_size, iv_data, iv_size));
+      return std::unique_ptr<cryptor>(new aes_cryptor_impl(kCCEncrypt, key_data, key_size, iv_data));
     } else {
       throw std::runtime_error("unsupported cipher");
     }
@@ -63,7 +59,7 @@ namespace brigid {
   std::unique_ptr<cryptor> make_decryptor(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
     check_cipher(cipher, key_size, iv_size);
     if (cipher == "aes-128-cbc" || cipher == "aes-192-cbc" || cipher == "aes-256-cbc") {
-      return std::unique_ptr<cryptor>(new aes_cryptor_impl(kCCDecrypt, key_data, key_size, iv_data, iv_size));
+      return std::unique_ptr<cryptor>(new aes_cryptor_impl(kCCDecrypt, key_data, key_size, iv_data));
     } else {
       throw std::runtime_error("unsupported cipher");
     }

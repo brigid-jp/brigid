@@ -4,13 +4,12 @@
 
 #include <brigid/http.hpp>
 #include <brigid/noncopyable.hpp>
+#include "error.hpp"
 
 #include <Foundation/Foundation.h>
 
 #include <condition_variable>
-#include <exception>
 #include <mutex>
-#include <stdexcept>
 
 namespace brigid {
   http_initializer::http_initializer() {}
@@ -137,7 +136,7 @@ namespace brigid {
       std::lock_guard<std::mutex> req_lock(req_mutex_);
       req_ = nullptr;
       if (error && !exception_) {
-        exception_ = std::make_exception_ptr(std::runtime_error(to_string(error.localizedDescription)));
+        exception_ = std::make_exception_ptr(BRIGID_ERROR(to_string(error.localizedDescription), error.code));
       }
       req_condition_.notify_all();
     }
