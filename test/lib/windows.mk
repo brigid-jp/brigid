@@ -5,6 +5,7 @@
 OBJS = \
 	test.obj \
 	test_crypto.obj \
+	test_http.obj \
 	test_main.obj
 
 TARGET = test.exe

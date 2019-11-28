@@ -5,7 +5,9 @@
 OBJS = \
 	crypto.obj \
 	crypto_impl.obj \
-	crypto_windows.obj
+	crypto_windows.obj \
+	http.obj \
+	http_windows.obj
 TARGET = brigid.lib
 
 all: $(TARGET)
