@@ -12,15 +12,19 @@
 #include <stdexcept>
 
 namespace brigid {
+  http_initializer::http_initializer() {}
+  http_initializer::~http_initializer() {}
+
   namespace {
     class http_session_context {
     public:
-      http_session_context();
-      void set_progress_cb(std::function<bool (size_t, size_t)>);
-      void set_header_cb(std::function<bool (int, const std::map<std::string, std::string>&)>);
-      void set_write_cb(std::function<bool (const char*, size_t)>);
-      void set_credential();
-      void set_credential(const std::string&, const std::string&);
+      http_session_context(
+          std::function<bool (size_t, size_t)>,
+          std::function<bool (int, const std::map<std::string, std::string>&)>,
+          std::function<bool (const char*, size_t)>,
+          bool,
+          const std::string&,
+          const std::string&);
       void did_complete_with_error(NSError*);
       bool did_send_body_data(size_t, size_t);
       NSURLCredential* did_receive_challenge(NSURLAuthenticationChallenge*);
@@ -121,32 +125,20 @@ namespace brigid {
       return [[NSString alloc] initWithBytes:data length:size encoding:NSUTF8StringEncoding];
     }
 
-    http_session_context::http_session_context()
-      : credential_(), rep_() {}
-
-    void http_session_context::set_progress_cb(std::function<bool (size_t, size_t)> progress_cb) {
-      progress_cb_ = progress_cb;
-    }
-
-    void http_session_context::set_header_cb(std::function<bool (int, const std::map<std::string, std::string>&)> header_cb) {
-      header_cb_ = header_cb;
-    }
-
-    void http_session_context::set_write_cb(std::function<bool (const char*, size_t)> write_cb) {
-      write_cb_ = write_cb;
-    }
-
-    void http_session_context::set_credential() {
-      credential_ = false;
-      username_.clear();
-      password_.clear();
-    }
-
-    void http_session_context::set_credential(const std::string& username, const std::string& password) {
-      credential_ = true;
-      username_ = username;
-      password_ = password;
-    }
+    http_session_context::http_session_context(
+        std::function<bool (size_t, size_t)> progress_cb,
+        std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
+        std::function<bool (const char*, size_t)> write_cb,
+        bool credential,
+        const std::string& username,
+        const std::string& password)
+      : progress_cb_(progress_cb),
+        header_cb_(header_cb),
+        write_cb_(write_cb),
+        credential_(credential),
+        username_(username),
+        password_(password),
+        rep_() {}
 
     void http_session_context::did_complete_with_error(NSError* error) {
       std::lock_guard<std::mutex> req_lock(req_mutex_);
@@ -267,33 +259,19 @@ namespace brigid {
 
     class http_session_impl : public http_session {
     public:
-      http_session_impl()
-        : context_(std::make_shared<http_session_context>()),
+      http_session_impl(
+          std::function<bool (size_t, size_t)> progress_cb,
+          std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
+          std::function<bool (const char*, size_t)> write_cb,
+          bool credential,
+          const std::string& username,
+          const std::string& password)
+        : context_(std::make_shared<http_session_context>(progress_cb, header_cb, write_cb, credential, username, password)),
           delegate_([[BrigidSessionDelegate alloc] initWithContext:context_]),
           session_([NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:delegate_ delegateQueue:nil]) {}
 
       virtual ~http_session_impl() {
         [session_ invalidateAndCancel];
-      }
-
-      virtual void set_progress_cb(std::function<bool (size_t, size_t)> progress_cb) {
-        context_->set_progress_cb(progress_cb);
-      }
-
-      virtual void set_header_cb(std::function<bool (int, const std::map<std::string, std::string>&)> header_cb) {
-        context_->set_header_cb(header_cb);
-      }
-
-      virtual void set_write_cb(std::function<bool (const char*, size_t)> write_cb) {
-        context_->set_write_cb(write_cb);
-      }
-
-      virtual void set_credential() {
-        context_->set_credential();
-      }
-
-      virtual void set_credential(const std::string& username, const std::string& password) {
-        context_->set_credential(username, password);
       }
 
       virtual void request(
@@ -330,7 +308,13 @@ namespace brigid {
     };
   }
 
-  std::unique_ptr<http_session> make_http_session() {
-    return std::unique_ptr<http_session>(new http_session_impl());
+  std::unique_ptr<http_session> make_http_session(
+      std::function<bool (size_t, size_t)> progress_cb,
+      std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
+      std::function<bool (const char*, size_t)> write_cb,
+      bool credential,
+      const std::string& username,
+      const std::string& password) {
+    return std::unique_ptr<http_session>(new http_session_impl(progress_cb, header_cb, write_cb, credential, username, password));
   }
 }
