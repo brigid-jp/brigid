@@ -92,7 +92,7 @@ namespace brigid {
     std::wstring agent = make_string("brigid");
 
     internet_handle_t session = make_internet_handle(check(WinHttpOpen(
-        agent.c_str(),
+        nullptr,
         WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
         WINHTTP_NO_PROXY_NAME,
         WINHTTP_NO_PROXY_BYPASS,

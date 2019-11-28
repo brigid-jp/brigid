@@ -2,25 +2,22 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include "crypto_impl.hpp"
-#include "type_traits.hpp"
 #include <brigid/crypto.hpp>
+#include "crypto_impl.hpp"
+#include "error.hpp"
+#include "type_traits.hpp"
 
 #include <windows.h>
 #include <bcrypt.h>
 
 #include <algorithm>
-#include <sstream>
-#include <stdexcept>
 #include <vector>
 
 namespace brigid {
   namespace {
     void check(NTSTATUS status) {
       if (!BCRYPT_SUCCESS(status)) {
-        std::ostringstream out;
-        out << "crypto_windows error number " << status;
-        throw std::runtime_error(out.str());
+        throw BRIGID_ERROR(status);
       }
     }
 
@@ -149,7 +146,7 @@ namespace brigid {
     if (cipher == "aes-128-cbc" || cipher == "aes-192-cbc" || cipher == "aes-256-cbc") {
       return std::unique_ptr<cryptor>(new aes_encryptor_impl(key_data, key_size, iv_data, iv_size));
     } else {
-      throw std::runtime_error("unsupported cipher");
+      throw BRIGID_ERROR("unsupported cipher");
     }
   }
 
@@ -158,7 +155,7 @@ namespace brigid {
     if (cipher == "aes-128-cbc" || cipher == "aes-192-cbc" || cipher == "aes-256-cbc") {
       return std::unique_ptr<cryptor>(new aes_decryptor_impl(key_data, key_size, iv_data, iv_size));
     } else {
-      throw std::runtime_error("unsupported cipher");
+      throw BRIGID_ERROR("unsupported cipher");
     }
   }
 }

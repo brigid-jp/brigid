@@ -52,7 +52,7 @@ namespace brigid {
     if (cipher == "aes-128-cbc" || cipher == "aes-192-cbc" || cipher == "aes-256-cbc") {
       return std::unique_ptr<cryptor>(new aes_cryptor_impl(kCCEncrypt, key_data, key_size, iv_data));
     } else {
-      throw std::runtime_error("unsupported cipher");
+      throw BRIGID_ERROR("unsupported cipher");
     }
   }
 
@@ -61,7 +61,7 @@ namespace brigid {
     if (cipher == "aes-128-cbc" || cipher == "aes-192-cbc" || cipher == "aes-256-cbc") {
       return std::unique_ptr<cryptor>(new aes_cryptor_impl(kCCDecrypt, key_data, key_size, iv_data));
     } else {
-      throw std::runtime_error("unsupported cipher");
+      throw BRIGID_ERROR("unsupported cipher");
     }
   }
 }
