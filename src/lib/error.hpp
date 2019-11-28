@@ -5,46 +5,45 @@
 #ifndef BRIGID_ERROR_HPP
 #define BRIGID_ERROR_HPP
 
-#include <exception>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 namespace brigid {
-  class error : public std::exception {
+  class error : public std::runtime_error {
   public:
-    error(const char* file, int line, const char* message) {
-      std::ostringstream out;
-      out << message << " at " << file << ":" << line;
-      what_ = out.str();
-    }
+    error(const char* file, int line, const char* message)
+      : std::runtime_error(make_what3(file, line, message)) {}
 
     template <class T>
-    error(const char* file, int line, T code) {
-      std::ostringstream out;
-      out << "error number " << code << " at " << file << ":" << line;
-      what_ = out.str();
-    }
+    error(const char* file, int line, T code)
+      : std::runtime_error(make_what(file, line, nullptr, code)) {}
 
     template <class T>
-    error(const char* file, int line, const char* message, T code) {
-      std::ostringstream out;
-      out << message << " (error number " << code << ") at " << file << ":" << line;
-      what_ = out.str();
-    }
+    error(const char* file, int line, const char* message, T code)
+      : std::runtime_error(make_what(file, line, message, code)) {}
 
     template <class T>
-    error(const char* file, int line, const std::string& message, T code) {
-      std::ostringstream out;
-      out << message << " (error number " << code << ") at " << file << ":" << line;
-      what_ = out.str();
-    }
-
-    virtual const char* what() const noexcept {
-      return what_.c_str();
-    }
+    error(const char* file, int line, const std::string& message, T code)
+      : std::runtime_error(make_what(file, line, message.c_str(), code)) {}
 
   private:
-    std::string what_;
+    static std::string make_what3(const char* file, int line, const char* message) {
+      std::ostringstream out;
+      out << message << " at " << file << ":" << line;
+      return out.str();
+    }
+
+    template <class T>
+    static std::string make_what(const char* file, int line, const char* message, T code) {
+      std::ostringstream out;
+      if (message) {
+        out << message << " (error number " << code << ") at " << file << ":" << line;
+      } else {
+        out << "error number " << code << " at " << file << ":" << line;
+      }
+      return out.str();
+    }
   };
 }
 
