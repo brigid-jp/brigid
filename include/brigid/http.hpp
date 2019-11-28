@@ -5,6 +5,8 @@
 #ifndef BRIGID_HTTP_HPP
 #define BRIGID_HTTP_HPP
 
+#include <brigid/noncopyable.hpp>
+
 #include <stddef.h>
 #include <functional>
 #include <map>
@@ -12,7 +14,7 @@
 #include <string>
 
 namespace brigid {
-  class http_initializer {
+  class http_initializer : private noncopyable {
   public:
     http_initializer();
     ~http_initializer();

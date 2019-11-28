@@ -3,6 +3,7 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/http.hpp>
+#include <brigid/noncopyable.hpp>
 #include "error.hpp"
 #include "http_curl.hpp"
 
@@ -256,7 +257,7 @@ namespace brigid {
       return file_t(handle, &fclose);
     }
 
-    class http_session_impl : public http_session {
+    class http_session_impl : public http_session, private noncopyable {
     public:
       http_session_impl(
           std::function<bool (size_t, size_t)> progress_cb,
@@ -284,7 +285,7 @@ namespace brigid {
       std::string password;
     };
 
-    class string_list {
+    class string_list : private noncopyable {
     public:
       string_list()
         : slist_() {}
@@ -311,7 +312,10 @@ namespace brigid {
 
     class http_reader {
     public:
-      http_reader() : now(), total() {}
+      http_reader()
+        : now(),
+          total() {}
+
       virtual ~http_reader() {}
       virtual size_t read(char*, size_t) = 0;
 
@@ -319,7 +323,7 @@ namespace brigid {
       size_t total;
     };
 
-    class http_data_reader : public http_reader {
+    class http_data_reader : public http_reader, private noncopyable {
     public:
       http_data_reader(const char* data, size_t size)
         : data_(data),
@@ -341,7 +345,7 @@ namespace brigid {
       size_t size_;
     };
 
-    class http_file_reader : public http_reader {
+    class http_file_reader : public http_reader, private noncopyable {
     public:
       http_file_reader(const char* path)
         : handle_(make_file(check(fopen(path, "rb")))) {
@@ -373,10 +377,10 @@ namespace brigid {
       return std::unique_ptr<http_reader>();
     }
 
-    class http_task {
+    class http_task : private noncopyable {
     public:
       http_task(
-          http_session_impl* session,
+          http_session_impl& session,
           const std::string& method,
           const std::string& url,
           const std::map<std::string, std::string>& header,
@@ -390,55 +394,49 @@ namespace brigid {
         for (const auto& field : header) {
           header_.append(field.first + ": " + field.second);
         }
+
+        setopt(CURLOPT_FOLLOWLOCATION, 1);
+        setopt(CURLOPT_CUSTOMREQUEST, method_.c_str());
+        if (method_ == "HEAD") {
+          setopt(CURLOPT_NOBODY, 1);
+        }
+        setopt(CURLOPT_URL, url_.c_str());
+        setopt(CURLOPT_HTTPHEADER, header_.get());
+
+        if (reader_) {
+          setopt(CURLOPT_UPLOAD, 1);
+          setopt(CURLOPT_INFILESIZE_LARGE, reader_->total);
+          setopt(CURLOPT_READFUNCTION, &http_task::read_cb);
+          setopt(CURLOPT_READDATA, this);
+        }
+
+        if (session_.header_cb) {
+          setopt(CURLOPT_HEADERFUNCTION, &http_task::header_cb);
+          setopt(CURLOPT_HEADERDATA, this);
+        }
+
+        if (session_.write_cb) {
+          setopt(CURLOPT_WRITEFUNCTION, &http_task::write_cb);
+          setopt(CURLOPT_WRITEDATA, this);
+        }
+
+        if (session_.credential) {
+          setopt(CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+          setopt(CURLOPT_USERNAME, session_.username.c_str());
+          setopt(CURLOPT_PASSWORD, session_.password.c_str());
+        }
       }
 
       void request() {
-        CURL* handle = session_->handle.get();
-
-        check(curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1));
-        check(curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, method_.c_str()));
-        if (method_ == "HEAD") {
-          check(curl_easy_setopt(handle, CURLOPT_NOBODY, 1));
-        }
-        check(curl_easy_setopt(handle, CURLOPT_URL, url_.c_str()));
-        check(curl_easy_setopt(handle, CURLOPT_HTTPHEADER, header_.get()));
-
-        if (reader_) {
-          check(curl_easy_setopt(handle, CURLOPT_UPLOAD, 1));
-          check(curl_easy_setopt(handle, CURLOPT_INFILESIZE_LARGE, reader_->total));
-          check(curl_easy_setopt(handle, CURLOPT_READFUNCTION, &http_task::read_cb));
-          check(curl_easy_setopt(handle, CURLOPT_READDATA, this));
-        }
-
-        if (session_->header_cb) {
-          check(curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, &http_task::header_cb));
-          check(curl_easy_setopt(handle, CURLOPT_HEADERDATA, this));
-        }
-
-        if (session_->write_cb) {
-          check(curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, &http_task::write_cb));
-          check(curl_easy_setopt(handle, CURLOPT_WRITEDATA, this));
-        }
-
-        if (session_->credential) {
-          check(curl_easy_setopt(handle, CURLOPT_HTTPAUTH, CURLAUTH_ANY));
-          check(curl_easy_setopt(handle, CURLOPT_USERNAME, session_->username.c_str()));
-          check(curl_easy_setopt(handle, CURLOPT_PASSWORD, session_->password.c_str()));
-        }
-
-        CURLcode code = curl_easy_perform(handle);
+        CURLcode code = curl_easy_perform(session_.handle.get());
         if (exception_) {
           std::rethrow_exception(exception_);
         }
         check(code);
       }
 
-      ~http_task() {
-        curl_easy_reset(session_->handle.get());
-      }
-
     private:
-      http_session_impl* session_;
+      http_session_impl& session_;
       std::string method_;
       std::string url_;
       string_list header_;
@@ -458,12 +456,17 @@ namespace brigid {
         return static_cast<http_task*>(self)->write(data, size * count);
       }
 
+      template <class T>
+      void setopt(CURLoption option, T parameter) {
+        check(curl_easy_setopt(session_.handle.get(), option, parameter));
+      }
+
       size_t read(char* data, size_t size) {
         try {
           if (reader_) {
             size_t result = reader_->read(data, size);
-            if (session_->progress_cb) {
-              if (!session_->progress_cb(reader_->now, reader_->total)) {
+            if (session_.progress_cb) {
+              if (!session_.progress_cb(reader_->now, reader_->total)) {
                 return CURL_READFUNC_ABORT;
               }
             }
@@ -479,11 +482,11 @@ namespace brigid {
 
       size_t header(const char* data, size_t size) {
         try {
-          if (session_->header_cb) {
+          if (session_.header_cb) {
             if (parser_.parse(data, size)) {
               long code = 0;
-              check(curl_easy_getinfo(session_->handle.get(), CURLINFO_RESPONSE_CODE, &code));
-              if (!session_->header_cb(code, parser_.get())) {
+              check(curl_easy_getinfo(session_.handle.get(), CURLINFO_RESPONSE_CODE, &code));
+              if (!session_.header_cb(code, parser_.get())) {
                 return 0;
               }
             }
@@ -499,8 +502,8 @@ namespace brigid {
 
       size_t write(const char* data, size_t size) {
         try {
-          if (session_->write_cb) {
-            if (!session_->write_cb(data, size)) {
+          if (session_.write_cb) {
+            if (!session_.write_cb(data, size)) {
               return 0;
             }
           }
@@ -521,8 +524,14 @@ namespace brigid {
         http_request_body body,
         const char* data,
         size_t size) {
-      http_task task(this, method, url, header, body, data, size);
-      task.request();
+      try {
+        http_task task(*this, method, url, header, body, data, size);
+        task.request();
+        curl_easy_reset(handle.get());
+      } catch (...) {
+        curl_easy_reset(handle.get());
+        throw;
+      }
     }
   }
 

@@ -10,10 +10,10 @@
 
 namespace brigid {
   class http_header_parser {
-  public:
-    http_header_parser();
     http_header_parser(const http_header_parser&) = delete;
     http_header_parser& operator=(const http_header_parser&) = delete;
+  public:
+    http_header_parser();
     bool parse(const char*, size_t);
     const std::map<std::string, std::string>& get() const;
   private:
