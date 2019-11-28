@@ -16,7 +16,8 @@ function handle(r)
   r:puts(("%s\n"):format(r.the_request))
   for i = 1, #keys do
     local k = keys[i]
-    r:puts(("%s: %s\n"):format(k, r.headers_in[k]))
+    local v = r.headers_in[k] or ""
+    r:puts(("%s: %s\n"):format(k, v))
   end
   r:puts "\n"
   if r.method == "POST" or r.method == "PUT" then
