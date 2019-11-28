@@ -7,6 +7,7 @@ OBJS = \
 	crypto_impl.obj \
 	crypto_windows.obj \
 	http.obj \
+	http_impl.obj \
 	http_windows.obj
 TARGET = brigid.lib
 

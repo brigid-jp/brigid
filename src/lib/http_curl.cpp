@@ -6,14 +6,12 @@
 #include <brigid/noncopyable.hpp>
 #include "error.hpp"
 #include "http_curl.hpp"
+#include "http_impl.hpp"
 
 #include <curl/curl.h>
 
 #include <errno.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <algorithm>
 
 namespace brigid {
   namespace {
@@ -238,23 +236,10 @@ namespace brigid {
       return handle;
     }
 
-    FILE* check(FILE* handle) {
-      if (!handle) {
-        throw BRIGID_ERROR("cannot fopen", errno);
-      }
-      return handle;
-    }
-
     using easy_t = std::unique_ptr<CURL, decltype(&curl_easy_cleanup)>;
 
     easy_t make_easy(CURL* handle) {
       return easy_t(handle, &curl_easy_cleanup);
-    }
-
-    using file_t = std::unique_ptr<FILE, decltype(&fclose)>;
-
-    file_t make_file(FILE* handle) {
-      return file_t(handle, &fclose);
     }
 
     class http_session_impl : public http_session, private noncopyable {
@@ -310,73 +295,6 @@ namespace brigid {
       curl_slist* slist_;
     };
 
-    class http_reader {
-    public:
-      http_reader()
-        : now(),
-          total() {}
-
-      virtual ~http_reader() {}
-      virtual size_t read(char*, size_t) = 0;
-
-      size_t now;
-      size_t total;
-    };
-
-    class http_data_reader : public http_reader, private noncopyable {
-    public:
-      http_data_reader(const char* data, size_t size)
-        : data_(data),
-          size_(size) {
-        total = size;
-      }
-
-      virtual size_t read(char* data, size_t size) {
-        size_t result = std::min(size, size_);
-        memmove(data, data_, result);
-        data_ += result;
-        size_ -= result;
-        now += result;
-        return result;
-      }
-
-    private:
-      const char* data_;
-      size_t size_;
-    };
-
-    class http_file_reader : public http_reader, private noncopyable {
-    public:
-      http_file_reader(const char* path)
-        : handle_(make_file(check(fopen(path, "rb")))) {
-        fseek(handle_.get(), 0, SEEK_END);
-        total = ftell(handle_.get());
-        fseek(handle_.get(), 0, SEEK_SET);
-      }
-
-      virtual size_t read(char* data, size_t size) {
-        size_t result = fread(data, 1, size, handle_.get());
-        now += result;
-        return result;
-      }
-
-    private:
-      file_t handle_;
-    };
-
-    std::unique_ptr<http_reader> make_reader(http_request_body body, const char* data, size_t size) {
-      switch (body) {
-        case http_request_body::data:
-          if (data) {
-            return std::unique_ptr<http_reader>(new http_data_reader(data, size));
-          }
-          break;
-        case http_request_body::file:
-          return std::unique_ptr<http_reader>(new http_file_reader(data));
-      }
-      return std::unique_ptr<http_reader>();
-    }
-
     class http_task : private noncopyable {
     public:
       http_task(
@@ -390,7 +308,7 @@ namespace brigid {
         : session_(session),
           method_(method),
           url_(url),
-          reader_(make_reader(body, data, size)) {
+          reader_(make_http_reader(body, data, size)) {
         for (const auto& field : header) {
           header_.append(field.first + ": " + field.second);
         }
