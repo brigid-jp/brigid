@@ -3,6 +3,7 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/http.hpp>
+#include <brigid/noncopyable.hpp>
 
 #include <Foundation/Foundation.h>
 
@@ -16,15 +17,22 @@ namespace brigid {
   http_initializer::~http_initializer() {}
 
   namespace {
-    class http_session_context {
+    class http_session_delegate_impl : private noncopyable {
     public:
-      http_session_context(
-          std::function<bool (size_t, size_t)>,
-          std::function<bool (int, const std::map<std::string, std::string>&)>,
-          std::function<bool (const char*, size_t)>,
-          bool,
-          const std::string&,
-          const std::string&);
+      http_session_delegate_impl(
+          std::function<bool (size_t, size_t)> progress_cb,
+          std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
+          std::function<bool (const char*, size_t)> write_cb,
+          bool credential,
+          const std::string& username,
+          const std::string& password)
+        : progress_cb_(progress_cb),
+          header_cb_(header_cb),
+          write_cb_(write_cb),
+          credential_(credential),
+          username_(username),
+          password_(password),
+          rep_() {}
       void did_complete_with_error(NSError*);
       bool did_send_body_data(size_t, size_t);
       NSURLCredential* did_receive_challenge(NSURLAuthenticationChallenge*);
@@ -50,15 +58,15 @@ namespace brigid {
   }
 }
 
-@interface BrigidSessionDelegate : NSObject <NSURLSessionDataDelegate> @end
+@interface BrigidHttpSessionDelegate : NSObject <NSURLSessionDataDelegate> @end
 
-@implementation BrigidSessionDelegate {
-  std::shared_ptr<brigid::http_session_context> context_;
+@implementation BrigidHttpSessionDelegate {
+  std::shared_ptr<brigid::http_session_delegate_impl> impl_;
 }
 
-- (instancetype)initWithContext:(std::shared_ptr<brigid::http_session_context>)context {
+- (instancetype)initWithImpl:(std::shared_ptr<brigid::http_session_delegate_impl>)impl {
   if (self = [super init]) {
-    context_ = context;
+    impl_ = impl;
   }
   return self;
 }
@@ -66,7 +74,7 @@ namespace brigid {
 - (void)URLSession:(NSURLSession *)_session
               task:(NSURLSessionTask *)task
 didCompleteWithError:(NSError *)error {
-  context_->did_complete_with_error(error);
+  impl_->did_complete_with_error(error);
 }
 
 - (void)URLSession:(NSURLSession *)session
@@ -74,7 +82,7 @@ didCompleteWithError:(NSError *)error {
    didSendBodyData:(int64_t)bytesSent
     totalBytesSent:(int64_t)totalBytesSent
 totalBytesExpectedToSend:(int64_t)totalBytesExpectedToSend {
-  if (!context_->did_send_body_data(totalBytesSent, totalBytesExpectedToSend)) {
+  if (!impl_->did_send_body_data(totalBytesSent, totalBytesExpectedToSend)) {
     [task cancel];
   }
 }
@@ -83,7 +91,7 @@ totalBytesExpectedToSend:(int64_t)totalBytesExpectedToSend {
               task:(NSURLSessionTask *)task
 didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
  completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completionHandler {
-  if (NSURLCredential* credential = context_->did_receive_challenge(challenge)) {
+  if (NSURLCredential* credential = impl_->did_receive_challenge(challenge)) {
     completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
   } else {
     completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
@@ -94,7 +102,7 @@ didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
           dataTask:(NSURLSessionDataTask *)dataTask
 didReceiveResponse:(NSURLResponse *)response
  completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler {
-  if (context_->did_receive_response((NSHTTPURLResponse*) response)) {
+  if (impl_->did_receive_response((NSHTTPURLResponse*) response)) {
     completionHandler(NSURLSessionResponseAllow);
   } else {
     completionHandler(NSURLSessionResponseCancel);
@@ -104,7 +112,7 @@ didReceiveResponse:(NSURLResponse *)response
 - (void)URLSession:(NSURLSession *)session
           dataTask:(NSURLSessionDataTask *)dataTask
     didReceiveData:(NSData *)data {
-  if (!context_->did_receive_data(data)) {
+  if (!impl_->did_receive_data(data)) {
     [dataTask cancel];
   }
 }
@@ -125,22 +133,7 @@ namespace brigid {
       return [[NSString alloc] initWithBytes:data length:size encoding:NSUTF8StringEncoding];
     }
 
-    http_session_context::http_session_context(
-        std::function<bool (size_t, size_t)> progress_cb,
-        std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
-        std::function<bool (const char*, size_t)> write_cb,
-        bool credential,
-        const std::string& username,
-        const std::string& password)
-      : progress_cb_(progress_cb),
-        header_cb_(header_cb),
-        write_cb_(write_cb),
-        credential_(credential),
-        username_(username),
-        password_(password),
-        rep_() {}
-
-    void http_session_context::did_complete_with_error(NSError* error) {
+    void http_session_delegate_impl::did_complete_with_error(NSError* error) {
       std::lock_guard<std::mutex> req_lock(req_mutex_);
       req_ = nullptr;
       if (error && !exception_) {
@@ -149,7 +142,7 @@ namespace brigid {
       req_condition_.notify_all();
     }
 
-    bool http_session_context::did_send_body_data(size_t total_bytes_sent, size_t total_bytes_expected_to_send) {
+    bool http_session_delegate_impl::did_send_body_data(size_t total_bytes_sent, size_t total_bytes_expected_to_send) {
       if (progress_cb_) {
         std::unique_lock<std::mutex> rep_lock(rep_mutex_, std::defer_lock);
         {
@@ -167,7 +160,7 @@ namespace brigid {
       }
     }
 
-    NSURLCredential* http_session_context::did_receive_challenge(NSURLAuthenticationChallenge* challenge) {
+    NSURLCredential* http_session_delegate_impl::did_receive_challenge(NSURLAuthenticationChallenge* challenge) {
       if (challenge.previousFailureCount == 0 && credential_) {
         return [NSURLCredential credentialWithUser:to_native_string(username_) password:to_native_string(password_) persistence:NSURLCredentialPersistenceForSession];
       } else {
@@ -175,7 +168,7 @@ namespace brigid {
       }
     }
 
-    bool http_session_context::did_receive_response(NSHTTPURLResponse* response) {
+    bool http_session_delegate_impl::did_receive_response(NSHTTPURLResponse* response) {
       if (header_cb_) {
         std::unique_lock<std::mutex> rep_lock(rep_mutex_, std::defer_lock);
         {
@@ -197,7 +190,7 @@ namespace brigid {
       }
     }
 
-    bool http_session_context::did_receive_data(NSData* data) {
+    bool http_session_delegate_impl::did_receive_data(NSData* data) {
       if (write_cb_) {
         std::unique_lock<std::mutex> rep_lock(rep_mutex_, std::defer_lock);
         {
@@ -222,7 +215,7 @@ namespace brigid {
       }
     }
 
-    void http_session_context::wait(NSURLSessionTask* task) {
+    void http_session_delegate_impl::wait(NSURLSessionTask* task) {
       {
         std::unique_lock<std::mutex> req_lock(req_mutex_);
 
@@ -266,9 +259,8 @@ namespace brigid {
           bool credential,
           const std::string& username,
           const std::string& password)
-        : context_(std::make_shared<http_session_context>(progress_cb, header_cb, write_cb, credential, username, password)),
-          delegate_([[BrigidSessionDelegate alloc] initWithContext:context_]),
-          session_([NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration ephemeralSessionConfiguration] delegate:delegate_ delegateQueue:nil]) {}
+        : impl_(std::make_shared<http_session_delegate_impl>(progress_cb, header_cb, write_cb, credential, username, password)),
+          session_([NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration ephemeralSessionConfiguration] delegate:[[BrigidHttpSessionDelegate alloc] initWithImpl:impl_] delegateQueue:nil]) {}
 
       virtual ~http_session_impl() {
         [session_ invalidateAndCancel];
@@ -298,12 +290,11 @@ namespace brigid {
             task = [session_ uploadTaskWithRequest:request fromFile:[NSURL fileURLWithPath:to_native_string(data, size)]];
             break;
         }
-        context_->wait(task);
+        impl_->wait(task);
       }
 
     private:
-      std::shared_ptr<http_session_context> context_;
-      BrigidSessionDelegate* delegate_;
+      std::shared_ptr<http_session_delegate_impl> impl_;
       NSURLSession* session_;
     };
   }
