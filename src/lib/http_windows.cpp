@@ -12,6 +12,7 @@
 #include <winhttp.h>
 
 #include <algorithm>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -63,8 +64,8 @@ namespace brigid {
       int result = check(WideCharToMultiByte(
           CP_UTF8,
           0,
-          source.data(),
-          static_cast<int>(source.size()),
+          data,
+          static_cast<int>(size),
           nullptr,
           0,
           nullptr,
@@ -73,8 +74,8 @@ namespace brigid {
       check(WideCharToMultiByte(
           CP_UTF8,
           0,
-          source.data(),
-          static_cast<int>(source.size()),
+          data,
+          static_cast<int>(size),
           buffer.data(),
           static_cast<int>(buffer.size()),
           nullptr,
@@ -105,7 +106,10 @@ namespace brigid {
               0)))),
           progress_cb_(progress_cb),
           header_cb_(header_cb),
-          write_cb_(write_cb) {}
+          write_cb_(write_cb),
+          credential_(credential),
+          username_(username),
+          password_(password) {}
 
       virtual void http_session_impl::request(
           const std::string& method,
@@ -152,46 +156,96 @@ namespace brigid {
               WINHTTP_ADDREQ_FLAG_ADD));
         }
 
-        DWORD total = WINHTTP_IGNORE_REQUEST_TOTAL_LENGTH;
-        std::unique_ptr<http_reader> reader(make_http_reader(body, data, size));
-        if (reader) {
-          total = static_cast<DWORD>(reader->total());
-        }
+        DWORD code = 0;
+        // DWORD auth_scheme = WINHTTP_AUTH_SCHEME_BASIC;
+        DWORD auth_scheme = 0;
 
-        check(WinHttpSendRequest(
-            request.get(),
-            WINHTTP_NO_ADDITIONAL_HEADERS,
-            0,
-            WINHTTP_NO_REQUEST_DATA,
-            0,
-            total,
-            0));
-
-        if (reader) {
-          std::vector<char> buffer(4096);
-          while (true) {
-            size_t result = reader->read(buffer.data(), buffer.size());
-            if (result == 0) {
-              break;
-            }
-            check(WinHttpWriteData(
+        for (int i = 0; i < 2; ++i) {
+          if (credential_ && auth_scheme != 0) {
+            check(WinHttpSetCredentials(
                 request.get(),
-                buffer.data(),
-                static_cast<DWORD>(result),
+                WINHTTP_AUTH_TARGET_SERVER,
+                auth_scheme,
+                to_native_string(username_).c_str(),
+                to_native_string(password_).c_str(),
                 nullptr));
-            if (progress_cb_) {
-              if (!progress_cb_(reader->now(), reader->total())) {
-                throw BRIGID_ERROR("canceled");
+          }
+
+          DWORD total = WINHTTP_IGNORE_REQUEST_TOTAL_LENGTH;
+          std::unique_ptr<http_reader> reader(make_http_reader(body, data, size));
+          if (reader) {
+            total = static_cast<DWORD>(reader->total());
+          }
+
+          check(WinHttpSendRequest(
+              request.get(),
+              WINHTTP_NO_ADDITIONAL_HEADERS,
+              0,
+              WINHTTP_NO_REQUEST_DATA,
+              0,
+              total,
+              0));
+
+          if (reader) {
+            std::vector<char> buffer(4096);
+            while (true) {
+              size_t result = reader->read(buffer.data(), buffer.size());
+              if (result == 0) {
+                break;
+              }
+              check(WinHttpWriteData(
+                  request.get(),
+                  buffer.data(),
+                  static_cast<DWORD>(result),
+                  nullptr));
+              if (progress_cb_) {
+                if (!progress_cb_(reader->now(), reader->total())) {
+                  throw BRIGID_ERROR("canceled");
+                }
               }
             }
           }
+
+          check(WinHttpReceiveResponse(
+              request.get(),
+              nullptr));
+
+          {
+            DWORD size = sizeof(code);
+            check(WinHttpQueryHeaders(
+                request.get(),
+                WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                WINHTTP_HEADER_NAME_BY_INDEX,
+                &code,
+                &size,
+                WINHTTP_NO_HEADER_INDEX));
+          }
+
+          if (code != 401) {
+            break;
+          }
+
+          if (!credential_) {
+            break;
+          }
+
+          DWORD schemes = 0;
+          DWORD scheme = 0;
+          DWORD target = 0;
+
+          check(WinHttpQueryAuthSchemes(
+              request.get(),
+              &schemes,
+              &scheme,
+              &target));
+
+          auth_scheme = scheme;
+          if (scheme == 0) {
+            break;
+          }
         }
 
-        check(WinHttpReceiveResponse(
-            request.get(),
-            nullptr));
-
-        {
+        if (header_cb_) {
           DWORD size = 0;
           BOOL result = WinHttpQueryHeaders(
               request.get(),
@@ -215,6 +269,32 @@ namespace brigid {
           buffer.resize(size);
 
           std::string header = to_string(buffer.data(), buffer.size());
+          http_header_parser parser;
+          parser.parse(header.data(), header.size());
+          if (!header_cb_(code, parser.get())) {
+            throw BRIGID_ERROR("canceled");
+          }
+        }
+
+        while (true) {
+          DWORD available = 0;
+          check(WinHttpQueryDataAvailable(request.get(), &available));
+          if (!available) {
+            break;
+          }
+          std::vector<char> buffer(available);
+          DWORD size = 0;
+          check(WinHttpReadData(
+              request.get(),
+              buffer.data(),
+              static_cast<DWORD>(buffer.size()),
+              &size));
+
+          if (write_cb_) {
+            if (!write_cb_(buffer.data(), buffer.size())) {
+              throw BRIGID_ERROR("canceled");
+            }
+          }
         }
       }
 
@@ -223,6 +303,9 @@ namespace brigid {
       std::function<bool (size_t, size_t)> progress_cb_;
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb_;
       std::function<bool (const char*, size_t)> write_cb_;
+      bool credential_;
+      std::string username_;
+      std::string password_;
     };
   }
 

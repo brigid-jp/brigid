@@ -6,6 +6,7 @@ OBJS = \
 	test.obj \
 	test_crypto.obj \
 	test_http.obj \
+	test_http_impl.obj \
 	test_main.obj
 
 TARGET = test.exe
@@ -23,7 +24,7 @@ check:
 	$(TARGET)
 
 $(TARGET): $(OBJS) ..\..\src\lib\brigid.lib
-	$(CC) /MD /O2 /W3 /EHsc /I..\..\include $** bcrypt.lib winhttp.lib /Fe$@
+	$(CC) /MD /O2 /W3 /EHsc /I..\..\include /I..\..\src\lib $** bcrypt.lib winhttp.lib /Fe$@
 
 .cpp.obj:
-	$(CC) /MD /O2 /W3 /EHsc /I..\..\include /c $< /Fo$@
+	$(CC) /MD /O2 /W3 /EHsc /I..\..\include /I..\..\src\lib /c $< /Fo$@

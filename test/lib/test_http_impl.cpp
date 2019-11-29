@@ -75,11 +75,11 @@ namespace {
     parse(parser, "HTTP/1.1 200 OK\r\n");
     parse(parser, "X-Test1:\r\n");
     parse(parser, "X-Test2:\r\n");
-    parse(parser, " 日本語\r\n");
+    parse(parser, " \xE6\x97\xA5\xE6\x9C\xAC\xE8\xAA\x9E\r\n");
     parse(parser, "\r\n");
     BRIGID_CHECK(parser.get().size() == 2);
     BRIGID_CHECK(get(parser, "X-Test1") == "");
-    BRIGID_CHECK(get(parser, "X-Test2") == "日本語");
+    BRIGID_CHECK(get(parser, "X-Test2") == "\xE6\x97\xA5\xE6\x9C\xAC\xE8\xAA\x9E");
 
     parse(parser, "HTTP/1.1 200 OK\r\n");
     parse(parser, "X-Test1: a \x1F\r\n");
