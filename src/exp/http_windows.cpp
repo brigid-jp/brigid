@@ -7,6 +7,7 @@
 #include <windows.h>
 #include <winhttp.h>
 
+#include <assert.h>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -139,6 +140,35 @@ namespace brigid {
     check(WinHttpReceiveResponse(
         request.get(),
         nullptr));
+
+    debug(key, "query");
+
+
+    DWORD size = 0;
+    BOOL result = WinHttpQueryHeaders(
+        request.get(),
+        WINHTTP_QUERY_RAW_HEADERS_CRLF,
+        WINHTTP_HEADER_NAME_BY_INDEX,
+        WINHTTP_NO_OUTPUT_BUFFER,
+        &size,
+        WINHTTP_NO_HEADER_INDEX);
+    assert(!result);
+    assert(GetLastError() == ERROR_INSUFFICIENT_BUFFER);
+    std::cout << size << "\n";
+
+    std::vector<WCHAR> buffer(size);
+
+    check(WinHttpQueryHeaders(
+        request.get(),
+        WINHTTP_QUERY_RAW_HEADERS_CRLF,
+        WINHTTP_HEADER_NAME_BY_INDEX,
+        buffer.data(),
+        &size,
+        WINHTTP_NO_HEADER_INDEX));
+
+    std::cout << size << "\n";
+    buffer.resize(size);
+    std::wcout << L"{{{" << std::wstring(buffer.begin(), buffer.end()) << L"}}}\n";
 
     debug(key, "read");
 
