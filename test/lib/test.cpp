@@ -44,16 +44,24 @@ namespace brigid {
   }
 
   int run_test_cases() {
-    size_t failed = 0;
+    size_t pass = 0;
+    size_t fail = 0;
 
     for (const auto& test_case : test_cases) {
       if (test_case()) {
+        ++pass;
       } else {
-        ++failed;
+        ++fail;
       }
     }
+    std::cout
+        << "============================================================\n"
+        << "TOTAL: " << test_cases.size() << "\n"
+        << "PASS:  " << pass << "\n"
+        << "FAIL:  " << fail << "\n"
+        << "============================================================\n";
 
-    if (failed == 0) {
+    if (fail == 0) {
       return 0;
     } else {
       return 1;
