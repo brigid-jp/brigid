@@ -10,6 +10,8 @@ OBJS = \
 	crypto.o \
 	crypto_impl.o \
 	crypto_java.o \
+	http.o \
+	http_impl.o \
 	http_java.o
 TARGET = libbrigid.a
 
