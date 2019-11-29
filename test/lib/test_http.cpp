@@ -63,6 +63,10 @@ namespace {
       return code_;
     }
 
+    const std::map<std::string, std::string>& header() const {
+      return header_;
+    }
+
     std::string header(const std::string& key) const {
       auto iterator = header_.find(key);
       if (iterator == header_.end()) {
@@ -70,10 +74,6 @@ namespace {
       } else {
         return iterator->second;
       }
-    }
-
-    const std::map<std::string, std::string>& header() const {
-      return header_;
     }
 
     const std::string& body() const {
@@ -257,6 +257,25 @@ namespace {
     BRIGID_CHECK_THROW([&](){ client.request("GET", "https://133.242.153.239/"); });
   }
 
+  void test9() {
+    test_client client;
+    client.request("GET", "https://brigid.jp/test/lua/nph-header.cgi");
+    BRIGID_CHECK(client.code() == 200);
+
+    for (const auto& field : client.header()) {
+      std::cout << "[" << field.first << "]=[" << field.second << "]\n";
+    }
+
+    BRIGID_CHECK(client.header("X-Test1") == "foo bar");
+    BRIGID_CHECK(client.header("X-Test2") == "foo bar");
+    BRIGID_CHECK(client.header("X-Test3") == "foo  bar");
+    // BRIGID_CHECK(client.header("X-Test4") == "foo bar");
+    // BRIGID_CHECK(client.header("X-Test5") == "foo bar");
+    BRIGID_CHECK(client.header("X-Test6") == "foo bar");
+    BRIGID_CHECK(client.header("x-test7") == "foo bar");
+    BRIGID_CHECK(client.header("X-tEsT8") == "foo bar");
+  }
+
   BRIGID_MAKE_TEST_CASE(test1);
   BRIGID_MAKE_TEST_CASE(test2);
   BRIGID_MAKE_TEST_CASE(test3);
@@ -265,4 +284,5 @@ namespace {
   BRIGID_MAKE_TEST_CASE(test6);
   BRIGID_MAKE_TEST_CASE(test7);
   BRIGID_MAKE_TEST_CASE(test8);
+  BRIGID_MAKE_TEST_CASE(test9);
 }
