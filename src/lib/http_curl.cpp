@@ -146,8 +146,14 @@ namespace brigid {
     }
 
     if (p3) {
+      // https://tools.ietf.org/html/rfc7230#section-3.2.4
+      //
+      // A user agent that receives an obs-fold in a response message that is
+      // not within a message/http container MUST replace each received
+      // obs-fold with one or more SP octets prior to interpreting the field
+      // value.
+      buffer_.append(" ");
       if (p3 < p2) {
-        buffer_.append(" ");
         buffer_.append(p3 + 1, p2);
       }
       return false;

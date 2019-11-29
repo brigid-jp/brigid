@@ -247,7 +247,7 @@ namespace {
       { "Content-Type", "application/json; charset=UTF-8" },
     };
 
-    client.request("POST", "https://brigid.jp/test/lua/echo.lua?keys=Content-Type,Content-Length,Expect", header, brigid::http_request_body::data, data.data(), data.size());
+    client.request("POST", "https://brigid.jp/test/lua/echo.lua?keys=Content-Type,Content-Length,Expect,User-Agent", header, brigid::http_request_body::data, data.data(), data.size());
     BRIGID_CHECK(client.code() == 200);
     std::cout << "[" << client.body() << "]\n";
   }
@@ -266,14 +266,20 @@ namespace {
       std::cout << "[" << field.first << "]=[" << field.second << "]\n";
     }
 
+    auto check = [](const std::string& value) -> bool {
+      size_t n = value.size();
+      return n > 6
+          && value.substr(0, 3) == "foo"
+          && value.substr(3, n - 6).find_first_not_of(" \t") == std::string::npos
+          && value.substr(n - 3, 3) == "bar";
+    };
+
     BRIGID_CHECK(client.header().size() == 10);
     BRIGID_CHECK(client.header("X-Test1") == "foo bar");
     BRIGID_CHECK(client.header("X-Test2") == "foo bar");
     BRIGID_CHECK(client.header("X-Test3") == "foo  bar");
-    // for apple
-    BRIGID_CHECK(client.header("X-Test4") == "foo\tbar");
-    BRIGID_CHECK(client.header("X-Test5") == "foo    bar");
-
+    BRIGID_CHECK(check(client.header("X-Test4")));
+    BRIGID_CHECK(check(client.header("X-Test5")));
     BRIGID_CHECK(client.header("X-Test6") == "foo bar");
     BRIGID_CHECK(client.header("x-test7") == "foo bar");
     BRIGID_CHECK(client.header("X-tEsT8") == "foo bar");
