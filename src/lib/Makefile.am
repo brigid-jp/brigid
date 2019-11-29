@@ -6,7 +6,11 @@ noinst_LTLIBRARIES = libbrigid.la
 
 libbrigid_la_CPPFLAGS = -I$(top_srcdir)/include
 libbrigid_la_LDFLAGS = -static
-libbrigid_la_SOURCES = crypto.cpp crypto_impl.cpp http.cpp
+libbrigid_la_SOURCES = \
+	crypto.cpp \
+	crypto_impl.cpp \
+	http.cpp \
+	http_impl.cpp
 
 if CRYPTO_APPLE
 libbrigid_la_SOURCES += crypto_apple.cpp
@@ -22,6 +26,6 @@ libbrigid_la_SOURCES += http_apple.mm
 else
 if HTTP_CURL
 libbrigid_la_CPPFLAGS += $(CURL_CFLAGS)
-libbrigid_la_SOURCES += http_curl.cpp http_impl.cpp
+libbrigid_la_SOURCES += http_curl.cpp
 endif
 endif

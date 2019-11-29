@@ -6,8 +6,26 @@
 #define BRIGID_HTTP_IMPL_HPP
 
 #include <brigid/http.hpp>
+#include <brigid/noncopyable.hpp>
+
+#include <stddef.h>
+#include <map>
+#include <memory>
+#include <string>
 
 namespace brigid {
+  class http_header_parser : private noncopyable {
+  public:
+    http_header_parser();
+    bool parse(const char*, size_t);
+    const std::map<std::string, std::string>& get() const;
+  private:
+    int state_;
+    std::string buffer_;
+    std::map<std::string, std::string> header_;
+    void parse_impl();
+  };
+
   class http_reader {
   public:
     virtual ~http_reader() = 0;

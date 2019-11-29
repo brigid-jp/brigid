@@ -14,6 +14,7 @@ test_exe_SOURCES = \
 	test.cpp \
 	test_crypto.cpp \
 	test_http.cpp \
+	test_http_impl.cpp \
 	test_main.cpp
 
 if CRYPTO_OPENSSL
@@ -27,6 +28,5 @@ else
 if HTTP_CURL
 test_exe_LDFLAGS += $(CURL_LDFLAGS)
 test_exe_LDADD += $(CURL_LIBS)
-test_exe_SOURCES += test_http_curl.cpp
 endif
 endif
