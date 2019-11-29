@@ -59,6 +59,7 @@ namespace {
     parse(parser, "  bar\r\n");
     parse(parser, "X-Test6:\t \t foo bar \t \t\r\n");
     parse(parser, "\r\n");
+
     BRIGID_CHECK(parser.get().size() == 6);
     BRIGID_CHECK(get(parser, "X-Test1") == "foo bar");
     BRIGID_CHECK(get(parser, "X-Test2") == "foo bar");
@@ -85,6 +86,32 @@ namespace {
     BRIGID_CHECK_THROW([&](){ parse(parser, "\r\n"); });
   }
 
+  void test3() {
+    brigid::http_header_parser parser;
+    parse(parser,
+        "HTTP/1.1 200 OK\r\n"
+        "X-Test1:foo bar\r\n"
+        "X-Test2: foo bar \r\n"
+        "X-Test3:  foo  bar  \r\n"
+        "X-Test4: foo\r\n"
+        "\tbar\r\n"
+        "X-Test5: foo \r\n"
+        " \r\n"
+        "  bar\r\n"
+        "X-Test6:\t \t foo bar \t \t\r\n"
+        "\r\n");
+
+    BRIGID_CHECK(parser.code() == 200);
+    BRIGID_CHECK(parser.get().size() == 6);
+    BRIGID_CHECK(get(parser, "X-Test1") == "foo bar");
+    BRIGID_CHECK(get(parser, "X-Test2") == "foo bar");
+    BRIGID_CHECK(get(parser, "X-Test3") == "foo  bar");
+    BRIGID_CHECK(get(parser, "X-Test4") == "foo bar");
+    BRIGID_CHECK(get(parser, "X-Test5") == "foo  bar");
+    BRIGID_CHECK(get(parser, "X-Test6") == "foo bar");
+  }
+
   BRIGID_MAKE_TEST_CASE(test1);
   BRIGID_MAKE_TEST_CASE(test2);
+  BRIGID_MAKE_TEST_CASE(test3);
 }
