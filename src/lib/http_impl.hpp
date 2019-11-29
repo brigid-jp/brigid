@@ -18,11 +18,14 @@ namespace brigid {
   public:
     http_header_parser();
     bool parse(const char*, size_t);
+    int code() const;
     const std::map<std::string, std::string>& get() const;
   private:
-    int state_;
     std::string buffer_;
+    int code_;
+    std::string field_;
     std::map<std::string, std::string> header_;
+    bool parse_impl(const char*, size_t);
     void parse_impl();
   };
 
