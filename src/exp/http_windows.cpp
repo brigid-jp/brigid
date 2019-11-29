@@ -33,7 +33,7 @@ namespace brigid {
           nullptr,
           0);
       if (size == 0) {
-        throw std::runtime_error("cannot WideCharToMultiByte");
+        throw std::runtime_error("cannot MultiByteToWideChar");
       }
       std::vector<WCHAR> buffer(size);
       int result = MultiByteToWideChar(
@@ -44,9 +44,41 @@ namespace brigid {
           buffer.data(),
           static_cast<int>(buffer.size()));
       if (result == 0) {
-        throw std::runtime_error("cannot WideCharToMultiByte");
+        throw std::runtime_error("cannot MultiByteToWideChar");
       }
       return std::wstring(buffer.data(), buffer.size());
+    }
+
+    std::string to_string(const std::wstring& source) {
+      if (source.empty()) {
+        return std::string();
+      }
+      int size = WideCharToMultiByte(
+          CP_UTF8,
+          0,
+          source.data(),
+          static_cast<int>(source.size()),
+          nullptr,
+          0,
+          nullptr,
+          nullptr);
+      if (size == 0) {
+        throw std::runtime_error("cannot WideCharToMultiByte");
+      }
+      std::vector<char> buffer(size);
+      int result = WideCharToMultiByte(
+          CP_UTF8,
+          0,
+          source.data(),
+          static_cast<int>(source.size()),
+          buffer.data(),
+          static_cast<int>(buffer.size()),
+          nullptr,
+          nullptr);
+      if (size == 0) {
+        throw std::runtime_error("cannot WideCharToMultiByte");
+      }
+      return std::string(buffer.data(), buffer.size());
     }
 
     URL_COMPONENTS make_url_components(const std::string& source) {
@@ -147,7 +179,7 @@ namespace brigid {
     DWORD size = 0;
     BOOL result = WinHttpQueryHeaders(
         request.get(),
-        WINHTTP_QUERY_RAW_HEADERS_CRLF,
+        WINHTTP_QUERY_RAW_HEADERS,
         WINHTTP_HEADER_NAME_BY_INDEX,
         WINHTTP_NO_OUTPUT_BUFFER,
         &size,
@@ -160,15 +192,28 @@ namespace brigid {
 
     check(WinHttpQueryHeaders(
         request.get(),
-        WINHTTP_QUERY_RAW_HEADERS_CRLF,
+        WINHTTP_QUERY_RAW_HEADERS,
         WINHTTP_HEADER_NAME_BY_INDEX,
         buffer.data(),
         &size,
         WINHTTP_NO_HEADER_INDEX));
 
     std::cout << size << "\n";
-    buffer.resize(size);
-    std::wcout << L"{{{" << std::wstring(buffer.begin(), buffer.end()) << L"}}}\n";
+
+    std::string request_header = to_string(std::wstring(buffer.begin(), buffer.end()));
+    size_t p = 0;
+    while (true) {
+      size_t q = request_header.find_first_of('\0', p);
+      if (q == request_header.npos) {
+        std::cout << "npos?\n";
+        break;
+      }
+      if (q == p) {
+        break;
+      }
+      std::cout << "{" << request_header.substr(p, q - p) << "}\n";
+      p = q + 1;
+    }
 
     debug(key, "read");
 

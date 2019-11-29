@@ -12,6 +12,7 @@
 #include <winhttp.h>
 
 #include <algorithm>
+#include <string>
 #include <vector>
 
 namespace brigid {
@@ -27,7 +28,7 @@ namespace brigid {
       return result;
     }
 
-    using native_string_t = std::vector<WCHAR>;
+    using native_string_t = std::basic_string<WCHAR>;
 
     native_string_t to_native_string(const std::string& source) {
       if (source.empty()) {
@@ -40,7 +41,7 @@ namespace brigid {
           static_cast<int>(source.size()),
           nullptr,
           0));
-      native_string_t buffer(result + 1);
+      std::vector<WCHAR> buffer(result);
       check(MultiByteToWideChar(
           CP_UTF8,
           0,
@@ -48,13 +49,37 @@ namespace brigid {
           static_cast<int>(source.size()),
           buffer.data(),
           static_cast<int>(buffer.size())));
-      return buffer;
+      return native_string_t(buffer.begin(), buffer.end());
     }
 
     native_string_t to_native_string(const WCHAR* data, size_t size) {
-      native_string_t buffer(size + 1);
-      std::copy(data, data + size, buffer.begin());
-      return buffer;
+      return native_string_t(data, size);
+    }
+
+    std::string to_string(const WCHAR* data, size_t size) {
+      if (size == 0) {
+        return std::string();
+      }
+      int result = check(WideCharToMultiByte(
+          CP_UTF8,
+          0,
+          source.data(),
+          static_cast<int>(source.size()),
+          nullptr,
+          0,
+          nullptr,
+          nullptr));
+      std::vector<char> buffer(result);
+      check(WideCharToMultiByte(
+          CP_UTF8,
+          0,
+          source.data(),
+          static_cast<int>(source.size()),
+          buffer.data(),
+          static_cast<int>(buffer.size()),
+          nullptr,
+          nullptr));
+      return std::string(buffer.data(), buffer.size());
     }
 
     using internet_handle_t = std::unique_ptr<remove_pointer_t<HINTERNET>, decltype(&WinHttpCloseHandle)>;
@@ -105,14 +130,14 @@ namespace brigid {
 
         internet_handle_t connection = make_internet_handle(check(WinHttpConnect(
             session_.get(),
-            native_host_name.data(),
+            native_host_name.c_str(),
             url_components.nPort,
             0)));
 
         internet_handle_t request = make_internet_handle(check(WinHttpOpenRequest(
             connection.get(),
-            native_method.data(),
-            native_url_path.data(),
+            native_method.c_str(),
+            native_url_path.c_str(),
             nullptr,
             WINHTTP_NO_REFERER,
             WINHTTP_DEFAULT_ACCEPT_TYPES,
@@ -122,7 +147,7 @@ namespace brigid {
           native_string_t native_field = to_native_string(field.first + ": " + field.second);
           check(WinHttpAddRequestHeaders(
               request.get(),
-              native_field.data(),
+              native_field.c_str(),
               static_cast<DWORD>(native_field.size()),
               WINHTTP_ADDREQ_FLAG_ADD));
         }
@@ -166,8 +191,31 @@ namespace brigid {
             request.get(),
             nullptr));
 
-        
+        {
+          DWORD size = 0;
+          BOOL result = WinHttpQueryHeaders(
+              request.get(),
+              WINHTTP_QUERY_RAW_HEADERS_CRLF,
+              WINHTTP_HEADER_NAME_BY_INDEX,
+              WINHTTP_NO_OUTPUT_BUFFER,
+              &size,
+              WINHTTP_NO_HEADER_INDEX);
+          check(!result && GetLastError() == ERROR_INSUFFICIENT_BUFFER);
 
+          std::vector<WCHAR> buffer(size);
+
+          check(WinHttpQueryHeaders(
+              request.get(),
+              WINHTTP_QUERY_RAW_HEADERS_CRLF,
+              WINHTTP_HEADER_NAME_BY_INDEX,
+              buffer.data(),
+              &size,
+              WINHTTP_NO_HEADER_INDEX));
+
+          buffer.resize(size);
+
+          std::string header = to_string(buffer.data(), buffer.size());
+        }
       }
 
     private:
