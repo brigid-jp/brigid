@@ -13,7 +13,7 @@ LDFLAGS = -shared
 OBJS = \
 	test.o \
 	test_crypto.o \
-	jnitest.o
+	test_java.o
 TARGET = libjnitest.dylib
 
 all: all-recursive $(TARGET)
