@@ -5,6 +5,7 @@
 #include <brigid/http.hpp>
 #include <brigid/noncopyable.hpp>
 #include "error.hpp"
+#include "http_impl.hpp"
 #include "type_traits.hpp"
 
 #include <windows.h>
@@ -126,12 +127,10 @@ namespace brigid {
               WINHTTP_ADDREQ_FLAG_ADD));
         }
 
-        DWORD total_length = WINHTTP_IGNORE_REQUEST_TOTAL_LENGTH;
-        switch (body) {
-          case http_request_body::data:
-            break;
-          case http_request_body::file:
-            break;
+        DWORD total = WINHTTP_IGNORE_REQUEST_TOTAL_LENGTH;
+        std::unique_ptr<http_reader> reader(make_http_reader(body, data, size));
+        if (reader) {
+          total = static_cast<DWORD>(reader->total());
         }
 
         check(WinHttpSendRequest(
@@ -140,9 +139,34 @@ namespace brigid {
             0,
             WINHTTP_NO_REQUEST_DATA,
             0,
-            total_length,
+            total,
             0));
 
+        if (reader) {
+          std::vector<char> buffer(4096);
+          while (true) {
+            size_t result = reader->read(buffer.data(), buffer.size());
+            if (result == 0) {
+              break;
+            }
+            check(WinHttpWriteData(
+                request.get(),
+                buffer.data(),
+                static_cast<DWORD>(result),
+                nullptr));
+            if (progress_cb_) {
+              if (!progress_cb_(reader->now(), reader->total())) {
+                throw BRIGID_ERROR("canceled");
+              }
+            }
+          }
+        }
+
+        check(WinHttpReceiveResponse(
+            request.get(),
+            nullptr));
+
+        
 
       }
 
