@@ -2,13 +2,12 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include "crypto_impl.hpp"
-#include "type_traits.hpp"
 #include <brigid/crypto.hpp>
+#include "crypto_impl.hpp"
+#include "java.hpp"
+#include "type_traits.hpp"
 
 #include <jni.h>
-
-extern "C" void* SDL_AndroidGetJNIEnv();
 
 #include <memory>
 #include <stdexcept>
@@ -16,12 +15,8 @@ extern "C" void* SDL_AndroidGetJNIEnv();
 
 namespace brigid {
   namespace {
-    JNIEnv* jni_env() {
-      return static_cast<JNIEnv*>(SDL_AndroidGetJNIEnv());
-    }
-
     void jni_delete_local_ref(jobject that) {
-      jni_env()->DeleteLocalRef(that);
+      java_env()->DeleteLocalRef(that);
     }
 
     template <class T>
@@ -33,7 +28,7 @@ namespace brigid {
     }
 
     void jni_delete_global_ref(jobject that) {
-      jni_env()->DeleteGlobalRef(that);
+      java_env()->DeleteGlobalRef(that);
     }
 
     template <class T>
@@ -47,7 +42,7 @@ namespace brigid {
     void jni_check() {
       static const char* what = "crypto_java exception";
 
-      JNIEnv* env = jni_env();
+      JNIEnv* env = java_env();
       if (!env->ExceptionCheck()) {
         return;
       }
@@ -114,7 +109,7 @@ namespace brigid {
         : klass_(jni_make_global_ref<jclass>()),
           instance_(jni_make_global_ref<jobject>()),
           method_(nullptr) {
-        JNIEnv* env = jni_env();
+        JNIEnv* env = java_env();
 
         jni_local_ref_t<jclass> klass = jni_make_local_ref(jni_check(env->FindClass(name)));
         klass_ = jni_make_global_ref(jni_check(reinterpret_cast<jclass>(env->NewGlobalRef(klass.get()))));
@@ -138,7 +133,7 @@ namespace brigid {
       }
 
       virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
-        JNIEnv* env = jni_env();
+        JNIEnv* env = java_env();
 
         jni_local_ref_t<jobject> in = jni_make_local_ref(jni_check(env->NewDirectByteBuffer(const_cast<char*>(in_data), in_size)));
 

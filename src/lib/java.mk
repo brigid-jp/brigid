@@ -7,6 +7,7 @@ CPPFLAGS = -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/darwin -I../../include
 CXXFLAGS = -Wall -W -O2 -std=c++11
 
 OBJS = \
+	java.o \
 	crypto.o \
 	crypto_impl.o \
 	crypto_java.o \

@@ -7,11 +7,12 @@ CPPFLAGS = -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/darwin -I../../include 
 CXXFLAGS = -Wall -W -O2 -std=c++11
 LDFLAGS = -shared
 
+#	test_http.o \
+#	test_http_impl.o \
+
 OBJS = \
 	test.o \
 	test_crypto.o \
-	test_http.o \
-	test_http_impl.o \
 	jnitest.o
 TARGET = libjnitest.dylib
 
