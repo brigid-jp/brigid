@@ -5,7 +5,6 @@
 #include <brigid/http.hpp>
 #include <brigid/noncopyable.hpp>
 #include "error.hpp"
-#include "http_curl.hpp"
 #include "http_impl.hpp"
 
 #include <curl/curl.h>
