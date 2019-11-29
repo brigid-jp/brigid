@@ -266,11 +266,14 @@ namespace {
       std::cout << "[" << field.first << "]=[" << field.second << "]\n";
     }
 
+    BRIGID_CHECK(client.header().size() == 10);
     BRIGID_CHECK(client.header("X-Test1") == "foo bar");
     BRIGID_CHECK(client.header("X-Test2") == "foo bar");
     BRIGID_CHECK(client.header("X-Test3") == "foo  bar");
-    // BRIGID_CHECK(client.header("X-Test4") == "foo bar");
-    // BRIGID_CHECK(client.header("X-Test5") == "foo bar");
+    // for apple
+    BRIGID_CHECK(client.header("X-Test4") == "foo\tbar");
+    BRIGID_CHECK(client.header("X-Test5") == "foo    bar");
+
     BRIGID_CHECK(client.header("X-Test6") == "foo bar");
     BRIGID_CHECK(client.header("x-test7") == "foo bar");
     BRIGID_CHECK(client.header("X-tEsT8") == "foo bar");
