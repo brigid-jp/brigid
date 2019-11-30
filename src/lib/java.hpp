@@ -13,40 +13,42 @@
 #include <memory>
 
 namespace brigid {
-  JNIEnv* java_env();
+  namespace java {
+    JNIEnv* get_env();
 
-  void java_delete_local_ref(jobject);
+    void delete_local_ref(jobject);
 
-  template <class T>
-  using java_local_ref_t = std::unique_ptr<remove_pointer_t<T>, decltype(&java_delete_local_ref)>;
+    template <class T>
+    using local_ref_t = std::unique_ptr<remove_pointer_t<T>, decltype(&delete_local_ref)>;
 
-  template <class T>
-  inline java_local_ref_t<T> java_make_local_ref(T object = nullptr) {
-    return java_local_ref_t<T>(object, &java_delete_local_ref);
-  }
-
-  void java_delete_global_ref(jobject);
-
-  template <class T>
-  using java_global_ref_t = std::unique_ptr<remove_pointer_t<T>, decltype(&java_delete_global_ref)>;
-
-  template <class T>
-  inline java_global_ref_t<T> java_make_global_ref(T object = nullptr) {
-    return java_global_ref_t<T>(object, &java_delete_global_ref);
-  }
-
-  void java_check();
-
-  template <class T>
-  T java_check(T that) {
-    java_check();
-    if (!that) {
-      throw std::runtime_error("crypto_java exception");
+    template <class T>
+    inline local_ref_t<T> make_local_ref(T object = nullptr) {
+      return local_ref_t<T>(object, &delete_local_ref);
     }
-    return that;
-  }
 
-  jboolean java_boolean(bool);
+    void delete_global_ref(jobject);
+
+    template <class T>
+    using global_ref_t = std::unique_ptr<remove_pointer_t<T>, decltype(&delete_global_ref)>;
+
+    template <class T>
+    inline global_ref_t<T> make_global_ref(T object = nullptr) {
+      return global_ref_t<T>(object, &delete_global_ref);
+    }
+
+    void check();
+
+    template <class T>
+    T check(T result) {
+      check();
+      if (!result) {
+        throw std::runtime_error("crypto_java exception");
+      }
+      return result;
+    }
+
+    jboolean to_boolean(bool);
+  }
 }
 
 #endif

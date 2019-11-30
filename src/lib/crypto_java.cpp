@@ -15,51 +15,53 @@
 
 namespace brigid {
   namespace {
+    using namespace java;
+
     class aes_cryptor_impl : public cryptor {
     public:
       aes_cryptor_impl(const char* name, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
-        : klass_(java_make_global_ref<jclass>()),
-          instance_(java_make_global_ref<jobject>()),
+        : klass_(make_global_ref<jclass>()),
+          instance_(make_global_ref<jobject>()),
           method_(nullptr) {
-        JNIEnv* env = java_env();
+        JNIEnv* env = get_env();
 
-        java_local_ref_t<jclass> klass = java_make_local_ref(java_check(env->FindClass(name)));
-        klass_ = java_make_global_ref(java_check(reinterpret_cast<jclass>(env->NewGlobalRef(klass.get()))));
+        local_ref_t<jclass> klass = make_local_ref(check(env->FindClass(name)));
+        klass_ = make_global_ref(check(reinterpret_cast<jclass>(env->NewGlobalRef(klass.get()))));
 
         {
-          jmethodID method = java_check(env->GetMethodID(klass.get(), "<init>", "([B[B)V"));
+          jmethodID method = check(env->GetMethodID(klass.get(), "<init>", "([B[B)V"));
 
-          java_local_ref_t<jbyteArray> key = java_make_local_ref(java_check(env->NewByteArray(key_size)));
+          local_ref_t<jbyteArray> key = make_local_ref(check(env->NewByteArray(key_size)));
           env->SetByteArrayRegion(key.get(), 0, key_size, reinterpret_cast<const jbyte*>(key_data));
-          java_check();
+          check();
 
-          java_local_ref_t<jbyteArray> iv = java_make_local_ref(java_check(env->NewByteArray(iv_size)));
+          local_ref_t<jbyteArray> iv = make_local_ref(check(env->NewByteArray(iv_size)));
           env->SetByteArrayRegion(iv.get(), 0, iv_size, reinterpret_cast<const jbyte*>(iv_data));
-          java_check();
+          check();
 
-          java_local_ref_t<jobject> instance = java_make_local_ref(java_check(env->NewObject(klass.get(), method, key.get(), iv.get())));
-          instance_ = java_make_global_ref(java_check(env->NewGlobalRef(instance.get())));
+          local_ref_t<jobject> instance = make_local_ref(check(env->NewObject(klass.get(), method, key.get(), iv.get())));
+          instance_ = make_global_ref(check(env->NewGlobalRef(instance.get())));
         }
 
-        method_ = java_check(env->GetMethodID(klass.get(), "update", "(Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Z)I"));
+        method_ = check(env->GetMethodID(klass.get(), "update", "(Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Z)I"));
       }
 
       virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
-        JNIEnv* env = java_env();
+        JNIEnv* env = get_env();
 
-        java_local_ref_t<jobject> in = java_make_local_ref(java_check(env->NewDirectByteBuffer(const_cast<char*>(in_data), in_size)));
+        local_ref_t<jobject> in = make_local_ref(check(env->NewDirectByteBuffer(const_cast<char*>(in_data), in_size)));
 
-        java_local_ref_t<jobject> out = java_make_local_ref(java_check(env->NewDirectByteBuffer(out_data, out_size)));
+        local_ref_t<jobject> out = make_local_ref(check(env->NewDirectByteBuffer(out_data, out_size)));
 
-        jint result = env->CallIntMethod(instance_.get(), method_, in.get(), out.get(), java_boolean(padding));
-        java_check();
+        jint result = env->CallIntMethod(instance_.get(), method_, in.get(), out.get(), to_boolean(padding));
+        check();
 
         return result;
       }
 
     private:
-      java_global_ref_t<jclass> klass_;
-      java_global_ref_t<jobject> instance_;
+      global_ref_t<jclass> klass_;
+      global_ref_t<jobject> instance_;
       jmethodID method_;
     };
   }
