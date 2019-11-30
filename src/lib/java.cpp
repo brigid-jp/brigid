@@ -2,6 +2,7 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include "error.hpp"
 #include "java.hpp"
 
 #include <string>
@@ -14,12 +15,12 @@ namespace brigid {
     return static_cast<JNIEnv*>(SDL_AndroidGetJNIEnv());
   }
 
-  void java_delete_local_ref(jobject that) {
-    java_env()->DeleteLocalRef(that);
+  void java_delete_local_ref(jobject object) {
+    java_env()->DeleteLocalRef(object);
   }
 
-  void java_delete_global_ref(jobject that) {
-    java_env()->DeleteGlobalRef(that);
+  void java_delete_global_ref(jobject object) {
+    java_env()->DeleteGlobalRef(object);
   }
 
   void java_check() {
