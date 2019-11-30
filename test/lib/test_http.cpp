@@ -192,12 +192,12 @@ namespace {
 
   void test4() {
     test_client client;
-    client.request("GET", "https://brigid.jp/test/lua/redirect.lua?count=1");
+    client.request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=1");
     BRIGID_CHECK(client.code() == 200);
     BRIGID_CHECK(client.body() == "ok\n");
     BRIGID_CHECK(client.header("Location") == "");
 
-    client.request("GET", "https://brigid.jp/test/lua/redirect.lua?count=16");
+    client.request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=16");
     BRIGID_CHECK(client.code() == 200);
     BRIGID_CHECK(client.body() == "ok\n");
     BRIGID_CHECK(client.header("Location") == "");
@@ -311,7 +311,11 @@ namespace {
       { "Content-Type", "application/json; charset=UTF-8" },
     };
 
-    client.request("POST", "https://brigid.jp/test/lua/echo.lua?keys=Content-Type,Content-Length,Expect,User-Agent", header, brigid::http_request_body::data, data.data(), data.size());
+    client.request("POST", "https://brigid.jp/test/cgi/cat.cgi", header, brigid::http_request_body::data, data.data(), data.size());
+    BRIGID_CHECK(client.code() == 200);
+    BRIGID_CHECK(client.body() == data);
+
+    client.request("POST", "https://brigid.jp/test/cgi/env.cgi", header, brigid::http_request_body::data, data.data(), data.size());
     BRIGID_CHECK(client.code() == 200);
     std::cout << "[" << client.body() << "]\n";
   }
@@ -323,7 +327,7 @@ namespace {
 
   void test9() {
     test_client client;
-    client.request("GET", "https://brigid.jp/test/lua/nph-header.cgi");
+    client.request("GET", "https://brigid.jp/test/cgi/nph-header.cgi");
     BRIGID_CHECK(client.code() == 200);
 
     for (const auto& field : client.header()) {
@@ -357,7 +361,11 @@ namespace {
       { "Content-Type", "application/x-www-form-urlencoded" },
     };
 
-    client.request("POST", "https://brigid.jp/test/lua/echo.lua?keys=Content-Type,Content-Length,Expect,User-Agent", header, brigid::http_request_body::data, data.data(), data.size());
+    client.request("POST", "https://brigid.jp/test/cgi/env.cgi", header, brigid::http_request_body::data, data.data(), data.size());
+    BRIGID_CHECK(client.code() == 200);
+    std::cout << "[" << client.body() << "]\n";
+
+    client.request("POST", "https://brigid.jp/test/cgi/cat.cgi", header, brigid::http_request_body::data, data.data(), data.size());
     BRIGID_CHECK(client.code() == 200);
     std::cout << "[" << client.body() << "]\n";
   }
@@ -370,6 +378,6 @@ namespace {
   BRIGID_MAKE_TEST_CASE(test6);
   BRIGID_MAKE_TEST_CASE(test7);
   BRIGID_MAKE_TEST_CASE(test8);
-  // BRIGID_MAKE_TEST_CASE(test9);
+  BRIGID_MAKE_TEST_CASE(test9);
   BRIGID_MAKE_TEST_CASE(test10);
 }
