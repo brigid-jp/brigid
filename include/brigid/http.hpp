@@ -24,7 +24,8 @@ namespace brigid {
     http_initializer http_initializer_;
   }
 
-  enum class http_request_body { data, file };
+  enum class http_authentication_scheme { none, basic, digest, any };
+  enum class http_request_body { none, data, file };
 
   class http_session {
   public:
@@ -36,7 +37,7 @@ namespace brigid {
       std::function<bool (size_t, size_t)>,
       std::function<bool (int, const std::map<std::string, std::string>&)>,
       std::function<bool (const char*, size_t)>,
-      bool,
+      http_authentication_scheme,
       const std::string&,
       const std::string&);
 }

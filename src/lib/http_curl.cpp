@@ -14,22 +14,6 @@
 
 namespace brigid {
   namespace {
-    int http_initializer_counter = 0;
-  }
-
-  http_initializer::http_initializer() {
-    if (++http_initializer_counter == 1) {
-      curl_global_init(CURL_GLOBAL_ALL);
-    }
-  }
-
-  http_initializer::~http_initializer() {
-    if (--http_initializer_counter == 0) {
-      curl_global_cleanup();
-    }
-  }
-
-  namespace {
     void check(CURLcode code) {
       if (code != CURLE_OK) {
         throw BRIGID_ERROR(curl_easy_strerror(code), code);
@@ -257,6 +241,20 @@ namespace brigid {
         curl_easy_reset(handle.get());
         throw;
       }
+    }
+
+    int http_initializer_counter = 0;
+  }
+
+  http_initializer::http_initializer() {
+    if (++http_initializer_counter == 1) {
+      curl_global_init(CURL_GLOBAL_ALL);
+    }
+  }
+
+  http_initializer::~http_initializer() {
+    if (--http_initializer_counter == 0) {
+      curl_global_cleanup();
     }
   }
 

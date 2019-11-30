@@ -10,7 +10,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class AESDecryptor {
-  public AESDecryptor(byte[] key, byte[] iv) throws Exception{
+  public AESDecryptor(byte[] key, byte[] iv) throws Exception {
     cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
     cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv));
   }

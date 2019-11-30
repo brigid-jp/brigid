@@ -13,7 +13,7 @@ namespace brigid {
   class error : public std::runtime_error {
   public:
     error(const char* file, int line, const char* message)
-      : std::runtime_error(make_what3(file, line, message)) {}
+      : std::runtime_error(make_what(file, line, message)) {}
 
     template <class T>
     error(const char* file, int line, T code)
@@ -28,7 +28,7 @@ namespace brigid {
       : std::runtime_error(make_what(file, line, message.c_str(), code)) {}
 
   private:
-    static std::string make_what3(const char* file, int line, const char* message) {
+    static std::string make_what(const char* file, int line, const char* message) {
       std::ostringstream out;
       out << message << " at " << file << ":" << line;
       return out.str();
