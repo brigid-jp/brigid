@@ -3,26 +3,25 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/crypto.hpp>
+#include <brigid/noncopyable.hpp>
 #include "crypto_impl.hpp"
 #include "java.hpp"
-#include "type_traits.hpp"
 
 #include <jni.h>
 
 #include <memory>
-#include <stdexcept>
-#include <vector>
+#include <string>
 
 namespace brigid {
   namespace {
     using namespace java;
 
-    class aes_cryptor_impl : public cryptor {
+    class aes_cryptor_impl : public cryptor, private noncopyable {
     public:
       aes_cryptor_impl(const char* name, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
         : klass_(make_global_ref<jclass>()),
           instance_(make_global_ref<jobject>()),
-          method_(nullptr) {
+          method_() {
         JNIEnv* env = get_env();
 
         local_ref_t<jclass> klass = make_local_ref(check(env->FindClass(name)));
@@ -71,7 +70,7 @@ namespace brigid {
     if (cipher == "aes-128-cbc" || cipher == "aes-192-cbc" || cipher == "aes-256-cbc") {
       return std::unique_ptr<cryptor>(new aes_cryptor_impl("jp/brigid/AESEncryptor", key_data, key_size, iv_data, iv_size));
     } else {
-      throw std::runtime_error("unsupported cipher");
+      throw BRIGID_ERROR("unsupported cipher");
     }
   }
 
@@ -80,7 +79,7 @@ namespace brigid {
     if (cipher == "aes-128-cbc" || cipher == "aes-192-cbc" || cipher == "aes-256-cbc") {
       return std::unique_ptr<cryptor>(new aes_cryptor_impl("jp/brigid/AESDecryptor", key_data, key_size, iv_data, iv_size));
     } else {
-      throw std::runtime_error("unsupported cipher");
+      throw BRIGID_ERROR("unsupported cipher");
     }
   }
 }
