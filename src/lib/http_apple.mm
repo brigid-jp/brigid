@@ -12,9 +12,6 @@
 #include <mutex>
 
 namespace brigid {
-  http_initializer::http_initializer() {}
-  http_initializer::~http_initializer() {}
-
   namespace {
     class http_session_delegate_impl : private noncopyable {
     public:
@@ -297,6 +294,9 @@ namespace brigid {
       NSURLSession* session_;
     };
   }
+
+  http_initializer::http_initializer() {}
+  http_initializer::~http_initializer() {}
 
   std::unique_ptr<http_session> make_http_session(
       std::function<bool (size_t, size_t)> progress_cb,
