@@ -318,14 +318,13 @@ namespace brigid {
 
   std::unique_ptr<http_reader> make_http_reader(http_request_body body, const char* data, size_t size) {
     switch (body) {
+      case http_request_body::none:
+        return nullptr;
       case http_request_body::data:
-        if (data) {
-          return std::unique_ptr<http_reader>(new http_data_reader(data, size));
-        }
-        break;
+        return std::unique_ptr<http_reader>(new http_data_reader(data, size));
       case http_request_body::file:
         return std::unique_ptr<http_reader>(new http_file_reader(data));
     }
-    return std::unique_ptr<http_reader>();
+    return nullptr;
   }
 }
