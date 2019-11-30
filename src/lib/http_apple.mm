@@ -296,11 +296,7 @@ namespace brigid {
             task = [session_ dataTaskWithRequest:request];
             break;
           case http_request_body::data:
-            if (size > 0) {
-              request.HTTPBody = [NSData dataWithBytes:data length:size];
-            } else {
-              request.HTTPBody = [[NSData alloc] init];
-            }
+            request.HTTPBody = [NSData dataWithBytes:data length:size];
             task = [session_ dataTaskWithRequest:request];
             break;
           case http_request_body::file:
