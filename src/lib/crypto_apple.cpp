@@ -11,7 +11,7 @@
 
 namespace brigid {
   namespace {
-    void check(CCCryptorStatus status) {
+    inline void check(CCCryptorStatus status) {
       if (status != kCCSuccess) {
         throw BRIGID_ERROR(status);
       }
@@ -19,7 +19,7 @@ namespace brigid {
 
     using cryptor_ref_t = std::unique_ptr<remove_pointer_t<CCCryptorRef>, decltype(&CCCryptorRelease)>;
 
-    cryptor_ref_t make_cryptor_ref(CCCryptorRef cryptor = nullptr) {
+    inline cryptor_ref_t make_cryptor_ref(CCCryptorRef cryptor = nullptr) {
       return cryptor_ref_t(cryptor, &CCCryptorRelease);
     }
 

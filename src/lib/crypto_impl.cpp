@@ -28,7 +28,7 @@ namespace brigid {
       throw BRIGID_ERROR("invalid key size");
     }
     if (iv_size != aes_block_size) {
-      throw BRIGID_ERROR("invalid iv size");
+      throw BRIGID_ERROR("invalid initialization vector size");
     }
   }
 }
