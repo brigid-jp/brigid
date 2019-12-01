@@ -16,13 +16,10 @@
 namespace brigid {
   class http_header_parser : private noncopyable {
   public:
-    http_header_parser();
     bool parse(const char*, size_t);
-    int code() const;
     const std::map<std::string, std::string>& get() const;
   private:
     std::string buffer_;
-    int code_;
     std::string field_;
     std::map<std::string, std::string> header_;
     bool parse_impl(const char*, size_t);

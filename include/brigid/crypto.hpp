@@ -7,17 +7,22 @@
 
 #include <stddef.h>
 #include <memory>
-#include <string>
 
 namespace brigid {
+  enum class crypto_cipher {
+    aes_128_cbc,
+    aes_192_cbc,
+    aes_256_cbc,
+  };
+
   class cryptor {
   public:
     virtual ~cryptor() = 0;
     virtual size_t update(const char*, size_t, char*, size_t, bool) = 0;
   };
 
-  std::unique_ptr<cryptor> make_encryptor(const std::string&, const char*, size_t, const char*, size_t);
-  std::unique_ptr<cryptor> make_decryptor(const std::string&, const char*, size_t, const char*, size_t);
+  std::unique_ptr<cryptor> make_encryptor(crypto_cipher, const char*, size_t, const char*, size_t);
+  std::unique_ptr<cryptor> make_decryptor(crypto_cipher, const char*, size_t, const char*, size_t);
 }
 
 #endif

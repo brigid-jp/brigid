@@ -2,21 +2,29 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include <brigid/noncopyable.hpp>
 #include "error.hpp"
 #include "http_impl.hpp"
 
+#include <errno.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <algorithm>
+#include <memory>
+#include <string>
+#include <map>
 
 namespace brigid {
   namespace {
-    bool is_digit(uint8_t c) {
+    inline bool is_digit(uint8_t c) {
       return 0x30 <= c && c <= 0x39;
     }
 
-    // https://tools.ietf.org/html/rfc7230#section-3.2
-    bool is_tchar(uint8_t c) {
+    inline bool is_tchar(uint8_t c) {
       switch (c) {
         case '!':
         case '#':
@@ -38,13 +46,11 @@ namespace brigid {
       return is_digit(c) || (0x41 <= c && c <= 0x5A) || (0x61 <= c && c <= 0x7A);
     }
 
-    bool is_vchar(uint8_t c) {
+    // VCHAR or obs-text
+    inline bool is_vchar(uint8_t c) {
       return (0x21 <= c && c <= 0x7E) || 0x80 <= c;
     }
   }
-
-  http_header_parser::http_header_parser()
-    : code_() {}
 
   bool http_header_parser::parse(const char* data, size_t size) {
     buffer_.append(data, size);
@@ -79,30 +85,31 @@ namespace brigid {
 
     {
       int s = 1;
-      int code = 0;
-      for (const char* p = pb; pb != pe; ++p) {
+      for (const char* p = pb; p != pe; ++p) {
         char c = *p;
         switch (s) {
-          case  1: s = c == 'H'    ?  2 : 0; break;
-          case  2: s = c == 'T'    ?  3 : 0; break;
-          case  3: s = c == 'T'    ?  4 : 0; break;
-          case  4: s = c == 'P'    ?  5 : 0; break;
-          case  5: s = c == '/'    ?  6 : 0; break;
-          case  6: s = is_digit(c) ?  7 : 0; break;
-          case  7: s = c == '.'    ?  8 : 0; break;
-          case  8: s = is_digit(c) ?  9 : 0; break;
-          case  9: s = c == ' '    ? 10 : 0; break;
-          case 10: s = is_digit(c) ? 11 : 0; code = code * 10 + c - 0x30; break;
-          case 11: s = is_digit(c) ? 12 : 0; code = code * 10 + c - 0x30; break;
-          case 12: s = is_digit(c) ? 13 : 0; code = code * 10 + c - 0x30; break;
-          case 13: s = c == ' '    ? 14 : 0; break;
+          case  1: s = c == 'H'    ?  2 :  0; break;
+          case  2: s = c == 'T'    ?  3 :  0; break;
+          case  3: s = c == 'T'    ?  4 :  0; break;
+          case  4: s = c == 'P'    ?  5 :  0; break;
+          case  5: s = c == '/'    ?  6 :  0; break;
+          case  6: s = is_digit(c) ?  7 : -1; break;
+          case  7: s = c == '.'    ?  8 : -1; break;
+          case  8: s = is_digit(c) ?  9 : -1; break;
+          case  9: s = c == ' '    ? 10 : -1; break;
+          case 10: s = is_digit(c) ? 11 : -1; break;
+          case 11: s = is_digit(c) ? 12 : -1; break;
+          case 12: s = is_digit(c) ? 13 : -1; break;
+          case 13: s = c == ' '    ? 14 : -1; break;
+          case 14: s = c == ' ' || c == '\t' || is_vchar(c) ? 14 : -1; break;
         }
-        if (s == 0 || s == 14) {
+        if (s == -1) {
+          throw BRIGID_ERROR("cannot parse header");
+        } else if (s == 0) {
           break;
         }
       }
       if (s == 14) {
-        code_ = code;
         field_.clear();
         header_.clear();
         return false;
@@ -160,10 +167,6 @@ namespace brigid {
     return false;
   }
 
-  int http_header_parser::code() const {
-    return code_;
-  }
-
   const std::map<std::string, std::string>& http_header_parser::get() const {
     return header_;
   }
@@ -182,7 +185,7 @@ namespace brigid {
           if (is_tchar(c)) {
             s = 2;
           } else {
-            s = 0;
+            s = -1;
           }
           break;
         case 2:
@@ -192,7 +195,7 @@ namespace brigid {
             s = 3;
             q1 = p;
           } else {
-            s = 0;
+            s = -1;
           }
           break;
         case 3:
@@ -202,23 +205,23 @@ namespace brigid {
             s = 4;
             q2 = p;
           } else {
-            s = 0;
+            s = -1;
           }
           break;
         case 4:
-          if (is_vchar(c) || c == ' ' || c == '\t') {
+          if (c == ' ' || c == '\t' || is_vchar(c)) {
             s = 4;
           } else {
-            s = 0;
+            s = -1;
           }
           break;
       }
-      if (s == 0) {
-        break;
+      if (s == -1) {
+        throw BRIGID_ERROR("cannot parse header");
       }
     }
 
-    if (s < 3) {
+    if (!q1) {
       throw BRIGID_ERROR("cannot parse header");
     }
 
@@ -232,17 +235,11 @@ namespace brigid {
   http_reader::~http_reader() {}
 
   namespace {
-    FILE* check(FILE* handle) {
+    inline FILE* check(FILE* handle) {
       if (!handle) {
-        throw BRIGID_ERROR("cannot fopen", errno);
+        throw BRIGID_ERROR(errno);
       }
       return handle;
-    }
-
-    using file_t = std::unique_ptr<FILE, decltype(&fclose)>;
-
-    file_t make_file(FILE* handle) {
-      return file_t(handle, &fclose);
     }
 
     class http_reader_impl : public http_reader {
@@ -295,25 +292,59 @@ namespace brigid {
       size_t size_;
     };
 
+    class file_descriptor : private noncopyable {
+    public:
+      explicit file_descriptor(int fd)
+        : fd_(fd) {}
+
+      ~file_descriptor() {
+        if (fd_ != -1) {
+          close(fd_);
+        }
+      }
+
+      bool operator!() const {
+        return fd_ == -1;
+      }
+
+      int get() const {
+        return fd_;
+      }
+
+      int release() {
+        int fd = fd_;
+        fd_ = -1;
+        return fd;
+      }
+
+    private:
+      int fd_;
+    };
+
     class http_file_reader : public http_reader_impl, private noncopyable {
     public:
-      http_file_reader(const char* path)
-        : handle_(make_file(check(fopen(path, "rb")))) {
-        fseek(handle_.get(), 0, SEEK_END);
-        set_total(ftell(handle_.get()));
-        fseek(handle_.get(), 0, SEEK_SET);
+      http_file_reader(const char* path, size_t size)
+        : fd_(open(path, O_RDONLY)) {
+        if (!fd_) {
+          throw BRIGID_ERROR("cannot open", errno);
+        }
+
+        struct stat st = {};
+        if (fstat(fd_.get(), &st) == -1) {
+          throw BRIGID_ERROR("cannot fstat", errno);
+        }
+        set_total(st.st_size);
       }
 
       virtual size_t read(char* data, size_t size) {
-        size_t result = fread(data, 1, size, handle_.get());
+        ssize_t result = ::read(fd_.get(), data, size);
         add_now(result);
         return result;
       }
 
     private:
-      file_t handle_;
+      file_descriptor fd_;
     };
-
   }
 
   std::unique_ptr<http_reader> make_http_reader(http_request_body body, const char* data, size_t size) {
@@ -323,7 +354,7 @@ namespace brigid {
       case http_request_body::data:
         return std::unique_ptr<http_reader>(new http_data_reader(data, size));
       case http_request_body::file:
-        return std::unique_ptr<http_reader>(new http_file_reader(data));
+        return std::unique_ptr<http_reader>(new http_file_reader(data, size));
     }
     return nullptr;
   }

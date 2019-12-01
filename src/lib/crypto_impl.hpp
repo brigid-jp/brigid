@@ -5,11 +5,12 @@
 #ifndef BRIGID_CRYPTO_IMPL_HPP
 #define BRIGID_CRYPTO_IMPL_HPP
 
+#include <brigid/crypto.hpp>
+
 #include <stddef.h>
-#include <string>
 
 namespace brigid {
-  void check_cipher(const std::string&, size_t, size_t);
+  void check_cipher(crypto_cipher, size_t, size_t);
 }
 
 #endif

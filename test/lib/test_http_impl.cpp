@@ -2,9 +2,12 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include "test.hpp"
+#include <brigid/http.hpp>
 #include <http_impl.hpp>
+#include "test.hpp"
 
+#include <fstream>
+#include <string>
 #include <vector>
 
 namespace {
@@ -101,7 +104,6 @@ namespace {
         "X-Test6:\t \t foo bar \t \t\r\n"
         "\r\n");
 
-    BRIGID_CHECK(parser.code() == 200);
     BRIGID_CHECK(parser.get().size() == 6);
     BRIGID_CHECK(get(parser, "X-Test1") == "foo bar");
     BRIGID_CHECK(get(parser, "X-Test2") == "foo bar");
@@ -111,7 +113,21 @@ namespace {
     BRIGID_CHECK(get(parser, "X-Test6") == "foo bar");
   }
 
+  void test4() {
+    std::string filename = "test.dat";
+    {
+      std::ofstream out(filename.c_str(), std::ios::out | std::ios::binary);
+      out << "test\r\n\t" << static_cast<char>(0x00) << "\xFF\n";
+    }
+
+    auto reader = brigid::make_http_reader(brigid::http_request_body::file, filename.data(), filename.size());
+    BRIGID_CHECK(reader->total() == 10);
+
+    remove("test.dat");
+  }
+
   BRIGID_MAKE_TEST_CASE(test1);
   BRIGID_MAKE_TEST_CASE(test2);
   BRIGID_MAKE_TEST_CASE(test3);
+  BRIGID_MAKE_TEST_CASE(test4);
 }

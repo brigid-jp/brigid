@@ -15,9 +15,12 @@ namespace brigid {
     error(const char* file, int line, const char* message)
       : std::runtime_error(make_what(file, line, message)) {}
 
+    error(const char* file, int line, const std::string& message)
+      : std::runtime_error(make_what(file, line, message.c_str())) {}
+
     template <class T>
     error(const char* file, int line, T code)
-      : std::runtime_error(make_what(file, line, nullptr, code)) {}
+      : std::runtime_error(make_what(file, line, code)) {}
 
     template <class T>
     error(const char* file, int line, const char* message, T code)
@@ -35,13 +38,16 @@ namespace brigid {
     }
 
     template <class T>
+    static std::string make_what(const char* file, int line, T code) {
+      std::ostringstream out;
+      out << "error number " << code << " at " << file << ":" << line;
+      return out.str();
+    }
+
+    template <class T>
     static std::string make_what(const char* file, int line, const char* message, T code) {
       std::ostringstream out;
-      if (message) {
-        out << message << " (error number " << code << ") at " << file << ":" << line;
-      } else {
-        out << "error number " << code << " at " << file << ":" << line;
-      }
+      out << message << " (error number " << code << ") at " << file << ":" << line;
       return out.str();
     }
   };

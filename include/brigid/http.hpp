@@ -14,6 +14,19 @@
 #include <string>
 
 namespace brigid {
+  enum class http_authentication_scheme {
+    none,
+    basic,
+    digest,
+    any,
+  };
+
+  enum class http_request_body {
+    none,
+    data,
+    file,
+  };
+
   class http_initializer : private noncopyable {
   public:
     http_initializer();
@@ -21,16 +34,19 @@ namespace brigid {
   };
 
   namespace {
-    http_initializer http_initializer_;
+    http_initializer http_initializer_instance;
   }
-
-  enum class http_authentication_scheme { none, basic, digest, any };
-  enum class http_request_body { none, data, file };
 
   class http_session {
   public:
     virtual ~http_session() = 0;
-    virtual void request(const std::string&, const std::string&, const std::map<std::string, std::string>&, http_request_body, const char*, size_t) = 0;
+    virtual void request(
+        const std::string&,
+        const std::string&,
+        const std::map<std::string, std::string>&,
+        http_request_body,
+        const char*,
+        size_t) = 0;
   };
 
   std::unique_ptr<http_session> make_http_session(
