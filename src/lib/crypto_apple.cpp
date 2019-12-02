@@ -3,8 +3,8 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/crypto.hpp>
-#include "error.hpp"
 #include "crypto_impl.hpp"
+#include "error.hpp"
 #include "type_traits.hpp"
 
 #include <CommonCrypto/CommonCrypto.h>
