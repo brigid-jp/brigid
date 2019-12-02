@@ -4,6 +4,6 @@
 
 #include "test.hpp"
 
-int main(int, char*[]) {
-  return brigid::run_test_cases();
+int main(int ac, char* av[]) {
+  return brigid::run_test_cases(ac, av);
 }

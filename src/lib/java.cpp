@@ -7,9 +7,9 @@
 
 #include <jni.h>
 
-#include <vector>
-
 extern "C" void* SDL_AndroidGetJNIEnv();
+
+#include <vector>
 
 namespace brigid {
   namespace java {

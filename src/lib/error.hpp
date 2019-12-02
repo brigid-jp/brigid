@@ -28,11 +28,6 @@ namespace brigid {
   };
 
   template <class T>
-  inline error_code<T> make_error_code(T code) {
-    return error_code<T>("error number", code);
-  }
-
-  template <class T>
   inline error_code<T> make_error_code(const char* name, T code) {
     return error_code<T>(name, code);
   }
