@@ -35,9 +35,10 @@ namespace brigid {
 
     class aes_encryptor_impl : public cryptor, private noncopyable {
     public:
-      aes_encryptor_impl(const EVP_CIPHER* cipher, const char* key_data, const char* iv_data)
+      aes_encryptor_impl(const EVP_CIPHER* cipher, const char* key_data, size_t key_size, const char* iv_data)
         : ctx_(make_cipher_ctx(check(EVP_CIPHER_CTX_new()))) {
         check(EVP_EncryptInit_ex(ctx_.get(), cipher, nullptr, reinterpret_cast<const unsigned char*>(key_data), reinterpret_cast<const unsigned char*>(iv_data)));
+        check(EVP_CIPHER_CTX_set_key_length(ctx_.get(), key_size));
       }
 
       virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
@@ -57,9 +58,10 @@ namespace brigid {
 
     class aes_decryptor_impl : public cryptor, private noncopyable {
     public:
-      aes_decryptor_impl(const EVP_CIPHER* cipher, const char* key_data, const char* iv_data)
+      aes_decryptor_impl(const EVP_CIPHER* cipher, const char* key_data, size_t key_size, const char* iv_data)
         : ctx_(make_cipher_ctx(check(EVP_CIPHER_CTX_new()))) {
         check(EVP_DecryptInit_ex(ctx_.get(), cipher, nullptr, reinterpret_cast<const unsigned char*>(key_data), reinterpret_cast<const unsigned char*>(iv_data)));
+        check(EVP_CIPHER_CTX_set_key_length(ctx_.get(), key_size));
       }
 
       virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
@@ -76,31 +78,45 @@ namespace brigid {
     private:
       cipher_ctx_t ctx_;
     };
+
+    int crypto_initializer_counter = 0;
+  }
+
+  crypto_initializer::crypto_initializer() {
+    if (++crypto_initializer_counter == 1) {
+      ERR_load_crypto_strings();
+    }
+  }
+
+  crypto_initializer::~crypto_initializer() {
+    if (--crypto_initializer_counter == 0) {
+      ERR_free_strings();
+    }
   }
 
   std::unique_ptr<cryptor> make_encryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-    check_cipher(cipher, key_size, iv_size);
+    check_cipher(cipher, iv_size);
     switch (cipher) {
       case crypto_cipher::aes_128_cbc:
-        return std::unique_ptr<cryptor>(new aes_encryptor_impl(EVP_aes_128_cbc(), key_data, iv_data));
+        return std::unique_ptr<cryptor>(new aes_encryptor_impl(EVP_aes_128_cbc(), key_data, key_size, iv_data));
       case crypto_cipher::aes_192_cbc:
-        return std::unique_ptr<cryptor>(new aes_encryptor_impl(EVP_aes_192_cbc(), key_data, iv_data));
+        return std::unique_ptr<cryptor>(new aes_encryptor_impl(EVP_aes_192_cbc(), key_data, key_size, iv_data));
       case crypto_cipher::aes_256_cbc:
-        return std::unique_ptr<cryptor>(new aes_encryptor_impl(EVP_aes_256_cbc(), key_data, iv_data));
+        return std::unique_ptr<cryptor>(new aes_encryptor_impl(EVP_aes_256_cbc(), key_data, key_size, iv_data));
       default:
         throw BRIGID_ERROR("unsupported cipher");
     }
   }
 
   std::unique_ptr<cryptor> make_decryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-    check_cipher(cipher, key_size, iv_size);
+    check_cipher(cipher, iv_size);
     switch (cipher) {
       case crypto_cipher::aes_128_cbc:
-        return std::unique_ptr<cryptor>(new aes_decryptor_impl(EVP_aes_128_cbc(), key_data, iv_data));
+        return std::unique_ptr<cryptor>(new aes_decryptor_impl(EVP_aes_128_cbc(), key_data, key_size, iv_data));
       case crypto_cipher::aes_192_cbc:
-        return std::unique_ptr<cryptor>(new aes_decryptor_impl(EVP_aes_192_cbc(), key_data, iv_data));
+        return std::unique_ptr<cryptor>(new aes_decryptor_impl(EVP_aes_192_cbc(), key_data, key_size, iv_data));
       case crypto_cipher::aes_256_cbc:
-        return std::unique_ptr<cryptor>(new aes_decryptor_impl(EVP_aes_256_cbc(), key_data, iv_data));
+        return std::unique_ptr<cryptor>(new aes_decryptor_impl(EVP_aes_256_cbc(), key_data, key_size, iv_data));
       default:
         throw BRIGID_ERROR("unsupported cipher");
     }

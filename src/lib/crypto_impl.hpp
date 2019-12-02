@@ -10,6 +10,7 @@
 #include <stddef.h>
 
 namespace brigid {
+  void check_cipher(crypto_cipher, size_t);
   void check_cipher(crypto_cipher, size_t, size_t);
 }
 

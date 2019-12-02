@@ -96,9 +96,7 @@ namespace {
   }
 
   void test_error() {
-    std::vector<char> buffer(1);
-    auto encryptor = brigid::make_encryptor(brigid::crypto_cipher::aes_256_cbc, key256.data(), key256.size(), iv.data(), iv.size());
-    BRIGID_CHECK_THROW([&](){ encryptor->update(plaintext.data(), plaintext.size(), buffer.data(), buffer.size(), true); });
+    BRIGID_CHECK_THROW([&](){ brigid::make_encryptor(brigid::crypto_cipher::aes_256_cbc, key256.data(), key256.size() - 1, nullptr, iv.size()); });
   }
 
   BRIGID_MAKE_TEST_CASE([](){ test_encryptor1(brigid::crypto_cipher::aes_128_cbc, key128, ciphertext128); });

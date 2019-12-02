@@ -5,11 +5,23 @@
 #ifndef BRIGID_CRYPTO_HPP
 #define BRIGID_CRYPTO_HPP
 
+#include <brigid/noncopyable.hpp>
+
 #include <stddef.h>
 #include <memory>
 
 namespace brigid {
   enum class crypto_cipher { aes_128_cbc, aes_192_cbc, aes_256_cbc };
+
+  class crypto_initializer : private noncopyable {
+  public:
+    crypto_initializer();
+    ~crypto_initializer();
+  };
+
+  namespace {
+    crypto_initializer crypto_initializer_instance;
+  }
 
   class cryptor {
   public:
