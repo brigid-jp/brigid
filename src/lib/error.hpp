@@ -5,11 +5,38 @@
 #ifndef BRIGID_ERROR_HPP
 #define BRIGID_ERROR_HPP
 
+#include <ostream>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 
 namespace brigid {
+  template <class T>
+  class error_code {
+  public:
+    error_code(const char* name, T code)
+      : name_(name),
+        code_(code) {}
+
+    friend std::ostream& operator<<(std::ostream& out, const error_code& self) {
+      return out << self.name_ << " " << self.code_;
+    }
+
+  private:
+    const char* name_;
+    T code_;
+  };
+
+  template <class T>
+  inline error_code<T> make_error_code(T code) {
+    return error_code<T>("error number", code);
+  }
+
+  template <class T>
+  inline error_code<T> make_error_code(const char* name, T code) {
+    return error_code<T>(name, code);
+  }
+
   class error : public std::runtime_error {
   public:
     error(const char* file, int line, const char* message)
@@ -19,15 +46,15 @@ namespace brigid {
       : std::runtime_error(make_what(file, line, message.c_str())) {}
 
     template <class T>
-    error(const char* file, int line, T code)
+    error(const char* file, int line, const error_code<T>& code)
       : std::runtime_error(make_what(file, line, code)) {}
 
     template <class T>
-    error(const char* file, int line, const char* message, T code)
+    error(const char* file, int line, const char* message, const error_code<T>& code)
       : std::runtime_error(make_what(file, line, message, code)) {}
 
     template <class T>
-    error(const char* file, int line, const std::string& message, T code)
+    error(const char* file, int line, const std::string& message, const error_code<T>& code)
       : std::runtime_error(make_what(file, line, message.c_str(), code)) {}
 
   private:
@@ -38,16 +65,16 @@ namespace brigid {
     }
 
     template <class T>
-    static std::string make_what(const char* file, int line, T code) {
+    static std::string make_what(const char* file, int line, const error_code<T>& code) {
       std::ostringstream out;
-      out << "error number " << code << " at " << file << ":" << line;
+      out << code << " at " << file << ":" << line;
       return out.str();
     }
 
     template <class T>
-    static std::string make_what(const char* file, int line, const char* message, T code) {
+    static std::string make_what(const char* file, int line, const char* message, const error_code<T>& code) {
       std::ostringstream out;
-      out << message << " (error number " << code << ") at " << file << ":" << line;
+      out << message << " (" << code << ") at " << file << ":" << line;
       return out.str();
     }
   };

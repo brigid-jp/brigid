@@ -8,8 +8,15 @@
 
 #include <Foundation/Foundation.h>
 
+#include <stddef.h>
+#include <stdint.h>
 #include <condition_variable>
+#include <exception>
+#include <functional>
+#include <map>
+#include <memory>
 #include <mutex>
+#include <string>
 
 namespace brigid {
   namespace {
@@ -133,7 +140,7 @@ namespace brigid {
       std::lock_guard<std::mutex> req_lock(req_mutex_);
       req_ = nullptr;
       if (error && !exception_) {
-        exception_ = std::make_exception_ptr(BRIGID_ERROR(to_string(error.localizedDescription), error.code));
+        exception_ = std::make_exception_ptr(BRIGID_ERROR(to_string(error.localizedDescription), make_error_code("NSError", error.code)));
       }
       req_condition_.notify_all();
     }
