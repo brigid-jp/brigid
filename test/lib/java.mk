@@ -14,7 +14,7 @@ OBJS = \
 	test.o \
 	test_crypto.o \
 	test_java.o
-TARGET = libjnitest.dylib
+TARGET = libjavatest.dylib
 
 all: all-recursive $(TARGET)
 
@@ -22,16 +22,16 @@ all-recursive:
 	(cd ../../src/lib && $(MAKE) -f java.mk all)
 
 clean:
-	rm -f $(OBJS) JNITest.h JNITest.class $(TARGET)
+	rm -f $(OBJS) JavaTest.h JavaTest.class $(TARGET)
 	(cd ../../src/lib && $(MAKE) -f java.mk clean)
 
 check:
-	java -classpath ../../src/java:. -Djava.library.path=. -Xcheck:jni JNITest
+	java -classpath ../../src/java:. -Djava.library.path=. -Xcheck:jni JavaTest
 
-JNITest.h: JNITest.java
-	javac -h . JNITest.java
+JavaTest.h: JavaTest.java
+	javac -h . JavaTest.java
 
-libjnitest.dylib: JNITest.h $(OBJS) ../../src/lib/libbrigid.a
+libjavatest.dylib: JavaTest.h $(OBJS) ../../src/lib/libbrigid.a
 	$(CXX) $(LDFLAGS) $(OBJS) ../../src/lib/libbrigid.a -o $@
 
 .cpp.o:

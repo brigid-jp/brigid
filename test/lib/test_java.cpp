@@ -4,7 +4,7 @@
 
 #include "test.hpp"
 
-#include "JNITest.h"
+#include "JavaTest.h"
 
 #include <iostream>
 
@@ -20,7 +20,7 @@ extern "C" void* SDL_AndroidGetJNIEnv() {
   return access_jnienv();
 }
 
-JNIEXPORT jint JNICALL Java_JNITest_test(JNIEnv* env, jclass) {
+JNIEXPORT jint JNICALL Java_JavaTest_test(JNIEnv* env, jclass) {
   access_jnienv(env);
   return brigid::run_test_cases(0, nullptr);
 }
