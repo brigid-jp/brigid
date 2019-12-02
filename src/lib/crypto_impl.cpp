@@ -9,7 +9,6 @@
 
 namespace brigid {
   void check_cipher(crypto_cipher cipher, size_t iv_size) {
-    size_t aes_key_size = 0;
     size_t aes_block_size = 16;
 
     switch (cipher) {
@@ -44,9 +43,9 @@ namespace brigid {
         throw BRIGID_ERROR("unsupported cipher");
     }
 
-    // if (key_size != aes_key_size) {
-    //   throw BRIGID_ERROR("invalid key size");
-    // }
+    if (key_size != aes_key_size) {
+      throw BRIGID_ERROR("invalid key size");
+    }
     if (iv_size != aes_block_size) {
       throw BRIGID_ERROR("invalid initialization vector size");
     }
