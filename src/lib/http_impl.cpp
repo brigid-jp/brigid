@@ -7,11 +7,11 @@
 #include "http_impl.hpp"
 
 #include <errno.h>
-#include <fcntl.h>
-#include <unistd.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <algorithm>
 #include <memory>
@@ -242,6 +242,12 @@ namespace brigid {
       return handle;
     }
 
+    using file_t = std::unique_ptr<FILE, decltype(&fclose)>;
+
+    inline file_t make_file(FILE* handle) {
+      return file_t(handle, &fclose);
+    }
+
     class http_reader_impl : public http_reader {
     public:
       http_reader_impl()
@@ -292,58 +298,25 @@ namespace brigid {
       size_t size_;
     };
 
-    class file_descriptor : private noncopyable {
-    public:
-      explicit file_descriptor(int fd)
-        : fd_(fd) {}
-
-      ~file_descriptor() {
-        if (fd_ != -1) {
-          close(fd_);
-        }
-      }
-
-      bool operator!() const {
-        return fd_ == -1;
-      }
-
-      int get() const {
-        return fd_;
-      }
-
-      int release() {
-        int fd = fd_;
-        fd_ = -1;
-        return fd;
-      }
-
-    private:
-      int fd_;
-    };
-
     class http_file_reader : public http_reader_impl, private noncopyable {
     public:
       http_file_reader(const char* path, size_t size)
-        : fd_(open(path, O_RDONLY)) {
-        if (!fd_) {
-          throw BRIGID_ERROR("cannot open", errno);
-        }
-
+        : handle_(make_file(check(fopen(path, "rb")))) {
         struct stat st = {};
-        if (fstat(fd_.get(), &st) == -1) {
-          throw BRIGID_ERROR("cannot fstat", errno);
+        if (stat(path, &st) == -1) {
+          throw BRIGID_ERROR("cannot stat", errno);
         }
         set_total(st.st_size);
       }
 
       virtual size_t read(char* data, size_t size) {
-        ssize_t result = ::read(fd_.get(), data, size);
+        size_t result = fread(data, 1, size, handle_.get());
         add_now(result);
         return result;
       }
 
     private:
-      file_descriptor fd_;
+      file_t handle_;
     };
   }
 

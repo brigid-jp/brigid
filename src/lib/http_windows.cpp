@@ -95,7 +95,7 @@ namespace brigid {
           std::function<bool (size_t, size_t)> progress_cb,
           std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
           std::function<bool (const char*, size_t)> write_cb,
-          bool credential,
+          http_authentication_scheme auth_scheme,
           const std::string& username,
           const std::string& password)
         : session_(make_internet_handle(check(WinHttpOpen(
@@ -107,7 +107,7 @@ namespace brigid {
           progress_cb_(progress_cb),
           header_cb_(header_cb),
           write_cb_(write_cb),
-          credential_(credential),
+          auth_scheme_(auth_scheme),
           username_(username),
           password_(password) {}
 
@@ -161,7 +161,7 @@ namespace brigid {
         DWORD auth_scheme = 0;
 
         for (int i = 0; i < 2; ++i) {
-          if (credential_ && auth_scheme != 0) {
+          if (auth_scheme_ != http_authentication_scheme::none && auth_scheme != 0) {
             check(WinHttpSetCredentials(
                 request.get(),
                 WINHTTP_AUTH_TARGET_SERVER,
@@ -225,7 +225,7 @@ namespace brigid {
             break;
           }
 
-          if (!credential_) {
+          if (auth_scheme_ == http_authentication_scheme::none) {
             break;
           }
 
@@ -239,8 +239,34 @@ namespace brigid {
               &scheme,
               &target));
 
-          auth_scheme = scheme;
-          if (scheme == 0) {
+          auth_scheme = 0;
+          switch (auth_scheme_) {
+            case http_authentication_scheme::none:
+              break;
+            case http_authentication_scheme::basic:
+              if (schemes & WINHTTP_AUTH_SCHEME_BASIC) {
+                auth_scheme = WINHTTP_AUTH_SCHEME_BASIC;
+              }
+              break;
+            case http_authentication_scheme::digest:
+              if (schemes & WINHTTP_AUTH_SCHEME_DIGEST) {
+                auth_scheme = WINHTTP_AUTH_SCHEME_DIGEST;
+              }
+              break;
+            case http_authentication_scheme::any:
+              if (scheme == WINHTTP_AUTH_SCHEME_BASIC || scheme == WINHTTP_AUTH_SCHEME_DIGEST) {
+                auth_scheme = scheme;
+              }
+              if (schemes & WINHTTP_AUTH_SCHEME_BASIC) {
+                auth_scheme = WINHTTP_AUTH_SCHEME_BASIC;
+              }
+              if (schemes & WINHTTP_AUTH_SCHEME_DIGEST) {
+                auth_scheme = WINHTTP_AUTH_SCHEME_DIGEST;
+              }
+              break;
+          }
+
+          if (auth_scheme == 0) {
             break;
           }
         }
@@ -303,7 +329,7 @@ namespace brigid {
       std::function<bool (size_t, size_t)> progress_cb_;
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb_;
       std::function<bool (const char*, size_t)> write_cb_;
-      bool credential_;
+      http_authentication_scheme auth_scheme_;
       std::string username_;
       std::string password_;
     };
@@ -313,9 +339,9 @@ namespace brigid {
       std::function<bool (size_t, size_t)> progress_cb,
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
       std::function<bool (const char*, size_t)> write_cb,
-      bool credential,
+      http_authentication_scheme auth_scheme,
       const std::string& username,
       const std::string& password) {
-    return std::unique_ptr<http_session>(new http_session_impl(progress_cb, header_cb, write_cb, credential, username, password));
+    return std::unique_ptr<http_session>(new http_session_impl(progress_cb, header_cb, write_cb, auth_scheme, username, password));
   }
 }
