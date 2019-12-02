@@ -73,6 +73,9 @@ namespace brigid {
     };
   }
 
+  crypto_initializer::crypto_initializer() {}
+  crypto_initializer::~crypto_initializer() {}
+
   std::unique_ptr<cryptor> make_encryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
     check_cipher(cipher, key_size, iv_size);
     switch (cipher) {
@@ -86,7 +89,7 @@ namespace brigid {
   }
 
   std::unique_ptr<cryptor> make_decryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-    check_cipher(cipher, key_size, iv_size);
+    check_cipher(cipher, iv_size);
     switch (cipher) {
       case crypto_cipher::aes_128_cbc:
       case crypto_cipher::aes_192_cbc:
