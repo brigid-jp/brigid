@@ -5,6 +5,7 @@
 #ifndef BRIGID_TEST_HPP
 #define BRIGID_TEST_HPP
 
+#include <exception>
 #include <functional>
 #include <iostream>
 #include <sstream>
@@ -27,7 +28,7 @@ namespace brigid {
     try {
       fn();
     } catch (const std::exception& e) {
-      std::cout << "caught exception " << e.what() << "\n";
+      std::cout << "caught exception: " << e.what() << "\n";
       return;
     } catch (...) {
       std::cout << "caught unknown exception\n";
@@ -43,7 +44,7 @@ namespace brigid {
     make_test_case(const std::string&, const std::string&, std::function<void ()>);
   };
 
-  int run_test_cases();
+  int run_test_cases(int, char*[]);
 }
 
 #define BRIGID_CHECK(expression) brigid::check_impl((expression), #expression, __FILE__, __LINE__)

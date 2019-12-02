@@ -5,7 +5,11 @@
 #include "test.hpp"
 
 #include <stddef.h>
+#include <exception>
+#include <functional>
 #include <iostream>
+#include <ostream>
+#include <string>
 #include <vector>
 
 namespace brigid {
@@ -20,14 +24,18 @@ namespace brigid {
       bool operator()() const {
         try {
           function_();
-          std::cout << "PASS " << file_ << ":" << name_ << "\n";
+          std::cout << "PASS " << *this << "\n";
           return true;
         } catch (const std::exception& e) {
-          std::cout << "FAIL " << file_ << ":" << name_ << " " << e.what() << "\n";
+          std::cout << "FAIL " << *this << " " << e.what() << "\n";
         } catch (...) {
-          std::cout << "FAIL " << file_ << ":" << name_ << "\n";
+          std::cout << "FAIL " << *this << "\n";
         }
         return false;
+      }
+
+      friend std::ostream& operator<<(std::ostream& out, const test_case_impl& self) {
+        return out << self.file_ << ":" << self.name_;
       }
 
     private:
@@ -43,28 +51,58 @@ namespace brigid {
     test_cases.emplace_back(file, name, function);
   }
 
-  int run_test_cases() {
-    size_t pass = 0;
-    size_t fail = 0;
+  int run_test_cases(int ac, char* av[]) {
+    try {
+      std::string command = "run";
+      bool run_all = true;
+      size_t run_each = 0;
 
-    for (const auto& test_case : test_cases) {
-      if (test_case()) {
-        ++pass;
-      } else {
-        ++fail;
+      if (av) {
+        if (ac > 1) {
+          command = av[1];
+        }
+        if (command == "run" && ac > 2) {
+          run_all = false;
+          run_each = std::stoull(av[2]);
+        }
       }
-    }
-    std::cout
-        << "============================================================\n"
-        << "TOTAL: " << test_cases.size() << "\n"
-        << "PASS:  " << pass << "\n"
-        << "FAIL:  " << fail << "\n"
-        << "============================================================\n";
 
-    if (fail == 0) {
-      return 0;
-    } else {
-      return 1;
+      if (command == "run") {
+        size_t total = 0;
+        size_t pass = 0;
+        size_t fail = 0;
+
+        for (size_t i = 0; i < test_cases.size(); ++i) {
+          if (run_all || run_each == i) {
+            ++total;
+            if (test_cases[i]()) {
+              ++pass;
+            } else {
+              ++fail;
+            }
+          }
+        }
+        std::cout
+            << "============================================================\n"
+            << "TOTAL: " << total << "\n"
+            << "PASS:  " << pass << "\n"
+            << "FAIL:  " << fail << "\n"
+            << "============================================================\n";
+
+        if (fail == 0) {
+          return 0;
+        } else {
+          return 1;
+        }
+      } else if (command == "list") {
+        for (size_t i = 0; i < test_cases.size(); ++i) {
+          std::cout << "[" << i << "] " << test_cases[i] << "\n";
+        }
+        return 0;
+      }
+    } catch (const std::exception& e) {
+      std::cerr << e.what() << "\n";
     }
+    return 1;
   }
 }
