@@ -3,6 +3,7 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/crypto.hpp>
+#include <brigid/noncopyable.hpp>
 #include "crypto_impl.hpp"
 #include "error.hpp"
 #include "type_traits.hpp"
@@ -17,7 +18,7 @@ namespace brigid {
   namespace {
     void check(NTSTATUS status) {
       if (!BCRYPT_SUCCESS(status)) {
-        throw BRIGID_ERROR(status);
+        throw BRIGID_ERROR(make_error_code("NTSTATUS", status));
       }
     }
 
@@ -37,7 +38,7 @@ namespace brigid {
       return key_handle_t(handle, &BCryptDestroyKey);
     }
 
-    class aes_cryptor_impl : public cryptor {
+    class aes_cryptor_impl : public cryptor, private noncopyable {
     public:
       aes_cryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
         : alg_(make_alg_handle()),

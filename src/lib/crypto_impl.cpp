@@ -5,6 +5,8 @@
 #include "crypto_impl.hpp"
 #include "error.hpp"
 
+#include <stddef.h>
+
 namespace brigid {
   void check_cipher(crypto_cipher cipher, size_t key_size, size_t iv_size) {
     size_t aes_key_size = 0;

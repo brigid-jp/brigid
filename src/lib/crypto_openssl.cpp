@@ -10,6 +10,8 @@
 #include <openssl/err.h>
 #include <openssl/evp.h>
 
+#include <stddef.h>
+#include <memory>
 #include <vector>
 
 namespace brigid {
@@ -20,7 +22,7 @@ namespace brigid {
         unsigned long code = ERR_get_error();
         std::vector<char> buffer(256);
         ERR_error_string_n(code, buffer.data(), buffer.size());
-        throw BRIGID_ERROR(buffer.data(), make_error_code("OpenSSL error code", code));
+        throw BRIGID_ERROR(buffer.data());
       }
       return result;
     }

@@ -5,10 +5,12 @@
 #include <brigid/crypto.hpp>
 #include <brigid/noncopyable.hpp>
 #include "crypto_impl.hpp"
+#include "error.hpp"
 #include "java.hpp"
 
 #include <jni.h>
 
+#include <stddef.h>
 #include <memory>
 #include <string>
 
