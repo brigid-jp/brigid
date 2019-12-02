@@ -126,8 +126,14 @@ namespace {
     remove("test.dat");
   }
 
+  void test5() {
+    std::string filename = "no-such-file.dat";
+    BRIGID_CHECK_THROW([&](){ brigid::make_http_reader(brigid::http_request_body::file, filename.data(), filename.size()); });
+  }
+
   BRIGID_MAKE_TEST_CASE(test1);
   BRIGID_MAKE_TEST_CASE(test2);
   BRIGID_MAKE_TEST_CASE(test3);
   BRIGID_MAKE_TEST_CASE(test4);
+  BRIGID_MAKE_TEST_CASE(test5);
 }
