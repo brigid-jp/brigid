@@ -48,7 +48,6 @@ namespace brigid {
       return is_digit(c) || (0x41 <= c && c <= 0x5A) || (0x61 <= c && c <= 0x7A);
     }
 
-    // VCHAR or obs-text
     inline bool is_vchar(uint8_t c) {
       return (0x21 <= c && c <= 0x7E) || 0x80 <= c;
     }
@@ -299,11 +298,11 @@ namespace brigid {
         : handle_(make_file()) {
         std::string path(data, size);
 
-        struct stat st = {};
-        if (stat(path.c_str(), &st) == -1) {
+        struct stat status = {};
+        if (stat(path.c_str(), &status) == -1) {
           throw std::system_error(errno, std::generic_category());
         }
-        set_total(st.st_size);
+        set_total(status.st_size);
 
         handle_ = make_file(fopen(path.c_str(), "rb"));
         if (!handle_) {
