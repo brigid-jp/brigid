@@ -20,7 +20,7 @@ namespace brigid {
         unsigned long code = ERR_get_error();
         std::vector<char> buffer(256);
         ERR_error_string_n(code, buffer.data(), buffer.size());
-        throw BRIGID_ERROR(buffer.data(), code);
+        throw BRIGID_ERROR(buffer.data(), make_error_code("OpenSSL error code", code));
       }
       return result;
     }
@@ -76,29 +76,31 @@ namespace brigid {
     };
   }
 
-  std::unique_ptr<cryptor> make_encryptor(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+  std::unique_ptr<cryptor> make_encryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
     check_cipher(cipher, key_size, iv_size);
-    if (cipher == "aes-128-cbc") {
-      return std::unique_ptr<cryptor>(new aes_encryptor_impl(EVP_aes_128_cbc(), key_data, iv_data));
-    } else if (cipher == "aes-192-cbc") {
-      return std::unique_ptr<cryptor>(new aes_encryptor_impl(EVP_aes_192_cbc(), key_data, iv_data));
-    } else if (cipher == "aes-256-cbc") {
-      return std::unique_ptr<cryptor>(new aes_encryptor_impl(EVP_aes_256_cbc(), key_data, iv_data));
-    } else {
-      throw BRIGID_ERROR("unsupported cipher");
+    switch (cipher) {
+      case crypto_cipher::aes_128_cbc:
+        return std::unique_ptr<cryptor>(new aes_encryptor_impl(EVP_aes_128_cbc(), key_data, iv_data));
+      case crypto_cipher::aes_192_cbc:
+        return std::unique_ptr<cryptor>(new aes_encryptor_impl(EVP_aes_192_cbc(), key_data, iv_data));
+      case crypto_cipher::aes_256_cbc:
+        return std::unique_ptr<cryptor>(new aes_encryptor_impl(EVP_aes_256_cbc(), key_data, iv_data));
+      default:
+        throw BRIGID_ERROR("unsupported cipher");
     }
   }
 
-  std::unique_ptr<cryptor> make_decryptor(const std::string& cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+  std::unique_ptr<cryptor> make_decryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
     check_cipher(cipher, key_size, iv_size);
-    if (cipher == "aes-128-cbc") {
-      return std::unique_ptr<cryptor>(new aes_decryptor_impl(EVP_aes_128_cbc(), key_data, iv_data));
-    } else if (cipher == "aes-192-cbc") {
-      return std::unique_ptr<cryptor>(new aes_decryptor_impl(EVP_aes_192_cbc(), key_data, iv_data));
-    } else if (cipher == "aes-256-cbc") {
-      return std::unique_ptr<cryptor>(new aes_decryptor_impl(EVP_aes_256_cbc(), key_data, iv_data));
-    } else {
-      throw BRIGID_ERROR("unsupported cipher");
+    switch (cipher) {
+      case crypto_cipher::aes_128_cbc:
+        return std::unique_ptr<cryptor>(new aes_decryptor_impl(EVP_aes_128_cbc(), key_data, iv_data));
+      case crypto_cipher::aes_192_cbc:
+        return std::unique_ptr<cryptor>(new aes_decryptor_impl(EVP_aes_192_cbc(), key_data, iv_data));
+      case crypto_cipher::aes_256_cbc:
+        return std::unique_ptr<cryptor>(new aes_decryptor_impl(EVP_aes_256_cbc(), key_data, iv_data));
+      default:
+        throw BRIGID_ERROR("unsupported cipher");
     }
   }
 }
