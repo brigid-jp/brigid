@@ -14,18 +14,8 @@
 #include <string>
 
 namespace brigid {
-  enum class http_authentication_scheme {
-    none,
-    basic,
-    digest,
-    any,
-  };
-
-  enum class http_request_body {
-    none,
-    data,
-    file,
-  };
+  enum class http_authentication_scheme { none, basic, digest, any };
+  enum class http_request_body { none, data, file };
 
   class http_initializer : private noncopyable {
   public:

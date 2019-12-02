@@ -9,11 +9,7 @@
 #include <memory>
 
 namespace brigid {
-  enum class crypto_cipher {
-    aes_128_cbc,
-    aes_192_cbc,
-    aes_256_cbc,
-  };
+  enum class crypto_cipher { aes_128_cbc, aes_192_cbc, aes_256_cbc };
 
   class cryptor {
   public:

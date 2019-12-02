@@ -3,17 +3,42 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/crypto.hpp>
+#include <brigid/noncopyable.hpp>
 #include "crypto_impl.hpp"
 #include "error.hpp"
 #include "type_traits.hpp"
 
 #include <CommonCrypto/CommonCrypto.h>
 
+#include <memory>
+
 namespace brigid {
   namespace {
+    inline const char* make_error_message(CCCryptorStatus status) {
+      switch (status) {
+        case -4300: return "kCCParamError";
+        case -4301: return "kCCBufferTooSmall";
+        case -4302: return "kCCMemoryFailure";
+        case -4303: return "kCCAlignmentError";
+        case -4304: return "kCCDecodeError";
+        case -4305: return "kCCUnimplemented";
+        case -4306: return "kCCOverflow";
+        case -4307: return "kCCRNGFailure";
+        case -4308: return "kCCUnspecifiedError";
+        case -4309: return "kCCCallSequenceError";
+        case -4310: return "kCCKeySizeError";
+        case -4311: return "kCCInvalidKey";
+      }
+      return nullptr;
+    }
+
     inline void check(CCCryptorStatus status) {
       if (status != kCCSuccess) {
-        throw BRIGID_ERROR(status);
+        if (const char* message = make_error_message(status)) {
+          throw BRIGID_ERROR(message, make_error_code("CCCryptorStatus", status));
+        } else {
+          throw BRIGID_ERROR(make_error_code("CCCryptorStatus", status));
+        }
       }
     }
 
@@ -23,7 +48,7 @@ namespace brigid {
       return cryptor_ref_t(cryptor, &CCCryptorRelease);
     }
 
-    class aes_cryptor_impl : public cryptor {
+    class aes_cryptor_impl : public cryptor, private noncopyable {
     public:
       aes_cryptor_impl(CCOperation operation, const char* key_data, size_t key_size, const char* iv_data)
         : cryptor_(make_cryptor_ref()) {
