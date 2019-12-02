@@ -2,21 +2,23 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include <brigid/http.hpp>
 #include <brigid/noncopyable.hpp>
 #include "error.hpp"
 #include "http_impl.hpp"
 
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <algorithm>
+#include <map>
 #include <memory>
 #include <string>
-#include <map>
+#include <system_error>
 
 namespace brigid {
   namespace {
@@ -46,7 +48,6 @@ namespace brigid {
       return is_digit(c) || (0x41 <= c && c <= 0x5A) || (0x61 <= c && c <= 0x7A);
     }
 
-    // VCHAR or obs-text
     inline bool is_vchar(uint8_t c) {
       return (0x21 <= c && c <= 0x7E) || 0x80 <= c;
     }
@@ -235,16 +236,9 @@ namespace brigid {
   http_reader::~http_reader() {}
 
   namespace {
-    inline FILE* check(FILE* handle) {
-      if (!handle) {
-        throw BRIGID_ERROR(errno);
-      }
-      return handle;
-    }
-
     using file_t = std::unique_ptr<FILE, decltype(&fclose)>;
 
-    inline file_t make_file(FILE* handle) {
+    inline file_t make_file(FILE* handle = nullptr) {
       return file_t(handle, &fclose);
     }
 
@@ -300,13 +294,20 @@ namespace brigid {
 
     class http_file_reader : public http_reader_impl, private noncopyable {
     public:
-      http_file_reader(const char* path, size_t size)
-        : handle_(make_file(check(fopen(path, "rb")))) {
-        struct stat st = {};
-        if (stat(path, &st) == -1) {
-          throw BRIGID_ERROR("cannot stat", errno);
+      http_file_reader(const char* data, size_t size)
+        : handle_(make_file()) {
+        std::string path(data, size);
+
+        struct stat status = {};
+        if (stat(path.c_str(), &status) == -1) {
+          throw std::system_error(errno, std::generic_category());
         }
-        set_total(st.st_size);
+        set_total(status.st_size);
+
+        handle_ = make_file(fopen(path.c_str(), "rb"));
+        if (!handle_) {
+          throw std::system_error(errno, std::generic_category());
+        }
       }
 
       virtual size_t read(char* data, size_t size) {

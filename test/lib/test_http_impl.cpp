@@ -3,7 +3,7 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/http.hpp>
-#include <http_impl.hpp>
+#include "http_impl.hpp"
 #include "test.hpp"
 
 #include <fstream>
@@ -11,8 +11,8 @@
 #include <vector>
 
 namespace {
-  bool parse(brigid::http_header_parser& parser, const std::string& line) {
-    return parser.parse(line.data(), line.size());
+  bool parse(brigid::http_header_parser& parser, const std::string& source) {
+    return parser.parse(source.data(), source.size());
   }
 
   std::string get(const brigid::http_header_parser& parser, const std::string& key) {
@@ -91,7 +91,7 @@ namespace {
 
   void test3() {
     brigid::http_header_parser parser;
-    parse(parser,
+    BRIGID_CHECK(parse(parser,
         "HTTP/1.1 200 OK\r\n"
         "X-Test1:foo bar\r\n"
         "X-Test2: foo bar \r\n"
@@ -102,7 +102,7 @@ namespace {
         " \r\n"
         "  bar\r\n"
         "X-Test6:\t \t foo bar \t \t\r\n"
-        "\r\n");
+        "\r\n"));
 
     BRIGID_CHECK(parser.get().size() == 6);
     BRIGID_CHECK(get(parser, "X-Test1") == "foo bar");
@@ -126,8 +126,14 @@ namespace {
     remove("test.dat");
   }
 
+  void test5() {
+    std::string filename = "no-such-file.dat";
+    BRIGID_CHECK_THROW([&](){ brigid::make_http_reader(brigid::http_request_body::file, filename.data(), filename.size()); });
+  }
+
   BRIGID_MAKE_TEST_CASE(test1);
   BRIGID_MAKE_TEST_CASE(test2);
   BRIGID_MAKE_TEST_CASE(test3);
   BRIGID_MAKE_TEST_CASE(test4);
+  BRIGID_MAKE_TEST_CASE(test5);
 }
