@@ -95,8 +95,12 @@ namespace {
     BRIGID_CHECK(std::equal(buffer.begin(), buffer.end(), plaintext.begin()));
   }
 
-  void test_error() {
-    BRIGID_CHECK_THROW([&](){ brigid::make_encryptor(brigid::crypto_cipher::aes_256_cbc, key256.data(), key256.size() - 1, nullptr, iv.size()); });
+  void test_error1() {
+    BRIGID_CHECK_THROW([&](){ brigid::make_encryptor(brigid::crypto_cipher::aes_256_cbc, key256.data(), key256.size() - 1, iv.data(), iv.size()); });
+  }
+
+  void test_error2() {
+    BRIGID_CHECK_THROW([&](){ brigid::make_encryptor(brigid::crypto_cipher::aes_256_cbc, key256.data(), key256.size(), iv.data(), iv.size() - 1); });
   }
 
   BRIGID_MAKE_TEST_CASE([](){ test_encryptor1(brigid::crypto_cipher::aes_128_cbc, key128, ciphertext128); });
@@ -111,5 +115,6 @@ namespace {
   BRIGID_MAKE_TEST_CASE([](){ test_decryptor2(brigid::crypto_cipher::aes_192_cbc, key192, ciphertext192); });
   BRIGID_MAKE_TEST_CASE([](){ test_decryptor1(brigid::crypto_cipher::aes_256_cbc, key256, ciphertext256); });
   BRIGID_MAKE_TEST_CASE([](){ test_decryptor2(brigid::crypto_cipher::aes_256_cbc, key256, ciphertext256); });
-  BRIGID_MAKE_TEST_CASE(test_error);
+  BRIGID_MAKE_TEST_CASE(test_error1);
+  BRIGID_MAKE_TEST_CASE(test_error2);
 }
