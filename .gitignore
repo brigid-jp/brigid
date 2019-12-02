@@ -37,8 +37,8 @@
 /src/exp/http.exe
 /stamp-h1
 /test-driver
-/test/lib/JNITest.h
-/test/lib/libjnitest.dylib
+/test/lib/JavaTest.h
+/test/lib/libjavatest.dylib
 Makefile
 test*.exe
 test*.log
