@@ -36,7 +36,7 @@ namespace brigid {
     inline void check(CCCryptorStatus status) {
       if (status != kCCSuccess) {
         if (const char* message = make_error_message(status)) {
-          throw BRIGID_ERROR(message, make_error_code("CCCryptorStatus", status));
+          throw BRIGID_ERROR(message);
         } else {
           throw BRIGID_ERROR(make_error_code("CCCryptorStatus", status));
         }
