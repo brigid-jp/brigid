@@ -13,7 +13,7 @@ namespace brigid {
   namespace {
     void check(CURLcode code) {
       if (code != CURLE_OK) {
-        throw BRIGID_ERROR(curl_easy_strerror(code), code);
+        throw BRIGID_ERROR(curl_easy_strerror(code), make_error_code("CURLcode", code));
       }
     }
 
