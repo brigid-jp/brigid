@@ -6,8 +6,6 @@
 
 #include "JavaTest.h"
 
-#include <iostream>
-
 void* access_jnienv(void* set_env = 0) {
   thread_local void* env = 0;
   if (set_env) {
