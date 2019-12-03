@@ -19,6 +19,8 @@
 
 namespace brigid {
   namespace {
+    using namespace windows;
+
     template <class T>
     T check(T result) {
       if (!result) {

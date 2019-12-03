@@ -16,6 +16,8 @@
 
 namespace brigid {
   namespace {
+    using namespace windows;
+
     void check(NTSTATUS code) {
       if (!BCRYPT_SUCCESS(code)) {
         std::string message;

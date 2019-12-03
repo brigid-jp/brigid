@@ -9,7 +9,9 @@
 #include <string>
 
 namespace brigid {
-  bool make_windows_error_message(const char*, uint32_t, std::string&);
+  namespace windows {
+    bool make_windows_error_message(const char*, uint32_t, std::string&);
+  }
 }
 
 #endif
