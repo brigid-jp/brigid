@@ -2,6 +2,9 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
+CPPFLAGS = /I..\..\include /D_CRT_SECURE_NO_WARNINGS
+CXXFLAGS = /nologo /MD /O2 /W3 /EHsc
+
 OBJS = \
 	crypto.obj \
 	crypto_windows.obj \
@@ -20,4 +23,4 @@ $(TARGET): $(OBJS)
 	lib $** /OUT:$@
 
 .cpp.obj:
-	$(CC) /MD /O2 /W3 /EHsc /I..\..\include /c $< /Fo$@
+	$(CC) $(CPPFLAGS) $(CXXFLAGS) /c $< /Fo$@

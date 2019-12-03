@@ -9,11 +9,14 @@
 #include "type_traits.hpp"
 #include "util_windows.hpp"
 
+#define NOMINMAX
 #include <windows.h>
 #include <winhttp.h>
 
 #include <algorithm>
-#include <iostream>
+#include <functional>
+#include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -215,8 +218,9 @@ namespace brigid {
               static_cast<DWORD>(reader->total()),
               0));
 
-          if (buffer_.size() < http_buffer_size) {
-            buffer_.resize(http_buffer_size);
+          size_t buffer_size = std::min(http_buffer_size, reader->total());
+          if (buffer_.size() < buffer_size) {
+            buffer_.resize(buffer_size);
           }
 
           while (true) {
