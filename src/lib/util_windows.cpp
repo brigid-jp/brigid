@@ -2,6 +2,7 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include "error.hpp"
 #include "util_windows.hpp"
 
 #include <windows.h>
@@ -12,11 +13,10 @@
 #include <vector>
 
 namespace brigid {
-  namespace {
-    inline bool make_utf8_string(const WCHAR* data, size_t size, std::string& output) {
+  namespace windows {
+    std::string encode_utf8(const wchar_t* data, size_t size) {
       if (size == 0) {
-        output.clear();
-        return true;
+        return std::string();
       }
 
       int result = WideCharToMultiByte(
@@ -29,7 +29,7 @@ namespace brigid {
           nullptr,
           nullptr);
       if (result == 0) {
-        return false;
+        throw BRIGID_ERROR("cannot WideCharToMultiByte");
       }
 
       std::vector<char> buffer(result);
@@ -44,34 +44,75 @@ namespace brigid {
           nullptr,
           nullptr);
       if (result == 0) {
-        return false;
+        throw BRIGID_ERROR("cannot WideCharToMultiByte");
       }
 
-      output.assign(buffer.data(), buffer.size());
-      return true;
+      return std::string(buffer.data(), buffer.size());
     }
-  }
 
-  bool make_windows_error_message(const char* name, uint32_t code, std::string& output) {
-    HMODULE module = GetModuleHandle(name);
-    if (!module) {
+    std::wstring decode_utf8(const char* data, size_t size) {
+      if (size == 0) {
+        return std::wstring();
+      }
+
+      int result = MultiByteToWideChar(
+          CP_UTF8,
+          0,
+          data,
+          static_cast<int>(size),
+          nullptr,
+          0);
+      if (result == 0) {
+        throw BRIGID_ERROR("cannot MultiByteToWideChar");
+      }
+
+      std::vector<WCHAR> buffer(result);
+
+      result = MultiByteToWideChar(
+          CP_UTF8,
+          0,
+          data,
+          static_cast<int>(size),
+          buffer.data(),
+          static_cast<int>(buffer.size()));
+      if (result == 0) {
+        throw BRIGID_ERROR("cannot MultiByteToWideChar");
+      }
+
+      return std::wstring(buffer.data(), buffer.size());
+    }
+
+    std::wstring decode_utf8(const std::string& source) {
+      return decode_utf8(source.data(), source.size());
+    }
+
+    bool get_error_message(const char* name, uint32_t code, std::string& output) {
+      try {
+        HMODULE module = GetModuleHandle(name);
+        if (!module) {
+          return false;
+        }
+
+        WCHAR* buffer = nullptr;
+        DWORD result = FormatMessageW(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS,
+            module,
+            code,
+            0,
+            reinterpret_cast<LPWSTR>(&buffer),
+            0,
+            nullptr);
+        std::unique_ptr<WCHAR, decltype(&LocalFree)> data(buffer, &LocalFree);
+
+        if (result < 2) {
+          return false;
+        }
+
+        output = encode_utf8(data.get(), result - 2);
+        return true;
+      } catch (...) {
+      }
       return false;
     }
-
-    WCHAR* buffer = nullptr;
-    DWORD size = FormatMessageW(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS,
-        module,
-        code,
-        0,
-        reinterpret_cast<LPWSTR>(&buffer),
-        0,
-        nullptr);
-    std::unique_ptr<WCHAR, decltype(&LocalFree)> data(buffer, &LocalFree);
-
-    if (size < 2) {
-      return false;
-    }
-    return make_utf8_string(data.get(), size - 2, output);
   }
 }

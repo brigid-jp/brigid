@@ -19,72 +19,20 @@
 
 namespace brigid {
   namespace {
+    using namespace windows;
+
     template <class T>
     T check(T result) {
       if (!result) {
         DWORD code = GetLastError();
         std::string message;
-        if (make_windows_error_message("winhttp.dll", code, message)) {
-          throw BRIGID_ERROR(message, make_error_code("winhttp error code", code));
+        if (get_error_message("winhttp.dll", code, message)) {
+          throw BRIGID_ERROR(message, make_error_code("winhttp error", code));
         } else {
-          throw BRIGID_ERROR(make_error_code("winhttp error code", code));
+          throw BRIGID_ERROR(make_error_code("winhttp error", code));
         }
       }
       return result;
-    }
-
-    using native_string_t = std::basic_string<WCHAR>;
-
-    native_string_t to_native_string(const std::string& source) {
-      if (source.empty()) {
-        return native_string_t();
-      }
-      int result = check(MultiByteToWideChar(
-          CP_UTF8,
-          0,
-          source.data(),
-          static_cast<int>(source.size()),
-          nullptr,
-          0));
-      std::vector<WCHAR> buffer(result);
-      check(MultiByteToWideChar(
-          CP_UTF8,
-          0,
-          source.data(),
-          static_cast<int>(source.size()),
-          buffer.data(),
-          static_cast<int>(buffer.size())));
-      return native_string_t(buffer.begin(), buffer.end());
-    }
-
-    native_string_t to_native_string(const WCHAR* data, size_t size) {
-      return native_string_t(data, size);
-    }
-
-    std::string to_string(const WCHAR* data, size_t size) {
-      if (size == 0) {
-        return std::string();
-      }
-      int result = check(WideCharToMultiByte(
-          CP_UTF8,
-          0,
-          data,
-          static_cast<int>(size),
-          nullptr,
-          0,
-          nullptr,
-          nullptr));
-      std::vector<char> buffer(result);
-      check(WideCharToMultiByte(
-          CP_UTF8,
-          0,
-          data,
-          static_cast<int>(size),
-          buffer.data(),
-          static_cast<int>(buffer.size()),
-          nullptr,
-          nullptr));
-      return std::string(buffer.data(), buffer.size());
     }
 
     using internet_handle_t = std::unique_ptr<remove_pointer_t<HINTERNET>, decltype(&WinHttpCloseHandle)>;
@@ -112,8 +60,8 @@ namespace brigid {
           header_cb_(header_cb),
           write_cb_(write_cb),
           auth_scheme_(auth_scheme),
-          username_(username),
-          password_(password) {}
+          native_username_(decode_utf8(username)),
+          native_password_(decode_utf8(password)) {}
 
       virtual void http_session_impl::request(
           const std::string& method,
@@ -122,8 +70,8 @@ namespace brigid {
           http_request_body body,
           const char* data,
           size_t size) {
-        native_string_t native_method = to_native_string(method);
-        native_string_t native_url = to_native_string(url);
+        std::wstring native_method(decode_utf8(method));
+        std::wstring native_url(decode_utf8(url));
 
         URL_COMPONENTS url_components = {};
         url_components.dwStructSize = sizeof(url_components);
@@ -133,8 +81,8 @@ namespace brigid {
         url_components.dwExtraInfoLength = -1;
         check(WinHttpCrackUrl(native_url.data(), static_cast<DWORD>(native_url.size()), 0, &url_components));
 
-        native_string_t native_host_name = to_native_string(url_components.lpszHostName, url_components.dwHostNameLength);
-        native_string_t native_url_path = to_native_string(url_components.lpszUrlPath, url_components.dwUrlPathLength);
+        std::wstring native_host_name(url_components.lpszHostName, url_components.dwHostNameLength);
+        std::wstring native_url_path(url_components.lpszUrlPath, url_components.dwUrlPathLength);
 
         internet_handle_t connection = make_internet_handle(check(WinHttpConnect(
             session_.get(),
@@ -152,7 +100,7 @@ namespace brigid {
             url_components.nScheme == INTERNET_SCHEME_HTTPS ? WINHTTP_FLAG_SECURE : 0)));
 
         for (const auto& field : header) {
-          native_string_t native_field = to_native_string(field.first + ": " + field.second);
+          std::wstring native_field = decode_utf8(field.first + ": " + field.second);
           check(WinHttpAddRequestHeaders(
               request.get(),
               native_field.c_str(),
@@ -170,8 +118,8 @@ namespace brigid {
                 request.get(),
                 WINHTTP_AUTH_TARGET_SERVER,
                 auth_scheme,
-                to_native_string(username_).c_str(),
-                to_native_string(password_).c_str(),
+                native_username_.c_str(),
+                native_password_.c_str(),
                 nullptr));
           }
 
@@ -298,7 +246,7 @@ namespace brigid {
 
           buffer.resize(size);
 
-          std::string header = to_string(buffer.data(), buffer.size());
+          std::string header = encode_utf8(buffer.data(), buffer.size());
           http_header_parser parser;
           parser.parse(header.data(), header.size());
           if (!header_cb_(code, parser.get())) {
@@ -334,8 +282,8 @@ namespace brigid {
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb_;
       std::function<bool (const char*, size_t)> write_cb_;
       http_authentication_scheme auth_scheme_;
-      std::string username_;
-      std::string password_;
+      std::wstring native_username_;
+      std::wstring native_password_;
     };
   }
 
