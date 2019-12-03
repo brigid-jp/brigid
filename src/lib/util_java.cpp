@@ -3,7 +3,7 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include "error.hpp"
-#include "java.hpp"
+#include "util_java.hpp"
 
 #include <jni.h>
 
