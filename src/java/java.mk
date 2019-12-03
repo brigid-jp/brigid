@@ -7,7 +7,7 @@
 CLASSES = \
 	jp/brigid/AESDecryptor.class \
 	jp/brigid/AESEncryptor.class \
-	jp/brigid/HTTPSession.class
+	jp/brigid/HttpSession.class
 
 all: $(CLASSES)
 

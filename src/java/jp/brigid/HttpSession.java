@@ -4,4 +4,4 @@
 
 package jp.brigid;
 
-public class HTTPSession {}
+public class HttpSession {}
