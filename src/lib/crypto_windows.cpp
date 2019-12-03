@@ -8,6 +8,7 @@
 #include "type_traits.hpp"
 #include "util_windows.hpp"
 
+#define NOMINMAX
 #include <windows.h>
 #include <bcrypt.h>
 

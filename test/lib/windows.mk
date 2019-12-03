@@ -2,6 +2,9 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
+CPPFLAGS = /I..\..\include /I..\..\src\lib /D_CRT_SECURE_NO_WARNINGS
+CXXFLAGS = /nologo /MD /O2 /W3 /EHsc
+
 OBJS = \
 	test.obj \
 	test_crypto.obj \
@@ -24,7 +27,7 @@ check:
 	$(TARGET)
 
 $(TARGET): $(OBJS) ..\..\src\lib\brigid.lib
-	$(CC) /MD /O2 /W3 /EHsc /I..\..\include /I..\..\src\lib $** bcrypt.lib winhttp.lib /Fe$@
+	$(CC) $(CPPFLAGS) $(CXXFLAGS) $** bcrypt.lib winhttp.lib /Fe$@
 
 .cpp.obj:
-	$(CC) /MD /O2 /W3 /EHsc /I..\..\include /I..\..\src\lib /c $< /Fo$@
+	$(CC) $(CPPFLAGS) $(CXXFLAGS) /c $< /Fo$@
