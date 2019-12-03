@@ -22,7 +22,7 @@ namespace brigid {
     using namespace windows;
 
     template <class T>
-    T check(T result) {
+    inline T check_impl(T result) {
       if (!result) {
         DWORD code = GetLastError();
         std::string message;
@@ -33,6 +33,14 @@ namespace brigid {
         }
       }
       return result;
+    }
+
+    HINTERNET check(HINTERNET handle) {
+      return check_impl(handle);
+    }
+
+    void check(BOOL result) {
+      check_impl(result);
     }
 
     using internet_handle_t = std::unique_ptr<remove_pointer_t<HINTERNET>, decltype(&WinHttpCloseHandle)>;
@@ -61,7 +69,8 @@ namespace brigid {
           write_cb_(write_cb),
           auth_scheme_(auth_scheme),
           username_(decode_utf8(username)),
-          password_(decode_utf8(password)) {}
+          password_(decode_utf8(password)),
+          buffer_() {}
 
       virtual void http_session_impl::request(
           const std::string& method,
@@ -70,14 +79,14 @@ namespace brigid {
           http_request_body body,
           const char* data,
           size_t size) {
-        std::wstring url_(decode_utf8(url));
+        std::wstring url_storage(decode_utf8(url));
         URL_COMPONENTS url_components = {};
         url_components.dwStructSize = sizeof(url_components);
         url_components.dwSchemeLength = -1;
         url_components.dwHostNameLength = -1;
         url_components.dwUrlPathLength = -1;
         url_components.dwExtraInfoLength = 0;
-        check(WinHttpCrackUrl(url_.data(), static_cast<DWORD>(url_.size()), 0, &url_components));
+        check(WinHttpCrackUrl(url_storage.data(), static_cast<DWORD>(url_storage.size()), 0, &url_components));
 
         internet_handle_t connection = make_internet_handle(check(WinHttpConnect(
             session_.get(),
@@ -130,6 +139,7 @@ namespace brigid {
           std::string header = encode_utf8(buffer.data(), buffer.size());
           http_header_parser parser;
           parser.parse(header.data(), header.size());
+
           if (!header_cb_(code, parser.get())) {
             throw BRIGID_ERROR("canceled");
           }
@@ -141,16 +151,18 @@ namespace brigid {
           if (!available) {
             break;
           }
-          std::vector<char> buffer(available);
+          if (buffer_.size() < available) {
+            buffer_.resize(available);
+          }
           DWORD size = 0;
           check(WinHttpReadData(
               request.get(),
-              buffer.data(),
-              static_cast<DWORD>(buffer.size()),
+              buffer_.data(),
+              static_cast<DWORD>(buffer_.size()),
               &size));
 
           if (write_cb_) {
-            if (!write_cb_(buffer.data(), buffer.size())) {
+            if (!write_cb_(buffer_.data(), size)) {
               throw BRIGID_ERROR("canceled");
             }
           }
@@ -165,14 +177,10 @@ namespace brigid {
       http_authentication_scheme auth_scheme_;
       std::wstring username_;
       std::wstring password_;
+      std::vector<char> buffer_;
 
-      DWORD send(
-          HINTERNET request,
-          DWORD auth_scheme,
-          http_request_body body,
-          const char* data,
-          size_t size) {
-        if (auth_scheme == 0) {
+      DWORD send(HINTERNET request, DWORD auth_scheme, http_request_body body, const char* data, size_t size) {
+        if (!auth_scheme) {
           switch (auth_scheme_) {
             case http_authentication_scheme::none:
               break;
@@ -187,7 +195,7 @@ namespace brigid {
           }
         }
 
-        if (auth_scheme != 0) {
+        if (auth_scheme) {
           check(WinHttpSetCredentials(
               request,
               WINHTTP_AUTH_TARGET_SERVER,
@@ -197,31 +205,28 @@ namespace brigid {
               nullptr));
         }
 
-        DWORD total = WINHTTP_IGNORE_REQUEST_TOTAL_LENGTH;
-        std::unique_ptr<http_reader> reader(make_http_reader(body, data, size));
-        if (reader) {
-          total = static_cast<DWORD>(reader->total());
-        }
+        if (std::unique_ptr<http_reader> reader = make_http_reader(body, data, size)) {
+          check(WinHttpSendRequest(
+              request,
+              WINHTTP_NO_ADDITIONAL_HEADERS,
+              0,
+              WINHTTP_NO_REQUEST_DATA,
+              0,
+              static_cast<DWORD>(reader->total()),
+              0));
 
-        check(WinHttpSendRequest(
-            request,
-            WINHTTP_NO_ADDITIONAL_HEADERS,
-            0,
-            WINHTTP_NO_REQUEST_DATA,
-            0,
-            total,
-            0));
+          if (buffer_.size() < http_buffer_size) {
+            buffer_.resize(http_buffer_size);
+          }
 
-        if (reader) {
-          std::vector<char> buffer(4096);
           while (true) {
-            size_t result = reader->read(buffer.data(), buffer.size());
+            size_t result = reader->read(buffer_.data(), buffer_.size());
             if (result == 0) {
               break;
             }
             check(WinHttpWriteData(
                 request,
-                buffer.data(),
+                buffer_.data(),
                 static_cast<DWORD>(result),
                 nullptr));
             if (progress_cb_) {
@@ -230,6 +235,15 @@ namespace brigid {
               }
             }
           }
+        } else {
+          check(WinHttpSendRequest(
+              request,
+              WINHTTP_NO_ADDITIONAL_HEADERS,
+              0,
+              WINHTTP_NO_REQUEST_DATA,
+              0,
+              WINHTTP_IGNORE_REQUEST_TOTAL_LENGTH,
+              0));
         }
 
         check(WinHttpReceiveResponse(
@@ -237,35 +251,32 @@ namespace brigid {
             nullptr));
 
         DWORD code = 0;
-        DWORD n = sizeof(code);
-        check(WinHttpQueryHeaders(
-            request,
-            WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
-            WINHTTP_HEADER_NAME_BY_INDEX,
-            &code,
-            &n,
-            WINHTTP_NO_HEADER_INDEX));
+        {
+          DWORD size = sizeof(code);
+          check(WinHttpQueryHeaders(
+              request,
+              WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+              WINHTTP_HEADER_NAME_BY_INDEX,
+              &code,
+              &size,
+              WINHTTP_NO_HEADER_INDEX));
+        }
 
-        if (code == 401 && auth_scheme_ == http_authentication_scheme::any && auth_scheme == 0) {
-          DWORD schemes = 0;
-          DWORD scheme = 0;
-          DWORD target = 0;
-
+        if (code == 401 && auth_scheme_ == http_authentication_scheme::any && !auth_scheme) {
+          DWORD supported_schemes = 0;
+          DWORD first_scheme = 0;
+          DWORD auth_target = 0;
           check(WinHttpQueryAuthSchemes(
               request,
-              &schemes,
-              &scheme,
-              &target));
-          if (scheme == WINHTTP_AUTH_SCHEME_BASIC || scheme == WINHTTP_AUTH_SCHEME_DIGEST) {
-            auth_scheme = scheme;
-          } else if (schemes & WINHTTP_AUTH_SCHEME_DIGEST) {
-            auth_scheme = WINHTTP_AUTH_SCHEME_DIGEST;
-          } else if (schemes & WINHTTP_AUTH_SCHEME_BASIC) {
-            auth_scheme = WINHTTP_AUTH_SCHEME_BASIC;
-          }
-
-          if (auth_scheme != 0) {
-            return send(request, auth_scheme, body, data, size);
+              &supported_schemes,
+              &first_scheme,
+              &auth_target));
+          if (first_scheme == WINHTTP_AUTH_SCHEME_BASIC || first_scheme == WINHTTP_AUTH_SCHEME_DIGEST) {
+            return send(request, first_scheme, body, data, size);
+          } else if (supported_schemes & WINHTTP_AUTH_SCHEME_DIGEST) {
+            return send(request, WINHTTP_AUTH_SCHEME_DIGEST, body, data, size);
+          } else if (supported_schemes & WINHTTP_AUTH_SCHEME_BASIC) {
+            return send(request, WINHTTP_AUTH_SCHEME_BASIC, body, data, size);
           }
         }
 

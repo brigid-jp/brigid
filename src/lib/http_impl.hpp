@@ -14,6 +14,8 @@
 #include <string>
 
 namespace brigid {
+  static const size_t http_buffer_size = 16384;
+
   class http_header_parser : private noncopyable {
   public:
     bool parse(const char*, size_t);
