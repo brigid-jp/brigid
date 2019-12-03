@@ -17,14 +17,27 @@
 #include <vector>
 
 namespace brigid {
-  http_initializer::http_initializer() {}
-  http_initializer::~http_initializer() {}
-
   namespace {
+    std::string to_string(const WCHAR*, size_t);
+
     template <class T>
     T check(T result) {
       if (!result) {
-        throw BRIGID_ERROR(GetLastError());
+        DWORD code = GetLastError();
+        std::vector<WCHAR> buffer(256);
+        DWORD result = FormatMessageW(
+            FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS,
+            GetModuleHandleA("winhttp.dll"),
+            code,
+            0,
+            buffer.data(),
+            buffer.size(),
+            nullptr);
+        std::string message = "unknown error";
+        if (result > 2) {
+          message = to_string(buffer.data(), result - 2);
+        }
+        throw BRIGID_ERROR(message);
       }
       return result;
     }
@@ -334,6 +347,9 @@ namespace brigid {
       std::string password_;
     };
   }
+
+  http_initializer::http_initializer() {}
+  http_initializer::~http_initializer() {}
 
   std::unique_ptr<http_session> make_http_session(
       std::function<bool (size_t, size_t)> progress_cb,
