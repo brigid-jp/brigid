@@ -198,7 +198,9 @@ namespace {
     BRIGID_CHECK(client.body() == "ok\n");
     BRIGID_CHECK(client.header("Location") == "");
 
-    client.request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=16");
+    // default redirection
+    // WinHTTP: 10
+    client.request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=10");
     BRIGID_CHECK(client.code() == 200);
     BRIGID_CHECK(client.body() == "ok\n");
     BRIGID_CHECK(client.header("Location") == "");
@@ -319,6 +321,7 @@ namespace {
     client.request("POST", "https://brigid.jp/test/cgi/env.cgi", header, brigid::http_request_body::data, data.data(), data.size());
     BRIGID_CHECK(client.code() == 200);
     std::cout << "[" << client.body() << "]\n";
+    BRIGID_CHECK(client.body().find("CONTENT_TYPE=application/json; charset=UTF-8\n") != std::string::npos);
   }
 
   void test8() {
@@ -365,6 +368,7 @@ namespace {
     client.request("POST", "https://brigid.jp/test/cgi/env.cgi", header, brigid::http_request_body::data, data.data(), data.size());
     BRIGID_CHECK(client.code() == 200);
     std::cout << "[" << client.body() << "]\n";
+    BRIGID_CHECK(client.body().find("CONTENT_TYPE=application/x-www-form-urlencoded\n") != std::string::npos);
 
     client.request("POST", "https://brigid.jp/test/cgi/cat.cgi", header, brigid::http_request_body::data, data.data(), data.size());
     BRIGID_CHECK(client.code() == 200);
@@ -378,7 +382,15 @@ namespace {
 
   void test12() {
     test_client client;
-    BRIGID_CHECK_THROW([&](){ client.request("GET", "https://brigid.jp/invalid\r\n\turl"); });
+    BRIGID_CHECK_THROW([&](){ client.request("GET", "!!! invalid url !!!"); });
+  }
+
+  void test13() {
+    test_client client;
+    client.request("GET", "https://brigid.jp/test/%63%67%69/env.cgi?%20%21");
+    BRIGID_CHECK(client.code() == 200);
+    std::cout << "[" << client.body() << "]\n";
+    BRIGID_CHECK(client.body().find("QUERY_STRING=%20%21\n") != std::string::npos);
   }
 
   BRIGID_MAKE_TEST_CASE(test1);
@@ -393,4 +405,5 @@ namespace {
   BRIGID_MAKE_TEST_CASE(test10);
   BRIGID_MAKE_TEST_CASE(test11);
   BRIGID_MAKE_TEST_CASE(test12);
+  BRIGID_MAKE_TEST_CASE(test13);
 }

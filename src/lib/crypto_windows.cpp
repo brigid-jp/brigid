@@ -11,7 +11,10 @@
 #include <windows.h>
 #include <bcrypt.h>
 
-#include <algorithm>
+#include <stddef.h>
+#include <string.h>
+#include <string>
+#include <memory>
 #include <vector>
 
 namespace brigid {
@@ -45,7 +48,7 @@ namespace brigid {
       return key_handle_t(handle, &BCryptDestroyKey);
     }
 
-    class aes_cryptor_impl : public cryptor, private noncopyable {
+    class aes_cryptor_impl : public cryptor {
     public:
       aes_cryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
         : alg_(make_alg_handle()),
@@ -88,7 +91,7 @@ namespace brigid {
             0));
         key_ = make_key_handle(key);
 
-        std::copy(iv_data, iv_data + iv_size, iv_.begin());
+        memmove(iv_.data(), iv_data, iv_size);
       }
 
       virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
@@ -104,7 +107,7 @@ namespace brigid {
       std::vector<UCHAR> iv_;
     };
 
-    class aes_encryptor_impl : public aes_cryptor_impl {
+    class aes_encryptor_impl : public aes_cryptor_impl, private noncopyable {
     public:
       aes_encryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
         : aes_cryptor_impl(key_data, key_size, iv_data, iv_size) {}
@@ -126,7 +129,7 @@ namespace brigid {
       }
     };
 
-    class aes_decryptor_impl : public aes_cryptor_impl {
+    class aes_decryptor_impl : public aes_cryptor_impl, private noncopyable {
     public:
       aes_decryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
         : aes_cryptor_impl(key_data, key_size, iv_data, iv_size) {}
