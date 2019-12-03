@@ -6,6 +6,7 @@
 #include "http_impl.hpp"
 #include "test.hpp"
 
+#include <stdio.h>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -120,10 +121,12 @@ namespace {
       out << "test\r\n\t" << static_cast<char>(0x00) << "\xFF\n";
     }
 
-    auto reader = brigid::make_http_reader(brigid::http_request_body::file, filename.data(), filename.size());
-    BRIGID_CHECK(reader->total() == 10);
+    {
+      auto reader = brigid::make_http_reader(brigid::http_request_body::file, filename.data(), filename.size());
+      BRIGID_CHECK(reader->total() == 10);
+    }
 
-    remove("test.dat");
+    remove(filename.c_str());
   }
 
   void test5() {

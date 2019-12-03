@@ -5,6 +5,7 @@
 #include "test.hpp"
 #include <brigid/http.hpp>
 
+#include <stdio.h>
 #include <fstream>
 #include <iostream>
 
@@ -187,7 +188,7 @@ namespace {
     BRIGID_CHECK(client.code()== 204);
     BRIGID_CHECK(client.body().empty());
 
-    remove("test.dat");
+    remove(filename.c_str());
   }
 
   void test4() {

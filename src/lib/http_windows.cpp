@@ -7,6 +7,7 @@
 #include "error.hpp"
 #include "http_impl.hpp"
 #include "type_traits.hpp"
+#include "util_windows.hpp"
 
 #include <windows.h>
 #include <winhttp.h>
@@ -17,14 +18,17 @@
 #include <vector>
 
 namespace brigid {
-  http_initializer::http_initializer() {}
-  http_initializer::~http_initializer() {}
-
   namespace {
     template <class T>
     T check(T result) {
       if (!result) {
-        throw BRIGID_ERROR(GetLastError());
+        DWORD code = GetLastError();
+        std::string message;
+        if (make_windows_error_message("winhttp.dll", code, message)) {
+          throw BRIGID_ERROR(message, make_error_code("winhttp error code", code));
+        } else {
+          throw BRIGID_ERROR(make_error_code("winhttp error code", code));
+        }
       }
       return result;
     }
@@ -334,6 +338,9 @@ namespace brigid {
       std::string password_;
     };
   }
+
+  http_initializer::http_initializer() {}
+  http_initializer::~http_initializer() {}
 
   std::unique_ptr<http_session> make_http_session(
       std::function<bool (size_t, size_t)> progress_cb,
