@@ -300,13 +300,15 @@ namespace brigid {
 
         struct stat status = {};
         if (stat(path.c_str(), &status) == -1) {
-          throw std::system_error(errno, std::generic_category());
+          int code = errno;
+          throw BRIGID_ERROR(std::generic_category().message(code), make_error_code("error number", code));
         }
         set_total(status.st_size);
 
         handle_ = make_file(fopen(path.c_str(), "rb"));
         if (!handle_) {
-          throw std::system_error(errno, std::generic_category());
+          int code = errno;
+          throw BRIGID_ERROR(std::generic_category().message(code), make_error_code("error number", code));
         }
       }
 

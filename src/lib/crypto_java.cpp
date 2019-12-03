@@ -75,9 +75,8 @@ namespace brigid {
       case crypto_cipher::aes_192_cbc:
       case crypto_cipher::aes_256_cbc:
         return std::unique_ptr<cryptor>(new aes_cryptor_impl("jp/brigid/AESEncryptor", key_data, key_size, iv_data, iv_size));
-      default:
-        throw BRIGID_ERROR("unsupported cipher");
     }
+    throw BRIGID_ERROR("unsupported cipher");
   }
 
   std::unique_ptr<cryptor> make_decryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
@@ -86,8 +85,7 @@ namespace brigid {
       case crypto_cipher::aes_192_cbc:
       case crypto_cipher::aes_256_cbc:
         return std::unique_ptr<cryptor>(new aes_cryptor_impl("jp/brigid/AESDecryptor", key_data, key_size, iv_data, iv_size));
-      default:
-        throw BRIGID_ERROR("unsupported cipher");
     }
+    throw BRIGID_ERROR("unsupported cipher");
   }
 }
