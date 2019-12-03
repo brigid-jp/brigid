@@ -21,7 +21,7 @@ namespace brigid {
         unsigned long code = ERR_get_error();
         std::vector<char> buffer(256);
         ERR_error_string_n(code, buffer.data(), buffer.size());
-        throw BRIGID_ERROR(buffer.data());
+        throw BRIGID_ERROR(buffer.data(), make_error_code("openssl error", code));
       }
       return result;
     }
@@ -78,23 +78,23 @@ namespace brigid {
       cipher_ctx_t ctx_;
     };
 
-    int crypto_initializer_counter = 0;
+    int crypto_initializer_count = 0;
   }
 
   crypto_initializer::crypto_initializer() {
-    if (++crypto_initializer_counter == 1) {
+    if (++crypto_initializer_count == 1) {
       ERR_load_crypto_strings();
     }
   }
 
   crypto_initializer::~crypto_initializer() {
-    if (--crypto_initializer_counter == 0) {
+    if (--crypto_initializer_count == 0) {
       ERR_free_strings();
     }
   }
 
   std::unique_ptr<cryptor> make_encryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-    EVP_CIPHER* evp_cipher = nullptr;
+    const EVP_CIPHER* evp_cipher = nullptr;
     switch (cipher) {
       case crypto_cipher::aes_128_cbc:
         evp_cipher = EVP_aes_128_cbc();
@@ -115,7 +115,7 @@ namespace brigid {
   }
 
   std::unique_ptr<cryptor> make_decryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-    EVP_CIPHER* evp_cipher = nullptr;
+    const EVP_CIPHER* evp_cipher = nullptr;
     switch (cipher) {
       case crypto_cipher::aes_128_cbc:
         evp_cipher = EVP_aes_128_cbc();
