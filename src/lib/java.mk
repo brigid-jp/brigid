@@ -8,7 +8,6 @@ CXXFLAGS = -Wall -W -O2 -std=c++11
 
 OBJS = \
 	crypto.o \
-	crypto_impl.o \
 	crypto_java.o \
 	http.o \
 	http_impl.o \

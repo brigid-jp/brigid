@@ -4,7 +4,6 @@
 
 #include <brigid/crypto.hpp>
 #include <brigid/noncopyable.hpp>
-#include "crypto_impl.hpp"
 #include "error.hpp"
 
 #include <openssl/err.h>
@@ -95,30 +94,44 @@ namespace brigid {
   }
 
   std::unique_ptr<cryptor> make_encryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-    check_cipher(cipher, iv_size);
+    EVP_CIPHER* evp_cipher = nullptr;
     switch (cipher) {
       case crypto_cipher::aes_128_cbc:
-        return std::unique_ptr<cryptor>(new aes_encryptor_impl(EVP_aes_128_cbc(), key_data, key_size, iv_data));
+        evp_cipher = EVP_aes_128_cbc();
+        break;
       case crypto_cipher::aes_192_cbc:
-        return std::unique_ptr<cryptor>(new aes_encryptor_impl(EVP_aes_192_cbc(), key_data, key_size, iv_data));
+        evp_cipher = EVP_aes_192_cbc();
+        break;
       case crypto_cipher::aes_256_cbc:
-        return std::unique_ptr<cryptor>(new aes_encryptor_impl(EVP_aes_256_cbc(), key_data, key_size, iv_data));
+        evp_cipher = EVP_aes_256_cbc();
+        break;
       default:
         throw BRIGID_ERROR("unsupported cipher");
     }
+    if (iv_size != 16) {
+      throw BRIGID_ERROR("invalid initialization vector size");
+    }
+    return std::unique_ptr<cryptor>(new aes_encryptor_impl(evp_cipher, key_data, key_size, iv_data));
   }
 
   std::unique_ptr<cryptor> make_decryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-    check_cipher(cipher, iv_size);
+    EVP_CIPHER* evp_cipher = nullptr;
     switch (cipher) {
       case crypto_cipher::aes_128_cbc:
-        return std::unique_ptr<cryptor>(new aes_decryptor_impl(EVP_aes_128_cbc(), key_data, key_size, iv_data));
+        evp_cipher = EVP_aes_128_cbc();
+        break;
       case crypto_cipher::aes_192_cbc:
-        return std::unique_ptr<cryptor>(new aes_decryptor_impl(EVP_aes_192_cbc(), key_data, key_size, iv_data));
+        evp_cipher = EVP_aes_192_cbc();
+        break;
       case crypto_cipher::aes_256_cbc:
-        return std::unique_ptr<cryptor>(new aes_decryptor_impl(EVP_aes_256_cbc(), key_data, key_size, iv_data));
+        evp_cipher = EVP_aes_256_cbc();
+        break;
       default:
         throw BRIGID_ERROR("unsupported cipher");
     }
+    if (iv_size != 16) {
+      throw BRIGID_ERROR("invalid initialization vector size");
+    }
+    return std::unique_ptr<cryptor>(new aes_decryptor_impl(evp_cipher, key_data, key_size, iv_data));
   }
 }

@@ -4,7 +4,6 @@
 
 OBJS = \
 	crypto.obj \
-	crypto_impl.obj \
 	crypto_windows.obj \
 	http.obj \
 	http_impl.obj \

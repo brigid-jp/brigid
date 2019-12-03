@@ -4,7 +4,6 @@
 
 #include <brigid/crypto.hpp>
 #include <brigid/noncopyable.hpp>
-#include "crypto_impl.hpp"
 #include "error.hpp"
 #include "util_java.hpp"
 

@@ -4,7 +4,6 @@
 
 #include <brigid/crypto.hpp>
 #include <brigid/noncopyable.hpp>
-#include "crypto_impl.hpp"
 #include "error.hpp"
 #include "type_traits.hpp"
 #include "util_windows.hpp"
@@ -152,7 +151,6 @@ namespace brigid {
   crypto_initializer::~crypto_initializer() {}
 
   std::unique_ptr<cryptor> make_encryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-    // check_cipher(cipher, key_size, iv_size);
     switch (cipher) {
       case crypto_cipher::aes_128_cbc:
       case crypto_cipher::aes_192_cbc:
@@ -167,7 +165,6 @@ namespace brigid {
   }
 
   std::unique_ptr<cryptor> make_decryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-    // check_cipher(cipher, key_size, iv_size);
     switch (cipher) {
       case crypto_cipher::aes_128_cbc:
       case crypto_cipher::aes_192_cbc:
