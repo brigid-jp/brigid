@@ -9,7 +9,6 @@
 #include <Foundation/Foundation.h>
 
 #include <stddef.h>
-#include <stdint.h>
 #include <condition_variable>
 #include <exception>
 #include <functional>
@@ -23,19 +22,12 @@ namespace brigid {
     class http_session_delegate_impl : private noncopyable {
     public:
       http_session_delegate_impl(
-          std::function<bool (size_t, size_t)> progress_cb,
-          std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
-          std::function<bool (const char*, size_t)> write_cb,
-          http_authentication_scheme auth_scheme,
-          const std::string& username,
-          const std::string& password)
-        : progress_cb_(progress_cb),
-          header_cb_(header_cb),
-          write_cb_(write_cb),
-          auth_scheme_(auth_scheme),
-          username_(username),
-          password_(password),
-          rep_() {}
+          std::function<bool (size_t, size_t)>,
+          std::function<bool (int, const std::map<std::string, std::string>&)>,
+          std::function<bool (const char*, size_t)>,
+          http_authentication_scheme,
+          const std::string&,
+          const std::string&);
       void did_complete_with_error(NSError*);
       bool did_send_body_data(size_t, size_t);
       NSURLCredential* did_receive_challenge(NSURLAuthenticationChallenge*);
@@ -48,8 +40,8 @@ namespace brigid {
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb_;
       std::function<bool (const char*, size_t)> write_cb_;
       http_authentication_scheme auth_scheme_;
-      std::string username_;
-      std::string password_;
+      NSString* username_;
+      NSString* password_;
       std::mutex req_mutex_;
       std::condition_variable req_condition_;
       std::function<bool ()> req_;
@@ -124,23 +116,38 @@ didReceiveResponse:(NSURLResponse *)response
 
 namespace brigid {
   namespace {
-    std::string to_string(NSString* source) {
+    std::string encode_utf8(NSString* source) {
       return std::string([source UTF8String], [source lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
     }
 
-    NSString* to_native_string(const std::string& source) {
-      return [[NSString alloc] initWithBytes:source.data() length:source.size() encoding:NSUTF8StringEncoding];
-    }
-
-    NSString* to_native_string(const char* data, size_t size) {
+    NSString* decode_utf8(const char* data, size_t size) {
       return [[NSString alloc] initWithBytes:data length:size encoding:NSUTF8StringEncoding];
     }
+
+    NSString* decode_utf8(const std::string& source) {
+      return decode_utf8(source.data(), source.size());
+    }
+
+    http_session_delegate_impl::http_session_delegate_impl(
+        std::function<bool (size_t, size_t)> progress_cb,
+        std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
+        std::function<bool (const char*, size_t)> write_cb,
+        http_authentication_scheme auth_scheme,
+        const std::string& username,
+        const std::string& password)
+      : progress_cb_(progress_cb),
+        header_cb_(header_cb),
+        write_cb_(write_cb),
+        auth_scheme_(auth_scheme),
+        username_(decode_utf8(username)),
+        password_(decode_utf8(password)),
+        rep_() {}
 
     void http_session_delegate_impl::did_complete_with_error(NSError* error) {
       std::lock_guard<std::mutex> req_lock(req_mutex_);
       req_ = nullptr;
       if (error && !exception_) {
-        exception_ = std::make_exception_ptr(BRIGID_ERROR(to_string(error.localizedDescription)));
+        exception_ = std::make_exception_ptr(BRIGID_ERROR(encode_utf8(error.localizedDescription), make_error_code("NSError", error.code)));
       }
       req_condition_.notify_all();
     }
@@ -181,7 +188,7 @@ namespace brigid {
             break;
         }
         if (credential) {
-          return [NSURLCredential credentialWithUser:to_native_string(username_) password:to_native_string(password_) persistence:NSURLCredentialPersistenceForSession];
+          return [NSURLCredential credentialWithUser:username_ password:password_ persistence:NSURLCredentialPersistenceForSession];
         }
       }
       return nil;
@@ -195,7 +202,7 @@ namespace brigid {
           req_ = [=]() -> bool {
             std::map<std::string, std::string> headers;
             for (NSString* key in response.allHeaderFields) {
-              headers[brigid::to_string(key)] = brigid::to_string(response.allHeaderFields[key]);
+              headers[brigid::encode_utf8(key)] = brigid::encode_utf8(response.allHeaderFields[key]);
             }
             return header_cb_(response.statusCode, headers);
           };
@@ -292,10 +299,10 @@ namespace brigid {
           http_request_body body,
           const char* data,
           size_t size) {
-        NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:to_native_string(url)]];
-        request.HTTPMethod = to_native_string(method);
+        NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:decode_utf8(url)]];
+        request.HTTPMethod = decode_utf8(method);
         for (const auto& header : headers) {
-          [request setValue:to_native_string(header.second) forHTTPHeaderField:to_native_string(header.first)];
+          [request setValue:decode_utf8(header.second) forHTTPHeaderField:decode_utf8(header.first)];
         }
         NSURLSessionTask* task = nil;
         switch (body) {
@@ -307,7 +314,7 @@ namespace brigid {
             task = [session_ dataTaskWithRequest:request];
             break;
           case http_request_body::file:
-            task = [session_ uploadTaskWithRequest:request fromFile:[NSURL fileURLWithPath:to_native_string(data, size)]];
+            task = [session_ uploadTaskWithRequest:request fromFile:[NSURL fileURLWithPath:decode_utf8(data, size)]];
             break;
         }
         impl_->wait(task);

@@ -371,6 +371,16 @@ namespace {
     std::cout << "[" << client.body() << "]\n";
   }
 
+  void test11() {
+    test_client client;
+    BRIGID_CHECK_THROW([&](){ client.request("GET", "https://no-such-host.brigid.jp/"); });
+  }
+
+  void test12() {
+    test_client client;
+    BRIGID_CHECK_THROW([&](){ client.request("GET", "https://brigid.jp/invalid\r\n\turl"); });
+  }
+
   BRIGID_MAKE_TEST_CASE(test1);
   BRIGID_MAKE_TEST_CASE(test2);
   BRIGID_MAKE_TEST_CASE(test3);
@@ -381,4 +391,6 @@ namespace {
   BRIGID_MAKE_TEST_CASE(test8);
   BRIGID_MAKE_TEST_CASE(test9);
   BRIGID_MAKE_TEST_CASE(test10);
+  BRIGID_MAKE_TEST_CASE(test11);
+  BRIGID_MAKE_TEST_CASE(test12);
 }
