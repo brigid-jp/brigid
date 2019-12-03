@@ -10,7 +10,10 @@
 
 namespace brigid {
   namespace windows {
-    bool make_windows_error_message(const char*, uint32_t, std::string&);
+    std::string encode_utf8(const wchar_t*, size_t);
+    std::wstring decode_utf8(const char*, size_t);
+    std::wstring decode_utf8(const std::string&);
+    bool get_error_message(const char*, uint32_t, std::string&);
   }
 }
 

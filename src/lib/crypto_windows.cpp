@@ -21,10 +21,10 @@ namespace brigid {
     void check(NTSTATUS code) {
       if (!BCRYPT_SUCCESS(code)) {
         std::string message;
-        if (make_windows_error_message("ntdll.dll", code, message)) {
-          throw BRIGID_ERROR(message, make_error_code("bcrypt error code", code));
+        if (get_error_message("ntdll.dll", code, message)) {
+          throw BRIGID_ERROR(message, make_error_code("bcrypt error", code));
         } else {
-          throw BRIGID_ERROR(make_error_code("bcrypt error code", code));
+          throw BRIGID_ERROR(make_error_code("bcrypt error", code));
         }
       }
     }

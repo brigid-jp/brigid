@@ -2,6 +2,7 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include "error.hpp"
 #include "util_windows.hpp"
 
 #include <windows.h>
@@ -13,67 +14,105 @@
 
 namespace brigid {
   namespace windows {
-    namespace {
-      inline bool make_utf8_string(const WCHAR* data, size_t size, std::string& output) {
-        if (size == 0) {
-          output.clear();
-          return true;
-        }
-
-        int result = WideCharToMultiByte(
-            CP_UTF8,
-            0,
-            data,
-            static_cast<int>(size),
-            nullptr,
-            0,
-            nullptr,
-            nullptr);
-        if (result == 0) {
-          return false;
-        }
-
-        std::vector<char> buffer(result);
-
-        result = WideCharToMultiByte(
-            CP_UTF8,
-            0,
-            data,
-            static_cast<int>(size),
-            buffer.data(),
-            static_cast<int>(buffer.size()),
-            nullptr,
-            nullptr);
-        if (result == 0) {
-          return false;
-        }
-
-        output.assign(buffer.data(), buffer.size());
-        return true;
+    std::string encode_utf8(const wchar_t* data, size_t size) {
+      if (size == 0) {
+        return std::string();
       }
+
+      int result = WideCharToMultiByte(
+          CP_UTF8,
+          0,
+          data,
+          static_cast<int>(size),
+          nullptr,
+          0,
+          nullptr,
+          nullptr);
+      if (result == 0) {
+        throw BRIGID_ERROR("cannot WideCharToMultiByte");
+      }
+
+      std::vector<char> buffer(result);
+
+      result = WideCharToMultiByte(
+          CP_UTF8,
+          0,
+          data,
+          static_cast<int>(size),
+          buffer.data(),
+          static_cast<int>(buffer.size()),
+          nullptr,
+          nullptr);
+      if (result == 0) {
+        throw BRIGID_ERROR("cannot WideCharToMultiByte");
+      }
+
+      return std::string(buffer.data(), buffer.size());
     }
 
-    bool make_windows_error_message(const char* name, uint32_t code, std::string& output) {
-      HMODULE module = GetModuleHandle(name);
-      if (!module) {
-        return false;
+    std::wstring decode_utf8(const char* data, size_t size) {
+      if (size == 0) {
+        return std::wstring();
       }
 
-      WCHAR* buffer = nullptr;
-      DWORD size = FormatMessageW(
-          FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS,
-          module,
-          code,
+      int result = MultiByteToWideChar(
+          CP_UTF8,
           0,
-          reinterpret_cast<LPWSTR>(&buffer),
-          0,
-          nullptr);
-      std::unique_ptr<WCHAR, decltype(&LocalFree)> data(buffer, &LocalFree);
-
-      if (size < 2) {
-        return false;
+          data,
+          static_cast<int>(size),
+          nullptr,
+          0);
+      if (result == 0) {
+        throw BRIGID_ERROR("cannot MultiByteToWideChar");
       }
-      return make_utf8_string(data.get(), size - 2, output);
+
+      std::vector<WCHAR> buffer(result);
+
+      result = MultiByteToWideChar(
+          CP_UTF8,
+          0,
+          data,
+          static_cast<int>(size),
+          buffer.data(),
+          static_cast<int>(buffer.size()));
+      if (result == 0) {
+        throw BRIGID_ERROR("cannot MultiByteToWideChar");
+      }
+
+      return std::wstring(buffer.data(), buffer.size());
+    }
+
+    std::wstring decode_utf8(const std::string& source) {
+      return decode_utf8(source.data(), source.size());
+    }
+
+    bool get_error_message(const char* name, uint32_t code, std::string& output) {
+      try {
+        HMODULE module = GetModuleHandle(name);
+        if (!module) {
+          return false;
+        }
+
+        WCHAR* buffer = nullptr;
+        DWORD result = FormatMessageW(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS,
+            module,
+            code,
+            0,
+            reinterpret_cast<LPWSTR>(&buffer),
+            0,
+            nullptr);
+        std::unique_ptr<WCHAR, decltype(&LocalFree)> data(buffer, &LocalFree);
+
+        if (result < 2) {
+          return false;
+        }
+
+        output = encode_utf8(data.get(), result - 2);
+        return true;
+      } catch (...) {
+      }
+      return false;
     }
   }
 }
