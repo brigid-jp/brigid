@@ -21,7 +21,7 @@ namespace brigid {
       if (!BCRYPT_SUCCESS(code)) {
         std::string message;
         if (make_windows_error_message("ntdll.dll", code, message)) {
-          throw BRIGID_ERROR(message);
+          throw BRIGID_ERROR(message, make_error_code("bcrypt error code", code));
         } else {
           throw BRIGID_ERROR(make_error_code("bcrypt error code", code));
         }

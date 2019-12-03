@@ -25,7 +25,7 @@ namespace brigid {
         DWORD code = GetLastError();
         std::string message;
         if (make_windows_error_message("winhttp.dll", code, message)) {
-          throw BRIGID_ERROR(message);
+          throw BRIGID_ERROR(message, make_error_code("winhttp error code", code));
         } else {
           throw BRIGID_ERROR(make_error_code("winhttp error code", code));
         }
