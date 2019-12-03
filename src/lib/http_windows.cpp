@@ -5,9 +5,9 @@
 #include <brigid/http.hpp>
 #include <brigid/noncopyable.hpp>
 #include "error.hpp"
-#include "error_windows.hpp"
 #include "http_impl.hpp"
 #include "type_traits.hpp"
+#include "util_windows.hpp"
 
 #include <windows.h>
 #include <winhttp.h>

@@ -6,8 +6,8 @@
 #include <brigid/noncopyable.hpp>
 #include "crypto_impl.hpp"
 #include "error.hpp"
-#include "error_windows.hpp"
 #include "type_traits.hpp"
+#include "util_windows.hpp"
 
 #include <windows.h>
 #include <bcrypt.h>
