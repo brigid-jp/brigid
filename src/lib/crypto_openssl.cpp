@@ -78,17 +78,17 @@ namespace brigid {
       cipher_ctx_t ctx_;
     };
 
-    int crypto_initializer_counter = 0;
+    int crypto_initializer_count = 0;
   }
 
   crypto_initializer::crypto_initializer() {
-    if (++crypto_initializer_counter == 1) {
+    if (++crypto_initializer_count == 1) {
       ERR_load_crypto_strings();
     }
   }
 
   crypto_initializer::~crypto_initializer() {
-    if (--crypto_initializer_counter == 0) {
+    if (--crypto_initializer_count == 0) {
       ERR_free_strings();
     }
   }

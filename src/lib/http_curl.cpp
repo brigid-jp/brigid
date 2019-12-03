@@ -9,6 +9,13 @@
 
 #include <curl/curl.h>
 
+#include <stddef.h>
+#include <exception>
+#include <functional>
+#include <map>
+#include <memory>
+#include <string>
+
 namespace brigid {
   namespace {
     void check(CURLcode code) {
@@ -126,24 +133,24 @@ namespace brigid {
           setopt(CURLOPT_WRITEDATA, this);
         }
 
-        bool credential = true;
         switch (session_.auth_scheme) {
           case http_authentication_scheme::none:
-            credential = false;
             break;
           case http_authentication_scheme::basic:
             setopt(CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+            setopt(CURLOPT_USERNAME, session_.username.c_str());
+            setopt(CURLOPT_PASSWORD, session_.password.c_str());
             break;
           case http_authentication_scheme::digest:
             setopt(CURLOPT_HTTPAUTH, CURLAUTH_DIGEST);
+            setopt(CURLOPT_USERNAME, session_.username.c_str());
+            setopt(CURLOPT_PASSWORD, session_.password.c_str());
             break;
           case http_authentication_scheme::any:
             setopt(CURLOPT_HTTPAUTH, CURLAUTH_BASIC | CURLAUTH_DIGEST);
+            setopt(CURLOPT_USERNAME, session_.username.c_str());
+            setopt(CURLOPT_PASSWORD, session_.password.c_str());
             break;
-        }
-        if (credential) {
-          setopt(CURLOPT_USERNAME, session_.username.c_str());
-          setopt(CURLOPT_PASSWORD, session_.password.c_str());
         }
       }
 
@@ -245,8 +252,10 @@ namespace brigid {
         const char* data,
         size_t size) {
       try {
-        http_task task(*this, method, url, header, body, data, size);
-        task.request();
+        {
+          http_task task(*this, method, url, header, body, data, size);
+          task.request();
+        }
         curl_easy_reset(handle.get());
       } catch (...) {
         curl_easy_reset(handle.get());
@@ -254,17 +263,17 @@ namespace brigid {
       }
     }
 
-    int http_initializer_counter = 0;
+    int http_initializer_count = 0;
   }
 
   http_initializer::http_initializer() {
-    if (++http_initializer_counter == 1) {
+    if (++http_initializer_count == 1) {
       curl_global_init(CURL_GLOBAL_ALL);
     }
   }
 
   http_initializer::~http_initializer() {
-    if (--http_initializer_counter == 0) {
+    if (--http_initializer_count == 0) {
       curl_global_cleanup();
     }
   }
