@@ -6,6 +6,7 @@
 #include <brigid/noncopyable.hpp>
 #include "crypto_impl.hpp"
 #include "error.hpp"
+#include "error_windows.hpp"
 #include "type_traits.hpp"
 
 #include <windows.h>
@@ -16,9 +17,14 @@
 
 namespace brigid {
   namespace {
-    void check(NTSTATUS status) {
-      if (!BCRYPT_SUCCESS(status)) {
-        throw BRIGID_ERROR(make_error_code("NTSTATUS", status));
+    void check(NTSTATUS code) {
+      if (!BCRYPT_SUCCESS(code)) {
+        std::string message;
+        if (make_windows_error_message("ntdll.dll", code, message)) {
+          throw BRIGID_ERROR(message);
+        } else {
+          throw BRIGID_ERROR(make_error_code("bcrypt error code", code));
+        }
       }
     }
 

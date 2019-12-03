@@ -5,6 +5,7 @@
 #include <brigid/http.hpp>
 #include <brigid/noncopyable.hpp>
 #include "error.hpp"
+#include "error_windows.hpp"
 #include "http_impl.hpp"
 #include "type_traits.hpp"
 
@@ -18,26 +19,16 @@
 
 namespace brigid {
   namespace {
-    std::string to_string(const WCHAR*, size_t);
-
     template <class T>
     T check(T result) {
       if (!result) {
         DWORD code = GetLastError();
-        std::vector<WCHAR> buffer(256);
-        DWORD result = FormatMessageW(
-            FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS,
-            GetModuleHandleA("winhttp.dll"),
-            code,
-            0,
-            buffer.data(),
-            buffer.size(),
-            nullptr);
-        std::string message = "unknown error";
-        if (result > 2) {
-          message = to_string(buffer.data(), result - 2);
+        std::string message;
+        if (make_windows_error_message("winhttp.dll", code, message)) {
+          throw BRIGID_ERROR(message);
+        } else {
+          throw BRIGID_ERROR(make_error_code("winhttp error code", code));
         }
-        throw BRIGID_ERROR(message);
       }
       return result;
     }
