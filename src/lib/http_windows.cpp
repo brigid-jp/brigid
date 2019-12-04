@@ -72,8 +72,7 @@ namespace brigid {
           write_cb_(write_cb),
           auth_scheme_(auth_scheme),
           username_(decode_utf8(username)),
-          password_(decode_utf8(password)),
-          buffer_() {}
+          password_(decode_utf8(password)) {}
 
       virtual void http_session_impl::request(
           const std::string& method,

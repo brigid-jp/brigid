@@ -30,13 +30,8 @@ namespace brigid {
         {
           jmethodID method = check(env->GetMethodID(klass.get(), "<init>", "([B[B)V"));
 
-          local_ref_t<jbyteArray> key = make_local_ref(check(env->NewByteArray(key_size)));
-          env->SetByteArrayRegion(key.get(), 0, key_size, reinterpret_cast<const jbyte*>(key_data));
-          check();
-
-          local_ref_t<jbyteArray> iv = make_local_ref(check(env->NewByteArray(iv_size)));
-          env->SetByteArrayRegion(iv.get(), 0, iv_size, reinterpret_cast<const jbyte*>(iv_data));
-          check();
+          local_ref_t<jbyteArray> key = make_byte_array(key_data, key_size);
+          local_ref_t<jbyteArray> iv = make_byte_array(iv_data, iv_size);
 
           local_ref_t<jobject> instance = make_local_ref(check(env->NewObject(klass.get(), method, key.get(), iv.get())));
           instance_ = make_global_ref(check(env->NewGlobalRef(instance.get())));
@@ -49,7 +44,6 @@ namespace brigid {
         JNIEnv* env = get_env();
 
         local_ref_t<jobject> in = make_local_ref(check(env->NewDirectByteBuffer(const_cast<char*>(in_data), in_size)));
-
         local_ref_t<jobject> out = make_local_ref(check(env->NewDirectByteBuffer(out_data, out_size)));
 
         jint result = env->CallIntMethod(instance_.get(), method_, in.get(), out.get(), to_boolean(padding));

@@ -9,6 +9,8 @@
 
 extern "C" void* SDL_AndroidGetJNIEnv();
 
+#include <stddef.h>
+#include <string>
 #include <vector>
 
 namespace brigid {
@@ -83,6 +85,29 @@ namespace brigid {
       } else {
         return JNI_FALSE;
       }
+    }
+
+    local_ref_t<jbyteArray> make_byte_array(const char* data, size_t size) {
+      JNIEnv* env = get_env();
+
+      local_ref_t<jbyteArray> result = make_local_ref(check(env->NewByteArray(size)));
+      env->SetByteArrayRegion(result.get(), 0, size, reinterpret_cast<const jbyte*>(data));
+      check();
+      return result;
+    }
+
+    local_ref_t<jbyteArray> make_byte_array(const std::string& source) {
+      return make_byte_array(source.data(), source.size());
+    }
+
+    std::string to_string(jbyteArray source) {
+      JNIEnv* env = get_env();
+
+      std::vector<char> buffer(env->GetArrayLength(source));
+      env->GetByteArrayRegion(source, 0, buffer.size(), reinterpret_cast<jbyte*>(buffer.data()));
+      check();
+
+      return std::string(buffer.data(), buffer.size());
     }
   }
 }

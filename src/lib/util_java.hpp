@@ -10,7 +10,9 @@
 
 #include <jni.h>
 
+#include <stddef.h>
 #include <memory>
+#include <string>
 #include <type_traits>
 
 namespace brigid {
@@ -56,6 +58,10 @@ namespace brigid {
     }
 
     jboolean to_boolean(bool);
+
+    local_ref_t<jbyteArray> make_byte_array(const char*, size_t);
+    local_ref_t<jbyteArray> make_byte_array(const std::string&);
+    std::string to_string(jbyteArray);
   }
 }
 
