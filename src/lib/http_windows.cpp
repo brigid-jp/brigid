@@ -82,14 +82,14 @@ namespace brigid {
           http_request_body body,
           const char* data,
           size_t size) {
-        std::wstring url_storage(decode_utf8(url));
+        std::wstring url_(decode_utf8(url));
         URL_COMPONENTS url_components = {};
         url_components.dwStructSize = sizeof(url_components);
         url_components.dwSchemeLength = -1;
         url_components.dwHostNameLength = -1;
         url_components.dwUrlPathLength = -1;
         url_components.dwExtraInfoLength = 0;
-        check(WinHttpCrackUrl(url_storage.data(), static_cast<DWORD>(url_storage.size()), 0, &url_components));
+        check(WinHttpCrackUrl(url_.data(), static_cast<DWORD>(url_.size()), 0, &url_components));
 
         internet_handle_t connection = make_internet_handle(check(WinHttpConnect(
             session_.get(),

@@ -11,7 +11,6 @@
 
 #include <stddef.h>
 #include <memory>
-#include <string>
 
 namespace brigid {
   namespace {

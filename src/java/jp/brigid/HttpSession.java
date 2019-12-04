@@ -4,4 +4,19 @@
 
 package jp.brigid;
 
-public class HttpSession {}
+import java.nio.ByteBuffer;
+
+public class HttpSession {
+  public HttpSession(int authScheme, byte[] username, byte[] password) throws Exception {
+    this.authScheme = authScheme;
+    this.username = new String(username, "UTF-8");
+    this.password = new String(password, "UTF-8");
+  }
+
+  public void request(
+      
+
+  private int authScheme;
+  private String username;
+  private String password;
+}
