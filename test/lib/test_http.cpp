@@ -211,94 +211,74 @@ namespace {
       test_client client;
       client.request("GET", "https://brigid.jp/test/dav/auth-none/");
       BRIGID_CHECK(client.code() == 200);
-      // std::cout << "[" << client.body() << "]\n";
 
       client.request("GET", "https://brigid.jp/test/dav/auth-basic/");
       BRIGID_CHECK(client.code() == 401);
-      // std::cout << "[" << client.body() << "]\n";
     }
 
     {
       test_client client(brigid::http_authentication_scheme::basic, "brigid", "O6jIOchrWCGuOSB4");
       client.request("GET", "https://brigid.jp/test/dav/auth-none/");
       BRIGID_CHECK(client.code() == 200);
-      // std::cout << "[" << client.body() << "]\n";
 
       client.request("GET", "https://brigid.jp/test/dav/auth-basic/");
       BRIGID_CHECK(client.code() == 200);
-      // std::cout << "[" << client.body() << "]\n";
     }
 
     {
       test_client client(brigid::http_authentication_scheme::digest, "brigid", "O6jIOchrWCGuOSB4");
       client.request("GET", "https://brigid.jp/test/dav/auth-none/");
       BRIGID_CHECK(client.code() == 200);
-      // std::cout << "[" << client.body() << "]\n";
 
       client.request("GET", "https://brigid.jp/test/dav/auth-basic/");
       BRIGID_CHECK(client.code() == 401);
-      // std::cout << "[" << client.body() << "]\n";
     }
 
     {
       test_client client(brigid::http_authentication_scheme::any, "brigid", "O6jIOchrWCGuOSB4");
       client.request("GET", "https://brigid.jp/test/dav/auth-none/");
       BRIGID_CHECK(client.code() == 200);
-      // std::cout << "[" << client.body() << "]\n";
 
       client.request("GET", "https://brigid.jp/test/dav/auth-basic/");
       BRIGID_CHECK(client.code() == 200);
-      // std::cout << "[" << client.body() << "]\n";
     }
   }
 
   void test6() {
-    std::map<std::string, std::string> header {
-      { "Depth", "1" },
-    };
-
     {
       test_client client;
-      client.request("GET", "https://brigid.jp/test/dav/auth-none/", header);
+      client.request("GET", "https://brigid.jp/test/dav/auth-none/");
       BRIGID_CHECK(client.code() == 200);
-      std::cout << "[" << client.body() << "]\n";
 
-      client.request("GET", "https://brigid.jp/test/dav/auth-digest/", header);
+      client.request("GET", "https://brigid.jp/test/dav/auth-digest/");
       BRIGID_CHECK(client.code() == 401);
-      std::cout << "[" << client.body() << "]\n";
-    }
-
-    {
-      test_client client(brigid::http_authentication_scheme::basic, "brigid", "YlrMTunTORZvrgSt");
-      client.request("GET", "https://brigid.jp/test/dav/auth-none/", header);
-      BRIGID_CHECK(client.code() == 200);
-      std::cout << "[" << client.body() << "]\n";
-
-      client.request("GET", "https://brigid.jp/test/dav/auth-digest/", header);
-      BRIGID_CHECK(client.code() == 401);
-      std::cout << "[" << client.body() << "]\n";
     }
 
     {
       test_client client(brigid::http_authentication_scheme::digest, "brigid", "YlrMTunTORZvrgSt");
-      client.request("GET", "https://brigid.jp/test/dav/auth-none/", header);
+      client.request("GET", "https://brigid.jp/test/dav/auth-none/");
       BRIGID_CHECK(client.code() == 200);
-      std::cout << "[" << client.body() << "]\n";
 
-      client.request("GET", "https://brigid.jp/test/dav/auth-digest/", header);
+      client.request("GET", "https://brigid.jp/test/dav/auth-digest/");
       BRIGID_CHECK(client.code() == 200);
-      std::cout << "[" << client.body() << "]\n";
+    }
+
+    {
+      test_client client(brigid::http_authentication_scheme::basic, "brigid", "YlrMTunTORZvrgSt");
+      client.request("GET", "https://brigid.jp/test/dav/auth-none/");
+      BRIGID_CHECK(client.code() == 200);
+
+      client.request("GET", "https://brigid.jp/test/dav/auth-digest/");
+      BRIGID_CHECK(client.code() == 401);
     }
 
     {
       test_client client(brigid::http_authentication_scheme::any, "brigid", "YlrMTunTORZvrgSt");
-      client.request("GET", "https://brigid.jp/test/dav/auth-none/", header);
+      client.request("GET", "https://brigid.jp/test/dav/auth-none/");
       BRIGID_CHECK(client.code() == 200);
-      std::cout << "[" << client.body() << "]\n";
 
-      client.request("GET", "https://brigid.jp/test/dav/auth-digest/", header);
+      client.request("GET", "https://brigid.jp/test/dav/auth-digest/");
       BRIGID_CHECK(client.code() == 200);
-      std::cout << "[" << client.body() << "]\n";
     }
   }
 

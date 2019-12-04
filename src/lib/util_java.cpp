@@ -109,5 +109,13 @@ namespace brigid {
 
       return std::string(buffer.data(), buffer.size());
     }
+
+    local_ref_t<jobject> make_direct_byte_buffer(char* data, size_t size) {
+      return make_local_ref(check(get_env()->NewDirectByteBuffer(const_cast<char*>(data), size)));
+    }
+
+    local_ref_t<jclass> find_class(const char* name) {
+      return make_local_ref(check(get_env()->FindClass(name)));
+    }
   }
 }

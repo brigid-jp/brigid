@@ -16,46 +16,39 @@ namespace brigid {
   namespace {
     using namespace java;
 
+    class vtable : private noncopyable {
+    public:
+      vtable(const char* name)
+        : clazz(make_global_ref(find_class(name))),
+          construct(clazz, "([B[B)V"),
+          update(clazz, "update", "(Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Z)I") {}
+
+      global_ref_t<jclass> clazz;
+      constructor construct;
+      method<jint> update;
+    };
+
     class aes_cryptor_impl : public cryptor, private noncopyable {
     public:
       aes_cryptor_impl(const char* name, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
-        : klass_(make_global_ref<jclass>()),
-          instance_(make_global_ref<jobject>()),
-          method_() {
-        JNIEnv* env = get_env();
-
-        local_ref_t<jclass> klass = make_local_ref(check(env->FindClass(name)));
-        klass_ = make_global_ref(check(reinterpret_cast<jclass>(env->NewGlobalRef(klass.get()))));
-
-        {
-          jmethodID method = check(env->GetMethodID(klass.get(), "<init>", "([B[B)V"));
-
-          local_ref_t<jbyteArray> key = make_byte_array(key_data, key_size);
-          local_ref_t<jbyteArray> iv = make_byte_array(iv_data, iv_size);
-
-          local_ref_t<jobject> instance = make_local_ref(check(env->NewObject(klass.get(), method, key.get(), iv.get())));
-          instance_ = make_global_ref(check(env->NewGlobalRef(instance.get())));
-        }
-
-        method_ = check(env->GetMethodID(klass.get(), "update", "(Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Z)I"));
-      }
+        : vtable_(name),
+          instance_(make_global_ref(vtable_.construct(
+              vtable_.clazz,
+              make_byte_array(key_data, key_size),
+              make_byte_array(iv_data, iv_size)))) {}
 
       virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
-        JNIEnv* env = get_env();
-
-        local_ref_t<jobject> in = make_local_ref(check(env->NewDirectByteBuffer(const_cast<char*>(in_data), in_size)));
-        local_ref_t<jobject> out = make_local_ref(check(env->NewDirectByteBuffer(out_data, out_size)));
-
-        jint result = env->CallIntMethod(instance_.get(), method_, in.get(), out.get(), to_boolean(padding));
-        check();
-
-        return result;
+        return vtable_.update(
+            instance_,
+            make_direct_byte_buffer(const_cast<char*>(in_data), in_size),
+            make_direct_byte_buffer(out_data, out_size),
+            to_boolean(padding));
       }
 
     private:
-      global_ref_t<jclass> klass_;
+      vtable vtable_;
       global_ref_t<jobject> instance_;
-      jmethodID method_;
+      method<jint> method_;
     };
   }
 

@@ -22,6 +22,32 @@ namespace brigid {
   namespace {
     using namespace java;
 
+    class vtable {
+    public:
+      vtable()
+        : clazz(make_global_ref(find_class("jp/brigid/HttpTask"))),
+          construct(clazz, "(I[B[B[B[B)V"),
+          set_header(clazz, "setHeader", "([B[B)V"),
+          connect(clazz, "connect", "(J)V"),
+          write(clazz, "write", "([BI)V"),
+          get_response_code(clazz, "getResponseCode", "()I"),
+          get_header_field_key(clazz, "getHeaderFieldKey", "(I)[B"),
+          get_header_field(clazz, "getHeaderField", "(I)[B"),
+          read(clazz, "read", "([B)I"),
+          disconnect(clazz, "disconnect", "()V") {}
+
+      global_ref_t<jclass> clazz;
+      constructor construct;
+      method<void> set_header;
+      method<void> connect;
+      method<void> write;
+      method<jint> get_response_code;
+      method<jbyteArray> get_header_field_key;
+      method<jbyteArray> get_header_field;
+      method<jint> read;
+      method<void> disconnect;
+    };
+
     class http_session_impl : public http_session, private noncopyable {
     public:
       http_session_impl(
@@ -31,17 +57,7 @@ namespace brigid {
           http_authentication_scheme auth_scheme,
           const std::string& username,
           const std::string& password)
-        : klass(make_global_ref<jclass>()),
-          method_init(),
-          method_set_header(),
-          method_connect(),
-          method_write(),
-          method_get_response_code(),
-          method_get_header_field_key(),
-          method_get_header_field(),
-          method_read(),
-          method_disconnect(),
-          buffer(make_global_ref<jbyteArray>()),
+        : buffer(make_global_ref<jbyteArray>()),
           progress_cb(progress_cb),
           header_cb(header_cb),
           write_cb(write_cb),
@@ -50,33 +66,13 @@ namespace brigid {
           password(password) {
         JNIEnv* env = get_env();
 
-        local_ref_t<jclass> klass_ = make_local_ref(check(env->FindClass("jp/brigid/HttpTask")));
-        klass = make_global_ref(check(reinterpret_cast<jclass>(env->NewGlobalRef(klass_.get()))));
-        method_init = check(env->GetMethodID(klass.get(), "<init>", "(I[B[B[B[B)V"));
-        method_set_header = check(env->GetMethodID(klass.get(), "setHeader", "([B[B)V"));
-        method_connect = check(env->GetMethodID(klass.get(), "connect", "(J)V"));
-        method_write = check(env->GetMethodID(klass.get(), "write", "([BI)V"));
-        method_get_response_code = check(env->GetMethodID(klass.get(), "getResponseCode", "()I"));
-        method_get_header_field_key = check(env->GetMethodID(klass.get(), "getHeaderFieldKey", "(I)[B"));
-        method_get_header_field = check(env->GetMethodID(klass.get(), "getHeaderField", "(I)[B"));
-        method_read = check(env->GetMethodID(klass.get(), "read", "([B)I"));
-        method_disconnect = check(env->GetMethodID(klass.get(), "disconnect", "()V"));
         local_ref_t<jbyteArray> buffer_ = make_local_ref(check(env->NewByteArray(http_buffer_size)));
         buffer = make_global_ref(check(reinterpret_cast<jbyteArray>(env->NewGlobalRef(buffer_.get()))));
       }
 
       virtual void request(const std::string&, const std::string&, const std::map<std::string, std::string>&, http_request_body, const char*, size_t);
 
-      global_ref_t<jclass> klass;
-      jmethodID method_init;
-      jmethodID method_set_header;
-      jmethodID method_connect;
-      jmethodID method_write;
-      jmethodID method_get_response_code;
-      jmethodID method_get_header_field_key;
-      jmethodID method_get_header_field;
-      jmethodID method_read;
-      jmethodID method_disconnect;
+      vtable vt;
       global_ref_t<jbyteArray> buffer;
       std::function<bool (size_t, size_t)> progress_cb;
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb;
@@ -94,29 +90,19 @@ namespace brigid {
           const std::string& url,
           const std::map<std::string, std::string>& header)
         : session_(session),
-          instance_(make_global_ref<jobject>()) {
-        JNIEnv* env = get_env();
-
-        local_ref_t<jbyteArray> username = make_byte_array(session.username);
-        local_ref_t<jbyteArray> password = make_byte_array(session.password);
-        local_ref_t<jbyteArray> method_ = make_byte_array(method);
-        local_ref_t<jbyteArray> url_ = make_byte_array(url);
-
-        local_ref_t<jobject> instance = make_local_ref(check(env->NewObject(
-            session_.klass.get(),
-            session_.method_init,
-            static_cast<int>(session_.auth_scheme),
-            username.get(),
-            password.get(),
-            method_.get(),
-            url_.get())));
-        instance_ = make_global_ref(check(env->NewGlobalRef(instance.get())));
+          instance_(make_global_ref(session_.vt.construct(
+              session_.vt.clazz,
+              static_cast<jint>(session_.auth_scheme),
+              make_byte_array(session_.username),
+              make_byte_array(session_.password),
+              make_byte_array(method),
+              make_byte_array(url)))) {
 
         for (const auto& field : header) {
-          local_ref_t<jbyteArray> key = make_byte_array(field.first);
-          local_ref_t<jbyteArray> value = make_byte_array(field.second);
-          env->CallVoidMethod(instance_.get(), session_.method_set_header, key.get(), value.get());
-          check();
+          session_.vt.set_header(
+              instance_,
+              make_byte_array(field.first),
+              make_byte_array(field.second));
         }
       }
 
@@ -125,8 +111,7 @@ namespace brigid {
 
         std::unique_ptr<http_reader> reader(make_http_reader(body, data, size));
 
-        env->CallVoidMethod(instance_.get(), session_.method_connect, reader ? reader->total() : -1);
-        check();
+        session_.vt.connect(instance_, reader ? reader->total() : -1);
 
         if (reader) {
           // size_t buffer_size = std::min(http_buffer_size, reader->total());
@@ -142,8 +127,8 @@ namespace brigid {
             }
             env->SetByteArrayRegion(session_.buffer.get(), 0, result, reinterpret_cast<const jbyte*>(buffer.data()));
             check();
-            env->CallVoidMethod(instance_.get(), session_.method_write, session_.buffer.get(), result);
-            check();
+
+            session_.vt.write(instance_, session_.buffer.get(), result);
 
             if (session_.progress_cb) {
               if (!session_.progress_cb(reader->now(), reader->total())) {
@@ -154,19 +139,15 @@ namespace brigid {
         }
 
         if (session_.header_cb) {
-          jint code = env->CallIntMethod(instance_.get(), session_.method_get_response_code);
-          check();
+          jint code = session_.vt.get_response_code(instance_);
 
           std::map<std::string, std::string> header;
           for (jint i = 0; ; ++i) {
-            local_ref_t<jbyteArray> field = make_local_ref<jbyteArray>(reinterpret_cast<jbyteArray>(env->CallObjectMethod(instance_.get(), session_.method_get_header_field, i)));
-            check();
+            local_ref_t<jbyteArray> field = session_.vt.get_header_field(instance_, i);
             if (!field) {
               break;
             }
-            local_ref_t<jbyteArray> key = make_local_ref<jbyteArray>(reinterpret_cast<jbyteArray>(env->CallObjectMethod(instance_.get(), session_.method_get_header_field_key, i)));
-            check();
-            if (key) {
+            if (local_ref_t<jbyteArray> key = session_.vt.get_header_field_key(instance_, i)) {
               header[to_string(key.get())] = to_string(field.get());
             }
           }
@@ -184,8 +165,7 @@ namespace brigid {
           // local_ref_t<jobject> buffer = make_local_ref(check(env->NewDirectByteBuffer(const_cast<char*>(session_.buffer.data()), session_.buffer.size())));
 
           while (true) {
-            jint result = env->CallIntMethod(instance_.get(), session_.method_read, session_.buffer.get());
-            check();
+            jint result = session_.vt.read(instance_, session_.buffer.get());
             if (result < 0) {
               break;
             }
@@ -201,8 +181,7 @@ namespace brigid {
           }
         }
 
-        env->CallVoidMethod(instance_.get(), session_.method_disconnect);
-        check();
+        session_.vt.disconnect(instance_);
       }
 
     private:
