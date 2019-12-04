@@ -57,18 +57,13 @@ namespace brigid {
           http_authentication_scheme auth_scheme,
           const std::string& username,
           const std::string& password)
-        : buffer(make_global_ref<jbyteArray>()),
+        : buffer(make_global_ref(make_byte_array(http_buffer_size))),
           progress_cb(progress_cb),
           header_cb(header_cb),
           write_cb(write_cb),
           auth_scheme(auth_scheme),
           username(username),
-          password(password) {
-        JNIEnv* env = get_env();
-
-        local_ref_t<jbyteArray> buffer_ = make_local_ref(check(env->NewByteArray(http_buffer_size)));
-        buffer = make_global_ref(check(reinterpret_cast<jbyteArray>(env->NewGlobalRef(buffer_.get()))));
-      }
+          password(password) {}
 
       virtual void request(const std::string&, const std::string&, const std::map<std::string, std::string>&, http_request_body, const char*, size_t);
 

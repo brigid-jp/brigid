@@ -87,6 +87,12 @@ namespace brigid {
       }
     }
 
+    local_ref_t<jbyteArray> make_byte_array(size_t size) {
+      local_ref_t<jbyteArray> result = make_local_ref(check(get_env()->NewByteArray(size)));
+      check();
+      return result;
+    }
+
     local_ref_t<jbyteArray> make_byte_array(const char* data, size_t size) {
       JNIEnv* env = get_env();
 
