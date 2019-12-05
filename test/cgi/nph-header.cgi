@@ -8,6 +8,7 @@ io.write(([[
 HTTP/1.1 200 OK
 Content-Type: text/plain; charset=UTF-8
 Content-Length: 3
+Connection: close
 X-Test1:foo bar
 X-Test2: foo bar 
 X-Test3:  foo  bar  
