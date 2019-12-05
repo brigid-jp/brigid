@@ -26,28 +26,30 @@ namespace brigid {
         : clazz(make_global_ref(find_class("jp/brigid/HttpTask"))),
           set_credential(clazz, "setCredential", "([B[B)V"),
           reset_credential(clazz, "resetCredential", "()V"),
-          construct(clazz, "([B[B)V"),
+          constructor(clazz, "([B[B)V"),
           set_header(clazz, "setHeader", "([B[B)V"),
-          connect(clazz, "connect", "(J)V"),
+          send(clazz, "send", "(I)V"),
           write(clazz, "write", "([BII)V"),
+          recv(clazz, "recv", "()V"),
           get_response_code(clazz, "getResponseCode", "()I"),
-          get_header_field_key(clazz, "getHeaderFieldKey", "(I)[B"),
-          get_header_field(clazz, "getHeaderField", "(I)[B"),
+          get_header_key(clazz, "getHeaderKey", "(I)[B"),
+          get_header_value(clazz, "getHeaderValue", "(I)[B"),
           read(clazz, "read", "([B)I"),
-          disconnect(clazz, "disconnect", "()V") {}
+          close(clazz, "close", "()V") {}
 
       global_ref_t<jclass> clazz;
       static_method<void> set_credential;
       static_method<void> reset_credential;
-      constructor_method construct;
+      constructor_method constructor;
       method<void> set_header;
-      method<void> connect;
+      method<void> send;
       method<void> write;
+      method<void> recv;
       method<jint> get_response_code;
-      method<jbyteArray> get_header_field_key;
-      method<jbyteArray> get_header_field;
+      method<jbyteArray> get_header_key;
+      method<jbyteArray> get_header_value;
       method<jint> read;
-      method<void> disconnect;
+      method<void> close;
     };
 
     class http_session_impl : public http_session, private noncopyable {
@@ -95,7 +97,7 @@ namespace brigid {
           const std::string& url,
           const std::map<std::string, std::string>& header)
         : session_(session),
-          instance_(make_global_ref(session_.vt.construct(
+          instance_(make_global_ref(session_.vt.constructor(
               session_.vt.clazz,
               make_byte_array(method),
               make_byte_array(url)))) {
@@ -106,7 +108,8 @@ namespace brigid {
 
       void request(http_request_body body, const char* data, size_t size) {
         if (std::unique_ptr<http_reader> reader = make_http_reader(body, data, size)) {
-          session_.vt.connect(instance_, reader->total());
+          session_.vt.send(instance_, reader->total());
+
           while (true) {
             std::vector<char> buffer(http_buffer_size);
             size_t result = reader->read(buffer.data(), buffer.size());
@@ -124,18 +127,20 @@ namespace brigid {
             }
           }
         } else {
-          session_.vt.connect(instance_, -1);
+          session_.vt.send(instance_, -1);
         }
 
-        jint code = session_.vt.get_response_code(instance_);
+        session_.vt.recv(instance_);
+
         if (session_.header_cb) {
+          jint code = session_.vt.get_response_code(instance_);
           std::map<std::string, std::string> header;
           for (jint i = 0; ; ++i) {
-            local_ref_t<jbyteArray> value = session_.vt.get_header_field(instance_, i);
+            local_ref_t<jbyteArray> value = session_.vt.get_header_value(instance_, i);
             if (!value) {
               break;
             }
-            if (local_ref_t<jbyteArray> key = session_.vt.get_header_field_key(instance_, i)) {
+            if (local_ref_t<jbyteArray> key = session_.vt.get_header_key(instance_, i)) {
               header[get_byte_array_region(key)] = get_byte_array_region(value);
             }
           }
@@ -162,7 +167,7 @@ namespace brigid {
           }
         }
 
-        session_.vt.disconnect(instance_);
+        session_.vt.close(instance_);
       }
 
     private:

@@ -41,16 +41,14 @@ public class HttpTask {
     connection.setRequestProperty(decodeUTF8(key), decodeUTF8(value));
   }
 
-  public void connect(long total) throws Exception {
+  public void send(int total) throws Exception {
     if (total >= 0) {
       connection.setDoOutput(true);
       connection.setFixedLengthStreamingMode(total);
-    }
-
-    connection.connect();
-
-    if (total >= 0) {
+      connection.connect();
       outputStream = connection.getOutputStream();
+    } else {
+      connection.connect();
     }
   }
 
@@ -58,22 +56,31 @@ public class HttpTask {
     outputStream.write(buffer, position, size);
   }
 
-  public int getResponseCode() throws Exception {
-    int code = connection.getResponseCode();
+  public void recv() throws Exception {
+    if (outputStream != null) {
+      outputStream.close();
+      outputStream = null;
+    }
+
+    connection.getResponseCode();
+
     if (!connection.getRequestMethod().equals("HEAD")) {
       inputStream = connection.getErrorStream();
       if (inputStream == null) {
         inputStream = connection.getInputStream();
       }
     }
-    return code;
   }
 
-  public byte[] getHeaderFieldKey(int i) throws Exception {
+  public int getResponseCode() throws Exception {
+    return connection.getResponseCode();
+  }
+
+  public byte[] getHeaderKey(int i) throws Exception {
     return encodeUTF8(connection.getHeaderFieldKey(i));
   }
 
-  public byte[] getHeaderField(int i) throws Exception {
+  public byte[] getHeaderValue(int i) throws Exception {
     return encodeUTF8(connection.getHeaderField(i));
   }
 
@@ -85,14 +92,19 @@ public class HttpTask {
     }
   }
 
-  public void disconnect() throws Exception {
+  public void close() throws Exception {
     if (outputStream != null) {
       outputStream.close();
+      outputStream = null;
     }
     if (inputStream != null) {
       inputStream.close();
+      inputStream = null;
     }
-    connection.disconnect();
+    if (connection != null) {
+      connection.disconnect();
+      connection = null;
+    }
   }
 
   private HttpURLConnection connection;
