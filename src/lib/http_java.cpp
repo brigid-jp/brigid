@@ -29,7 +29,7 @@ namespace brigid {
           construct(clazz, "(I[B[B[B[B)V"),
           set_header(clazz, "setHeader", "([B[B)V"),
           connect(clazz, "connect", "(J)V"),
-          write(clazz, "write", "([BI)V"),
+          write(clazz, "write", "([BII)V"),
           get_response_code(clazz, "getResponseCode", "()I"),
           get_header_field_key(clazz, "getHeaderFieldKey", "(I)[B"),
           get_header_field(clazz, "getHeaderField", "(I)[B"),
@@ -115,7 +115,7 @@ namespace brigid {
             }
             set_byte_array_region(session_.buffer, 0, result, buffer.data());
 
-            session_.vt.write(instance_, session_.buffer, result);
+            session_.vt.write(instance_, session_.buffer, 0, result);
 
             if (session_.progress_cb) {
               if (!session_.progress_cb(reader->now(), reader->total())) {

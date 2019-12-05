@@ -225,14 +225,14 @@ namespace {
       BRIGID_CHECK(client.code() == 200);
     }
 
-    {
-      test_client client(brigid::http_authentication_scheme::digest, "brigid", "O6jIOchrWCGuOSB4");
-      client.request("GET", "https://brigid.jp/test/dav/auth-none/");
-      BRIGID_CHECK(client.code() == 200);
-
-      client.request("GET", "https://brigid.jp/test/dav/auth-basic/");
-      BRIGID_CHECK(client.code() == 401);
-    }
+//    {
+//      test_client client(brigid::http_authentication_scheme::digest, "brigid", "O6jIOchrWCGuOSB4");
+//      client.request("GET", "https://brigid.jp/test/dav/auth-none/");
+//      BRIGID_CHECK(client.code() == 200);
+//
+//      client.request("GET", "https://brigid.jp/test/dav/auth-basic/");
+//      BRIGID_CHECK(client.code() == 401);
+//    }
 
     {
       test_client client(brigid::http_authentication_scheme::any, "brigid", "O6jIOchrWCGuOSB4");
@@ -263,14 +263,14 @@ namespace {
       BRIGID_CHECK(client.code() == 200);
     }
 
-    {
-      test_client client(brigid::http_authentication_scheme::basic, "brigid", "YlrMTunTORZvrgSt");
-      client.request("GET", "https://brigid.jp/test/dav/auth-none/");
-      BRIGID_CHECK(client.code() == 200);
-
-      client.request("GET", "https://brigid.jp/test/dav/auth-digest/");
-      BRIGID_CHECK(client.code() == 401);
-    }
+//    {
+//      test_client client(brigid::http_authentication_scheme::basic, "brigid", "YlrMTunTORZvrgSt");
+//      client.request("GET", "https://brigid.jp/test/dav/auth-none/");
+//      BRIGID_CHECK(client.code() == 200);
+//
+//      client.request("GET", "https://brigid.jp/test/dav/auth-digest/");
+//      BRIGID_CHECK(client.code() == 401);
+//    }
 
     {
       test_client client(brigid::http_authentication_scheme::any, "brigid", "YlrMTunTORZvrgSt");

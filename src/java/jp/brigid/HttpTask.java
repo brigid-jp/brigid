@@ -51,23 +51,13 @@ public class HttpTask {
     }
   }
 
-  public void write(byte[] buffer, int size) throws Exception {
-    outputStream.write(buffer, 0, size);
+  public void write(byte[] buffer, int position, int size) throws Exception {
+    outputStream.write(buffer, position, size);
   }
 
   public int getResponseCode() throws Exception {
-    return connection.getResponseCode();
-  }
+    int code = connection.getResponseCode();
 
-  public byte[] getHeaderFieldKey(int i) throws Exception {
-    return encodeUTF8(connection.getHeaderFieldKey(i));
-  }
-
-  public byte[] getHeaderField(int i) throws Exception {
-    return encodeUTF8(connection.getHeaderField(i));
-  }
-
-  public int read(byte[] buffer) throws Exception {
     if (!method.equals("HEAD")) {
       if (errorStream == null) {
         errorStream = connection.getErrorStream();
@@ -79,6 +69,18 @@ public class HttpTask {
       }
     }
 
+    return code;
+  }
+
+  public byte[] getHeaderFieldKey(int i) throws Exception {
+    return encodeUTF8(connection.getHeaderFieldKey(i));
+  }
+
+  public byte[] getHeaderField(int i) throws Exception {
+    return encodeUTF8(connection.getHeaderField(i));
+  }
+
+  public int read(byte[] buffer) throws Exception {
     if (errorStream != null) {
       return errorStream.read(buffer);
     } else if (inputStream != null) {
