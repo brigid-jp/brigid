@@ -25,7 +25,7 @@ namespace brigid {
           std::function<bool (size_t, size_t)>,
           std::function<bool (int, const std::map<std::string, std::string>&)>,
           std::function<bool (const char*, size_t)>,
-          http_authentication_scheme,
+          bool,
           const std::string&,
           const std::string&);
       void did_complete_with_error(NSError*);
@@ -39,7 +39,7 @@ namespace brigid {
       std::function<bool (size_t, size_t)> progress_cb_;
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb_;
       std::function<bool (const char*, size_t)> write_cb_;
-      http_authentication_scheme auth_scheme_;
+      bool credential_;
       NSString* username_;
       NSString* password_;
       std::mutex req_mutex_;
@@ -132,13 +132,13 @@ namespace brigid {
         std::function<bool (size_t, size_t)> progress_cb,
         std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
         std::function<bool (const char*, size_t)> write_cb,
-        http_authentication_scheme auth_scheme,
+        bool credential,
         const std::string& username,
         const std::string& password)
       : progress_cb_(progress_cb),
         header_cb_(header_cb),
         write_cb_(write_cb),
-        auth_scheme_(auth_scheme),
+        credential_(credential),
         username_(decode_utf8(username)),
         password_(decode_utf8(password)),
         rep_() {}
@@ -172,22 +172,7 @@ namespace brigid {
 
     NSURLCredential* http_session_delegate_impl::did_receive_challenge(NSURLAuthenticationChallenge* challenge) {
       if (challenge.previousFailureCount == 0) {
-        NSString* auth_method = challenge.protectionSpace.authenticationMethod;
-        bool credential = false;
-        switch (auth_scheme_) {
-          case http_authentication_scheme::none:
-            break;
-          case http_authentication_scheme::basic:
-            credential = [auth_method isEqualToString:NSURLAuthenticationMethodHTTPBasic];
-            break;
-          case http_authentication_scheme::digest:
-            credential = [auth_method isEqualToString:NSURLAuthenticationMethodHTTPDigest];
-            break;
-          case http_authentication_scheme::any:
-            credential = [auth_method isEqualToString:NSURLAuthenticationMethodHTTPBasic] || [auth_method isEqualToString:NSURLAuthenticationMethodHTTPDigest];
-            break;
-        }
-        if (credential) {
+        if (credential_) {
           return [NSURLCredential credentialWithUser:username_ password:password_ persistence:NSURLCredentialPersistenceForSession];
         }
       }
@@ -282,10 +267,10 @@ namespace brigid {
           std::function<bool (size_t, size_t)> progress_cb,
           std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
           std::function<bool (const char*, size_t)> write_cb,
-          http_authentication_scheme auth_scheme,
+          bool credential,
           const std::string& username,
           const std::string& password)
-        : impl_(std::make_shared<http_session_delegate_impl>(progress_cb, header_cb, write_cb, auth_scheme, username, password)),
+        : impl_(std::make_shared<http_session_delegate_impl>(progress_cb, header_cb, write_cb, credential, username, password)),
           session_([NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration ephemeralSessionConfiguration] delegate:[[BrigidHttpSessionDelegate alloc] initWithImpl:impl_] delegateQueue:nil]) {}
 
       virtual ~http_session_impl() {
@@ -333,9 +318,9 @@ namespace brigid {
       std::function<bool (size_t, size_t)> progress_cb,
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
       std::function<bool (const char*, size_t)> write_cb,
-      http_authentication_scheme auth_scheme,
+      bool credential,
       const std::string& username,
       const std::string& password) {
-    return std::unique_ptr<http_session>(new http_session_impl(progress_cb, header_cb, write_cb, auth_scheme, username, password));
+    return std::unique_ptr<http_session>(new http_session_impl(progress_cb, header_cb, write_cb, credential, username, password));
   }
 }

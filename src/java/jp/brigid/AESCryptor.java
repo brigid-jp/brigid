@@ -9,10 +9,10 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-public class AESDecryptor {
-  public AESDecryptor(byte[] key, byte[] iv) throws Exception {
+public class AESCryptor {
+  public AESCryptor(boolean encrypt, byte[] key, byte[] iv) throws Exception {
     cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-    cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv));
+    cipher.init(encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv));
   }
 
   public int update(ByteBuffer in, ByteBuffer out, boolean padding) throws Exception {

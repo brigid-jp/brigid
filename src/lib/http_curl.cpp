@@ -101,19 +101,17 @@ namespace brigid {
           const char* data,
           size_t size)
         : session_(session),
-          method_(method),
-          url_(url),
           reader_(make_http_reader(body, data, size)) {
         for (const auto& field : header) {
           header_.append(field.first + ": " + field.second);
         }
 
         setopt(CURLOPT_FOLLOWLOCATION, 1);
-        setopt(CURLOPT_CUSTOMREQUEST, method_.c_str());
-        if (method_ == "HEAD") {
+        setopt(CURLOPT_CUSTOMREQUEST, method.c_str());
+        if (method == "HEAD") {
           setopt(CURLOPT_NOBODY, 1);
         }
-        setopt(CURLOPT_URL, url_.c_str());
+        setopt(CURLOPT_URL, url.c_str());
         setopt(CURLOPT_HTTPHEADER, header_.get());
 
         if (reader_) {
@@ -164,8 +162,6 @@ namespace brigid {
 
     private:
       http_session_impl& session_;
-      std::string method_;
-      std::string url_;
       string_list header_;
       std::unique_ptr<http_reader> reader_;
       http_header_parser parser_;

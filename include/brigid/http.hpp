@@ -14,7 +14,6 @@
 #include <string>
 
 namespace brigid {
-  enum class http_authentication_scheme { none, basic, digest, any };
   enum class http_request_body { none, data, file };
 
   class http_initializer : private noncopyable {
@@ -43,7 +42,7 @@ namespace brigid {
       std::function<bool (size_t, size_t)>,
       std::function<bool (int, const std::map<std::string, std::string>&)>,
       std::function<bool (const char*, size_t)>,
-      http_authentication_scheme,
+      bool,
       const std::string&,
       const std::string&);
 }
