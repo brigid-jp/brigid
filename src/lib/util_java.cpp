@@ -19,14 +19,6 @@ namespace brigid {
       return static_cast<JNIEnv*>(SDL_AndroidGetJNIEnv());
     }
 
-    void delete_local_ref(jobject object) {
-      get_env()->DeleteLocalRef(object);
-    }
-
-    void delete_global_ref(jobject object) {
-      get_env()->DeleteGlobalRef(object);
-    }
-
     void check_impl(bool null_pointer) {
       JNIEnv* env = get_env();
       if (!env->ExceptionCheck()) {
@@ -38,16 +30,16 @@ namespace brigid {
       local_ref_t<jthrowable> instance = make_local_ref(env->ExceptionOccurred());
       env->ExceptionClear();
 
-      local_ref_t<jclass> klass = make_local_ref(env->FindClass("java/lang/Throwable"));
+      local_ref_t<jclass> clazz = make_local_ref(env->FindClass("java/lang/Throwable"));
       if (env->ExceptionCheck()) {
         env->ExceptionClear();
-        klass.reset();
+        clazz.reset();
       }
-      if (!klass) {
+      if (!clazz) {
         throw BRIGID_ERROR("cannot FindClass");
       }
 
-      jmethodID method = env->GetMethodID(klass.get(), "toString", "()Ljava/lang/String;");
+      jmethodID method = env->GetMethodID(clazz.get(), "toString", "()Ljava/lang/String;");
       if (env->ExceptionCheck()) {
         env->ExceptionClear();
         method = nullptr;
@@ -79,6 +71,36 @@ namespace brigid {
       check_impl(false);
     }
 
+    void delete_local_ref::operator()(jobject object) const {
+      get_env()->DeleteLocalRef(object);
+    }
+
+    void delete_global_ref::operator()(jobject object) const {
+      get_env()->DeleteGlobalRef(object);
+    }
+
+    local_ref_t<jbyteArray> make_byte_array(size_t size) {
+      local_ref_t<jbyteArray> result = make_local_ref(get_env()->NewByteArray(size));
+      check(result.get());
+      return result;
+    }
+
+    local_ref_t<jbyteArray> make_byte_array(const char* data, size_t size) {
+      local_ref_t<jbyteArray> result = make_byte_array(size);
+      set_byte_array_region(result, 0, size, data);
+      return result;
+    }
+
+    local_ref_t<jbyteArray> make_byte_array(const std::string& source) {
+      return make_byte_array(source.data(), source.size());
+    }
+
+    local_ref_t<jobject> make_direct_byte_buffer(void* data, size_t size) {
+      local_ref_t<jobject> result = make_local_ref(get_env()->NewDirectByteBuffer(data, size));
+      check(result.get());
+      return result;
+    }
+
     jboolean to_boolean(bool source) {
       if (source) {
         return JNI_TRUE;
@@ -87,41 +109,10 @@ namespace brigid {
       }
     }
 
-    local_ref_t<jbyteArray> make_byte_array(size_t size) {
-      local_ref_t<jbyteArray> result = make_local_ref(check(get_env()->NewByteArray(size)));
-      check();
-      return result;
-    }
-
-    local_ref_t<jbyteArray> make_byte_array(const char* data, size_t size) {
-      JNIEnv* env = get_env();
-
-      local_ref_t<jbyteArray> result = make_local_ref(check(env->NewByteArray(size)));
-      env->SetByteArrayRegion(result.get(), 0, size, reinterpret_cast<const jbyte*>(data));
-      check();
-      return result;
-    }
-
-    local_ref_t<jbyteArray> make_byte_array(const std::string& source) {
-      return make_byte_array(source.data(), source.size());
-    }
-
-    std::string to_string(jbyteArray source) {
-      JNIEnv* env = get_env();
-
-      std::vector<char> buffer(env->GetArrayLength(source));
-      env->GetByteArrayRegion(source, 0, buffer.size(), reinterpret_cast<jbyte*>(buffer.data()));
-      check();
-
-      return std::string(buffer.data(), buffer.size());
-    }
-
-    local_ref_t<jobject> make_direct_byte_buffer(char* data, size_t size) {
-      return make_local_ref(check(get_env()->NewDirectByteBuffer(const_cast<char*>(data), size)));
-    }
-
     local_ref_t<jclass> find_class(const char* name) {
-      return make_local_ref(check(get_env()->FindClass(name)));
+      local_ref_t<jclass> result = make_local_ref(get_env()->FindClass(name));
+      check(result.get());
+      return result;
     }
   }
 }

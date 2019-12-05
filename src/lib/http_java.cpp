@@ -102,28 +102,20 @@ namespace brigid {
       }
 
       void request(http_request_body body, const char* data, size_t size) {
-        JNIEnv* env = get_env();
-
         std::unique_ptr<http_reader> reader(make_http_reader(body, data, size));
 
         session_.vt.connect(instance_, reader ? reader->total() : -1);
 
         if (reader) {
-          // size_t buffer_size = std::min(http_buffer_size, reader->total());
-          // if (session_.buffer.size() < buffer_size) {
-          //   session_.buffer.resize(buffer_size);
-          // }
-
           while (true) {
             std::vector<char> buffer(http_buffer_size);
             size_t result = reader->read(buffer.data(), buffer.size());
             if (result == 0) {
               break;
             }
-            env->SetByteArrayRegion(session_.buffer.get(), 0, result, reinterpret_cast<const jbyte*>(buffer.data()));
-            check();
+            set_byte_array_region(session_.buffer, 0, result, buffer.data());
 
-            session_.vt.write(instance_, session_.buffer.get(), result);
+            session_.vt.write(instance_, session_.buffer, result);
 
             if (session_.progress_cb) {
               if (!session_.progress_cb(reader->now(), reader->total())) {
@@ -143,7 +135,7 @@ namespace brigid {
               break;
             }
             if (local_ref_t<jbyteArray> key = session_.vt.get_header_field_key(instance_, i)) {
-              header[to_string(key.get())] = to_string(field.get());
+              header[get_byte_array_region(key)] = get_byte_array_region(field);
             }
           }
 
@@ -153,21 +145,14 @@ namespace brigid {
         }
 
         if (session_.write_cb) {
-          // if (session_.buffer.size() < http_buffer_size) {
-          //   session_.buffer.resize(http_buffer_size);
-          // }
-
-          // local_ref_t<jobject> buffer = make_local_ref(check(env->NewDirectByteBuffer(const_cast<char*>(session_.buffer.data()), session_.buffer.size())));
-
           while (true) {
-            jint result = session_.vt.read(instance_, session_.buffer.get());
+            jint result = session_.vt.read(instance_, session_.buffer);
             if (result < 0) {
               break;
             }
             if (result > 0) {
               std::vector<char> buffer(result);
-              env->GetByteArrayRegion(session_.buffer.get(), 0, result, reinterpret_cast<jbyte*>(buffer.data()));
-              check();
+              get_byte_array_region(session_.buffer, 0, result, buffer.data());
 
               if (!session_.write_cb(buffer.data(), buffer.size())) {
                 throw BRIGID_ERROR("canceled");

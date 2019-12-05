@@ -31,14 +31,14 @@ namespace brigid {
     class aes_cryptor_impl : public cryptor, private noncopyable {
     public:
       aes_cryptor_impl(const char* name, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
-        : vtable_(name),
-          instance_(make_global_ref(vtable_.construct(
-              vtable_.clazz,
+        : vt_(name),
+          instance_(make_global_ref(vt_.construct(
+              vt_.clazz,
               make_byte_array(key_data, key_size),
               make_byte_array(iv_data, iv_size)))) {}
 
       virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
-        return vtable_.update(
+        return vt_.update(
             instance_,
             make_direct_byte_buffer(const_cast<char*>(in_data), in_size),
             make_direct_byte_buffer(out_data, out_size),
@@ -46,9 +46,8 @@ namespace brigid {
       }
 
     private:
-      vtable vtable_;
+      vtable vt_;
       global_ref_t<jobject> instance_;
-      method<jint> method_;
     };
   }
 
