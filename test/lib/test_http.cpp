@@ -186,10 +186,14 @@ namespace {
     BRIGID_CHECK(client.progress_count() > 0);
     BRIGID_CHECK(client.code() == 201 || client.code() == 204);
 
+    std::cout << "progress_count " << client.progress_count() << " " << 1024 * 1024 / client.progress_count() << "\n";
+
     client.request("GET", "https://brigid.jp/test/dav/auth-none/test.txt");
     BRIGID_CHECK(client.progress_count() == 0);
     BRIGID_CHECK(client.code() == 200);
     BRIGID_CHECK(client.body().size() == 1024 * 1024);
+
+    std::cout << "write_count " << client.write_count() << " " << 1024 * 1024 / client.write_count() << "\n";
 
     client.request("DELETE", "https://brigid.jp/test/dav/auth-none/test.txt");
     BRIGID_CHECK(client.progress_count() == 0);
