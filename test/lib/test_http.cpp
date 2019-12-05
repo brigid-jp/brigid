@@ -170,10 +170,14 @@ namespace {
 
   void test3() {
     std::string filename = "test.dat";
+    std::string data;
+    for (size_t i = 0; i < 4096; i += 16) {
+      data += "0123456789ABCDE\n";
+    }
     {
       std::ofstream out(filename.c_str(), std::ios::out | std::ios::binary);
-      for (size_t i = 0; i < 1024 * 1024 / 16; ++i) {
-        out << "0123456789ABCDE\n";
+      for (size_t i = 0; i < 1024 * 1024; i += data.size()) {
+        out << data;
       }
     }
 
@@ -181,6 +185,11 @@ namespace {
     client.request("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", empty_header, brigid::http_request_body::file, filename.data(), filename.size());
     BRIGID_CHECK(client.progress_count() > 0);
     BRIGID_CHECK(client.code() == 201 || client.code() == 204);
+
+    client.request("GET", "https://brigid.jp/test/dav/auth-none/test.txt");
+    BRIGID_CHECK(client.progress_count() == 0);
+    BRIGID_CHECK(client.code() == 200);
+    BRIGID_CHECK(client.body().size() == 1024 * 1024);
 
     client.request("DELETE", "https://brigid.jp/test/dav/auth-none/test.txt");
     BRIGID_CHECK(client.progress_count() == 0);
