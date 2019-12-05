@@ -16,8 +16,6 @@
 #include <string>
 #include <vector>
 
-#include <iostream>
-
 namespace brigid {
   namespace {
     using namespace java;
@@ -26,7 +24,9 @@ namespace brigid {
     public:
       vtable()
         : clazz(make_global_ref(find_class("jp/brigid/HttpTask"))),
-          construct(clazz, "(I[B[B[B[B)V"),
+          set_credential(clazz, "setCredential", "([B[B)V"),
+          reset_credential(clazz, "resetCredential", "()V"),
+          construct(clazz, "([B[B)V"),
           set_header(clazz, "setHeader", "([B[B)V"),
           connect(clazz, "connect", "(J)V"),
           write(clazz, "write", "([BII)V"),
@@ -37,6 +37,8 @@ namespace brigid {
           disconnect(clazz, "disconnect", "()V") {}
 
       global_ref_t<jclass> clazz;
+      static_method<void> set_credential;
+      static_method<void> reset_credential;
       constructor_method construct;
       method<void> set_header;
       method<void> connect;
@@ -54,16 +56,26 @@ namespace brigid {
           std::function<bool (size_t, size_t)> progress_cb,
           std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
           std::function<bool (const char*, size_t)> write_cb,
-          http_authentication_scheme auth_scheme,
+          bool credential,
           const std::string& username,
           const std::string& password)
         : buffer(make_global_ref(make_byte_array(http_buffer_size))),
           progress_cb(progress_cb),
           header_cb(header_cb),
           write_cb(write_cb),
-          auth_scheme(auth_scheme),
-          username(username),
-          password(password) {}
+          credential(credential) {
+        if (credential) {
+          vt.set_credential(vt.clazz, make_byte_array(username), make_byte_array(password));
+        }
+      }
+
+      ~http_session_impl() {
+        try {
+          if (credential) {
+            vt.reset_credential(vt.clazz);
+          }
+        } catch (...) {}
+      }
 
       virtual void request(const std::string&, const std::string&, const std::map<std::string, std::string>&, http_request_body, const char*, size_t);
 
@@ -72,9 +84,7 @@ namespace brigid {
       std::function<bool (size_t, size_t)> progress_cb;
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb;
       std::function<bool (const char*, size_t)> write_cb;
-      http_authentication_scheme auth_scheme;
-      std::string username;
-      std::string password;
+      bool credential;
     };
 
     class http_task : private noncopyable {
@@ -87,26 +97,16 @@ namespace brigid {
         : session_(session),
           instance_(make_global_ref(session_.vt.construct(
               session_.vt.clazz,
-              static_cast<jint>(session_.auth_scheme),
-              make_byte_array(session_.username),
-              make_byte_array(session_.password),
               make_byte_array(method),
               make_byte_array(url)))) {
-
         for (const auto& field : header) {
-          session_.vt.set_header(
-              instance_,
-              make_byte_array(field.first),
-              make_byte_array(field.second));
+          session_.vt.set_header(instance_, make_byte_array(field.first), make_byte_array(field.second));
         }
       }
 
       void request(http_request_body body, const char* data, size_t size) {
-        std::unique_ptr<http_reader> reader(make_http_reader(body, data, size));
-
-        session_.vt.connect(instance_, reader ? reader->total() : -1);
-
-        if (reader) {
+        if (std::unique_ptr<http_reader> reader = make_http_reader(body, data, size)) {
+          session_.vt.connect(instance_, reader->total());
           while (true) {
             std::vector<char> buffer(http_buffer_size);
             size_t result = reader->read(buffer.data(), buffer.size());
@@ -123,19 +123,20 @@ namespace brigid {
               }
             }
           }
+        } else {
+          session_.vt.connect(instance_, -1);
         }
 
+        jint code = session_.vt.get_response_code(instance_);
         if (session_.header_cb) {
-          jint code = session_.vt.get_response_code(instance_);
-
           std::map<std::string, std::string> header;
           for (jint i = 0; ; ++i) {
-            local_ref_t<jbyteArray> field = session_.vt.get_header_field(instance_, i);
-            if (!field) {
+            local_ref_t<jbyteArray> value = session_.vt.get_header_field(instance_, i);
+            if (!value) {
               break;
             }
             if (local_ref_t<jbyteArray> key = session_.vt.get_header_field_key(instance_, i)) {
-              header[get_byte_array_region(key)] = get_byte_array_region(field);
+              header[get_byte_array_region(key)] = get_byte_array_region(value);
             }
           }
 
@@ -188,9 +189,9 @@ namespace brigid {
       std::function<bool (size_t, size_t)> progress_cb,
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
       std::function<bool (const char*, size_t)> write_cb,
-      http_authentication_scheme auth_scheme,
+      bool credential,
       const std::string& username,
       const std::string& password) {
-    return std::unique_ptr<http_session>(new http_session_impl(progress_cb, header_cb, write_cb, auth_scheme, username, password));
+    return std::unique_ptr<http_session>(new http_session_impl(progress_cb, header_cb, write_cb, credential, username, password));
   }
 }

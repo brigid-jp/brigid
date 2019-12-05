@@ -181,7 +181,6 @@ namespace {
     client.request("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", empty_header, brigid::http_request_body::file, filename.data(), filename.size());
     BRIGID_CHECK(client.progress_count() > 0);
     BRIGID_CHECK(client.code() == 201 || client.code() == 204);
-    std::cout << "[" << client.body() << "]\n";
 
     client.request("DELETE", "https://brigid.jp/test/dav/auth-none/test.txt");
     BRIGID_CHECK(client.progress_count() == 0);
@@ -260,7 +259,6 @@ namespace {
 
     client.request("POST", "https://brigid.jp/test/cgi/env.cgi", header, brigid::http_request_body::data, data.data(), data.size());
     BRIGID_CHECK(client.code() == 200);
-    std::cout << "[" << client.body() << "]\n";
     BRIGID_CHECK(client.body().find("CONTENT_TYPE=application/json; charset=UTF-8\n") != std::string::npos);
   }
 
@@ -307,12 +305,10 @@ namespace {
 
     client.request("POST", "https://brigid.jp/test/cgi/env.cgi", header, brigid::http_request_body::data, data.data(), data.size());
     BRIGID_CHECK(client.code() == 200);
-    std::cout << "[" << client.body() << "]\n";
     BRIGID_CHECK(client.body().find("CONTENT_TYPE=application/x-www-form-urlencoded\n") != std::string::npos);
 
     client.request("POST", "https://brigid.jp/test/cgi/cat.cgi", header, brigid::http_request_body::data, data.data(), data.size());
     BRIGID_CHECK(client.code() == 200);
-    std::cout << "[" << client.body() << "]\n";
   }
 
   void test11() {
@@ -329,7 +325,6 @@ namespace {
     test_client client;
     client.request("GET", "https://brigid.jp/test/%63%67%69/env.cgi?%20%21");
     BRIGID_CHECK(client.code() == 200);
-    std::cout << "[" << client.body() << "]\n";
     BRIGID_CHECK(client.body().find("QUERY_STRING=%20%21\n") != std::string::npos);
   }
 

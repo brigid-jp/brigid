@@ -33,8 +33,7 @@ public class HttpTask {
 
   public HttpTask(byte[] method, byte[] url) throws Exception {
     connection = (HttpURLConnection) new URL(decodeUTF8(url)).openConnection();
-    this.method = decodeUTF8(method);
-    connection.setRequestMethod(this.method);
+    connection.setRequestMethod(decodeUTF8(method));
     connection.setUseCaches(false);
   }
 
@@ -61,18 +60,12 @@ public class HttpTask {
 
   public int getResponseCode() throws Exception {
     int code = connection.getResponseCode();
-
-    if (!method.equals("HEAD")) {
-      if (errorStream == null) {
-        errorStream = connection.getErrorStream();
-      }
-      if (errorStream == null) {
-        if (inputStream == null) {
-          inputStream = connection.getInputStream();
-        }
+    if (!connection.getRequestMethod().equals("HEAD")) {
+      inputStream = connection.getErrorStream();
+      if (inputStream == null) {
+        inputStream = connection.getInputStream();
       }
     }
-
     return code;
   }
 
@@ -85,9 +78,7 @@ public class HttpTask {
   }
 
   public int read(byte[] buffer) throws Exception {
-    if (errorStream != null) {
-      return errorStream.read(buffer);
-    } else if (inputStream != null) {
+    if (inputStream != null) {
       return inputStream.read(buffer);
     } else {
       return -1;
@@ -101,15 +92,10 @@ public class HttpTask {
     if (inputStream != null) {
       inputStream.close();
     }
-    if (errorStream != null) {
-      errorStream.close();
-    }
     connection.disconnect();
   }
 
   private HttpURLConnection connection;
-  private String method;
   private OutputStream outputStream;
-  private InputStream errorStream;
   private InputStream inputStream;
 }

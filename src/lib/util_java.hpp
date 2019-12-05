@@ -174,7 +174,7 @@ namespace brigid {
 
     template <class T>
     struct method_impl<T, enable_if_t<std::is_void<T>::value>> {
-      using result_type = void;
+      using result_type = T;
 
       template <class U, class... U_args>
       static result_type call(const U& object, jmethodID method, const U_args&... args) {
@@ -207,6 +207,38 @@ namespace brigid {
       template <class U, class... U_args>
       result_type operator()(const U& object, const U_args&... args) const {
         return method_impl<T>::call(unref(object), method_, unref(args)...);
+      }
+
+    private:
+      jmethodID method_;
+    };
+
+    template <class T, class = void>
+    struct static_method_impl;
+
+    template <class T>
+    struct static_method_impl<T, enable_if_t<std::is_void<T>::value>> {
+      using result_type = T;
+
+      template <class U, class... U_args>
+      static result_type call(const U& clazz, jmethodID method, const U_args&... args) {
+        get_env()->CallStaticVoidMethod(unref(clazz), method, unref(args)...);
+        check();
+      }
+    };
+
+    template <class T>
+    class static_method : private noncopyable {
+    public:
+      using result_type = typename static_method_impl<T>::result_type;
+
+      template <class U>
+      static_method(const U& clazz, const char* name, const char* signature)
+        : method_(check(get_env()->GetStaticMethodID(unref(clazz), name, signature))) {}
+
+      template <class U, class... U_args>
+      result_type operator()(const U& object, const U_args&... args) const {
+        return static_method_impl<T>::call(unref(object), method_, unref(args)...);
       }
 
     private:
