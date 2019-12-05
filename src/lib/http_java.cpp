@@ -10,6 +10,7 @@
 #include <jni.h>
 
 #include <stddef.h>
+#include <algorithm>
 #include <functional>
 #include <map>
 #include <memory>
@@ -61,11 +62,11 @@ namespace brigid {
           bool credential,
           const std::string& username,
           const std::string& password)
-        : buffer(make_global_ref(make_byte_array(http_buffer_size))),
-          progress_cb(progress_cb),
+        : progress_cb(progress_cb),
           header_cb(header_cb),
           write_cb(write_cb),
-          credential(credential) {
+          credential(credential),
+          jbuffer(make_global_ref(make_byte_array(0))) {
         if (credential) {
           vt.set_credential(vt.clazz, make_byte_array(username), make_byte_array(password));
         }
@@ -79,14 +80,22 @@ namespace brigid {
         } catch (...) {}
       }
 
+      void ensure_buffer_size(size_t size) {
+        if (nbuffer.size() < size) {
+          nbuffer.resize(size);
+          jbuffer = make_global_ref(make_byte_array(size));
+        }
+      }
+
       virtual void request(const std::string&, const std::string&, const std::map<std::string, std::string>&, http_request_body, const char*, size_t);
 
       vtable vt;
-      global_ref_t<jbyteArray> buffer;
       std::function<bool (size_t, size_t)> progress_cb;
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb;
       std::function<bool (const char*, size_t)> write_cb;
       bool credential;
+      std::vector<char> nbuffer;
+      global_ref_t<jbyteArray> jbuffer;
     };
 
     class http_task : private noncopyable {
@@ -97,28 +106,33 @@ namespace brigid {
           const std::string& url,
           const std::map<std::string, std::string>& header)
         : session_(session),
-          instance_(make_global_ref(session_.vt.constructor(
-              session_.vt.clazz,
-              make_byte_array(method),
-              make_byte_array(url)))) {
+          instance_(make_global_ref(session_.vt.constructor(session_.vt.clazz, make_byte_array(method), make_byte_array(url)))) {
         for (const auto& field : header) {
           session_.vt.set_header(instance_, make_byte_array(field.first), make_byte_array(field.second));
         }
+      }
+
+      ~http_task() {
+        try {
+          if (instance_) {
+            session_.vt.close(instance_);
+          }
+        } catch (...) {}
       }
 
       void request(http_request_body body, const char* data, size_t size) {
         if (std::unique_ptr<http_reader> reader = make_http_reader(body, data, size)) {
           session_.vt.send(instance_, reader->total());
 
+          session_.ensure_buffer_size(std::min(reader->total(), http_buffer_size));
           while (true) {
-            std::vector<char> buffer(http_buffer_size);
-            size_t result = reader->read(buffer.data(), buffer.size());
+            size_t result = reader->read(session_.nbuffer.data(), session_.nbuffer.size());
             if (result == 0) {
               break;
             }
-            set_byte_array_region(session_.buffer, 0, result, buffer.data());
+            set_byte_array_region(session_.jbuffer, 0, result, session_.nbuffer.data());
 
-            session_.vt.write(instance_, session_.buffer, 0, result);
+            session_.vt.write(instance_, session_.jbuffer, 0, result);
 
             if (session_.progress_cb) {
               if (!session_.progress_cb(reader->now(), reader->total())) {
@@ -151,23 +165,21 @@ namespace brigid {
         }
 
         if (session_.write_cb) {
+          session_.ensure_buffer_size(http_buffer_size);
           while (true) {
-            jint result = session_.vt.read(instance_, session_.buffer);
+            jint result = session_.vt.read(instance_, session_.jbuffer);
             if (result < 0) {
               break;
             }
             if (result > 0) {
-              std::vector<char> buffer(result);
-              get_byte_array_region(session_.buffer, 0, result, buffer.data());
+              get_byte_array_region(session_.jbuffer, 0, result, session_.nbuffer.data());
 
-              if (!session_.write_cb(buffer.data(), buffer.size())) {
+              if (!session_.write_cb(session_.nbuffer.data(), result)) {
                 throw BRIGID_ERROR("canceled");
               }
             }
           }
         }
-
-        session_.vt.close(instance_);
       }
 
     private:
