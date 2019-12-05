@@ -109,6 +109,11 @@ namespace brigid {
     jboolean to_boolean(bool);
 
     template <class T>
+    inline size_t get_array_length(const T& source) {
+      return get_env()->GetArrayLength(unref(source));
+    }
+
+    template <class T>
     inline void get_byte_array_region(const T& source, size_t position, size_t size, char* target, enable_if_t<std::is_same<unref_t<T>, jbyteArray>::value>* = nullptr) {
       get_env()->GetByteArrayRegion(unref(source), position, size, reinterpret_cast<jbyte*>(target));
       check();
@@ -123,7 +128,7 @@ namespace brigid {
 
     template <class T>
     inline std::string get_byte_array_region(const T& source, size_t position = 0, enable_if_t<std::is_same<unref_t<T>, jbyteArray>::value>* = nullptr) {
-      size_t size = get_env()->GetArrayLength(unref(source));
+      size_t size = get_array_length(source);
       if (size < position) {
         throw BRIGID_ERROR("invalid position");
       }
