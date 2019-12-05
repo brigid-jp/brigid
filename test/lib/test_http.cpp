@@ -17,14 +17,14 @@ namespace {
   class test_client {
   public:
     explicit test_client(
-        brigid::http_authentication_scheme auth_scheme = brigid::http_authentication_scheme::none,
+        bool credential = false,
         const std::string& username = std::string(),
         const std::string& password = std::string())
       : session_(brigid::make_http_session(
             std::bind(&test_client::progress_cb, this, _1, _2),
             std::bind(&test_client::header_cb, this, _1, _2),
             std::bind(&test_client::write_cb, this, _1, _2),
-            auth_scheme,
+            credential,
             username,
             password)),
         progress_count_(),
@@ -217,25 +217,7 @@ namespace {
     }
 
     {
-      test_client client(brigid::http_authentication_scheme::basic, "brigid", "O6jIOchrWCGuOSB4");
-      client.request("GET", "https://brigid.jp/test/dav/auth-none/");
-      BRIGID_CHECK(client.code() == 200);
-
-      client.request("GET", "https://brigid.jp/test/dav/auth-basic/");
-      BRIGID_CHECK(client.code() == 200);
-    }
-
-//    {
-//      test_client client(brigid::http_authentication_scheme::digest, "brigid", "O6jIOchrWCGuOSB4");
-//      client.request("GET", "https://brigid.jp/test/dav/auth-none/");
-//      BRIGID_CHECK(client.code() == 200);
-//
-//      client.request("GET", "https://brigid.jp/test/dav/auth-basic/");
-//      BRIGID_CHECK(client.code() == 401);
-//    }
-
-    {
-      test_client client(brigid::http_authentication_scheme::any, "brigid", "O6jIOchrWCGuOSB4");
+      test_client client(true, "brigid", "O6jIOchrWCGuOSB4");
       client.request("GET", "https://brigid.jp/test/dav/auth-none/");
       BRIGID_CHECK(client.code() == 200);
 
@@ -255,25 +237,7 @@ namespace {
     }
 
     {
-      test_client client(brigid::http_authentication_scheme::digest, "brigid", "YlrMTunTORZvrgSt");
-      client.request("GET", "https://brigid.jp/test/dav/auth-none/");
-      BRIGID_CHECK(client.code() == 200);
-
-      client.request("GET", "https://brigid.jp/test/dav/auth-digest/");
-      BRIGID_CHECK(client.code() == 200);
-    }
-
-//    {
-//      test_client client(brigid::http_authentication_scheme::basic, "brigid", "YlrMTunTORZvrgSt");
-//      client.request("GET", "https://brigid.jp/test/dav/auth-none/");
-//      BRIGID_CHECK(client.code() == 200);
-//
-//      client.request("GET", "https://brigid.jp/test/dav/auth-digest/");
-//      BRIGID_CHECK(client.code() == 401);
-//    }
-
-    {
-      test_client client(brigid::http_authentication_scheme::any, "brigid", "YlrMTunTORZvrgSt");
+      test_client client(true, "brigid", "YlrMTunTORZvrgSt");
       client.request("GET", "https://brigid.jp/test/dav/auth-none/");
       BRIGID_CHECK(client.code() == 200);
 
