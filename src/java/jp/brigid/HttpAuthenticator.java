@@ -8,35 +8,13 @@ import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 
 public class HttpAuthenticator extends Authenticator {
-  public HttpAuthenticator(int authScheme, String username, String password) {
-    this.authScheme = authScheme;
+  public HttpAuthenticator(String username, String password) {
     auth = new PasswordAuthentication(username, password.toCharArray());
   }
 
-  public PasswordAuthentication getPasswordAuthentication() {
-    String reqeustingScheme = getRequestingScheme().toLowerCase();
-    switch (authScheme) {
-      case 0: // none
-        break;
-      case 1: // basic
-        if (reqeustingScheme.equals("basic")) {
-          return auth;
-        }
-        break;
-      case 2: // digest
-        if (reqeustingScheme.equals("digest")) {
-          return auth;
-        }
-        break;
-      case 3: // any
-        if (reqeustingScheme.equals("basic") || reqeustingScheme.equals("digest")) {
-          return auth;
-        }
-        break;
-    }
-    return null;
+  protected PasswordAuthentication getPasswordAuthentication() {
+    return auth;
   }
 
-  private int authScheme;
   private PasswordAuthentication auth;
 }

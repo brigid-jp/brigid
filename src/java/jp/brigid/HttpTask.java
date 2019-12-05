@@ -9,7 +9,6 @@ import java.io.OutputStream;
 import java.net.Authenticator;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.ByteBuffer;
 
 public class HttpTask {
   private static byte[] encodeUTF8(String source) throws Exception {
@@ -24,10 +23,15 @@ public class HttpTask {
     return new String(source, "UTF-8");
   }
 
-  public HttpTask(int authScheme, byte[] username, byte[] password, byte[] method, byte[] url) throws Exception {
-    // Android does not support digest.
-    Authenticator.setDefault(new HttpAuthenticator(authScheme, decodeUTF8(username), decodeUTF8(password)));
+  public static void setCredential(byte[] username, byte[] password) throws Exception {
+    Authenticator.setDefault(new HttpAuthenticator(decodeUTF8(username), decodeUTF8(password)));
+  }
 
+  public static void resetCredential() {
+    Authenticator.setDefault(null);
+  }
+
+  public HttpTask(byte[] method, byte[] url) throws Exception {
     connection = (HttpURLConnection) new URL(decodeUTF8(url)).openConnection();
     this.method = decodeUTF8(method);
     connection.setRequestMethod(this.method);
