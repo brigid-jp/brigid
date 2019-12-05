@@ -37,7 +37,7 @@ namespace brigid {
           disconnect(clazz, "disconnect", "()V") {}
 
       global_ref_t<jclass> clazz;
-      constructor construct;
+      constructor_method construct;
       method<void> set_header;
       method<void> connect;
       method<void> write;

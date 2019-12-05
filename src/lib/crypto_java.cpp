@@ -24,7 +24,7 @@ namespace brigid {
           update(clazz, "update", "(Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Z)I") {}
 
       global_ref_t<jclass> clazz;
-      constructor construct;
+      constructor_method construct;
       method<jint> update;
     };
 

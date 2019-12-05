@@ -138,12 +138,12 @@ namespace brigid {
 
     local_ref_t<jclass> find_class(const char*);
 
-    class constructor : private noncopyable {
+    class constructor_method : private noncopyable {
     public:
       using result_type = local_ref_t<jobject>;
 
       template <class U>
-      constructor(const U& clazz, const char* signature)
+      constructor_method(const U& clazz, const char* signature)
         : method_(check(get_env()->GetMethodID(unref(clazz), "<init>", signature))) {}
 
       template <class U, class... U_args>
