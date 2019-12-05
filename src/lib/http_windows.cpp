@@ -58,7 +58,7 @@ namespace brigid {
           std::function<bool (size_t, size_t)> progress_cb,
           std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
           std::function<bool (const char*, size_t)> write_cb,
-          http_authentication_scheme auth_scheme,
+          bool credential,
           const std::string& username,
           const std::string& password)
         : session_(make_internet_handle(check(WinHttpOpen(
@@ -70,7 +70,7 @@ namespace brigid {
           progress_cb_(progress_cb),
           header_cb_(header_cb),
           write_cb_(write_cb),
-          auth_scheme_(auth_scheme),
+          credential_(credential),
           username_(decode_utf8(username)),
           password_(decode_utf8(password)) {}
 
@@ -176,27 +176,12 @@ namespace brigid {
       std::function<bool (size_t, size_t)> progress_cb_;
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb_;
       std::function<bool (const char*, size_t)> write_cb_;
-      http_authentication_scheme auth_scheme_;
+      bool credential_;
       std::wstring username_;
       std::wstring password_;
       std::vector<char> buffer_;
 
       DWORD send(HINTERNET request, DWORD auth_scheme, http_request_body body, const char* data, size_t size) {
-        if (!auth_scheme) {
-          switch (auth_scheme_) {
-            case http_authentication_scheme::none:
-              break;
-            case http_authentication_scheme::basic:
-              auth_scheme = WINHTTP_AUTH_SCHEME_BASIC;
-              break;
-            case http_authentication_scheme::digest:
-              auth_scheme = WINHTTP_AUTH_SCHEME_DIGEST;
-              break;
-            case http_authentication_scheme::any:
-              break;
-          }
-        }
-
         if (auth_scheme) {
           check(WinHttpSetCredentials(
               request,
@@ -265,7 +250,7 @@ namespace brigid {
               WINHTTP_NO_HEADER_INDEX));
         }
 
-        if (code == 401 && auth_scheme_ == http_authentication_scheme::any && !auth_scheme) {
+        if (code == 401 && credential_) {
           DWORD supported_schemes = 0;
           DWORD first_scheme = 0;
           DWORD auth_target = 0;
@@ -274,12 +259,8 @@ namespace brigid {
               &supported_schemes,
               &first_scheme,
               &auth_target));
-          if (first_scheme == WINHTTP_AUTH_SCHEME_BASIC || first_scheme == WINHTTP_AUTH_SCHEME_DIGEST) {
+          if (first_scheme) {
             return send(request, first_scheme, body, data, size);
-          } else if (supported_schemes & WINHTTP_AUTH_SCHEME_DIGEST) {
-            return send(request, WINHTTP_AUTH_SCHEME_DIGEST, body, data, size);
-          } else if (supported_schemes & WINHTTP_AUTH_SCHEME_BASIC) {
-            return send(request, WINHTTP_AUTH_SCHEME_BASIC, body, data, size);
           }
         }
 
@@ -295,9 +276,9 @@ namespace brigid {
       std::function<bool (size_t, size_t)> progress_cb,
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
       std::function<bool (const char*, size_t)> write_cb,
-      http_authentication_scheme auth_scheme,
+      bool credential,
       const std::string& username,
       const std::string& password) {
-    return std::unique_ptr<http_session>(new http_session_impl(progress_cb, header_cb, write_cb, auth_scheme, username, password));
+    return std::unique_ptr<http_session>(new http_session_impl(progress_cb, header_cb, write_cb, credential, username, password));
   }
 }
