@@ -5,8 +5,7 @@
 .SUFFIXES: .java .class
 
 CLASSES = \
-	jp/brigid/AESDecryptor.class \
-	jp/brigid/AESEncryptor.class \
+	jp/brigid/AESCryptor.class \
 	jp/brigid/HttpAuthenticator.class \
 	jp/brigid/HttpTask.class
 
