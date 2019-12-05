@@ -43,14 +43,14 @@ namespace brigid {
           std::function<bool (size_t, size_t)> progress_cb,
           std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
           std::function<bool (const char*, size_t)> write_cb,
-          http_authentication_scheme auth_scheme,
+          bool credential,
           const std::string& username,
           const std::string& password)
         : handle(make_easy(check(curl_easy_init()))),
           progress_cb(progress_cb),
           header_cb(header_cb),
           write_cb(write_cb),
-          auth_scheme(auth_scheme),
+          credential(credential),
           username(username),
           password(password) {}
 
@@ -60,7 +60,7 @@ namespace brigid {
       std::function<bool (size_t, size_t)> progress_cb;
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb;
       std::function<bool (const char*, size_t)> write_cb;
-      http_authentication_scheme auth_scheme;
+      bool credential;
       std::string username;
       std::string password;
     };
@@ -131,24 +131,10 @@ namespace brigid {
           setopt(CURLOPT_WRITEDATA, this);
         }
 
-        switch (session_.auth_scheme) {
-          case http_authentication_scheme::none:
-            break;
-          case http_authentication_scheme::basic:
-            setopt(CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        if (session_.credential) {
+            setopt(CURLOPT_HTTPAUTH, CURLAUTH_ANY);
             setopt(CURLOPT_USERNAME, session_.username.c_str());
             setopt(CURLOPT_PASSWORD, session_.password.c_str());
-            break;
-          case http_authentication_scheme::digest:
-            setopt(CURLOPT_HTTPAUTH, CURLAUTH_DIGEST);
-            setopt(CURLOPT_USERNAME, session_.username.c_str());
-            setopt(CURLOPT_PASSWORD, session_.password.c_str());
-            break;
-          case http_authentication_scheme::any:
-            setopt(CURLOPT_HTTPAUTH, CURLAUTH_BASIC | CURLAUTH_DIGEST);
-            setopt(CURLOPT_USERNAME, session_.username.c_str());
-            setopt(CURLOPT_PASSWORD, session_.password.c_str());
-            break;
         }
       }
 
@@ -278,9 +264,9 @@ namespace brigid {
       std::function<bool (size_t, size_t)> progress_cb,
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
       std::function<bool (const char*, size_t)> write_cb,
-      http_authentication_scheme auth_scheme,
+      bool credential,
       const std::string& username,
       const std::string& password) {
-    return std::unique_ptr<http_session>(new http_session_impl(progress_cb, header_cb, write_cb, auth_scheme, username, password));
+    return std::unique_ptr<http_session>(new http_session_impl(progress_cb, header_cb, write_cb, credential, username, password));
   }
 }
