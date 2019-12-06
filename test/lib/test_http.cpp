@@ -210,7 +210,7 @@ namespace {
     BRIGID_CHECK(client.body() == "ok\n");
     BRIGID_CHECK(client.header("Location") == "");
 
-    client.request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=10");
+    client.request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=11");
     BRIGID_CHECK(client.code() == 200);
     BRIGID_CHECK(client.body() == "ok\n");
     BRIGID_CHECK(client.header("Location") == "");
