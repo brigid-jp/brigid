@@ -12,7 +12,8 @@ OBJS = \
 	test_crypto.o \
 	test_java.o \
 	test_http.o \
-	test_http_impl.o
+	test_http_impl.o \
+	test_version.o
 TARGET = libjavatest.dylib
 
 all: all-recursive $(TARGET)

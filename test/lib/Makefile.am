@@ -15,7 +15,8 @@ test_exe_SOURCES = \
 	test_crypto.cpp \
 	test_http.cpp \
 	test_http_impl.cpp \
-	test_main.cpp
+	test_main.cpp \
+	test_version.cpp
 
 if CRYPTO_OPENSSL
 test_exe_LDFLAGS += $(OPENSSL_LDFLAGS)
