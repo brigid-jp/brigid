@@ -92,29 +92,34 @@ namespace brigid {
 
     class http_task : private noncopyable {
     public:
-      http_task(
-          http_session_impl& session,
+      http_task(http_session_impl& session)
+        : session_(session) {}
+
+      ~http_task() {
+        curl_easy_reset(session_.handle.get());
+      }
+
+      void request(
           const std::string& method,
           const std::string& url,
           const std::map<std::string, std::string>& header,
           http_request_body body,
           const char* data,
-          size_t size)
-        : session_(session),
-          reader_(make_http_reader(body, data, size)) {
-        for (const auto& field : header) {
-          header_.append(field.first + ": " + field.second);
-        }
-
+          size_t size) {
         setopt(CURLOPT_FOLLOWLOCATION, 1);
+
         setopt(CURLOPT_CUSTOMREQUEST, method.c_str());
         if (method == "HEAD") {
           setopt(CURLOPT_NOBODY, 1);
         }
         setopt(CURLOPT_URL, url.c_str());
+
+        for (const auto& field : header) {
+          header_.append(field.first + ": " + field.second);
+        }
         setopt(CURLOPT_HTTPHEADER, header_.get());
 
-        if (reader_) {
+        if (reader_ = make_http_reader(body, data, size)) {
           setopt(CURLOPT_UPLOAD, 1);
           setopt(CURLOPT_INFILESIZE_LARGE, reader_->total());
           setopt(CURLOPT_READFUNCTION, &http_task::read_cb);
@@ -132,13 +137,11 @@ namespace brigid {
         }
 
         if (session_.credential) {
-            setopt(CURLOPT_HTTPAUTH, CURLAUTH_ANY);
-            setopt(CURLOPT_USERNAME, session_.username.c_str());
-            setopt(CURLOPT_PASSWORD, session_.password.c_str());
+          setopt(CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+          setopt(CURLOPT_USERNAME, session_.username.c_str());
+          setopt(CURLOPT_PASSWORD, session_.password.c_str());
         }
-      }
 
-      void request() {
         CURLcode code = curl_easy_perform(session_.handle.get());
         if (exception_) {
           std::rethrow_exception(exception_);
@@ -233,16 +236,8 @@ namespace brigid {
         http_request_body body,
         const char* data,
         size_t size) {
-      try {
-        {
-          http_task task(*this, method, url, header, body, data, size);
-          task.request();
-        }
-        curl_easy_reset(handle.get());
-      } catch (...) {
-        curl_easy_reset(handle.get());
-        throw;
-      }
+      http_task task(*this);
+      task.request(method, url, header, body, data, size);
     }
 
     int http_initializer_count = 0;
