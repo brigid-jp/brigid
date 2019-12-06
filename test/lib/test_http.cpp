@@ -210,12 +210,12 @@ namespace {
     BRIGID_CHECK(client.body() == "ok\n");
     BRIGID_CHECK(client.header("Location") == "");
 
-    // default redirection
-    // WinHTTP: 10
     client.request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=10");
     BRIGID_CHECK(client.code() == 200);
     BRIGID_CHECK(client.body() == "ok\n");
     BRIGID_CHECK(client.header("Location") == "");
+
+    BRIGID_CHECK_THROW([&](){ client.request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=21"); });
   }
 
   void test5() {
