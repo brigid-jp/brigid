@@ -341,6 +341,30 @@ namespace {
     BRIGID_CHECK(client.body().find("QUERY_STRING=%20%21\n") != std::string::npos);
   }
 
+  void test14() {
+    test_client client;
+    client.request("GET", "https://brigid.jp/test/cgi/cookie.cgi");
+    BRIGID_CHECK(client.code() == 200);
+    std::cout << "{" << client.body() << "}\n";
+    BRIGID_CHECK(client.header("Set-Cookie") == "code=42; Path=/test/cgi/; Secure");
+    BRIGID_CHECK(client.body() == "HTTP_COOKIE=\n");
+
+    client.request("GET", "https://brigid.jp/test/cgi/cookie.cgi");
+    BRIGID_CHECK(client.code() == 200);
+    std::cout << "{" << client.body() << "}\n";
+    BRIGID_CHECK(client.header("Set-Cookie") == "code=42; Path=/test/cgi/; Secure");
+    BRIGID_CHECK(client.body() == "HTTP_COOKIE=\n");
+
+    std::map<std::string, std::string> header {
+      { "Cookie", "code=69" },
+    };
+    client.request("GET", "https://brigid.jp/test/cgi/cookie.cgi", header);
+    BRIGID_CHECK(client.code() == 200);
+    std::cout << "{" << client.body() << "}\n";
+    BRIGID_CHECK(client.header("Set-Cookie") == "");
+    BRIGID_CHECK(client.body() == "HTTP_COOKIE=code=69\n");
+  }
+
   BRIGID_MAKE_TEST_CASE(test1);
   BRIGID_MAKE_TEST_CASE(test2);
   BRIGID_MAKE_TEST_CASE(test3);
@@ -354,4 +378,5 @@ namespace {
   BRIGID_MAKE_TEST_CASE(test11);
   BRIGID_MAKE_TEST_CASE(test12);
   BRIGID_MAKE_TEST_CASE(test13);
+  BRIGID_MAKE_TEST_CASE(test14);
 }
