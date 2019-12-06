@@ -5,9 +5,7 @@
 #include <brigid/version.hpp>
 #include "test.hpp"
 
-#include <stdint.h>
 #include <string.h>
-#include <iostream>
 
 namespace {
   void test1() {
