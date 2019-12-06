@@ -39,9 +39,7 @@ namespace brigid {
       std::function<bool (size_t, size_t)> progress_cb_;
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb_;
       std::function<bool (const char*, size_t)> write_cb_;
-      bool credential_;
-      NSString* username_;
-      NSString* password_;
+      NSURLCredential* credential_;
       std::mutex req_mutex_;
       std::condition_variable req_condition_;
       std::function<bool ()> req_;
@@ -138,10 +136,12 @@ namespace brigid {
       : progress_cb_(progress_cb),
         header_cb_(header_cb),
         write_cb_(write_cb),
-        credential_(credential),
-        username_(decode_utf8(username)),
-        password_(decode_utf8(password)),
-        rep_() {}
+        credential_(),
+        rep_() {
+      if (credential) {
+        credential_ = [NSURLCredential credentialWithUser:decode_utf8(username) password:decode_utf8(password) persistence:NSURLCredentialPersistenceForSession];
+      }
+    }
 
     void http_session_delegate_impl::did_complete_with_error(NSError* error) {
       std::lock_guard<std::mutex> req_lock(req_mutex_);
@@ -172,9 +172,7 @@ namespace brigid {
 
     NSURLCredential* http_session_delegate_impl::did_receive_challenge(NSURLAuthenticationChallenge* challenge) {
       if (challenge.previousFailureCount == 0) {
-        if (credential_) {
-          return [NSURLCredential credentialWithUser:username_ password:password_ persistence:NSURLCredentialPersistenceForSession];
-        }
+        return credential_;
       }
       return nil;
     }
