@@ -2,8 +2,8 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include "test.hpp"
 #include <brigid/http.hpp>
+#include "test.hpp"
 
 #include <stdio.h>
 #include <fstream>

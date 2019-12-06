@@ -3,7 +3,6 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include "test.hpp"
-
 #include "JavaTest.h"
 
 void* access_jnienv(void* set_env = 0) {

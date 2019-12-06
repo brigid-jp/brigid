@@ -2,8 +2,8 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include "test.hpp"
 #include <brigid/crypto.hpp>
+#include "test.hpp"
 
 #include <algorithm>
 #include <iostream>

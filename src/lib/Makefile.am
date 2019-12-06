@@ -9,7 +9,8 @@ libbrigid_la_LDFLAGS = -static
 libbrigid_la_SOURCES = \
 	crypto.cpp \
 	http.cpp \
-	http_impl.cpp
+	http_impl.cpp \
+	version.cpp
 
 if CRYPTO_APPLE
 libbrigid_la_SOURCES += crypto_apple.cpp
