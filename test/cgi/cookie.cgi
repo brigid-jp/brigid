@@ -7,7 +7,7 @@
 local cookie = os.getenv "HTTP_COOKIE" or ""
 
 if cookie == "" then
-  io.write "Set-Cookie: code=42\n"
+  io.write "Set-Cookie: code=42; Path=/test/cgi/; Secure\n"
 end
 
 io.write(([[
