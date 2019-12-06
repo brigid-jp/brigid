@@ -69,6 +69,11 @@ namespace brigid {
     struct is_global_ref_t<std::unique_ptr<T, delete_global_ref>> : std::true_type {};
 
     template <class T>
+    inline global_ref_t<T> make_global_ref(enable_if_t<is_jobject_t<T>::value>* = nullptr) {
+      return global_ref_t<T>(nullptr, delete_global_ref());
+    }
+
+    template <class T>
     inline global_ref_t<typename T::pointer> make_global_ref(const T& source, enable_if_t<(is_local_ref_t<T>::value && is_jobject_t<typename T::pointer>::value)>* = nullptr) {
       global_ref_t<typename T::pointer> result(reinterpret_cast<typename T::pointer>(get_env()->NewGlobalRef(source.get())), delete_global_ref());
       check(result.get());

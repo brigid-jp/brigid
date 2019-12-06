@@ -41,28 +41,28 @@ public class HttpTask {
     connection.setRequestProperty(decodeUTF8(key), decodeUTF8(value));
   }
 
-  public void send(int total) throws Exception {
-    if (total >= 0) {
-      connection.setDoOutput(true);
-      connection.setFixedLengthStreamingMode(total);
-      connection.connect();
-      outputStream = connection.getOutputStream();
-    } else {
-      connection.connect();
-    }
+  public void send() throws Exception {
+    connection.connect();
+  }
+
+  public void sendBody(long total) throws Exception {
+    connection.setDoOutput(true);
+    connection.setFixedLengthStreamingMode(total);
+    connection.connect();
+    outputStream = connection.getOutputStream();
   }
 
   public void write(byte[] buffer, int position, int size) throws Exception {
     outputStream.write(buffer, position, size);
   }
 
-  public void recv() throws Exception {
+  public int recv() throws Exception {
     if (outputStream != null) {
       outputStream.close();
       outputStream = null;
     }
 
-    connection.getResponseCode();
+    int code = connection.getResponseCode();
 
     if (!connection.getRequestMethod().equals("HEAD")) {
       inputStream = connection.getErrorStream();
@@ -70,6 +70,8 @@ public class HttpTask {
         inputStream = connection.getInputStream();
       }
     }
+
+    return code;
   }
 
   public int getResponseCode() throws Exception {
