@@ -10,7 +10,8 @@ OBJS = \
 	test_crypto.obj \
 	test_http.obj \
 	test_http_impl.obj \
-	test_main.obj
+	test_main.obj \
+	test_version.obj
 
 TARGET = test.exe
 
