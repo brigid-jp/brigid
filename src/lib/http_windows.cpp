@@ -13,7 +13,7 @@
 #include <windows.h>
 #include <winhttp.h>
 
-#include <algorithm>
+#include <stddef.h>
 #include <functional>
 #include <map>
 #include <memory>
@@ -147,15 +147,15 @@ namespace brigid {
           }
         }
 
+        ensure_buffer_size(http_buffer_size);
         while (true) {
           DWORD available = 0;
           check(WinHttpQueryDataAvailable(request.get(), &available));
           if (!available) {
             break;
           }
-          if (buffer_.size() < available) {
-            buffer_.resize(available);
-          }
+
+          ensure_buffer_size(available);
           DWORD size = 0;
           check(WinHttpReadData(
               request.get(),
@@ -181,6 +181,12 @@ namespace brigid {
       std::wstring password_;
       std::vector<char> buffer_;
 
+      void ensure_buffer_size(size_t size) {
+        if (buffer_.size() < size) {
+          buffer_.resize(size);
+        }
+      }
+
       DWORD send(HINTERNET request, DWORD auth_scheme, http_request_body body, const char* data, size_t size) {
         if (auth_scheme) {
           check(WinHttpSetCredentials(
@@ -202,11 +208,7 @@ namespace brigid {
               static_cast<DWORD>(reader->total()),
               0));
 
-          size_t buffer_size = std::min(http_buffer_size, reader->total());
-          if (buffer_.size() < buffer_size) {
-            buffer_.resize(buffer_size);
-          }
-
+          ensure_buffer_size(http_buffer_size);
           while (true) {
             size_t result = reader->read(buffer_.data(), buffer_.size());
             if (result == 0) {
@@ -251,16 +253,16 @@ namespace brigid {
         }
 
         if (code == 401 && credential_) {
-          DWORD supported_schemes = 0;
-          DWORD first_scheme = 0;
-          DWORD auth_target = 0;
+          DWORD schemes = 0;
+          DWORD scheme = 0;
+          DWORD target = 0;
           check(WinHttpQueryAuthSchemes(
               request,
-              &supported_schemes,
-              &first_scheme,
-              &auth_target));
-          if (first_scheme) {
-            return send(request, first_scheme, body, data, size);
+              &schemes,
+              &scheme,
+              &target));
+          if (scheme) {
+            return send(request, scheme, body, data, size);
           }
         }
 
