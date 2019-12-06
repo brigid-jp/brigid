@@ -10,7 +10,6 @@
 #include <jni.h>
 
 #include <stddef.h>
-#include <algorithm>
 #include <functional>
 #include <map>
 #include <memory>
@@ -29,9 +28,10 @@ namespace brigid {
           reset_credential(clazz, "resetCredential", "()V"),
           constructor(clazz, "([B[B)V"),
           set_header(clazz, "setHeader", "([B[B)V"),
-          send(clazz, "send", "(I)V"),
+          send(clazz, "send", "()V"),
+          send_body(clazz, "sendBody", "(J)V"),
           write(clazz, "write", "([BII)V"),
-          recv(clazz, "recv", "()V"),
+          recv(clazz, "recv", "()I"),
           get_response_code(clazz, "getResponseCode", "()I"),
           get_header_key(clazz, "getHeaderKey", "(I)[B"),
           get_header_value(clazz, "getHeaderValue", "(I)[B"),
@@ -44,8 +44,9 @@ namespace brigid {
       constructor_method constructor;
       method<void> set_header;
       method<void> send;
+      method<void> send_body;
       method<void> write;
-      method<void> recv;
+      method<jint> recv;
       method<jint> get_response_code;
       method<jbyteArray> get_header_key;
       method<jbyteArray> get_header_value;
@@ -66,7 +67,7 @@ namespace brigid {
           header_cb(header_cb),
           write_cb(write_cb),
           credential(credential),
-          jbuffer(make_global_ref(make_byte_array(0))) {
+          jbuffer(make_global_ref<jbyteArray>()) {
         if (credential) {
           vt.set_credential(vt.clazz, make_byte_array(username), make_byte_array(password));
         }
@@ -100,17 +101,9 @@ namespace brigid {
 
     class http_task : private noncopyable {
     public:
-      http_task(
-          http_session_impl& session,
-          const std::string& method,
-          const std::string& url,
-          const std::map<std::string, std::string>& header)
+      http_task(http_session_impl& session)
         : session_(session),
-          instance_(make_global_ref(session_.vt.constructor(session_.vt.clazz, make_byte_array(method), make_byte_array(url)))) {
-        for (const auto& field : header) {
-          session_.vt.set_header(instance_, make_byte_array(field.first), make_byte_array(field.second));
-        }
-      }
+          instance_(make_global_ref<jobject>()) {}
 
       ~http_task() {
         try {
@@ -120,11 +113,23 @@ namespace brigid {
         } catch (...) {}
       }
 
-      void request(http_request_body body, const char* data, size_t size) {
-        if (std::unique_ptr<http_reader> reader = make_http_reader(body, data, size)) {
-          session_.vt.send(instance_, reader->total());
+      void request(
+          const std::string& method,
+          const std::string& url,
+          const std::map<std::string, std::string>& header,
+          http_request_body body,
+          const char* data,
+          size_t size) {
+        instance_ = make_global_ref(session_.vt.constructor(session_.vt.clazz, make_byte_array(method), make_byte_array(url)));
 
-          session_.ensure_buffer_size(std::min(reader->total(), http_buffer_size));
+        for (const auto& field : header) {
+          session_.vt.set_header(instance_, make_byte_array(field.first), make_byte_array(field.second));
+        }
+
+        if (std::unique_ptr<http_reader> reader = make_http_reader(body, data, size)) {
+          session_.vt.send_body(instance_, reader->total());
+
+          session_.ensure_buffer_size(http_buffer_size);
           while (true) {
             size_t result = reader->read(session_.nbuffer.data(), session_.nbuffer.size());
             if (result == 0) {
@@ -141,13 +146,14 @@ namespace brigid {
             }
           }
         } else {
-          session_.vt.send(instance_, -1);
+          session_.vt.send(instance_);
         }
 
         session_.vt.recv(instance_);
 
         if (session_.header_cb) {
           jint code = session_.vt.get_response_code(instance_);
+
           std::map<std::string, std::string> header;
           for (jint i = 0; ; ++i) {
             local_ref_t<jbyteArray> value = session_.vt.get_header_value(instance_, i);
@@ -194,8 +200,8 @@ namespace brigid {
         http_request_body body,
         const char* data,
         size_t size) {
-      http_task task(*this, method, url, header);
-      task.request(body, data, size);
+      http_task task(*this);
+      task.request(method, url, header, body, data, size);
     }
   }
 
