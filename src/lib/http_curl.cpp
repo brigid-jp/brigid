@@ -107,6 +107,7 @@ namespace brigid {
           const char* data,
           size_t size) {
         setopt(CURLOPT_FOLLOWLOCATION, 1);
+        setopt(CURLOPT_MAXREDIRS, 50);
 
         setopt(CURLOPT_CUSTOMREQUEST, method.c_str());
         if (method == "HEAD") {
