@@ -48,7 +48,7 @@ namespace brigid {
 
     using internet_handle_t = std::unique_ptr<remove_pointer_t<HINTERNET>, decltype(&WinHttpCloseHandle)>;
 
-    internet_handle_t make_internet_handle(HINTERNET handle = nullptr) {
+    internet_handle_t make_internet_handle(HINTERNET handle) {
       return internet_handle_t(handle, &WinHttpCloseHandle);
     }
 
@@ -104,6 +104,13 @@ namespace brigid {
             WINHTTP_NO_REFERER,
             WINHTTP_DEFAULT_ACCEPT_TYPES,
             url_components.nScheme == INTERNET_SCHEME_HTTPS ? WINHTTP_FLAG_SECURE : 0)));
+
+        DWORD feature = WINHTTP_DISABLE_COOKIES;
+        check(WinHttpSetOption(
+            request.get(),
+            WINHTTP_OPTION_DISABLE_FEATURE,
+            &feature,
+            sizeof(feature)));
 
         for (const auto& field : header) {
           check(WinHttpAddRequestHeaders(
