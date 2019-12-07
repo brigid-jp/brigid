@@ -14,7 +14,7 @@ namespace brigid {
     }
   }
 
-  void initialize_main(lua_State* L) {
+  void initialize_version(lua_State* L) {
     luax_set_field(L, -1, "get_version", impl_get_version);
   }
 }
