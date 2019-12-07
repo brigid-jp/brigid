@@ -3,8 +3,8 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/crypto.hpp>
+#include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
-#include "error.hpp"
 #include "type_traits.hpp"
 #include "util_windows.hpp"
 

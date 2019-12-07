@@ -5,8 +5,6 @@
 #include "common.hpp"
 #include <exception>
 
-
-
 namespace brigid {
   namespace {
     int closure(lua_State* L) {
@@ -58,6 +56,10 @@ namespace brigid {
     size_t size = 0;
     const char* data = luaL_checklstring(L, arg, &size);
     return luax_data_reference(data, size);
+  }
+
+  void luax_push(lua_State* L, const char* data) {
+    lua_pushstring(L, data);
   }
 
   void luax_push(lua_State* L, const char* data, size_t size) {

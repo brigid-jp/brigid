@@ -2,7 +2,7 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include "error.hpp"
+#include <brigid/error.hpp>
 #include "util_windows.hpp"
 
 #define NOMINMAX
@@ -111,8 +111,7 @@ namespace brigid {
 
         output = encode_utf8(data.get(), result - 2);
         return true;
-      } catch (...) {
-      }
+      } catch (...) {}
       return false;
     }
   }

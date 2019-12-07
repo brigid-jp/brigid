@@ -10,7 +10,9 @@ brigid_la_LIBADD = $(top_srcdir)/src/lib/libbrigid.la
 brigid_la_SOURCES = \
 	common.cpp \
 	crypto.cpp \
-	module.cpp
+	module.cpp \
+	util_lua.cpp \
+	version.cpp
 
 if CRYPTO_OPENSSL
 brigid_la_LDFLAGS += $(OPENSSL_LDFLAGS)
