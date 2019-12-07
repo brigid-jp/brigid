@@ -60,6 +60,10 @@ namespace brigid {
     return luax_data_reference(data, size);
   }
 
+  void luax_push(lua_State* L, const char* data) {
+    lua_pushstring(L, data);
+  }
+
   void luax_push(lua_State* L, const char* data, size_t size) {
     lua_pushlstring(L, data, size);
   }

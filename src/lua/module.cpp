@@ -6,9 +6,11 @@
 
 namespace brigid {
   void initialize_crypto(lua_State*);
+  void initialize_main(lua_State*);
 
   void initialize(lua_State* L) {
     initialize_crypto(L);
+    initialize_main(L);
   }
 }
 

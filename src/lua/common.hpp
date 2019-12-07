@@ -35,8 +35,8 @@ namespace brigid {
 
   luax_data_reference luax_check_data(lua_State*, int);
 
+  void luax_push(lua_State*, const char*);
   void luax_push(lua_State*, const char*, size_t);
-
   void luax_push(lua_State*, luax_function_t);
 
   void luax_set_field(lua_State*, int, const char*, luax_function_t);
