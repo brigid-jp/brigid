@@ -3,6 +3,7 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/http.hpp>
+#include <brigid/version.hpp>
 #include "test.hpp"
 
 #include <stdio.h>
@@ -345,13 +346,11 @@ namespace {
     test_client client;
     client.request("GET", "https://brigid.jp/test/cgi/cookie.cgi");
     BRIGID_CHECK(client.code() == 200);
-    std::cout << "{" << client.body() << "}\n";
     BRIGID_CHECK(client.header("Set-Cookie") == "code=42; Path=/test/cgi/; Secure");
     BRIGID_CHECK(client.body() == "HTTP_COOKIE=\n");
 
     client.request("GET", "https://brigid.jp/test/cgi/cookie.cgi");
     BRIGID_CHECK(client.code() == 200);
-    std::cout << "{" << client.body() << "}\n";
     BRIGID_CHECK(client.header("Set-Cookie") == "code=42; Path=/test/cgi/; Secure");
     BRIGID_CHECK(client.body() == "HTTP_COOKIE=\n");
 
@@ -360,9 +359,21 @@ namespace {
     };
     client.request("GET", "https://brigid.jp/test/cgi/cookie.cgi", header);
     BRIGID_CHECK(client.code() == 200);
-    std::cout << "{" << client.body() << "}\n";
     BRIGID_CHECK(client.header("Set-Cookie") == "");
     BRIGID_CHECK(client.body() == "HTTP_COOKIE=code=69\n");
+  }
+
+  void test15() {
+    test_client client;
+
+    std::string ua = std::string("brigid/") + brigid::get_version();
+    std::map<std::string, std::string> header {
+      { "User-Agent", ua },
+    };
+
+    client.request("GET", "https://brigid.jp/test/cgi/env.cgi", header);
+    BRIGID_CHECK(client.code() == 200);
+    BRIGID_CHECK(client.body().find("USER_AGENT=" + ua + "\n") != std::string::npos);
   }
 
   BRIGID_MAKE_TEST_CASE(test1);
@@ -379,4 +390,5 @@ namespace {
   BRIGID_MAKE_TEST_CASE(test12);
   BRIGID_MAKE_TEST_CASE(test13);
   BRIGID_MAKE_TEST_CASE(test14);
+  BRIGID_MAKE_TEST_CASE(test15);
 }
