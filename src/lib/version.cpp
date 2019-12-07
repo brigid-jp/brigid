@@ -1,5 +1,6 @@
-#ifndef BRIGID_VERSION_HPP
-#define BRIGID_VERSION_HPP
+// Copyright (c) 2019 <dev@brigid.jp>
+// This software is released under the MIT License.
+// https://opensource.org/licenses/mit-license.php
 
 #include <brigid/version.hpp>
 
@@ -10,5 +11,3 @@ namespace brigid {
 #undef m4_define
   }
 }
-
-#endif
