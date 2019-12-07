@@ -111,8 +111,7 @@ namespace brigid {
 
         output = encode_utf8(data.get(), result - 2);
         return true;
-      } catch (...) {
-      }
+      } catch (...) {}
       return false;
     }
   }

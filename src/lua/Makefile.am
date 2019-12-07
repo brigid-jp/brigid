@@ -11,7 +11,8 @@ brigid_la_SOURCES = \
 	common.cpp \
 	crypto.cpp \
 	main.cpp \
-	module.cpp
+	module.cpp \
+	util_lua.cpp
 
 if CRYPTO_OPENSSL
 brigid_la_LDFLAGS += $(OPENSSL_LDFLAGS)

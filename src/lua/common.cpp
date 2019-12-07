@@ -5,8 +5,6 @@
 #include "common.hpp"
 #include <exception>
 
-
-
 namespace brigid {
   namespace {
     int closure(lua_State* L) {
