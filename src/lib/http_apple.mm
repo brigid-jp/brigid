@@ -3,8 +3,8 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/http.hpp>
+#include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
-#include "error.hpp"
 
 #include <Foundation/Foundation.h>
 

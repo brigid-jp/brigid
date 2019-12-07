@@ -2,7 +2,7 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include "error.hpp"
+#include <brigid/error.hpp>
 #include "util_java.hpp"
 
 #include <jni.h>
