@@ -3,18 +3,18 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/version.hpp>
-#include "common.hpp"
-
-#include <string>
+#include "util_lua.hpp"
 
 namespace brigid {
+  using namespace lua;
+
   namespace {
     void impl_get_version(lua_State* L) {
-      luax_push(L, get_version());
+      push(L, get_version());
     }
   }
 
   void initialize_version(lua_State* L) {
-    luax_set_field(L, -1, "get_version", impl_get_version);
+    set_field(L, -1, "get_version", impl_get_version);
   }
 }
