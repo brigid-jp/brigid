@@ -3,12 +3,15 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/crypto.hpp>
+#include <brigid/error.hpp>
 #include "common.hpp"
+#include "util_lua.hpp"
 
-#include <stdexcept>
 #include <vector>
 
 namespace brigid {
+  using namespace lua;
+
   namespace {
     crypto_cipher check_cipher(lua_State* L, int arg) {
       const auto cipher = luax_check_data(L, arg).to_str();
@@ -19,7 +22,7 @@ namespace brigid {
       } else if (cipher == "aes-256-cbc") {
         return crypto_cipher::aes_256_cbc;
       }
-      throw std::runtime_error("unsupported cipher");
+      throw BRIGID_ERROR("unsupported cipher");
     }
 
     void impl_encrypt_string(lua_State* L) {
@@ -43,10 +46,35 @@ namespace brigid {
       size_t result = decryptor->update(in.data(), in.size(), out.data(), out.size(), true);
       luax_push(L, out.data(), result);
     }
+
+
+    // void impl_gc(lua_State* L) {
+    //   check_udata<cryptor*>(L, -1, "brigid.cryptor")->~cryptor();
+    // }
+
+    // void impl_call(lua_State* L) {
+    //   std::unique_ptr<cryptor> cryptor = make_decryptor();
+    //   crptyor** self = new_userdata<cryptor*>(L, "brigid.cryptor", cryptor.get());
+    //   cryptor.release();
+    // }
   }
 
   void initialize_crypto(lua_State* L) {
     luax_set_field(L, -1, "encrypt_string", impl_encrypt_string);
     luax_set_field(L, -1, "decrypt_string", impl_decrypt_string);
+
+    // lua_newtable(L, "cryptor");
+    // {
+    //   luaL_newmetatable(L, "brigid.cryptor");
+    //   lua_pushvalue(L, -2)
+    //   set_field(L, -2, "__index");
+    //   set_field(L, -1, "__gc", impl_gc);
+    //   lua_pop(L, 1);
+    // }
+    // set_field(L, -1, "cryptor");
+
+    // brigid.cryptor
+
+
   }
 }
