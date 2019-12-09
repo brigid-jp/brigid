@@ -33,7 +33,6 @@ namespace brigid {
 
   view_t* new_view(lua_State*, const char*, size_t);
   view_t* check_view(lua_State*, int);
-  void initialize_view(lua_State*);
 }
 
 #endif

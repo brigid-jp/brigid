@@ -7,7 +7,8 @@
 
 #include <lua.hpp>
 
-#include <string>
+#include <stddef.h>
+#include <string.h>
 
 namespace brigid {
   data_t::data_t(const char* data, size_t size)
@@ -22,7 +23,7 @@ namespace brigid {
     return size_;
   }
 
-  std::string data_t::to_str() const {
+  std::string data_t::str() const {
     return std::string(data_, size_);
   }
 

@@ -10,6 +10,7 @@
 #include "view.hpp"
 
 #include <utility>
+#include <string>
 #include <vector>
 
 namespace brigid {
@@ -17,7 +18,8 @@ namespace brigid {
 
   namespace {
     crypto_cipher check_cipher(lua_State* L, int arg) {
-      const auto cipher = check_data(L, arg).to_str();
+      data_t data = check_data(L, arg);
+      std::string cipher(data.data(), data.size());
       if (cipher == "aes-128-cbc") {
         return crypto_cipher::aes_128_cbc;
       } else if (cipher == "aes-192-cbc") {
@@ -42,13 +44,15 @@ namespace brigid {
         size_t result = cryptor_->update(in_data, in_size, buffer_.data(), buffer_.size(), padding);
         out_size_ += result;
 
-        lua_State* L = write_cb_.state();
-        {
-          top_saver saver(L);
-          write_cb_.get_field(L);
-          view_invalidator invalidator(new_view(L, buffer_.data(), result));
-          if (lua_pcall(L, 1, 0, 0) != 0) {
-            throw BRIGID_ERROR(lua_tostring(L, -1));
+        if (result > 0) {
+          lua_State* L = write_cb_.state();
+          {
+            top_saver saver(L);
+            write_cb_.get_field(L);
+            view_invalidator invalidator(new_view(L, buffer_.data(), result));
+            if (lua_pcall(L, 1, 0, 0) != 0) {
+              throw BRIGID_ERROR(lua_tostring(L, -1));
+            }
           }
         }
       }
