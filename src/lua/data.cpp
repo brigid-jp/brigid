@@ -8,7 +8,7 @@
 #include <lua.hpp>
 
 #include <stddef.h>
-#include <string.h>
+#include <string>
 
 namespace brigid {
   data_t::data_t(const char* data, size_t size)

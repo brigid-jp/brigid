@@ -19,7 +19,7 @@ namespace brigid {
           function(L);
         } catch (const std::exception& e) {
           lua_settop(L, top);
-          return luaL_error(L, "caught exception: %s", e.what());
+          return luaL_error(L, "%s", e.what());
         }
         return lua_gettop(L) - top;
       }
@@ -118,9 +118,7 @@ namespace brigid {
       : state_(that.state_),
         state_ref_(that.state_ref_),
         ref_(that.ref_) {
-      that.state_ = nullptr;
-      that.state_ref_ = LUA_NOREF;
-      that.ref_ = LUA_NOREF;
+      that.reset();
     }
 
     reference::~reference() {
@@ -133,9 +131,7 @@ namespace brigid {
         state_ = that.state_;
         state_ref_ = that.state_ref_;
         ref_ = that.ref_;
-        that.state_ = nullptr;
-        that.state_ref_ = LUA_NOREF;
-        that.ref_ = LUA_NOREF;
+        that.reset();
       }
       return *this;
     }
@@ -152,10 +148,14 @@ namespace brigid {
       if (lua_State* L = state_) {
         luaL_unref(L, LUA_REGISTRYINDEX, state_ref_);
         luaL_unref(L, LUA_REGISTRYINDEX, ref_);
-        state_ = nullptr;
-        state_ref_ = LUA_NOREF;
-        ref_ = LUA_NOREF;
+        reset();
       }
+    }
+
+    void reference::reset() {
+      state_ = nullptr;
+      state_ref_ = LUA_NOREF;
+      ref_ = LUA_NOREF;
     }
   }
 }

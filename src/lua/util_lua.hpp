@@ -105,6 +105,7 @@ namespace brigid {
       int state_ref_;
       int ref_;
       void unref();
+      void reset();
     };
   }
 }
