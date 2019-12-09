@@ -82,10 +82,10 @@ namespace brigid {
       return get_table(L, index);
     }
 
-    class top_saver : private noncopyable {
+    class stack_guard : private noncopyable {
     public:
-      explicit top_saver(lua_State*);
-      ~top_saver();
+      explicit stack_guard(lua_State*);
+      ~stack_guard();
     private:
       lua_State* state_;
       int top_;

@@ -61,7 +61,7 @@ namespace brigid {
 #if LUA_VERSION_NUM >= 502
       return luaL_testudata(L, index, name);
 #else
-      top_saver saver;
+      stack_guard guard(L);
       if (void* data = lua_touserdata(L, index)) {
         if (lua_getmetatable(L, index)) {
           luaL_getmetatable(L, name);
@@ -91,11 +91,11 @@ namespace brigid {
       lua_pushcclosure(L, impl_closure, 1);
     }
 
-    top_saver::top_saver(lua_State* L)
+    stack_guard::stack_guard(lua_State* L)
       : state_(L),
         top_(lua_gettop(L)) {}
 
-    top_saver::~top_saver() {
+    stack_guard::~stack_guard() {
       lua_settop(state_, top_);
     }
 

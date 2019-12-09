@@ -14,7 +14,7 @@ namespace brigid {
     : data_(data),
       size_(size) {}
 
-  void view_t::invalidate() {
+  void view_t::close() {
     data_ = nullptr;
     size_ = 0;
   }
@@ -27,11 +27,11 @@ namespace brigid {
     return size_;
   }
 
-  view_invalidator::view_invalidator(view_t* view)
+  view_guard::view_guard(view_t* view)
     : view_(view) {}
 
-  view_invalidator::~view_invalidator() {
-    view_->invalidate();
+  view_guard::~view_guard() {
+    view_->close();
   }
 
   namespace {
@@ -48,7 +48,7 @@ namespace brigid {
   view_t* check_view(lua_State* L, int arg) {
     view_t* self = check_udata<view_t>(L, arg, "brigid.view");
     if (!self->data()) {
-      luaL_error(L, "attempt to use an invalidated view");
+      luaL_error(L, "attempt to use a closed view");
     }
     return self;
   }
@@ -56,7 +56,7 @@ namespace brigid {
   void initialize_view(lua_State* L) {
     lua_newtable(L);
     {
-      top_saver saver(L);
+      stack_guard guard(L);
       luaL_newmetatable(L, "brigid.view");
       lua_pushvalue(L, -2);
       set_field(L, -2, "__index");

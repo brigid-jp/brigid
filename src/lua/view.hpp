@@ -15,7 +15,7 @@ namespace brigid {
   class view_t {
   public:
     view_t(const char*, size_t);
-    void invalidate();
+    void close();
     const char* data() const;
     size_t size() const;
   private:
@@ -23,10 +23,10 @@ namespace brigid {
     size_t size_;
   };
 
-  class view_invalidator : private noncopyable {
+  class view_guard : private noncopyable {
   public:
-    explicit view_invalidator(view_t*);
-    ~view_invalidator();
+    explicit view_guard(view_t*);
+    ~view_guard();
   private:
     view_t* view_;
   };

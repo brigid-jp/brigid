@@ -46,13 +46,11 @@ namespace brigid {
 
         if (result > 0) {
           lua_State* L = write_cb_.state();
-          {
-            top_saver saver(L);
-            write_cb_.get_field(L);
-            view_invalidator invalidator(new_view(L, buffer_.data(), result));
-            if (lua_pcall(L, 1, 0, 0) != 0) {
-              throw BRIGID_ERROR(lua_tostring(L, -1));
-            }
+          stack_guard sguard(L);
+          write_cb_.get_field(L);
+          view_guard vguard(new_view(L, buffer_.data(), result));
+          if (lua_pcall(L, 1, 0, 0) != 0) {
+            throw BRIGID_ERROR(lua_tostring(L, -1));
           }
         }
       }
@@ -106,11 +104,12 @@ namespace brigid {
   void initialize_crypto(lua_State* L) {
     lua_newtable(L);
     {
-      top_saver saver(L);
-      luaL_newmetatable(L, "brigid.cryptor");
-      lua_pushvalue(L, -2);
-      set_field(L, -2, "__index");
-      set_field(L, -1, "__gc", impl_gc);
+      stack_guard guard(L); {
+        luaL_newmetatable(L, "brigid.cryptor");
+        lua_pushvalue(L, -2);
+        set_field(L, -2, "__index");
+        set_field(L, -1, "__gc", impl_gc);
+      }
     }
     {
       set_field(L, -1, "update", impl_update);
