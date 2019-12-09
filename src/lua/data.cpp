@@ -7,6 +7,8 @@
 
 #include <lua.hpp>
 
+#include <string>
+
 namespace brigid {
   data_t::data_t(const char* data, size_t size)
     : data_(data),
@@ -18,6 +20,10 @@ namespace brigid {
 
   size_t data_t::size() const {
     return size_;
+  }
+
+  std::string data_t::to_str() const {
+    return std::string(data_, size_);
   }
 
   data_t check_data(lua_State* L, int arg) {

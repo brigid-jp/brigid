@@ -5,7 +5,6 @@
 #include <brigid/crypto.hpp>
 #include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
-#include "common.hpp"
 #include "data.hpp"
 #include "util_lua.hpp"
 #include "view.hpp"
@@ -18,7 +17,7 @@ namespace brigid {
 
   namespace {
     crypto_cipher check_cipher(lua_State* L, int arg) {
-      const auto cipher = luax_check_data(L, arg).to_str();
+      const auto cipher = check_data(L, arg).to_str();
       if (cipher == "aes-128-cbc") {
         return crypto_cipher::aes_128_cbc;
       } else if (cipher == "aes-192-cbc") {

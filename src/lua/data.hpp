@@ -8,6 +8,7 @@
 #include <lua.hpp>
 
 #include <stddef.h>
+#include <string>
 
 namespace brigid {
   class data_t {
@@ -15,6 +16,7 @@ namespace brigid {
     data_t(const char*, size_t);
     const char* data() const;
     size_t size() const;
+    std::string to_str() const;
   private:
     const char* data_;
     size_t size_;
