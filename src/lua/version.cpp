@@ -5,6 +5,8 @@
 #include <brigid/version.hpp>
 #include "util_lua.hpp"
 
+#include <lua.hpp>
+
 namespace brigid {
   using namespace lua;
 

@@ -161,7 +161,7 @@ namespace brigid {
       case crypto_cipher::aes_128_cbc:
       case crypto_cipher::aes_192_cbc:
       case crypto_cipher::aes_256_cbc:
-        if (iv_size != 16) {
+        if (iv_size != get_block_size(cipher)) {
           throw BRIGID_ERROR("invalid initialization vector size");
         }
         return std::unique_ptr<cryptor>(new aes_encryptor_impl(key_data, key_size, iv_data, iv_size));
@@ -174,7 +174,7 @@ namespace brigid {
       case crypto_cipher::aes_128_cbc:
       case crypto_cipher::aes_192_cbc:
       case crypto_cipher::aes_256_cbc:
-        if (iv_size != 16) {
+        if (iv_size != get_block_size(cipher)) {
           throw BRIGID_ERROR("invalid initialization vector size");
         }
         return std::unique_ptr<cryptor>(new aes_decryptor_impl(key_data, key_size, iv_data, iv_size));

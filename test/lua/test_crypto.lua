@@ -22,16 +22,31 @@ local ciphertexts = {
   ["aes-256-cbc"] = "\224\111\099\167\017\232\183\170\159\148\064\016\125\070\128\161\023\153\067\128\234\049\210\162\153\185\083\002\212\057\185\112\044\142\101\169\146\054\236\146\007\004\145\092\241\169\138\068";
 }
 
+local function encrypt(cipher, key, iv, plaintext)
+  local result = {}
+  local cryptor = brigid.encryptor("aes-128-cbc", key, iv, function (view)
+    local mt = getmetatable(view)
+    result[#result + 1] = tostring(view)
+  end)
+  cryptor:update(plaintext, true)
+  return table.concat(result)
+end
+
+local function decrypt(cipher, key, iv, ciphertext)
+  local result = {}
+  local cryptor = brigid.decryptor("aes-128-cbc", key, iv, function (view)
+    result[#result + 1] = tostring(view)
+  end)
+  cryptor:update(ciphertext, true)
+  return table.concat(result)
+end
+
 for i = 1, #ciphers do
   local cipher = ciphers[i]
   local key = keys[cipher]
   local ciphertext = ciphertexts[cipher]
-  assert(brigid.encrypt_string(cipher, plaintext, key, iv) == ciphertext)
+  assert(encrypt(cipher, key, iv, plaintext) == ciphertext)
   io.write("PASS encrypt_string ", cipher, "\n")
-  assert(brigid.decrypt_string(cipher, ciphertext, key, iv) == plaintext)
+  assert(decrypt(cipher, key, iv, ciphertext) == plaintext)
   io.write("PASS decrypt_string ", cipher, "\n")
 end
-
-local result, message = pcall(brigid.encrypt_string, "no-such-algorithm", "", "", "")
-io.write(message, "\n")
-assert(not result)

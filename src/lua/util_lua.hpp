@@ -5,9 +5,12 @@
 #ifndef BRIGID_UTIL_LUA_HPP
 #define BRIGID_UTIL_LUA_HPP
 
+#include <brigid/noncopyable.hpp>
+
 #include <lua.hpp>
 
 #include <stddef.h>
+#include <new>
 #include <utility>
 
 namespace brigid {
@@ -15,7 +18,14 @@ namespace brigid {
     using cxx_function_t = void (*)(lua_State*);
 
     int abs_index(lua_State*, int);
+    int get_table(lua_State*, int);
     void set_metatable(lua_State*, const char*);
+    void* test_udata_impl(lua_State*, int, const char*);
+
+    void push(lua_State*, lua_Integer);
+    void push(lua_State*, const char*);
+    void push(lua_State*, const char*, size_t);
+    void push(lua_State*, cxx_function_t);
 
     template <class T, class... T_args>
     inline T* new_userdata(lua_State* L, const char* name, T_args... args) {
@@ -30,9 +40,10 @@ namespace brigid {
       return static_cast<T*>(luaL_checkudata(L, arg, name));
     }
 
-    void push(lua_State*, const char*);
-    void push(lua_State*, const char*, size_t);
-    void push(lua_State*, cxx_function_t);
+    template <class T>
+    inline T* test_udata(lua_State* L, int index, const char* name) {
+      return static_cast<T*>(test_udata_impl(L, index, name));
+    }
 
     template <class T>
     inline void set_field(lua_State* L, int index, T key) {
@@ -63,6 +74,38 @@ namespace brigid {
         lua_setmetatable(L, index);
       }
     }
+
+    template <class T>
+    inline int get_field(lua_State* L, int index, T key) {
+      index = abs_index(L, index);
+      push(L, std::forward<T>(key));
+      return get_table(L, index);
+    }
+
+    class top_saver : private noncopyable {
+    public:
+      explicit top_saver(lua_State*);
+      ~top_saver();
+    private:
+      lua_State* state_;
+      int top_;
+    };
+
+    class reference : private noncopyable {
+    public:
+      reference();
+      reference(lua_State*, int);
+      reference(reference&&);
+      ~reference();
+      reference& operator=(reference&&);
+      lua_State* state() const;
+      int get_field(lua_State*) const;
+    private:
+      lua_State* state_;
+      int state_ref_;
+      int ref_;
+      void unref();
+    };
   }
 }
 

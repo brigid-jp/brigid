@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/sh -e
 
 # Copyright (c) 2019 <dev@brigid.jp>
 # This software is released under the MIT License.
