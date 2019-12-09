@@ -32,18 +32,17 @@ namespace brigid {
 
     class cryptor_t : private noncopyable {
     public:
-      cryptor_t(std::unique_ptr<cryptor>&& cryptor, size_t max_size, reference&& write_cb)
+      cryptor_t(std::unique_ptr<cryptor>&& cryptor, reference&& write_cb)
         : cryptor_(std::move(cryptor)),
+          in_size_(),
           out_size_(),
-          max_size_(max_size),
           write_cb_(std::move(write_cb)) {}
 
       void update(const char* in_data, size_t in_size, bool padding) {
-        max_size_ += in_size;
-        ensure_buffer_size(max_size_ - out_size_);
+        in_size_ += in_size;
+        ensure_buffer_size(cryptor_->calculate_buffer_size(in_size_) - out_size_);
         size_t result = cryptor_->update(in_data, in_size, buffer_.data(), buffer_.size(), padding);
         out_size_ += result;
-
         if (result > 0) {
           lua_State* L = write_cb_.state();
           stack_guard sguard(L);
@@ -57,8 +56,8 @@ namespace brigid {
 
     private:
       std::unique_ptr<cryptor> cryptor_;
+      size_t in_size_;
       size_t out_size_;
-      size_t max_size_;
       std::vector<char> buffer_;
       reference write_cb_;
 
@@ -89,7 +88,7 @@ namespace brigid {
       const auto key = check_data(L, 2);
       const auto iv = check_data(L, 3);
       luaL_checkany(L, 4);
-      new_userdata<cryptor_t>(L, "brigid.cryptor", make_encryptor(cipher, key.data(), key.size(), iv.data(), iv.size()), get_block_size(cipher), reference(L, 4));
+      new_userdata<cryptor_t>(L, "brigid.cryptor", make_encryptor(cipher, key.data(), key.size(), iv.data(), iv.size()), reference(L, 4));
     }
 
     void impl_decryptor(lua_State* L) {
@@ -97,7 +96,7 @@ namespace brigid {
       const auto key = check_data(L, 2);
       const auto iv = check_data(L, 3);
       luaL_checkany(L, 4);
-      new_userdata<cryptor_t>(L, "brigid.cryptor", make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size()), 0, reference(L, 4));
+      new_userdata<cryptor_t>(L, "brigid.cryptor", make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size()), reference(L, 4));
     }
   }
 

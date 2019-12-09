@@ -9,14 +9,4 @@
 
 namespace brigid {
   cryptor::~cryptor() {}
-
-  size_t get_block_size(crypto_cipher cipher) {
-    switch (cipher) {
-      case crypto_cipher::aes_128_cbc:
-      case crypto_cipher::aes_192_cbc:
-      case crypto_cipher::aes_256_cbc:
-        return 16;
-    }
-    throw BRIGID_ERROR("unsupported cipher");
-  }
 }
