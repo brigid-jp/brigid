@@ -62,15 +62,15 @@ namespace brigid {
       lua_settable(L, index);
     }
 
-    template <class T, class... T_args>
-    inline void set_metafield(lua_State* L, int index, T key, T_args... args) {
+    template <class... T>
+    inline void set_metafield(lua_State* L, int index, T... args) {
       index = abs_index(L, index);
       if (lua_getmetatable(L, index)) {
-        set_field(L, -1, std::forward<T>(key), std::forward<T_args>(args)...);
+        set_field(L, -1, std::forward<T>(args)...);
         lua_pop(L, 1);
       } else {
         lua_newtable(L);
-        set_field(L, -1, std::forward<T>(key), std::forward<T_args>(args)...);
+        set_field(L, -1, std::forward<T>(args)...);
         lua_setmetatable(L, index);
       }
     }
