@@ -22,11 +22,11 @@
 
 namespace brigid {
   namespace {
-    inline bool is_digit(uint8_t c) {
+    bool is_digit(uint8_t c) {
       return 0x30 <= c && c <= 0x39;
     }
 
-    inline bool is_tchar(uint8_t c) {
+    bool is_tchar(uint8_t c) {
       switch (c) {
         case '!':
         case '#':
@@ -48,7 +48,7 @@ namespace brigid {
       return is_digit(c) || (0x41 <= c && c <= 0x5A) || (0x61 <= c && c <= 0x7A);
     }
 
-    inline bool is_vchar(uint8_t c) {
+    bool is_vchar(uint8_t c) {
       return (0x21 <= c && c <= 0x7E) || 0x80 <= c;
     }
   }
@@ -238,7 +238,7 @@ namespace brigid {
   namespace {
     using file_t = std::unique_ptr<FILE, decltype(&fclose)>;
 
-    inline file_t make_file(FILE* handle = nullptr) {
+    file_t make_file(FILE* handle = nullptr) {
       return file_t(handle, &fclose);
     }
 

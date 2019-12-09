@@ -14,7 +14,7 @@
 
 namespace brigid {
   namespace {
-    inline const char* get_error_message(CCCryptorStatus code) {
+    const char* get_error_message(CCCryptorStatus code) {
       switch (code) {
         case -4300: return "kCCParamError";
         case -4301: return "kCCBufferTooSmall";
@@ -32,7 +32,7 @@ namespace brigid {
       return nullptr;
     }
 
-    inline void check(CCCryptorStatus code) {
+    void check(CCCryptorStatus code) {
       if (code != kCCSuccess) {
         if (const char* message = get_error_message(code)) {
           throw BRIGID_ERROR(message, make_error_code("CommonCrypto error", code));
@@ -44,7 +44,7 @@ namespace brigid {
 
     using cryptor_ref_t = std::unique_ptr<remove_pointer_t<CCCryptorRef>, decltype(&CCCryptorRelease)>;
 
-    inline cryptor_ref_t make_cryptor_ref(CCCryptorRef cryptor = nullptr) {
+    cryptor_ref_t make_cryptor_ref(CCCryptorRef cryptor = nullptr) {
       return cryptor_ref_t(cryptor, &CCCryptorRelease);
     }
 
