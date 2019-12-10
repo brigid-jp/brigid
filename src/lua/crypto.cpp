@@ -9,6 +9,8 @@
 #include "util_lua.hpp"
 #include "view.hpp"
 
+#include <stddef.h>
+#include <memory>
 #include <utility>
 #include <string>
 #include <vector>
@@ -43,12 +45,13 @@ namespace brigid {
         size_t result = cryptor_->update(in_data, in_size, buffer_.data(), buffer_.size(), padding);
         out_size_ += result;
         if (result > 0) {
-          lua_State* L = write_cb_.state();
-          stack_guard sguard(L);
-          write_cb_.get_field(L);
-          view_guard vguard(new_view(L, buffer_.data(), result));
-          if (lua_pcall(L, 1, 0, 0) != 0) {
-            throw BRIGID_ERROR(lua_tostring(L, -1));
+          if (lua_State* L = write_cb_.state()) {
+            stack_guard guard(L);
+            write_cb_.get_field(L);
+            view_guard vguard(new_view(L, buffer_.data(), result));
+            if (lua_pcall(L, 1, 0, 0) != 0) {
+              throw BRIGID_ERROR(lua_tostring(L, -1));
+            }
           }
         }
       }
@@ -86,33 +89,45 @@ namespace brigid {
       crypto_cipher cipher = check_cipher(L, 1);
       data_t key = check_data(L, 2);
       data_t iv = check_data(L, 3);
-      luaL_checkany(L, 4);
-      new_userdata<cryptor_t>(L, "brigid.cryptor", make_encryptor(cipher, key.data(), key.size(), iv.data(), iv.size()), reference(L, 4));
+      reference write_cb;
+
+      if (!lua_isnoneornil(L, 4)) {
+        write_cb = reference(L, 4);
+      }
+
+      new_userdata<cryptor_t>(L, "brigid.cryptor",
+          make_encryptor(cipher, key.data(), key.size(), iv.data(), iv.size()),
+          std::move(write_cb));
     }
 
     void impl_decryptor(lua_State* L) {
       crypto_cipher cipher = check_cipher(L, 1);
       data_t key = check_data(L, 2);
       data_t iv = check_data(L, 3);
-      luaL_checkany(L, 4);
-      new_userdata<cryptor_t>(L, "brigid.cryptor", make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size()), reference(L, 4));
+      reference write_cb;
+
+      if (!lua_isnoneornil(L, 4)) {
+        write_cb = reference(L, 4);
+      }
+
+      new_userdata<cryptor_t>(L, "brigid.cryptor",
+          make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size()),
+          std::move(write_cb));
     }
   }
 
   void initialize_crypto(lua_State* L) {
     lua_newtable(L);
     {
-      stack_guard guard(L); {
-        luaL_newmetatable(L, "brigid.cryptor");
-        lua_pushvalue(L, -2);
-        set_field(L, -2, "__index");
-        set_field(L, -1, "__gc", impl_gc);
-      }
-    }
-    {
+      luaL_newmetatable(L, "brigid.cryptor");
+      lua_pushvalue(L, -2);
+      set_field(L, -2, "__index");
+      set_field(L, -1, "__gc", impl_gc);
+      lua_pop(L, 1);
+
       set_field(L, -1, "update", impl_update);
     }
-    set_field(L, -1, "cryptor");
+    set_field(L, -2, "cryptor");
 
     set_field(L, -1, "encryptor", impl_encryptor);
     set_field(L, -1, "decryptor", impl_decryptor);

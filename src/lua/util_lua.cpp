@@ -8,6 +8,7 @@
 
 #include <stddef.h>
 #include <exception>
+#include <string>
 
 namespace brigid {
   namespace lua {
@@ -74,6 +75,10 @@ namespace brigid {
 #endif
     }
 
+    bool is_false(lua_State* L, int index) {
+      return lua_isboolean(L, index) && !lua_toboolean(L, index);
+    }
+
     void push(lua_State* L, lua_Integer value) {
       lua_pushinteger(L, value);
     }
@@ -84,6 +89,10 @@ namespace brigid {
 
     void push(lua_State* L, const char* data, size_t size) {
       lua_pushlstring(L, data, size);
+    }
+
+    void push(lua_State* L, const std::string& value) {
+      lua_pushlstring(L, value.data(), value.size());
     }
 
     void push(lua_State* L, cxx_function_t value) {

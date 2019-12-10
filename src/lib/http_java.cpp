@@ -17,9 +17,9 @@
 #include <vector>
 
 namespace brigid {
-  namespace {
-    using namespace java;
+  using namespace java;
 
+  namespace {
     class vtable {
     public:
       vtable()
@@ -139,10 +139,8 @@ namespace brigid {
 
             session_.vt.write(instance_, session_.jbuffer, 0, result);
 
-            if (session_.progress_cb) {
-              if (!session_.progress_cb(reader->now(), reader->total())) {
-                throw BRIGID_ERROR("canceled");
-              }
+            if (!session_.progress_cb(reader->now(), reader->total())) {
+              throw BRIGID_ERROR("canceled");
             }
           }
         } else {
@@ -151,38 +149,34 @@ namespace brigid {
 
         session_.vt.recv(instance_);
 
-        if (session_.header_cb) {
-          jint code = session_.vt.get_response_code(instance_);
+        jint response_code = session_.vt.get_response_code(instance_);
 
-          std::map<std::string, std::string> header;
-          for (jint i = 0; ; ++i) {
-            local_ref_t<jbyteArray> value = session_.vt.get_header_value(instance_, i);
-            if (!value) {
-              break;
-            }
-            if (local_ref_t<jbyteArray> key = session_.vt.get_header_key(instance_, i)) {
-              header[get_byte_array_region(key)] = get_byte_array_region(value);
-            }
+        std::map<std::string, std::string> response_header;
+        for (jint i = 0; ; ++i) {
+          local_ref_t<jbyteArray> value = session_.vt.get_header_value(instance_, i);
+          if (!value) {
+            break;
           }
-
-          if (!session_.header_cb(code, header)) {
-            throw BRIGID_ERROR("canceled");
+          if (local_ref_t<jbyteArray> key = session_.vt.get_header_key(instance_, i)) {
+            response_header[get_byte_array_region(key)] = get_byte_array_region(value);
           }
         }
 
-        if (session_.write_cb) {
-          session_.ensure_buffer_size(http_buffer_size);
-          while (true) {
-            jint result = session_.vt.read(instance_, session_.jbuffer);
-            if (result < 0) {
-              break;
-            }
-            if (result > 0) {
-              get_byte_array_region(session_.jbuffer, 0, result, session_.nbuffer.data());
+        if (!session_.header_cb(response_code, response_header)) {
+          throw BRIGID_ERROR("canceled");
+        }
 
-              if (!session_.write_cb(session_.nbuffer.data(), result)) {
-                throw BRIGID_ERROR("canceled");
-              }
+        session_.ensure_buffer_size(http_buffer_size);
+        while (true) {
+          jint result = session_.vt.read(instance_, session_.jbuffer);
+          if (result < 0) {
+            break;
+          }
+          if (result > 0) {
+            get_byte_array_region(session_.jbuffer, 0, result, session_.nbuffer.data());
+
+            if (!session_.write_cb(session_.nbuffer.data(), result)) {
+              throw BRIGID_ERROR("canceled");
             }
           }
         }

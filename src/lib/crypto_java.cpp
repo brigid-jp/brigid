@@ -13,9 +13,9 @@
 #include <memory>
 
 namespace brigid {
-  namespace {
-    using namespace java;
+  using namespace java;
 
+  namespace {
     class vtable : private noncopyable {
     public:
       vtable()

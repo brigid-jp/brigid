@@ -21,9 +21,9 @@
 #include <vector>
 
 namespace brigid {
-  namespace {
-    using namespace windows;
+  using namespace windows;
 
+  namespace {
     template <class T>
     T check_impl(T result) {
       if (!result) {
