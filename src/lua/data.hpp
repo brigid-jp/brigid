@@ -13,6 +13,7 @@
 namespace brigid {
   class data_t {
   public:
+    data_t();
     data_t(const char*, size_t);
     const char* data() const;
     size_t size() const;
@@ -22,6 +23,7 @@ namespace brigid {
     size_t size_;
   };
 
+  data_t to_data(lua_State*, int);
   data_t check_data(lua_State*, int);
 }
 

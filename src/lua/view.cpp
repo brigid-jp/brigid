@@ -53,6 +53,15 @@ namespace brigid {
     return self;
   }
 
+  view_t* test_view(lua_State* L, int index) {
+    if (view_t* self = test_udata<view_t>(L, index, "brigid.view")) {
+      if (self->data()) {
+        return self;
+      }
+    }
+    return nullptr;
+  }
+
   void initialize_view(lua_State* L) {
     lua_newtable(L);
     {

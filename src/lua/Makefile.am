@@ -10,6 +10,7 @@ brigid_la_LIBADD = $(top_srcdir)/src/lib/libbrigid.la
 brigid_la_SOURCES = \
 	data.cpp \
 	crypto.cpp \
+	http.cpp \
 	module.cpp \
 	util_lua.cpp \
 	version.cpp \

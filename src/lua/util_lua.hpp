@@ -11,6 +11,7 @@
 
 #include <stddef.h>
 #include <new>
+#include <string>
 #include <utility>
 
 namespace brigid {
@@ -21,10 +22,12 @@ namespace brigid {
     int get_table(lua_State*, int);
     void set_metatable(lua_State*, const char*);
     void* test_udata_impl(lua_State*, int, const char*);
+    bool is_false(lua_State*, int);
 
     void push(lua_State*, lua_Integer);
     void push(lua_State*, const char*);
     void push(lua_State*, const char*, size_t);
+    void push(lua_State*, const std::string&);
     void push(lua_State*, cxx_function_t);
 
     template <class T, class... T_args>

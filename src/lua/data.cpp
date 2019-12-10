@@ -11,6 +11,10 @@
 #include <string>
 
 namespace brigid {
+  data_t::data_t()
+    : data_(),
+      size_() {}
+
   data_t::data_t(const char* data, size_t size)
     : data_(data),
       size_(size) {}
@@ -24,7 +28,25 @@ namespace brigid {
   }
 
   std::string data_t::str() const {
-    return std::string(data_, size_);
+    if (size_ == 0) {
+      return std::string();
+    } else {
+      return std::string(data_, size_);
+    }
+  }
+
+  data_t to_data(lua_State* L, int index) {
+    if (lua_isuserdata(L, index)) {
+      if (view_t* view = test_view(L, index)) {
+        return data_t(view->data(), view->size());
+      }
+    } else {
+      size_t size = 0;
+      if (const char* data = lua_tolstring(L, index, &size)) {
+        return data_t(data, size);
+      }
+    }
+    return data_t();
   }
 
   data_t check_data(lua_State* L, int arg) {

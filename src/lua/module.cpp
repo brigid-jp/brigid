@@ -6,11 +6,13 @@
 
 namespace brigid {
   void initialize_crypto(lua_State*);
+  void initialize_http(lua_State*);
   void initialize_version(lua_State*);
   void initialize_view(lua_State*);
 
   void initialize(lua_State* L) {
     initialize_crypto(L);
+    initialize_http(L);
     initialize_version(L);
     initialize_view(L);
   }

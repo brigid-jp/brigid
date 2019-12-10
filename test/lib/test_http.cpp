@@ -7,6 +7,7 @@
 #include "test.hpp"
 
 #include <stdio.h>
+#include <functional>
 #include <fstream>
 #include <iostream>
 
