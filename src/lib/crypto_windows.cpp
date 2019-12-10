@@ -19,9 +19,9 @@
 #include <vector>
 
 namespace brigid {
-  namespace {
-    using namespace windows;
+  using namespace windows;
 
+  namespace {
     void check(NTSTATUS code) {
       if (!BCRYPT_SUCCESS(code)) {
         std::string message;

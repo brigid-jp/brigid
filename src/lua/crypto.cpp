@@ -102,12 +102,11 @@ namespace brigid {
   void initialize_crypto(lua_State* L) {
     lua_newtable(L);
     {
-      stack_guard guard(L); {
-        luaL_newmetatable(L, "brigid.cryptor");
-        lua_pushvalue(L, -2);
-        set_field(L, -2, "__index");
-        set_field(L, -1, "__gc", impl_gc);
-      }
+      stack_guard guard(L);
+      luaL_newmetatable(L, "brigid.cryptor");
+      lua_pushvalue(L, -2);
+      set_field(L, -2, "__index");
+      set_field(L, -1, "__gc", impl_gc);
     }
     {
       set_field(L, -1, "update", impl_update);

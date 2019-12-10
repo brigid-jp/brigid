@@ -17,9 +17,9 @@
 #include <vector>
 
 namespace brigid {
-  namespace {
-    using namespace java;
+  using namespace java;
 
+  namespace {
     class vtable {
     public:
       vtable()
