@@ -5,7 +5,6 @@
 # https://opensource.org/licenses/mit-license.php
 
 here=`dirname "$0"`
-here=`(cd "$here" && pwd)`
 root=`(cd "$here/../.." && pwd)`
 
 case X$LUA_CPATH in
