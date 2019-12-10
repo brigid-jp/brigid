@@ -40,6 +40,10 @@ namespace brigid {
         check(EVP_CIPHER_CTX_set_key_length(ctx_.get(), key_size));
       }
 
+      virtual size_t calculate_buffer_size(size_t in_size) const {
+        return in_size + 16;
+      };
+
       virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
         int size1 = out_size;
         int size2 = 0;
@@ -62,6 +66,10 @@ namespace brigid {
         check(EVP_DecryptInit_ex(ctx_.get(), cipher, nullptr, reinterpret_cast<const unsigned char*>(key_data), reinterpret_cast<const unsigned char*>(iv_data)));
         check(EVP_CIPHER_CTX_set_key_length(ctx_.get(), key_size));
       }
+
+      virtual size_t calculate_buffer_size(size_t in_size) const {
+        return in_size;
+      };
 
       virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
         int size1 = out_size;
@@ -108,7 +116,7 @@ namespace brigid {
       default:
         throw BRIGID_ERROR("unsupported cipher");
     }
-    if (iv_size != get_block_size(cipher)) {
+    if (iv_size != 16) {
       throw BRIGID_ERROR("invalid initialization vector size");
     }
     return std::unique_ptr<cryptor>(new aes_encryptor_impl(evp_cipher, key_data, key_size, iv_data));
@@ -129,7 +137,7 @@ namespace brigid {
       default:
         throw BRIGID_ERROR("unsupported cipher");
     }
-    if (iv_size != get_block_size(cipher)) {
+    if (iv_size != 16) {
       throw BRIGID_ERROR("invalid initialization vector size");
     }
     return std::unique_ptr<cryptor>(new aes_decryptor_impl(evp_cipher, key_data, key_size, iv_data));
