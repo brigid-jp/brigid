@@ -135,9 +135,9 @@ namespace brigid {
       }
     };
 
-    http_session_t* check_http_session(lua_State* L, int arg, bool check_closed = true) {
+    http_session_t* check_http_session(lua_State* L, int arg, bool validate = true) {
       http_session_t* self = check_udata<http_session_t>(L, arg, "brigid.http_session");
-      if (check_closed) {
+      if (validate) {
         if (self->closed()) {
           luaL_error(L, "attempt to use a closed brigid.http_session");
         }
