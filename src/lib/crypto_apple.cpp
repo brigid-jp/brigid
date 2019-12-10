@@ -58,8 +58,8 @@ namespace brigid {
         cryptor_ = make_cryptor_ref(cryptor);
       }
 
-      virtual size_t calculate_buffer_size(size_t in_total) const {
-        return in_total + buffer_size_;
+      virtual size_t calculate_buffer_size(size_t in_size) const {
+        return in_size + buffer_size_;
       };
 
       virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
