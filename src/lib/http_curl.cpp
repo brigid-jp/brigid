@@ -127,15 +127,11 @@ namespace brigid {
           setopt(CURLOPT_READDATA, this);
         }
 
-        if (session_.header_cb) {
-          setopt(CURLOPT_HEADERFUNCTION, &http_task::header_cb);
-          setopt(CURLOPT_HEADERDATA, this);
-        }
+        setopt(CURLOPT_HEADERFUNCTION, &http_task::header_cb);
+        setopt(CURLOPT_HEADERDATA, this);
 
-        if (session_.write_cb) {
-          setopt(CURLOPT_WRITEFUNCTION, &http_task::write_cb);
-          setopt(CURLOPT_WRITEDATA, this);
-        }
+        setopt(CURLOPT_WRITEFUNCTION, &http_task::write_cb);
+        setopt(CURLOPT_WRITEDATA, this);
 
         if (session_.credential) {
           setopt(CURLOPT_HTTPAUTH, CURLAUTH_ANY);
@@ -178,10 +174,8 @@ namespace brigid {
         try {
           if (reader_) {
             size_t result = reader_->read(data, size);
-            if (session_.progress_cb) {
-              if (!session_.progress_cb(reader_->now(), reader_->total())) {
-                return CURL_READFUNC_ABORT;
-              }
+            if (!session_.progress_cb(reader_->now(), reader_->total())) {
+              return CURL_READFUNC_ABORT;
             }
             return result;
           }
@@ -195,13 +189,11 @@ namespace brigid {
 
       size_t header(const char* data, size_t size) {
         try {
-          if (session_.header_cb) {
-            if (parser_.parse(data, size)) {
-              long code = 0;
-              check(curl_easy_getinfo(session_.handle.get(), CURLINFO_RESPONSE_CODE, &code));
-              if (!session_.header_cb(code, parser_.get())) {
-                return 0;
-              }
+          if (parser_.parse(data, size)) {
+            long code = 0;
+            check(curl_easy_getinfo(session_.handle.get(), CURLINFO_RESPONSE_CODE, &code));
+            if (!session_.header_cb(code, parser_.get())) {
+              return 0;
             }
           }
           return size;
@@ -215,10 +207,8 @@ namespace brigid {
 
       size_t write(const char* data, size_t size) {
         try {
-          if (session_.write_cb) {
-            if (!session_.write_cb(data, size)) {
-              return 0;
-            }
+          if (!session_.write_cb(data, size)) {
+            return 0;
           }
           return size;
         } catch (...) {
