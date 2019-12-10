@@ -203,7 +203,7 @@ namespace brigid {
       if (get_field(L, 2, "url") != LUA_TNIL) {
         url = to_data(L, -1).str();
       }
-      if (get_field(L, 2, "header") != LUA_TTABLE) {
+      if (get_field(L, 2, "header") == LUA_TTABLE) {
         int index = abs_index(L, -1);
         lua_pushnil(L);
         while (true) {

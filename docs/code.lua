@@ -23,9 +23,17 @@ if mode == "cxx" then
 
   io.write(("static const std::string %s(%s_data, %d);\n"):format(name, name, size))
 elseif mode == "lua" then
-  io.write(([[local %s = "]]):format(name))
+  io.write(("local %s = table.concat {"):format(name))
   for i = 1, size do
+    local r = i % 8
+    if r == 1 then
+      if i == 1 then
+        io.write "\n  \""
+      else
+        io.write "\";\n  \""
+      end
+    end
     io.write(([[\%03d]]):format(data:byte(i)))
   end
-  io.write "\"\n"
+  io.write "\";\n}\n"
 end

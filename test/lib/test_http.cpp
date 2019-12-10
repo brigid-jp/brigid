@@ -318,12 +318,13 @@ namespace {
       { "Content-Type", "application/x-www-form-urlencoded" },
     };
 
+    client.request("POST", "https://brigid.jp/test/cgi/cat.cgi", header, brigid::http_request_body::data, data.data(), data.size());
+    BRIGID_CHECK(client.code() == 200);
+    BRIGID_CHECK(client.body().empty())
+
     client.request("POST", "https://brigid.jp/test/cgi/env.cgi", header, brigid::http_request_body::data, data.data(), data.size());
     BRIGID_CHECK(client.code() == 200);
     BRIGID_CHECK(client.body().find("CONTENT_TYPE=application/x-www-form-urlencoded\n") != std::string::npos);
-
-    client.request("POST", "https://brigid.jp/test/cgi/cat.cgi", header, brigid::http_request_body::data, data.data(), data.size());
-    BRIGID_CHECK(client.code() == 200);
   }
 
   void test11() {
