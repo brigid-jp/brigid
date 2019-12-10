@@ -122,7 +122,7 @@ namespace brigid {
 
         DWORD code = send(request.get(), 0, body, data, size);
 
-        if (header_cb_) {
+        {
           DWORD size = 0;
           BOOL result = WinHttpQueryHeaders(
               request.get(),
@@ -170,10 +170,8 @@ namespace brigid {
               static_cast<DWORD>(buffer_.size()),
               &size));
 
-          if (write_cb_) {
-            if (!write_cb_(buffer_.data(), size)) {
-              throw BRIGID_ERROR("canceled");
-            }
+          if (!write_cb_(buffer_.data(), size)) {
+            throw BRIGID_ERROR("canceled");
           }
         }
       }
@@ -226,10 +224,8 @@ namespace brigid {
                 buffer_.data(),
                 static_cast<DWORD>(result),
                 nullptr));
-            if (progress_cb_) {
-              if (!progress_cb_(reader->now(), reader->total())) {
-                throw BRIGID_ERROR("canceled");
-              }
+            if (!progress_cb_(reader->now(), reader->total())) {
+              throw BRIGID_ERROR("canceled");
             }
           }
         } else {

@@ -8,8 +8,8 @@ brigid_la_CPPFLAGS = -I$(top_srcdir)/include
 brigid_la_LDFLAGS = -module -avoid-version -shared
 brigid_la_LIBADD = $(top_srcdir)/src/lib/libbrigid.la
 brigid_la_SOURCES = \
-	data.cpp \
 	crypto.cpp \
+	data.cpp \
 	http.cpp \
 	module.cpp \
 	util_lua.cpp \
