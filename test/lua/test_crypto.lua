@@ -49,9 +49,7 @@ for i = 1, #ciphers do
   local key = keys[cipher]
   local ciphertext = ciphertexts[cipher]
   assert(encrypt(cipher, key, iv, plaintext) == ciphertext)
-  io.write("PASS encrypt_string ", cipher, "\n")
   assert(decrypt(cipher, key, iv, ciphertext) == plaintext)
-  io.write("PASS decrypt_string ", cipher, "\n")
 end
 
 local result, message = pcall(tostring, last_view)
@@ -59,8 +57,7 @@ print(message)
 assert(not result)
 
 local cryptor = brigid.encryptor("aes-256-cbc", keys["aes-256-cbc"], iv)
-cryptor:update("0")
-cryptor:update("1")
+cryptor:update("1234567890123456")
 cryptor:close()
 local result, message = pcall(function () cryptor:update("0") end)
 print(message)
