@@ -2,12 +2,12 @@
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
-local backend = ...
+local build = ...
 
-if backend == "windows" then
+if build == "autotools" then
+  package.cpath = [[../../src/lua/.libs/?.so;;]]
+elseif build == "windows" then
   package.cpath = [[..\..\?.dll;;]]
-else
-  package.cpath = [[../../?.so;;]]
 end
 
 local total = 0;
@@ -33,3 +33,9 @@ PASS:  %d
 FAIL:  %d
 ============================================================
 ]]):format(total, pass, fail))
+
+if fail == 0 then
+  os.exit(0)
+else
+  os.exit(1)
+end
