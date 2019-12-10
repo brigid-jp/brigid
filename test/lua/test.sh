@@ -4,9 +4,12 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
+here=`dirname "$0"`
+root=`(cd "$here/../.." && pwd)`
+
 case X$LUA_CPATH in
-  X) LUA_CPATH="../../src/lua/.libs/?.so;;";;
-  *) LUA_CPATH="../../src/lua/.libs/?.so;$LUA_CPATH";;
+  X) LUA_CPATH="$root/src/lua/.libs/?.so;;";;
+  *) LUA_CPATH="$root/src/lua/.libs/?.so;$LUA_CPATH";;
 esac
 export LUA_CPATH
 

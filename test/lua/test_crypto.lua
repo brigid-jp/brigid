@@ -57,3 +57,11 @@ end
 local result, message = pcall(tostring, last_view)
 print(message)
 assert(not result)
+
+local cryptor = brigid.encryptor("aes-256-cbc", keys["aes-256-cbc"], iv)
+cryptor:update("0")
+cryptor:update("1")
+cryptor:close()
+local result, message = pcall(function () cryptor:update("0") end)
+print(message)
+assert(not result)

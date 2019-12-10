@@ -56,6 +56,17 @@ namespace brigid {
         }
       }
 
+      void close() {
+        cryptor_ = nullptr;
+        in_size_ = 0;
+        out_size_ = 0;
+        write_cb_ = reference();
+      }
+
+      bool closed() const {
+        return !cryptor_;
+      }
+
     private:
       std::unique_ptr<cryptor> cryptor_;
       size_t in_size_;
@@ -70,12 +81,18 @@ namespace brigid {
       }
     };
 
-    cryptor_t* check_cryptor(lua_State* L, int arg) {
-      return check_udata<cryptor_t>(L, arg, "brigid.cryptor");
+    cryptor_t* check_cryptor(lua_State* L, int arg, bool check_closed = true) {
+      cryptor_t* self = check_udata<cryptor_t>(L, arg, "brigid.cryptor");
+      if (check_closed) {
+        if (self->closed()) {
+          luaL_error(L, "attempt to use a closed brigid.cryptor");
+        }
+      }
+      return self;
     }
 
     void impl_gc(lua_State* L) {
-      check_cryptor(L, -1)->~cryptor_t();
+      check_cryptor(L, -1, false)->~cryptor_t();
     }
 
     void impl_update(lua_State* L) {
@@ -83,6 +100,10 @@ namespace brigid {
       const auto in = check_data(L, 2);
       bool padding = lua_toboolean(L, 3);
       self->update(in.data(), in.size(), padding);
+    }
+
+    void impl_close(lua_State* L) {
+      check_cryptor(L, 1)->close();
     }
 
     void impl_encryptor(lua_State* L) {
@@ -126,6 +147,7 @@ namespace brigid {
       lua_pop(L, 1);
 
       set_field(L, -1, "update", impl_update);
+      set_field(L, -1, "close", impl_close);
     }
     set_field(L, -2, "cryptor");
 

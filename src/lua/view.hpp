@@ -16,6 +16,7 @@ namespace brigid {
   public:
     view_t(const char*, size_t);
     void close();
+    bool closed() const;
     const char* data() const;
     size_t size() const;
   private:

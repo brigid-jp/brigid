@@ -61,6 +61,19 @@ namespace brigid {
         return header_;
       }
 
+      void close() {
+        session_ = nullptr;
+        progress_cb_ = reference();
+        header_cb_ = reference();
+        write_cb_ = reference();
+        code_ = -1;
+        header_.clear();
+      }
+
+      bool closed() const {
+        return !session_;
+      }
+
     private:
       std::unique_ptr<http_session> session_;
       reference progress_cb_;
@@ -122,8 +135,14 @@ namespace brigid {
       }
     };
 
-    http_session_t* check_http_session(lua_State* L, int arg) {
-      return check_udata<http_session_t>(L, arg, "brigid.http_session");
+    http_session_t* check_http_session(lua_State* L, int arg, bool check_closed = true) {
+      http_session_t* self = check_udata<http_session_t>(L, arg, "brigid.http_session");
+      if (check_closed) {
+        if (self->closed()) {
+          luaL_error(L, "attempt to use a closed brigid.http_session");
+        }
+      }
+      return self;
     }
 
     void impl_gc(lua_State* L) {
@@ -214,6 +233,10 @@ namespace brigid {
         set_field(L, -1, field.first, field.second);
       }
     }
+
+    void impl_close(lua_State* L) {
+      check_http_session(L, 1)->close();
+    }
   }
 
   void initialize_http(lua_State* L) {
@@ -227,6 +250,7 @@ namespace brigid {
 
       set_metafield(L, -1, "__call", impl_call);
       set_field(L, -1, "request", impl_request);
+      set_field(L, -1, "close", impl_close);
     }
     set_field(L, -2, "http_session");
   }
