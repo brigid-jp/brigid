@@ -113,6 +113,10 @@ namespace brigid {
       aes_encryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
         : aes_cryptor_impl(key_data, key_size, iv_data, iv_size) {}
 
+      virtual size_t calculate_buffer_size(size_t in_size) const {
+        return in_size + 16;
+      };
+
       virtual size_t update_impl(BCRYPT_KEY_HANDLE key, std::vector<UCHAR>& iv, const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
         ULONG result = 0;
         check(BCryptEncrypt(
@@ -134,6 +138,10 @@ namespace brigid {
     public:
       aes_decryptor_impl(const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
         : aes_cryptor_impl(key_data, key_size, iv_data, iv_size) {}
+
+      virtual size_t calculate_buffer_size(size_t in_size) const {
+        return in_size;
+      };
 
       virtual size_t update_impl(BCRYPT_KEY_HANDLE key, std::vector<UCHAR>& iv, const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
         ULONG result = 0;
@@ -161,7 +169,7 @@ namespace brigid {
       case crypto_cipher::aes_128_cbc:
       case crypto_cipher::aes_192_cbc:
       case crypto_cipher::aes_256_cbc:
-        if (iv_size != get_block_size(cipher)) {
+        if (iv_size != 16) {
           throw BRIGID_ERROR("invalid initialization vector size");
         }
         return std::unique_ptr<cryptor>(new aes_encryptor_impl(key_data, key_size, iv_data, iv_size));
@@ -174,7 +182,7 @@ namespace brigid {
       case crypto_cipher::aes_128_cbc:
       case crypto_cipher::aes_192_cbc:
       case crypto_cipher::aes_256_cbc:
-        if (iv_size != get_block_size(cipher)) {
+        if (iv_size != 16) {
           throw BRIGID_ERROR("invalid initialization vector size");
         }
         return std::unique_ptr<cryptor>(new aes_decryptor_impl(key_data, key_size, iv_data, iv_size));
