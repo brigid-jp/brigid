@@ -26,7 +26,7 @@ local session = brigid.http_session {
 
 session:request {
   method = "POST";
-  url = "https://brigid.jp/test/cgi/env.cgi";
+  url = "https://brigid.jp/test/cgi/cat.cgi";
   header = {
     ["Content-Type"] = "application/octet-stream";
     ["User-Agent"] = "brigid/" .. brigid.get_version();

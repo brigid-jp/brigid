@@ -229,13 +229,12 @@ namespace brigid {
   void initialize_http(lua_State* L) {
     lua_newtable(L);
     {
-      stack_guard guard(L);
       luaL_newmetatable(L, "brigid.http_session");
       lua_pushvalue(L, -2);
       set_field(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);
-    }
-    {
+      lua_pop(L, 1);
+
       set_metafield(L, -1, "__call", impl_call);
       set_field(L, -1, "request", impl_request);
     }
