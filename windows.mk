@@ -12,9 +12,13 @@ OBJS = \
 	src\lib\http_impl.obj \
 	src\lib\http_windows.obj \
 	src\lib\util_windows.obj \
-	src\lua\common.obj \
+	src\lib\version.obj \
+	src\lua\data.obj \
 	src\lua\crypto.obj \
-	src\lua\module.obj
+	src\lua\module.obj \
+	src\lua\util_lua.obj \
+	src\lua\version.obj \
+	src\lua\view.obj
 TARGET = brigid.dll
 
 all: $(TARGET)
