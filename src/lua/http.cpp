@@ -41,8 +41,7 @@ namespace brigid {
             password)),
           progress_cb_(std::move(progress_cb)),
           header_cb_(std::move(header_cb)),
-          write_cb_(std::move(write_cb)),
-          code_(-1) {}
+          write_cb_(std::move(write_cb)) {}
 
       void request(
           const std::string& method,
@@ -53,21 +52,11 @@ namespace brigid {
         session_->request(method, url, header, body, data, size);
       }
 
-      int code() const {
-        return code_;
-      }
-
-      const std::map<std::string, std::string>& header() const {
-        return header_;
-      }
-
       void close() {
         session_ = nullptr;
         progress_cb_ = reference();
         header_cb_ = reference();
         write_cb_ = reference();
-        code_ = -1;
-        header_.clear();
       }
 
       bool closed() const {
@@ -79,8 +68,6 @@ namespace brigid {
       reference progress_cb_;
       reference header_cb_;
       reference write_cb_;
-      int code_;
-      std::map<std::string, std::string> header_;
 
       bool progress_cb(size_t now, size_t total) {
         if (lua_State* L = progress_cb_.state()) {
@@ -99,8 +86,6 @@ namespace brigid {
       }
 
       bool header_cb(int code, const std::map<std::string, std::string>& header) {
-        code_ = code;
-        header_ = header;
         if (lua_State* L = header_cb_.state()) {
           stack_guard guard(L);
           header_cb_.get_field(L);
@@ -226,12 +211,6 @@ namespace brigid {
 
       self->request(method, url, header, body, data.data(), data.size());
       lua_pop(L, 5);
-
-      push(L, self->code());
-      lua_newtable(L);
-      for (const auto& field : self->header()) {
-        set_field(L, -1, field.first, field.second);
-      }
     }
 
     void impl_close(lua_State* L) {

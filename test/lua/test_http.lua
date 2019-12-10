@@ -33,6 +33,8 @@ function class:progress_cb(now, total)
 end
 
 function class:header_cb(code, header)
+  self.code = code
+  self.header = header
 end
 
 function class:write_cb(out)
@@ -51,8 +53,17 @@ function class:request(method, url, header, request)
   request.method = method
   request.url = url
   request.header = header
-  local code, header = self.session:request(request)
-  return code, header, table.concat(self.buffer)
+  self.session:request(request)
+
+  local code = self.code
+  local header = self.header
+  local body = table.concat(self.buffer)
+
+  self.buffer = nil
+  self.code = nil
+  self.header = nil
+
+  return code, header, body
 end
 
 function class:request_data(method, url, header, data)
