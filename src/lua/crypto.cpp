@@ -17,9 +17,8 @@ namespace brigid {
   using namespace lua;
 
   namespace {
-    crypto_cipher check_cipher(lua_State* L, int arg) {
-      data_t data = check_data(L, arg);
-      std::string cipher(data.data(), data.size());
+    crypto_cipher to_cipher(const data_t& data) {
+      std::string cipher = data.str();
       if (cipher == "aes-128-cbc") {
         return crypto_cipher::aes_128_cbc;
       } else if (cipher == "aes-192-cbc") {
@@ -84,19 +83,19 @@ namespace brigid {
     }
 
     void impl_encryptor(lua_State* L) {
-      const auto cipher = check_cipher(L, 1);
-      const auto key = check_data(L, 2);
-      const auto iv = check_data(L, 3);
+      data_t cipher = check_data(L, 1);
+      data_t key = check_data(L, 2);
+      data_t iv = check_data(L, 3);
       luaL_checkany(L, 4);
-      new_userdata<cryptor_t>(L, "brigid.cryptor", make_encryptor(cipher, key.data(), key.size(), iv.data(), iv.size()), reference(L, 4));
+      new_userdata<cryptor_t>(L, "brigid.cryptor", make_encryptor(to_cipher(cipher), key.data(), key.size(), iv.data(), iv.size()), reference(L, 4));
     }
 
     void impl_decryptor(lua_State* L) {
-      const auto cipher = check_cipher(L, 1);
-      const auto key = check_data(L, 2);
-      const auto iv = check_data(L, 3);
+      data_t cipher = check_data(L, 1);
+      data_t key = check_data(L, 2);
+      data_t iv = check_data(L, 3);
       luaL_checkany(L, 4);
-      new_userdata<cryptor_t>(L, "brigid.cryptor", make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size()), reference(L, 4));
+      new_userdata<cryptor_t>(L, "brigid.cryptor", make_decryptor(to_cipher(cipher), key.data(), key.size(), iv.data(), iv.size()), reference(L, 4));
     }
   }
 
