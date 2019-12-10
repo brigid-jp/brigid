@@ -26,6 +26,7 @@ namespace brigid {
   class cryptor {
   public:
     virtual ~cryptor() = 0;
+    virtual size_t calculate_buffer_size(size_t) const = 0;
     virtual size_t update(const char*, size_t, char*, size_t, bool) = 0;
   };
 

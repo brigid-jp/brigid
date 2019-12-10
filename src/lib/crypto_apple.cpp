@@ -14,7 +14,7 @@
 
 namespace brigid {
   namespace {
-    inline const char* get_error_message(CCCryptorStatus code) {
+    const char* get_error_message(CCCryptorStatus code) {
       switch (code) {
         case -4300: return "kCCParamError";
         case -4301: return "kCCBufferTooSmall";
@@ -32,7 +32,7 @@ namespace brigid {
       return nullptr;
     }
 
-    inline void check(CCCryptorStatus code) {
+    void check(CCCryptorStatus code) {
       if (code != kCCSuccess) {
         if (const char* message = get_error_message(code)) {
           throw BRIGID_ERROR(message, make_error_code("CommonCrypto error", code));
@@ -44,18 +44,23 @@ namespace brigid {
 
     using cryptor_ref_t = std::unique_ptr<remove_pointer_t<CCCryptorRef>, decltype(&CCCryptorRelease)>;
 
-    inline cryptor_ref_t make_cryptor_ref(CCCryptorRef cryptor = nullptr) {
+    cryptor_ref_t make_cryptor_ref(CCCryptorRef cryptor = nullptr) {
       return cryptor_ref_t(cryptor, &CCCryptorRelease);
     }
 
     class aes_cryptor_impl : public cryptor, private noncopyable {
     public:
-      aes_cryptor_impl(CCOperation operation, const char* key_data, size_t key_size, const char* iv_data)
-        : cryptor_(make_cryptor_ref()) {
+      aes_cryptor_impl(CCOperation operation, const char* key_data, size_t key_size, const char* iv_data, size_t buffer_size)
+        : cryptor_(make_cryptor_ref()),
+          buffer_size_(buffer_size) {
         CCCryptorRef cryptor = nullptr;
         check(CCCryptorCreateWithMode(operation, kCCModeCBC, kCCAlgorithmAES, kCCOptionPKCS7Padding, iv_data, key_data, key_size, nullptr, 0, 0, 0, &cryptor));
         cryptor_ = make_cryptor_ref(cryptor);
       }
+
+      virtual size_t calculate_buffer_size(size_t in_size) const {
+        return in_size + buffer_size_;
+      };
 
       virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
         size_t size1 = 0;
@@ -69,6 +74,7 @@ namespace brigid {
 
     private:
       cryptor_ref_t cryptor_;
+      size_t buffer_size_;
     };
   }
 
@@ -83,7 +89,7 @@ namespace brigid {
         if (iv_size != 16) {
           throw BRIGID_ERROR("invalid initialization vector size");
         }
-        return std::unique_ptr<cryptor>(new aes_cryptor_impl(kCCEncrypt, key_data, key_size, iv_data));
+        return std::unique_ptr<cryptor>(new aes_cryptor_impl(kCCEncrypt, key_data, key_size, iv_data, 16));
     }
     throw BRIGID_ERROR("unsupported cipher");
   }
@@ -96,7 +102,7 @@ namespace brigid {
         if (iv_size != 16) {
           throw BRIGID_ERROR("invalid initialization vector size");
         }
-        return std::unique_ptr<cryptor>(new aes_cryptor_impl(kCCDecrypt, key_data, key_size, iv_data));
+        return std::unique_ptr<cryptor>(new aes_cryptor_impl(kCCDecrypt, key_data, key_size, iv_data, 0));
     }
     throw BRIGID_ERROR("unsupported cipher");
   }

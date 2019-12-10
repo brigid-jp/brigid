@@ -30,13 +30,14 @@ namespace brigid {
 
     class aes_cryptor_impl : public cryptor, private noncopyable {
     public:
-      aes_cryptor_impl(bool encrypt, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size)
+      aes_cryptor_impl(bool encrypt, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, size_t buffer_size)
         : vt_(),
           instance_(make_global_ref(vt_.constructor(
               vt_.clazz,
               to_boolean(encrypt),
               make_byte_array(key_data, key_size),
-              make_byte_array(iv_data, iv_size)))) {}
+              make_byte_array(iv_data, iv_size)))),
+          buffer_size_(buffer_size) {}
 
       virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
         return vt_.update(
@@ -46,9 +47,14 @@ namespace brigid {
             to_boolean(padding));
       }
 
+      virtual size_t calculate_buffer_size(size_t in_size) const {
+        return in_size + buffer_size_;
+      };
+
     private:
       vtable vt_;
       global_ref_t<jobject> instance_;
+      size_t buffer_size_;
     };
   }
 
@@ -60,7 +66,7 @@ namespace brigid {
       case crypto_cipher::aes_128_cbc:
       case crypto_cipher::aes_192_cbc:
       case crypto_cipher::aes_256_cbc:
-        return std::unique_ptr<cryptor>(new aes_cryptor_impl(true, key_data, key_size, iv_data, iv_size));
+        return std::unique_ptr<cryptor>(new aes_cryptor_impl(true, key_data, key_size, iv_data, iv_size, 16));
     }
     throw BRIGID_ERROR("unsupported cipher");
   }
@@ -70,7 +76,7 @@ namespace brigid {
       case crypto_cipher::aes_128_cbc:
       case crypto_cipher::aes_192_cbc:
       case crypto_cipher::aes_256_cbc:
-        return std::unique_ptr<cryptor>(new aes_cryptor_impl(false, key_data, key_size, iv_data, iv_size));
+        return std::unique_ptr<cryptor>(new aes_cryptor_impl(false, key_data, key_size, iv_data, iv_size, 0));
     }
     throw BRIGID_ERROR("unsupported cipher");
   }

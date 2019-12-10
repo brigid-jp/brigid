@@ -2,8 +2,8 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#ifndef BRIGID_JAVA_HPP
-#define BRIGID_JAVA_HPP
+#ifndef BRIGID_UTIL_JAVA_HPP
+#define BRIGID_UTIL_JAVA_HPP
 
 #include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>

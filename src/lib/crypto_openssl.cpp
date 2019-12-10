@@ -108,7 +108,7 @@ namespace brigid {
       default:
         throw BRIGID_ERROR("unsupported cipher");
     }
-    if (iv_size != 16) {
+    if (iv_size != get_block_size(cipher)) {
       throw BRIGID_ERROR("invalid initialization vector size");
     }
     return std::unique_ptr<cryptor>(new aes_encryptor_impl(evp_cipher, key_data, key_size, iv_data));
@@ -129,7 +129,7 @@ namespace brigid {
       default:
         throw BRIGID_ERROR("unsupported cipher");
     }
-    if (iv_size != 16) {
+    if (iv_size != get_block_size(cipher)) {
       throw BRIGID_ERROR("invalid initialization vector size");
     }
     return std::unique_ptr<cryptor>(new aes_decryptor_impl(evp_cipher, key_data, key_size, iv_data));

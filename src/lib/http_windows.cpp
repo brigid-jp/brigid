@@ -25,7 +25,7 @@ namespace brigid {
     using namespace windows;
 
     template <class T>
-    inline T check_impl(T result) {
+    T check_impl(T result) {
       if (!result) {
         DWORD code = GetLastError();
         std::string message;
