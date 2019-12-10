@@ -153,21 +153,17 @@ namespace brigid {
     }
 
     bool http_session_delegate_impl::did_send_body_data(size_t total_bytes_sent, size_t total_bytes_expected_to_send) {
-      if (progress_cb_) {
-        std::unique_lock<std::mutex> rep_lock(rep_mutex_, std::defer_lock);
-        {
-          std::lock_guard<std::mutex> req_lock(req_mutex_);
-          req_ = [=]() -> bool {
-            return progress_cb_(total_bytes_sent, total_bytes_expected_to_send);
-          };
-          rep_lock.lock();
-          req_condition_.notify_all();
-        }
-        rep_condition_.wait(rep_lock);
-        return rep_;
-      } else {
-        return true;
+      std::unique_lock<std::mutex> rep_lock(rep_mutex_, std::defer_lock);
+      {
+        std::lock_guard<std::mutex> req_lock(req_mutex_);
+        req_ = [=]() -> bool {
+          return progress_cb_(total_bytes_sent, total_bytes_expected_to_send);
+        };
+        rep_lock.lock();
+        req_condition_.notify_all();
       }
+      rep_condition_.wait(rep_lock);
+      return rep_;
     }
 
     NSURLCredential* http_session_delegate_impl::did_receive_challenge(NSURLAuthenticationChallenge* challenge) {
@@ -178,50 +174,42 @@ namespace brigid {
     }
 
     bool http_session_delegate_impl::did_receive_response(NSHTTPURLResponse* response) {
-      if (header_cb_) {
-        std::unique_lock<std::mutex> rep_lock(rep_mutex_, std::defer_lock);
-        {
-          std::lock_guard<std::mutex> req_lock(req_mutex_);
-          req_ = [=]() -> bool {
-            std::map<std::string, std::string> headers;
-            for (NSString* key in response.allHeaderFields) {
-              headers[brigid::encode_utf8(key)] = brigid::encode_utf8(response.allHeaderFields[key]);
-            }
-            return header_cb_(response.statusCode, headers);
-          };
-          rep_lock.lock();
-          req_condition_.notify_all();
-        }
-        rep_condition_.wait(rep_lock);
-        return rep_;
-      } else {
-        return true;
+      std::unique_lock<std::mutex> rep_lock(rep_mutex_, std::defer_lock);
+      {
+        std::lock_guard<std::mutex> req_lock(req_mutex_);
+        req_ = [=]() -> bool {
+          std::map<std::string, std::string> headers;
+          for (NSString* key in response.allHeaderFields) {
+            headers[brigid::encode_utf8(key)] = brigid::encode_utf8(response.allHeaderFields[key]);
+          }
+          return header_cb_(response.statusCode, headers);
+        };
+        rep_lock.lock();
+        req_condition_.notify_all();
       }
+      rep_condition_.wait(rep_lock);
+      return rep_;
     }
 
     bool http_session_delegate_impl::did_receive_data(NSData* data) {
-      if (write_cb_) {
-        std::unique_lock<std::mutex> rep_lock(rep_mutex_, std::defer_lock);
-        {
-          std::lock_guard<std::mutex> req_lock(req_mutex_);
-          req_ = [=]() -> bool {
-            __block bool result = true;
-            [data enumerateByteRangesUsingBlock:^(const void* bytes, NSRange byteRange, BOOL* stop) {
-              result = write_cb_(static_cast<const char*>(bytes), byteRange.length);
-              if (!result) {
-                *stop = YES;
-              }
-            }];
-            return result;
-          };
-          rep_lock.lock();
-          req_condition_.notify_all();
-        }
-        rep_condition_.wait(rep_lock);
-        return rep_;
-      } else {
-        return true;
+      std::unique_lock<std::mutex> rep_lock(rep_mutex_, std::defer_lock);
+      {
+        std::lock_guard<std::mutex> req_lock(req_mutex_);
+        req_ = [=]() -> bool {
+          __block bool result = true;
+          [data enumerateByteRangesUsingBlock:^(const void* bytes, NSRange byteRange, BOOL* stop) {
+            result = write_cb_(static_cast<const char*>(bytes), byteRange.length);
+            if (!result) {
+              *stop = YES;
+            }
+          }];
+          return result;
+        };
+        rep_lock.lock();
+        req_condition_.notify_all();
       }
+      rep_condition_.wait(rep_lock);
+      return rep_;
     }
 
     void http_session_delegate_impl::wait(NSURLSessionTask* task) {
