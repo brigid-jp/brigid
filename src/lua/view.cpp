@@ -19,6 +19,10 @@ namespace brigid {
     size_ = 0;
   }
 
+  bool view_t::closed() const {
+    return !data_;
+  }
+
   const char* view_t::data() const {
     return data_;
   }
@@ -47,15 +51,15 @@ namespace brigid {
 
   view_t* check_view(lua_State* L, int arg) {
     view_t* self = check_udata<view_t>(L, arg, "brigid.view");
-    if (!self->data()) {
-      luaL_error(L, "attempt to use a closed view");
+    if (self->closed()) {
+      luaL_error(L, "attempt to use a closed brigid.view");
     }
     return self;
   }
 
   view_t* test_view(lua_State* L, int index) {
     if (view_t* self = test_udata<view_t>(L, index, "brigid.view")) {
-      if (self->data()) {
+      if (!self->closed()) {
         return self;
       }
     }

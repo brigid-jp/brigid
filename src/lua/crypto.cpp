@@ -81,11 +81,11 @@ namespace brigid {
       }
     };
 
-    cryptor_t* check_cryptor(lua_State* L, int arg, bool check_valid = true) {
+    cryptor_t* check_cryptor(lua_State* L, int arg, bool check_closed = true) {
       cryptor_t* self = check_udata<cryptor_t>(L, arg, "brigid.cryptor");
-      if (check_valid) {
+      if (check_closed) {
         if (self->closed()) {
-          luaL_error(L, "attempt to use a closed cryptor");
+          luaL_error(L, "attempt to use a closed brigid.cryptor");
         }
       }
       return self;
@@ -103,8 +103,7 @@ namespace brigid {
     }
 
     void impl_close(lua_State* L) {
-      cryptor_t* self = check_cryptor(L, 1);
-      self->close();
+      check_cryptor(L, 1)->close();
     }
 
     void impl_encryptor(lua_State* L) {
