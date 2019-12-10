@@ -4,13 +4,18 @@
 
 #include <brigid/error.hpp>
 #include <brigid/http.hpp>
+#include <brigid/noncopyable.hpp>
 #include "data.hpp"
 #include "util_lua.hpp"
 #include "view.hpp"
 
 #include <lua.hpp>
 
+#include <stddef.h>
 #include <functional>
+#include <map>
+#include <memory>
+#include <string>
 #include <utility>
 
 namespace brigid {
@@ -36,7 +41,8 @@ namespace brigid {
             password)),
           progress_cb_(std::move(progress_cb)),
           header_cb_(std::move(header_cb)),
-          write_cb_(std::move(write_cb)) {}
+          write_cb_(std::move(write_cb)),
+          code_(-1) {}
 
       void request(
           const std::string& method,
@@ -47,11 +53,21 @@ namespace brigid {
         session_->request(method, url, header, body, data, size);
       }
 
+      int code() const {
+        return code_;
+      }
+
+      const std::map<std::string, std::string>& header() const {
+        return header_;
+      }
+
     private:
       std::unique_ptr<http_session> session_;
       reference progress_cb_;
       reference header_cb_;
       reference write_cb_;
+      int code_;
+      std::map<std::string, std::string> header_;
 
       bool progress_cb(size_t now, size_t total) {
         if (lua_State* L = progress_cb_.state()) {
@@ -70,6 +86,8 @@ namespace brigid {
       }
 
       bool header_cb(int code, const std::map<std::string, std::string>& header) {
+        code_ = code;
+        header_ = header;
         if (lua_State* L = header_cb_.state()) {
           stack_guard guard(L);
           header_cb_.get_field(L);
@@ -122,42 +140,24 @@ namespace brigid {
       std::string username;
       std::string password;
 
-      {
-        stack_guard guard(L);
-        if (get_field(L, -1, "progress") != LUA_TNIL) {
-          progress_cb = reference(L, -1);
-        }
+      if (get_field(L, 2, "progress") != LUA_TNIL) {
+        progress_cb = reference(L, -1);
       }
-
-      {
-        stack_guard guard(L);
-        if (get_field(L, -1, "header") != LUA_TNIL) {
-          header_cb = reference(L, -1);
-        }
+      if (get_field(L, 2, "header") != LUA_TNIL) {
+        header_cb = reference(L, -1);
       }
-
-      {
-        stack_guard guard(L);
-        if (get_field(L, -1, "write") != LUA_TNIL) {
-          write_cb = reference(L, -1);
-        }
+      if (get_field(L, 2, "write") != LUA_TNIL) {
+        write_cb = reference(L, -1);
       }
-
-      {
-        stack_guard guard(L);
-        if (get_field(L, -1, "username") != LUA_TNIL) {
-          username = to_data(L, -1).str();
-          ++credential;
-        }
+      if (get_field(L, 2, "username") != LUA_TNIL) {
+        ++credential;
+        username = to_data(L, -1).str();
       }
-
-      {
-        stack_guard guard(L);
-        if (get_field(L, -1, "password") != LUA_TNIL) {
-          password = to_data(L, -1).str();
-          ++credential;
-        }
+      if (get_field(L, 2, "password") != LUA_TNIL) {
+        ++credential;
+        password = to_data(L, -1).str();
       }
+      lua_pop(L, 5);
 
       new_userdata<http_session_t>(L, "brigid.http_session",
           std::move(progress_cb),
@@ -178,51 +178,41 @@ namespace brigid {
       http_request_body body = http_request_body::none;
       data_t data;
 
-      {
-        stack_guard guard(L);
-        if (get_field(L, -1, "method") != LUA_TNIL) {
-          method = to_data(L, -1).str();
-        }
+      if (get_field(L, 2, "method") != LUA_TNIL) {
+        method = to_data(L, -1).str();
       }
-
-      {
-        stack_guard guard(L);
-        if (get_field(L, -1, "url") != LUA_TNIL) {
-          url = to_data(L, -1).str();
-        }
+      if (get_field(L, 2, "url") != LUA_TNIL) {
+        url = to_data(L, -1).str();
       }
-
-      {
-        stack_guard guard(L);
-        if (get_field(L, -1, "header") != LUA_TNIL) {
-          int index = abs_index(L, -1);
-          lua_pushnil(L);
-          while (true) {
-            if (!lua_next(L, index)) {
-              break;
-            }
-            lua_pushvalue(L, -2);
-            data_t key = to_data(L, -1);
-            data_t value = to_data(L, -2);
-            header[key.str()] = value.str();
-            lua_pop(L, 2);
+      if (get_field(L, 2, "header") != LUA_TTABLE) {
+        int index = abs_index(L, -1);
+        lua_pushnil(L);
+        while (true) {
+          if (!lua_next(L, index)) {
+            break;
           }
+          lua_pushvalue(L, -2);
+          header[to_data(L, -1).str()] = to_data(L, -2).str();
+          lua_pop(L, 2);
         }
       }
-
-      if (get_field(L, -1, "data") != LUA_TNIL) {
+      if (get_field(L, 2, "data") != LUA_TNIL) {
         body = http_request_body::data;
         data = to_data(L, -1);
-      } else {
-        lua_pop(L, 1);
-        if (get_field(L, -1, "file") != LUA_TNIL) {
-          body = http_request_body::file;
-          data = to_data(L, -1);
-        }
+      }
+      if (get_field(L, 2, "file") != LUA_TNIL) {
+        body = http_request_body::file;
+        data = to_data(L, -1);
       }
 
       self->request(method, url, header, body, data.data(), data.size());
-      lua_pop(L, 1);
+      lua_pop(L, 5);
+
+      push(L, self->code());
+      lua_newtable(L);
+      for (const auto& field : self->header()) {
+        set_field(L, -1, field.first, field.second);
+      }
     }
   }
 

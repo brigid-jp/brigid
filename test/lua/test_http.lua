@@ -9,12 +9,12 @@ local session = brigid.http_session {
     print(now, total)
   end;
 
-  header = function (code, header)
-    print(code)
-    for k, v in pairs(header) do
-      print(k, v)
-    end
-  end;
+  -- header = function (code, header)
+  --   print(code)
+  --   for k, v in pairs(header) do
+  --     print(k, v)
+  --   end
+  -- end;
 
   write = function (view)
     io.write(tostring(view))
@@ -24,7 +24,7 @@ local session = brigid.http_session {
   -- password = "";
 }
 
-session:request {
+local code, header = session:request {
   method = "POST";
   url = "https://brigid.jp/test/cgi/cat.cgi";
   header = {
@@ -33,3 +33,11 @@ session:request {
   };
   data = "foo=42";
 }
+
+io.write "\n"
+
+print("status", code)
+for k, v in pairs(header) do
+  print(("%s: %s"):format(k, v))
+end
+

@@ -9,6 +9,8 @@
 #include "util_lua.hpp"
 #include "view.hpp"
 
+#include <stddef.h>
+#include <memory>
 #include <utility>
 #include <string>
 #include <vector>
@@ -87,20 +89,30 @@ namespace brigid {
       crypto_cipher cipher = check_cipher(L, 1);
       data_t key = check_data(L, 2);
       data_t iv = check_data(L, 3);
-      luaL_checkany(L, 4);
+      reference write_cb;
+
+      if (!lua_isnoneornil(L, 4)) {
+        write_cb = reference(L, 4);
+      }
+
       new_userdata<cryptor_t>(L, "brigid.cryptor",
           make_encryptor(cipher, key.data(), key.size(), iv.data(), iv.size()),
-          reference(L, 4));
+          std::move(write_cb));
     }
 
     void impl_decryptor(lua_State* L) {
       crypto_cipher cipher = check_cipher(L, 1);
       data_t key = check_data(L, 2);
       data_t iv = check_data(L, 3);
-      luaL_checkany(L, 4);
+      reference write_cb;
+
+      if (!lua_isnoneornil(L, 4)) {
+        write_cb = reference(L, 4);
+      }
+
       new_userdata<cryptor_t>(L, "brigid.cryptor",
           make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size()),
-          reference(L, 4));
+          std::move(write_cb));
     }
   }
 
