@@ -78,3 +78,14 @@ cryptor:close()
 local result, message = pcall(function () cryptor:update("0") end)
 print(message)
 assert(not result)
+
+local view
+local cryptor
+cryptor = brigid.encryptor(cipher, key, iv, function (out)
+  view = out
+end)
+cryptor:update(plaintext, true)
+assert(view)
+local result, message = pcall(function () tostring(view) end)
+print(message)
+assert(not result)

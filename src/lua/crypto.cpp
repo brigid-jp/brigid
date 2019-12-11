@@ -6,6 +6,7 @@
 #include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
 #include "data.hpp"
+#include "scope_exit.hpp"
 #include "util_lua.hpp"
 #include "view.hpp"
 
@@ -48,7 +49,11 @@ namespace brigid {
           if (lua_State* L = write_cb_.state()) {
             stack_guard guard(L);
             write_cb_.get_field(L);
-            view_guard vguard(new_view(L, buffer_.data(), result));
+            view_t* view = new_view(L, buffer_.data(), result);
+            scope_exit scope_guard([&]() {
+              view->close();
+              // running_ = false;
+            });
             if (lua_pcall(L, 1, 0, 0) != 0) {
               throw BRIGID_ERROR(lua_tostring(L, -1));
             }

@@ -31,13 +31,6 @@ namespace brigid {
     return size_;
   }
 
-  view_guard::view_guard(view_t* view)
-    : view_(view) {}
-
-  view_guard::~view_guard() {
-    view_->close();
-  }
-
   namespace {
     void impl_tostring(lua_State* L) {
       view_t* self = check_view(L, 1);

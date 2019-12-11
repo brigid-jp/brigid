@@ -18,11 +18,14 @@ namespace brigid {
         try {
           cxx_function_t function = reinterpret_cast<cxx_function_t>(lua_touserdata(L, lua_upvalueindex(1)));
           function(L);
+          return lua_gettop(L) - top;
         } catch (const std::exception& e) {
           lua_settop(L, top);
           return luaL_error(L, "%s", e.what());
+        } catch (...) {
+          lua_settop(L, top);
+          return luaL_error(L, "unknown exception");
         }
-        return lua_gettop(L) - top;
       }
     }
 

@@ -24,14 +24,6 @@ namespace brigid {
     size_t size_;
   };
 
-  class view_guard : private noncopyable {
-  public:
-    explicit view_guard(view_t*);
-    ~view_guard();
-  private:
-    view_t* view_;
-  };
-
   view_t* new_view(lua_State*, const char*, size_t);
   view_t* check_view(lua_State*, int);
   view_t* test_view(lua_State*, int);
