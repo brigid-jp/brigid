@@ -42,7 +42,8 @@ namespace brigid {
             password)),
           progress_cb_(std::move(progress_cb)),
           header_cb_(std::move(header_cb)),
-          write_cb_(std::move(write_cb)) {}
+          write_cb_(std::move(write_cb)),
+          running_() {}
 
       void request(
           const std::string& method,
@@ -64,11 +65,16 @@ namespace brigid {
         return !session_;
       }
 
+      bool running() const {
+        return running_;
+      }
+
     private:
       std::unique_ptr<http_session> session_;
       reference progress_cb_;
       reference header_cb_;
       reference write_cb_;
+      bool running_;
 
       bool progress_cb(size_t now, size_t total) {
         if (lua_State* L = progress_cb_.state()) {
@@ -76,6 +82,10 @@ namespace brigid {
           progress_cb_.get_field(L);
           push(L, now);
           push(L, total);
+          running_ = true;
+          scope_exit scope_guard([&]() {
+            running_ = false;
+          });
           if (lua_pcall(L, 2, 1, 0) != 0) {
             throw BRIGID_ERROR(lua_tostring(L, -1));
           }
@@ -95,6 +105,10 @@ namespace brigid {
           for (const auto& field : header) {
             set_field(L, -1, field.first, field.second);
           }
+          running_ = true;
+          scope_exit scope_guard([&]() {
+            running_ = false;
+          });
           if (lua_pcall(L, 2, 1, 0) != 0) {
             throw BRIGID_ERROR(lua_tostring(L, -1));
           }
@@ -110,7 +124,9 @@ namespace brigid {
           stack_guard guard(L);
           write_cb_.get_field(L);
           view_t* view = new_view(L, data, size);
+          running_ = true;
           scope_exit scope_guard([&]() {
+            running_ = false;
             view->close();
           });
           if (lua_pcall(L, 1, 1, 0) != 0) {
@@ -130,12 +146,15 @@ namespace brigid {
         if (self->closed()) {
           luaL_error(L, "attempt to use a closed brigid.http_session");
         }
+        if (self->running()) {
+          luaL_error(L, "attempt to use a running brigid.http_session");
+        }
       }
       return self;
     }
 
     void impl_gc(lua_State* L) {
-      check_http_session(L, -1)->~http_session_t();
+      check_http_session(L, -1, false)->~http_session_t();
     }
 
     void impl_call(lua_State* L) {

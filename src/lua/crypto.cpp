@@ -51,15 +51,13 @@ namespace brigid {
             stack_guard guard(L);
             write_cb_.get_field(L);
             view_t* view = new_view(L, buffer_.data(), result);
-            {
-              running_ = true;
-              scope_exit guard([&]() {
-                running_ = false;
-                view->close();
-              });
-              if (lua_pcall(L, 1, 0, 0) != 0) {
-                throw BRIGID_ERROR(lua_tostring(L, -1));
-              }
+            running_ = true;
+            scope_exit scope_guard([&]() {
+              running_ = false;
+              view->close();
+            });
+            if (lua_pcall(L, 1, 0, 0) != 0) {
+              throw BRIGID_ERROR(lua_tostring(L, -1));
             }
           }
         }
