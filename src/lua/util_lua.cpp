@@ -2,11 +2,13 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include <brigid/error.hpp>
 #include "util_lua.hpp"
 
 #include <lua.hpp>
 
 #include <stddef.h>
+#include <string.h>
 #include <exception>
 #include <string>
 
@@ -16,9 +18,18 @@ namespace brigid {
       int impl_closure(lua_State* L) {
         int top = lua_gettop(L);
         try {
-          cxx_function_t function = reinterpret_cast<cxx_function_t>(lua_touserdata(L, lua_upvalueindex(1)));
-          function(L);
-          return lua_gettop(L) - top;
+          size_t size = 0;
+          if (const char* data = lua_tolstring(L, lua_upvalueindex(1), &size)) {
+            if (size == sizeof(cxx_function_t)) {
+              cxx_function_t function = nullptr;
+              memmove(&function, data, size);
+              if (function) {
+                function(L);
+                return lua_gettop(L) - top;
+              }
+            }
+          }
+          throw BRIGID_ERROR("invalid upvalue");
         } catch (const std::exception& e) {
           lua_settop(L, top);
           return luaL_error(L, "%s", e.what());
@@ -99,7 +110,10 @@ namespace brigid {
     }
 
     void push(lua_State* L, cxx_function_t value) {
-      lua_pushlightuserdata(L, reinterpret_cast<void*>(value));
+      static const size_t size = sizeof(cxx_function_t);
+      char data[size] = {};
+      memmove(data, &value, size);
+      lua_pushlstring(L, data, size);
       lua_pushcclosure(L, impl_closure, 1);
     }
 
