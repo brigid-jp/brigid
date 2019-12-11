@@ -7,8 +7,24 @@
 
 #include <lua.hpp>
 
+#include <string.h>
+#include <iostream>
+
 namespace brigid {
   using namespace lua;
+
+  namespace {
+    void impl_tostring(lua_State* L) {
+      view_t* self = check_view(L, 1);
+      push(L, self->data(), self->size());
+    }
+
+    const void* impl_get_pointer_ffi(void* self) {
+      return static_cast<view_t*>(self)->data();
+    }
+
+    using impl_get_pointer_ffi_t = const void* (*)(void*);
+  }
 
   view_t::view_t(const char* data, size_t size)
     : data_(data),
@@ -29,13 +45,6 @@ namespace brigid {
 
   size_t view_t::size() const {
     return size_;
-  }
-
-  namespace {
-    void impl_tostring(lua_State* L) {
-      view_t* self = check_view(L, 1);
-      push(L, self->data(), self->size());
-    }
   }
 
   view_t* new_view(lua_State* L, const char* data, size_t size) {
@@ -62,11 +71,34 @@ namespace brigid {
   void initialize_view(lua_State* L) {
     lua_newtable(L);
     {
-      stack_guard guard(L);
       luaL_newmetatable(L, "brigid.view");
       lua_pushvalue(L, -2);
       set_field(L, -2, "__index");
       set_field(L, -1, "__tostring", impl_tostring);
+      lua_pop(L, 1);
+
+      {
+        stack_guard guard(L);
+
+        static const char code[] =
+        #include "view.lua"
+        ;
+
+        if (luaL_loadbuffer(L, code, sizeof(code), "view.lua") == 0) {
+          impl_get_pointer_ffi_t value = &impl_get_pointer_ffi;
+          static const size_t size = sizeof(impl_get_pointer_ffi_t);
+          char data[size] = {};
+          memmove(data, &value, size);
+          lua_pushlstring(L, data, size);
+          if (lua_pcall(L, 1, 1, 0) == 0) {
+            std::cout << "ffi " << lua_isnil(L, -1) << "\n";
+          } else {
+            std::cerr << "pcall error " << lua_tostring(L, -1) << "\n";
+          }
+        } else {
+          std::cerr << "loadbuffer error " << lua_tostring(L, -1) << "\n";
+        }
+      }
     }
     set_field(L, -2, "view");
   }
