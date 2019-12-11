@@ -83,6 +83,9 @@ local view
 local cryptor
 cryptor = brigid.encryptor(cipher, key, iv, function (out)
   view = out
+  local result, message = pcall(function () cryptor:update(plaintext, true) end)
+  print(message)
+  assert(not result)
 end)
 cryptor:update(plaintext, true)
 assert(view)

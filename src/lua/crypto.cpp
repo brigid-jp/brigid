@@ -38,7 +38,8 @@ namespace brigid {
         : cryptor_(std::move(cryptor)),
           in_size_(),
           out_size_(),
-          write_cb_(std::move(write_cb)) {}
+          write_cb_(std::move(write_cb)),
+          running_() {}
 
       void update(const char* in_data, size_t in_size, bool padding) {
         in_size_ += in_size;
@@ -50,12 +51,15 @@ namespace brigid {
             stack_guard guard(L);
             write_cb_.get_field(L);
             view_t* view = new_view(L, buffer_.data(), result);
-            scope_exit scope_guard([&]() {
-              view->close();
-              // running_ = false;
-            });
-            if (lua_pcall(L, 1, 0, 0) != 0) {
-              throw BRIGID_ERROR(lua_tostring(L, -1));
+            {
+              running_ = true;
+              scope_exit guard([&]() {
+                running_ = false;
+                view->close();
+              });
+              if (lua_pcall(L, 1, 0, 0) != 0) {
+                throw BRIGID_ERROR(lua_tostring(L, -1));
+              }
             }
           }
         }
@@ -72,12 +76,17 @@ namespace brigid {
         return !cryptor_;
       }
 
+      bool running() const {
+        return running_;
+      }
+
     private:
       std::unique_ptr<cryptor> cryptor_;
       size_t in_size_;
       size_t out_size_;
       std::vector<char> buffer_;
       reference write_cb_;
+      bool running_;
 
       void ensure_buffer_size(size_t size) {
         if (buffer_.size() < size) {
@@ -91,6 +100,9 @@ namespace brigid {
       if (validate) {
         if (self->closed()) {
           luaL_error(L, "attempt to use a closed brigid.cryptor");
+        }
+        if (self->running()) {
+          luaL_error(L, "attempt to use a running brigid.cryptor");
         }
       }
       return self;
