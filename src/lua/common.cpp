@@ -203,6 +203,8 @@ namespace brigid {
       set_field(L, LUA_REGISTRYINDEX, "brigid.common.encode_pointer");
       get_field(L, -1, "decode_pointer");
       set_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
+      get_field(L, -1, "test_love2d_data");
+      set_field(L, LUA_REGISTRYINDEX, "brigid.common.test_love2d_data");
     }
     lua_pop(L, 1);
   }

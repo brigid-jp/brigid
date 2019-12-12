@@ -5,10 +5,22 @@ R""--(
 
 local class = ...
 
+function class.test_love2d_data(source)
+  if source.getPointer and source.getSize then
+    if source.getFFIPointer then
+      local result = source:getFFIPointer()
+      if result ~= nil then
+        return class.encode_pointer(result), source:getSize()
+      end
+    end
+    return class.encode_pointer(source:getPointer()), source:getSize()
+  end
+end
+
 local ffi
 pcall(function () ffi = require "ffi" end)
 if not ffi then
-  return nil
+  return
 end
 
 function class.encode_pointer(source)

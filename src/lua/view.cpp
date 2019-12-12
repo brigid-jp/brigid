@@ -19,7 +19,9 @@ namespace brigid {
       view_t* self = check_view(L, 1);
       if (get_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer") == LUA_TFUNCTION) {
         push(L, encode_pointer(self->data()));
-        lua_pcall(L, 1, 1, 0);
+        if (lua_pcall(L, 1, 1, 0) != 0) {
+          throw BRIGID_ERROR(lua_tostring(L, -1));
+        }
       }
     }
 
