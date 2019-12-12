@@ -94,6 +94,7 @@ local result, message = pcall(function () tostring(view) end)
 print(message)
 assert(not result)
 
+--[[
 local cryptor = brigid.decryptor(cipher, key, iv, function (out)
   print(tostring(out))
   print(out.get_pointer_ffi)
@@ -102,3 +103,4 @@ local cryptor = brigid.decryptor(cipher, key, iv, function (out)
   end
 end)
 cryptor:update(ciphertext, true)
+]]
