@@ -71,6 +71,7 @@ end
 
 local cipher = "aes-256-cbc"
 local key = keys[cipher]
+local ciphertext = ciphertexts[cipher]
 
 local cryptor = brigid.encryptor(cipher, key, iv)
 cryptor:update(plaintext)
@@ -92,3 +93,12 @@ assert(view)
 local result, message = pcall(function () tostring(view) end)
 print(message)
 assert(not result)
+
+local cryptor = brigid.decryptor(cipher, key, iv, function (out)
+  print(tostring(out))
+  print(out.get_pointer_ffi)
+  if out.get_pointer_ffi then
+    print(out:get_pointer_ffi())
+  end
+end)
+cryptor:update(ciphertext, true)

@@ -10,8 +10,10 @@
 #include <lua.hpp>
 
 #include <stddef.h>
+#include <string.h>
 #include <new>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 namespace brigid {
@@ -29,6 +31,14 @@ namespace brigid {
     void push(lua_State*, const char*, size_t);
     void push(lua_State*, const std::string&);
     void push(lua_State*, cxx_function_t);
+
+    template <class T>
+    inline void push_pointer(lua_State* L, T value, typename std::enable_if<std::is_pointer<T>::value>::type* = nullptr) {
+      static const size_t size = sizeof(value);
+      char buffer[size] = {};
+      memmove(buffer, &value, size);
+      lua_pushlstring(L, buffer, size);
+    }
 
     template <class T, class... T_args>
     inline T* new_userdata(lua_State* L, const char* name, T_args... args) {

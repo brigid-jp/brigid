@@ -29,14 +29,11 @@ namespace brigid {
               }
             }
           }
-          throw BRIGID_ERROR("invalid upvalue");
         } catch (const std::exception& e) {
           lua_settop(L, top);
           return luaL_error(L, "%s", e.what());
-        } catch (...) {
-          lua_settop(L, top);
-          return luaL_error(L, "unknown exception");
         }
+        throw BRIGID_ERROR("attempt to call an invalid closure");
       }
     }
 
@@ -110,10 +107,7 @@ namespace brigid {
     }
 
     void push(lua_State* L, cxx_function_t value) {
-      static const size_t size = sizeof(cxx_function_t);
-      char data[size] = {};
-      memmove(data, &value, size);
-      lua_pushlstring(L, data, size);
+      push_pointer(L, value);
       lua_pushcclosure(L, impl_closure, 1);
     }
 

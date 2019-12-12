@@ -2,28 +2,55 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include <brigid/error.hpp>
 #include "util_lua.hpp"
 #include "view.hpp"
 
 #include <lua.hpp>
 
-#include <string.h>
 #include <iostream>
 
 namespace brigid {
   using namespace lua;
 
   namespace {
+    typedef struct {
+      const void* (*f)(void*);
+    } get_pointer_ffi_t;
+
+    const void* get_pointer_ffi_f(void* self) {
+      return static_cast<view_t*>(self)->data();
+    }
+
+    get_pointer_ffi_t get_pointer_ffi = { &get_pointer_ffi_f };
+
+    void initialize_view_get_pointer_ffi(lua_State* L) {
+      stack_guard guard(L);
+
+      static const char code[] =
+      #include "view.lua"
+      ;
+
+      if (luaL_loadstring(L, code) != 0) {
+        throw BRIGID_ERROR(lua_tostring(L, -1));
+      }
+      push_pointer(L, &get_pointer_ffi);
+      if (lua_pcall(L, 1, 1, 0) != 0) {
+        throw BRIGID_ERROR(lua_tostring(L, -1));
+      }
+      set_field(L, -2, "get_pointer_ffi");
+    }
+
     void impl_tostring(lua_State* L) {
       view_t* self = check_view(L, 1);
       push(L, self->data(), self->size());
     }
 
-    const void* impl_get_pointer_ffi(void* self) {
-      return static_cast<view_t*>(self)->data();
+    void impl_get_pointer(lua_State* L) {
+      // ffi
+      // useradata
+      // string
     }
-
-    using impl_get_pointer_ffi_t = const void* (*)(void*);
   }
 
   view_t::view_t(const char* data, size_t size)
@@ -77,28 +104,7 @@ namespace brigid {
       set_field(L, -1, "__tostring", impl_tostring);
       lua_pop(L, 1);
 
-      {
-        stack_guard guard(L);
-
-        static const char code[] =
-        #include "view.lua"
-        ;
-
-        if (luaL_loadbuffer(L, code, sizeof(code), "view.lua") == 0) {
-          impl_get_pointer_ffi_t value = &impl_get_pointer_ffi;
-          static const size_t size = sizeof(impl_get_pointer_ffi_t);
-          char data[size] = {};
-          memmove(data, &value, size);
-          lua_pushlstring(L, data, size);
-          if (lua_pcall(L, 1, 1, 0) == 0) {
-            std::cout << "ffi " << lua_isnil(L, -1) << "\n";
-          } else {
-            std::cerr << "pcall error " << lua_tostring(L, -1) << "\n";
-          }
-        } else {
-          std::cerr << "loadbuffer error " << lua_tostring(L, -1) << "\n";
-        }
-      }
+      initialize_view_get_pointer_ffi(L);
     }
     set_field(L, -2, "view");
   }
