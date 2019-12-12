@@ -3,53 +3,31 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/error.hpp>
-#include "util_lua.hpp"
+#include "common.hpp"
 #include "view.hpp"
 
 #include <lua.hpp>
 
-#include <iostream>
-
 namespace brigid {
-  using namespace util_lua;
-
   namespace {
-    typedef struct {
-      const void* (*f)(void*);
-    } get_pointer_ffi_t;
-
-    const void* get_pointer_ffi_f(void* self) {
-      return static_cast<view_t*>(self)->data();
-    }
-
-    get_pointer_ffi_t get_pointer_ffi = { &get_pointer_ffi_f };
-
-    void initialize_view_get_pointer_ffi(lua_State* L) {
-      stack_guard guard(L);
-
-      static const char code[] =
-      #include "view.lua"
-      ;
-
-      if (luaL_loadstring(L, code) != 0) {
-        throw BRIGID_ERROR(lua_tostring(L, -1));
-      }
-      push(L, encode_pointer(&get_pointer_ffi));
-      if (lua_pcall(L, 1, 1, 0) != 0) {
-        throw BRIGID_ERROR(lua_tostring(L, -1));
-      }
-      set_field(L, -2, "get_pointer_ffi");
-    }
-
     void impl_tostring(lua_State* L) {
       view_t* self = check_view(L, 1);
       push(L, self->data(), self->size());
     }
 
     void impl_get_pointer(lua_State* L) {
-      // ffi
-      // useradata
-      // string
+      view_t* self = check_view(L, 1);
+      if (get_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer") == LUA_TFUNCTION) {
+        push(L, encode_pointer(self->data()));
+        if (lua_pcall(L, 1, 1, 0) != 0) {
+          throw BRIGID_ERROR(lua_tostring(L, -1));
+        }
+      }
+    }
+
+    void impl_get_size(lua_State* L) {
+      view_t* self = check_view(L, 1);
+      push(L, self->size());
     }
   }
 
@@ -104,7 +82,8 @@ namespace brigid {
       set_field(L, -1, "__tostring", impl_tostring);
       lua_pop(L, 1);
 
-      initialize_view_get_pointer_ffi(L);
+      set_field(L, -1, "get_pointer", impl_get_pointer);
+      set_field(L, -1, "get_size", impl_get_size);
     }
     set_field(L, -2, "view");
   }

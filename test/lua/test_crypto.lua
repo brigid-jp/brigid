@@ -94,11 +94,18 @@ local result, message = pcall(function () tostring(view) end)
 print(message)
 assert(not result)
 
+local ffi
+pcall(function () ffi = require "ffi" end)
+
 local cryptor = brigid.decryptor(cipher, key, iv, function (out)
-  print(tostring(out))
-  print(out.get_pointer_ffi)
-  if out.get_pointer_ffi then
-    print(out:get_pointer_ffi())
+  local ptr = out:get_pointer()
+  print(tostring(ptr))
+  if ffi then
+    assert(type(ptr) == "cdata")
+    assert(ffi.string(ptr, out:get_size()) == plaintext)
+  else
+    assert(type(ptr) == "userdata")
   end
+  assert(out:get_size() == #plaintext)
 end)
 cryptor:update(ciphertext, true)

@@ -5,9 +5,9 @@
 #include <brigid/error.hpp>
 #include <brigid/http.hpp>
 #include <brigid/noncopyable.hpp>
+#include "common.hpp"
 #include "data.hpp"
 #include "scope_exit.hpp"
-#include "util_lua.hpp"
 #include "view.hpp"
 
 #include <lua.hpp>
@@ -21,7 +21,6 @@
 
 namespace brigid {
   using namespace std::placeholders;
-  using namespace util_lua;
 
   namespace {
     class http_session_t : private noncopyable {

@@ -45,13 +45,6 @@ function love.load()
     write "rawequal(registry.ByteData, metatable)\n"
   end
 
-  --[[
-  const void* ptr = ...
-  typedef struct {
-    char[sizeof(void*) + 1] s;
-  } wrapper_t;
-  ]]
-
   if data.getFFIPointer then
     write("getPointer is_void_pointer ", tostring(ffi.istype("void*", data:getPointer())), "\n")
     write("getPointer is_const_void_pointer ", tostring(ffi.istype("const void*", data:getPointer())), "\n")
@@ -78,6 +71,35 @@ function love.load()
     write("test6 ", ffi.sizeof(ptr[0]), " ", tostring(ptr[0]), "\n")
   end
 
+  write("package.cpath ", package.cpath, "\n")
+  package.cpath = "../lua/.libs/?.so;" .. package.cpath
+  write("package.cpath ", package.cpath, "\n")
+  local brigid
+  pcall(function () brigid = require "brigid" end)
+  write("brigid ", tostring(brigid), "\n")
+  if brigid then
+    write("brigid.version ", brigid.get_version(), "\n")
+
+    local plaintext = love.data.newByteData "The quick brown fox jumps over the lazy dog"
+    local key = love.data.newByteData "01234567890123456789012345678901"
+    local iv = love.data.newByteData "0123456789012345"
+    local ciphertext = love.data.newByteData(table.concat {
+      "\224\111\099\167\017\232\183\170";
+      "\159\148\064\016\125\070\128\161";
+      "\023\153\067\128\234\049\210\162";
+      "\153\185\083\002\212\057\185\112";
+      "\044\142\101\169\146\054\236\146";
+      "\007\004\145\092\241\169\138\068";
+    })
+    local out = love.data.newByteData(plaintext:getSize())
+    love.filesystem.write("test1.dat", out)
+    local cryptor = brigid.decryptor("aes-256-cbc", key, iv, function (view)
+      write("view {", tostring(view), "}\n")
+      ffi.copy(out:getFFIPointer(), view:get_pointer(), view:get_size())
+    end)
+    cryptor:update(ciphertext, true)
+    love.filesystem.write("test2.dat", out)
+  end
 end
 
 function love.draw()

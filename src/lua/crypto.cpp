@@ -5,9 +5,9 @@
 #include <brigid/crypto.hpp>
 #include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
+#include "common.hpp"
 #include "data.hpp"
 #include "scope_exit.hpp"
-#include "util_lua.hpp"
 #include "view.hpp"
 
 #include <stddef.h>
@@ -17,8 +17,6 @@
 #include <vector>
 
 namespace brigid {
-  using namespace util_lua;
-
   namespace {
     crypto_cipher check_cipher(lua_State* L, int arg) {
       std::string cipher = check_data(L, arg).str();
