@@ -34,7 +34,7 @@ namespace brigid {
       if (luaL_loadstring(L, code) != 0) {
         throw BRIGID_ERROR(lua_tostring(L, -1));
       }
-      push_pointer(L, &get_pointer_ffi);
+      push(L, encode_pointer(&get_pointer_ffi));
       if (lua_pcall(L, 1, 1, 0) != 0) {
         throw BRIGID_ERROR(lua_tostring(L, -1));
       }

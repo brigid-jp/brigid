@@ -20,13 +20,9 @@ namespace brigid {
         try {
           size_t size = 0;
           if (const char* data = lua_tolstring(L, lua_upvalueindex(1), &size)) {
-            if (size == sizeof(cxx_function_t)) {
-              cxx_function_t function = nullptr;
-              memmove(&function, data, size);
-              if (function) {
-                function(L);
-                return lua_gettop(L) - top;
-              }
+            if (cxx_function_t function = decode_pointer<cxx_function_t>(data, size)) {
+              function(L);
+              return lua_gettop(L) - top;
             }
           }
         } catch (const std::exception& e) {
@@ -107,7 +103,7 @@ namespace brigid {
     }
 
     void push(lua_State* L, cxx_function_t value) {
-      push_pointer(L, value);
+      push(L, encode_pointer(value));
       lua_pushcclosure(L, impl_closure, 1);
     }
 

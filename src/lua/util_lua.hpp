@@ -33,11 +33,20 @@ namespace brigid {
     void push(lua_State*, cxx_function_t);
 
     template <class T>
-    inline void push_pointer(lua_State* L, T value, typename std::enable_if<std::is_pointer<T>::value>::type* = nullptr) {
-      static const size_t size = sizeof(value);
+    inline std::string encode_pointer(T source, typename std::enable_if<std::is_pointer<T>::value>::type* = nullptr) {
+      static const size_t size = sizeof(source);
       char buffer[size] = {};
-      memmove(buffer, &value, size);
-      lua_pushlstring(L, buffer, size);
+      memmove(buffer, &source, size);
+      return std::string(buffer, size);
+    }
+
+    template <class T>
+    inline T decode_pointer(const char* data, size_t size, typename std::enable_if<std::is_pointer<T>::value>::type* = nullptr) {
+      T result = nullptr;
+      if (size == sizeof(T)) {
+        memmove(&result, data, size);
+      }
+      return result;
     }
 
     template <class T, class... T_args>
