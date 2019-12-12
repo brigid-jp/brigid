@@ -190,16 +190,20 @@ namespace brigid {
     }
     {
       stack_guard guard(L);
-
       static const char code[] =
       #include "common.lua"
       ;
-
       if (luaL_loadstring(L, code) == 0) {
         lua_pushvalue(L, -2);
         lua_pcall(L, 1, 0, 0);
       }
     }
-    set_field(L, LUA_REGISTRYINDEX, "brigid.common");
+    {
+      get_field(L, -1, "encode_pointer");
+      set_field(L, LUA_REGISTRYINDEX, "brigid.common.encode_pointer");
+      get_field(L, -1, "decode_pointer");
+      set_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
+    }
+    lua_pop(L, 1);
   }
 }

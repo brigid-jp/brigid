@@ -45,13 +45,6 @@ function love.load()
     write "rawequal(registry.ByteData, metatable)\n"
   end
 
-  --[[
-  const void* ptr = ...
-  typedef struct {
-    char[sizeof(void*) + 1] s;
-  } wrapper_t;
-  ]]
-
   if data.getFFIPointer then
     write("getPointer is_void_pointer ", tostring(ffi.istype("void*", data:getPointer())), "\n")
     write("getPointer is_const_void_pointer ", tostring(ffi.istype("const void*", data:getPointer())), "\n")

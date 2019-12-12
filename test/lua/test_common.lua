@@ -4,9 +4,9 @@
 
 local brigid = require "brigid"
 
-local common = assert(debug.getregistry()["brigid.common"])
-local encode_pointer = common.encode_pointer
-local decode_pointer = common.decode_pointer
+local registry = assert(debug.getregistry())
+local encode_pointer = registry["brigid.common.encode_pointer"]
+local decode_pointer = registry["brigid.common.decode_pointer"]
 
 local session = brigid.http_session {}
 print(session)

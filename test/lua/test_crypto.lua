@@ -93,3 +93,8 @@ assert(view)
 local result, message = pcall(function () tostring(view) end)
 print(message)
 assert(not result)
+
+local cryptor = brigid.encryptor(cipher, key, iv, function (out)
+  print(tostring(out:get_pointer()))
+end)
+cryptor:update(plaintext, true)
