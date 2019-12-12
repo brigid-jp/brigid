@@ -5,8 +5,8 @@
 #include <brigid/crypto.hpp>
 #include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
+#include "common_windows.hpp"
 #include "type_traits.hpp"
-#include "util_windows.hpp"
 
 #define NOMINMAX
 #include <windows.h>
@@ -19,8 +19,6 @@
 #include <vector>
 
 namespace brigid {
-  using namespace util_windows;
-
   namespace {
     void check(NTSTATUS code) {
       if (!BCRYPT_SUCCESS(code)) {
