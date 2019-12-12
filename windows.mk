@@ -6,12 +6,12 @@ CPPFLAGS = /I$(LUA_INCDIR) /I. /Iinclude /D_CRT_SECURE_NO_WARNINGS
 CXXFLAGS = $(CFLAGS) /W3 /EHsc
 
 OBJS = \
+	src\lib\common_windows.obj \
 	src\lib\crypto.obj \
 	src\lib\crypto_windows.obj \
 	src\lib\http.obj \
 	src\lib\http_impl.obj \
 	src\lib\http_windows.obj \
-	src\lib\util_windows.obj \
 	src\lib\version.obj \
 	src\lua\crypto.obj \
 	src\lua\data.obj \

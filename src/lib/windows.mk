@@ -6,12 +6,12 @@ CPPFLAGS = /I..\.. /I..\..\include /D_CRT_SECURE_NO_WARNINGS
 CXXFLAGS = /nologo /MD /O2 /W3 /EHsc
 
 OBJS = \
+	common_windows.obj \
 	crypto.obj \
 	crypto_windows.obj \
 	http.obj \
 	http_impl.obj \
 	http_windows.obj \
-	util_windows.obj \
 	version.obj
 TARGET = brigid.lib
 
