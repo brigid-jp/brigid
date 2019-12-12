@@ -22,6 +22,11 @@ namespace brigid {
         lua_pcall(L, 1, 1, 0);
       }
     }
+
+    void impl_get_size(lua_State* L) {
+      view_t* self = check_view(L, 1);
+      push(L, self->size());
+    }
   }
 
   view_t::view_t(const char* data, size_t size)
@@ -76,6 +81,7 @@ namespace brigid {
       lua_pop(L, 1);
 
       set_field(L, -1, "get_pointer", impl_get_pointer);
+      set_field(L, -1, "get_size", impl_get_size);
     }
     set_field(L, -2, "view");
   }
