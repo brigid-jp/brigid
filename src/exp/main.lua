@@ -14,7 +14,6 @@ local function write(...)
   end
 end
 
-
 function love.load()
   local data = love.data.newByteData("foo bar baz qux")
   write("pointer ", tostring(data:getPointer()), "\n")
@@ -44,6 +43,39 @@ function love.load()
 
   if rawequal(registry.ByteData, metatable) then
     write "rawequal(registry.ByteData, metatable)\n"
+  end
+
+  --[[
+  const void* ptr = ...
+  typedef struct {
+    char[sizeof(void*) + 1] s;
+  } wrapper_t;
+  ]]
+
+  if data.getFFIPointer then
+    write("getPointer is_void_pointer ", tostring(ffi.istype("void*", data:getPointer())), "\n")
+    write("getPointer is_const_void_pointer ", tostring(ffi.istype("const void*", data:getPointer())), "\n")
+    write("getFFIPointer is_void_pointer ", tostring(ffi.istype("void*", data:getFFIPointer())), "\n")
+    write("getFFIPointer is_const_void_pointer ", tostring(ffi.istype("const void*", data:getFFIPointer())), "\n")
+    -- local ptr = ffi.new("const void*[1]", data:getPointer())
+    local ptr = ffi.new("const void*[1]", data:getFFIPointer())
+    write("test1 ", ffi.sizeof(ptr), " ", tostring(ptr), "\n")
+    write("test2 ", ffi.sizeof(ptr[0]), " ", tostring(ptr[0]), "\n")
+    local str = ffi.string(ptr, ffi.sizeof(ptr))
+    for i = 1, #str do
+      if i > 1 then
+        write " "
+      end
+      write(("%02x"):format(str:byte(i, i)))
+    end
+    write "\n"
+
+    local ptr = ffi.new("const void*[1]")
+    write("test3 ", ffi.sizeof(ptr), " ", tostring(ptr), "\n")
+    write("test4 ", ffi.sizeof(ptr[0]), " ", tostring(ptr[0]), "\n")
+    ffi.copy(ptr, str);
+    write("test5 ", ffi.sizeof(ptr), " ", tostring(ptr), "\n")
+    write("test6 ", ffi.sizeof(ptr[0]), " ", tostring(ptr[0]), "\n")
   end
 
 end
