@@ -14,7 +14,7 @@
 #include <vector>
 
 namespace brigid {
-  namespace windows {
+  namespace util_windows {
     std::string encode_utf8(const wchar_t* data, size_t size) {
       if (size == 0) {
         return std::string();

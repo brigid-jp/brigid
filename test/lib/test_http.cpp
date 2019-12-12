@@ -320,7 +320,7 @@ namespace {
 
     client.request("POST", "https://brigid.jp/test/cgi/cat.cgi", header, brigid::http_request_body::data, data.data(), data.size());
     BRIGID_CHECK(client.code() == 200);
-    BRIGID_CHECK(client.body().empty())
+    BRIGID_CHECK(client.body().empty());
 
     client.request("POST", "https://brigid.jp/test/cgi/env.cgi", header, brigid::http_request_body::data, data.data(), data.size());
     BRIGID_CHECK(client.code() == 200);

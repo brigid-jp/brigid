@@ -2,11 +2,13 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include <brigid/error.hpp>
 #include "util_lua.hpp"
 
 #include <lua.hpp>
 
 #include <stddef.h>
+#include <string.h>
 #include <exception>
 #include <string>
 
@@ -16,13 +18,18 @@ namespace brigid {
       int impl_closure(lua_State* L) {
         int top = lua_gettop(L);
         try {
-          cxx_function_t function = reinterpret_cast<cxx_function_t>(lua_touserdata(L, lua_upvalueindex(1)));
-          function(L);
+          size_t size = 0;
+          if (const char* data = lua_tolstring(L, lua_upvalueindex(1), &size)) {
+            if (cxx_function_t function = decode_pointer<cxx_function_t>(data, size)) {
+              function(L);
+              return lua_gettop(L) - top;
+            }
+          }
         } catch (const std::exception& e) {
           lua_settop(L, top);
           return luaL_error(L, "%s", e.what());
         }
-        return lua_gettop(L) - top;
+        throw BRIGID_ERROR("attempt to call an invalid closure");
       }
     }
 
@@ -96,7 +103,7 @@ namespace brigid {
     }
 
     void push(lua_State* L, cxx_function_t value) {
-      lua_pushlightuserdata(L, reinterpret_cast<void*>(value));
+      push(L, encode_pointer(value));
       lua_pushcclosure(L, impl_closure, 1);
     }
 

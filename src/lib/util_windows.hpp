@@ -9,7 +9,7 @@
 #include <string>
 
 namespace brigid {
-  namespace windows {
+  namespace util_windows {
     std::string encode_utf8(const wchar_t*, size_t);
     std::wstring decode_utf8(const char*, size_t);
     std::wstring decode_utf8(const std::string&);

@@ -12,6 +12,7 @@ brigid_la_SOURCES = \
 	data.cpp \
 	http.cpp \
 	module.cpp \
+	scope_exit.cpp \
 	util_lua.cpp \
 	version.cpp \
 	view.cpp
