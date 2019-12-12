@@ -17,6 +17,7 @@ OBJS = \
 	src\lua\data.obj \
 	src\lua\http.obj \
 	src\lua\module.obj \
+	src\lua\scope_exit.obj \
 	src\lua\util_lua.obj \
 	src\lua\version.obj \
 	src\lua\view.obj
