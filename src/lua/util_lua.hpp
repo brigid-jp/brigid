@@ -17,7 +17,7 @@
 #include <utility>
 
 namespace brigid {
-  namespace lua {
+  namespace util_lua {
     using cxx_function_t = void (*)(lua_State*);
 
     int abs_index(lua_State*, int);

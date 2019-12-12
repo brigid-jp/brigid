@@ -8,7 +8,7 @@
 #include <lua.hpp>
 
 namespace brigid {
-  using namespace lua;
+  using namespace util_lua;
 
   namespace {
     void impl_get_version(lua_State* L) {

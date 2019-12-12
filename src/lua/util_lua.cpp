@@ -13,7 +13,7 @@
 #include <string>
 
 namespace brigid {
-  namespace lua {
+  namespace util_lua {
     namespace {
       int impl_closure(lua_State* L) {
         int top = lua_gettop(L);
@@ -157,7 +157,7 @@ namespace brigid {
     }
 
     int reference::get_field(lua_State* L) const {
-      return lua::get_field(L, LUA_REGISTRYINDEX, ref_);
+      return util_lua::get_field(L, LUA_REGISTRYINDEX, ref_);
     }
 
     void reference::unref() {

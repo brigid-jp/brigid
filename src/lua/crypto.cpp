@@ -17,7 +17,7 @@
 #include <vector>
 
 namespace brigid {
-  using namespace lua;
+  using namespace util_lua;
 
   namespace {
     crypto_cipher check_cipher(lua_State* L, int arg) {
