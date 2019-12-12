@@ -4,8 +4,8 @@
 
 #include <brigid/http.hpp>
 #include <brigid/noncopyable.hpp>
+#include "common_java.hpp"
 #include "http_impl.hpp"
-#include "util_java.hpp"
 
 #include <jni.h>
 
@@ -17,8 +17,6 @@
 #include <vector>
 
 namespace brigid {
-  using namespace util_java;
-
   namespace {
     class vtable {
     public:

@@ -7,12 +7,12 @@ CPPFLAGS = -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/darwin -I../.. -I../../
 CXXFLAGS = -Wall -W -O2 -std=c++11
 
 OBJS = \
+	common_java.o \
 	crypto.o \
 	crypto_java.o \
 	http.o \
 	http_impl.o \
 	http_java.o \
-	util_java.o \
 	version.o
 TARGET = libbrigid.a
 
