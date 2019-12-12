@@ -14,7 +14,7 @@ extern "C" void* SDL_AndroidGetJNIEnv();
 #include <vector>
 
 namespace brigid {
-  namespace java {
+  namespace util_java {
     JNIEnv* get_env() {
       return static_cast<JNIEnv*>(SDL_AndroidGetJNIEnv());
     }

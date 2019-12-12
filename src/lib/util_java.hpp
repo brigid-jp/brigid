@@ -18,7 +18,7 @@
 #include <vector>
 
 namespace brigid {
-  namespace java {
+  namespace util_java {
     template <bool T_condition, class T = void>
     using enable_if_t = typename std::enable_if<T_condition, T>::type;
 

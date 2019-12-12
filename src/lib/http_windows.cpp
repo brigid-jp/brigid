@@ -21,7 +21,7 @@
 #include <vector>
 
 namespace brigid {
-  using namespace windows;
+  using namespace util_windows;
 
   namespace {
     template <class T>
