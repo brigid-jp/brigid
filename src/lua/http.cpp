@@ -21,7 +21,7 @@
 
 namespace brigid {
   using namespace std::placeholders;
-  using namespace lua;
+  using namespace util_lua;
 
   namespace {
     class http_session_t : private noncopyable {

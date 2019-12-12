@@ -5,7 +5,7 @@
 #include <brigid/crypto.hpp>
 #include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
-#include "util_java.hpp"
+#include "common_java.hpp"
 
 #include <jni.h>
 
@@ -13,8 +13,6 @@
 #include <memory>
 
 namespace brigid {
-  using namespace util_java;
-
   namespace {
     class vtable : private noncopyable {
     public:

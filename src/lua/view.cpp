@@ -11,7 +11,7 @@
 #include <iostream>
 
 namespace brigid {
-  using namespace lua;
+  using namespace util_lua;
 
   namespace {
     typedef struct {
