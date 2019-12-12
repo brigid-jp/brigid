@@ -3,7 +3,7 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/error.hpp>
-#include "util_lua.hpp"
+#include "common.hpp"
 #include "view.hpp"
 
 #include <lua.hpp>
@@ -11,8 +11,6 @@
 #include <iostream>
 
 namespace brigid {
-  using namespace util_lua;
-
   namespace {
     typedef struct {
       const void* (*f)(void*);

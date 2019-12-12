@@ -3,13 +3,11 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/version.hpp>
-#include "util_lua.hpp"
+#include "common.hpp"
 
 #include <lua.hpp>
 
 namespace brigid {
-  using namespace util_lua;
-
   namespace {
     void impl_get_version(lua_State* L) {
       push(L, get_version());
