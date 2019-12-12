@@ -74,7 +74,7 @@ local key = keys[cipher]
 local ciphertext = ciphertexts[cipher]
 
 local cryptor = brigid.encryptor(cipher, key, iv)
-cryptor:update(plaintext)
+cryptor:update(plaintext, true)
 cryptor:close()
 local result, message = pcall(function () cryptor:update("0") end)
 print(message)
