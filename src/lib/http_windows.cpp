@@ -2,12 +2,12 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <brigid/http.hpp>
 #include <brigid/error.hpp>
+#include <brigid/http.hpp>
 #include <brigid/noncopyable.hpp>
+#include <brigid/type_traits.hpp>
 #include "common_windows.hpp"
 #include "http_impl.hpp"
-#include "type_traits.hpp"
 
 #define NOMINMAX
 #include <windows.h>

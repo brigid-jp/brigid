@@ -30,9 +30,6 @@ namespace brigid {
     } catch (const std::exception& e) {
       std::cout << "caught exception: " << e.what() << "\n";
       return;
-    } catch (...) {
-      std::cout << "caught unknown exception\n";
-      return;
     }
     std::ostringstream out;
     out << "check throw failed (" << expression << ") at " << file << ":" << line;

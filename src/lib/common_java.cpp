@@ -70,11 +70,11 @@ namespace brigid {
     check_impl(false);
   }
 
-  void delete_local_ref::operator()(jobject object) const {
+  void delete_local_ref_t::operator()(jobject object) const {
     get_env()->DeleteLocalRef(object);
   }
 
-  void delete_global_ref::operator()(jobject object) const {
+  void delete_global_ref_t::operator()(jobject object) const {
     get_env()->DeleteGlobalRef(object);
   }
 
