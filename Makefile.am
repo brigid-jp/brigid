@@ -6,8 +6,19 @@ ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = src/lib src/lua test/lib test/lua
 
 EXTRA_DIST = \
+	.gitignore \
+	LICENSE \
+	README.md \
+	brigid-*.rockspec \
+	brigid.def \
 	docs \
-	m4/update.sh
+	include \
+	m4/update.sh \
+	src/java/java.mk \
+	src/java/jp/brigid/*.java \
+	test/cgi \
+	test/love \
+	windows.mk
 
 dist-hook:
 	rm -f `find $(distdir) -name '.*.swp'`

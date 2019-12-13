@@ -31,3 +31,10 @@ test_exe_LDFLAGS += $(CURL_LDFLAGS)
 test_exe_LDADD += $(CURL_LIBS)
 endif
 endif
+
+EXTRA_DIST = \
+	JavaTest.java \
+	java.mk \
+	test.hpp \
+	test_java.cpp \
+	windows.mk

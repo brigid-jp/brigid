@@ -4,6 +4,13 @@
 
 luaexec_LTLIBRARIES = brigid.la
 
+noinst_HEADERS = \
+	common.hpp \
+	common.lua \
+	data.hpp \
+	scope_exit.hpp \
+	view.hpp
+
 brigid_la_CPPFLAGS = -I$(top_srcdir)/include
 brigid_la_LDFLAGS = -module -avoid-version -shared
 brigid_la_LIBADD = $(top_srcdir)/src/lib/libbrigid.la
