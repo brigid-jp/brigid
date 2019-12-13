@@ -13,12 +13,12 @@ OBJS = \
 	src\lib\http_impl.obj \
 	src\lib\http_windows.obj \
 	src\lib\version.obj \
+	src\lua\common.obj \
 	src\lua\crypto.obj \
 	src\lua\data.obj \
 	src\lua\http.obj \
 	src\lua\module.obj \
 	src\lua\scope_exit.obj \
-	src\lua\util_lua.obj \
 	src\lua\version.obj \
 	src\lua\view.obj
 TARGET = brigid.dll
