@@ -6,10 +6,12 @@
 #include <brigid/version.hpp>
 #include "test.hpp"
 
-#include <stdio.h>
-#include <functional>
 #include <fstream>
+#include <functional>
 #include <iostream>
+#include <map>
+#include <memory>
+#include <string>
 
 namespace {
   using namespace std::placeholders;
