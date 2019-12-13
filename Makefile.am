@@ -4,3 +4,10 @@
 
 ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = src/lib src/lua test/lib test/lua
+
+EXTRA_DIST = \
+	docs \
+	m4/update.sh
+
+dist-hook:
+	rm -f `find $(distdir) -name '.*.swp'`
