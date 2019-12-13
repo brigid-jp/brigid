@@ -7,7 +7,7 @@
 
 #include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
-#include "type_traits.hpp"
+#include <brigid/type_traits.hpp>
 
 #include <jni.h>
 
