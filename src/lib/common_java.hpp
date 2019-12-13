@@ -18,9 +18,6 @@
 #include <vector>
 
 namespace brigid {
-  template <bool T_condition, class T = void>
-  using enable_if_t = typename std::enable_if<T_condition, T>::type;
-
   template <class T>
   using is_jobject_t = std::is_base_of<remove_pointer_t<jobject>, remove_pointer_t<T>>;
 

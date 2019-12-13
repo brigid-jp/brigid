@@ -6,6 +6,7 @@
 #define BRIGID_COMMON_HPP
 
 #include <brigid/noncopyable.hpp>
+#include <brigid/type_traits.hpp>
 
 #include <lua.hpp>
 
@@ -32,7 +33,7 @@ namespace brigid {
   void push(lua_State*, cxx_function_t);
 
   template <class T>
-  inline std::string encode_pointer(T source, typename std::enable_if<std::is_pointer<T>::value>::type* = nullptr) {
+  inline std::string encode_pointer(T source, enable_if_t<std::is_pointer<T>::value>* = nullptr) {
     static const size_t size = sizeof(source);
     char buffer[size] = {};
     memmove(buffer, &source, size);
@@ -40,7 +41,7 @@ namespace brigid {
   }
 
   template <class T>
-  inline T decode_pointer(const char* data, size_t size, typename std::enable_if<std::is_pointer<T>::value>::type* = nullptr) {
+  inline T decode_pointer(const char* data, size_t size, enable_if_t<std::is_pointer<T>::value>* = nullptr) {
     T result = nullptr;
     if (data && size == sizeof(T)) {
       memmove(&result, data, size);
