@@ -33,45 +33,45 @@ namespace brigid {
     return result;
   }
 
-  struct delete_local_ref {
+  struct delete_local_ref_t {
     void operator()(jobject) const;
   };
 
   template <class T>
-  using local_ref_t = std::unique_ptr<remove_pointer_t<T>, delete_local_ref>;
+  using local_ref_t = std::unique_ptr<remove_pointer_t<T>, delete_local_ref_t>;
 
   template <class>
   struct is_local_ref_t : std::false_type {};
 
   template <class T>
-  struct is_local_ref_t<std::unique_ptr<T, delete_local_ref>> : std::true_type {};
+  struct is_local_ref_t<std::unique_ptr<T, delete_local_ref_t>> : std::true_type {};
 
   template <class T>
   inline local_ref_t<T> make_local_ref(T object, enable_if_t<is_jobject_t<T>::value>* = nullptr) {
-    return local_ref_t<T>(object, delete_local_ref());
+    return local_ref_t<T>(object, delete_local_ref_t());
   }
 
-  struct delete_global_ref {
+  struct delete_global_ref_t {
     void operator()(jobject) const;
   };
 
   template <class T>
-  using global_ref_t = std::unique_ptr<remove_pointer_t<T>, delete_global_ref>;
+  using global_ref_t = std::unique_ptr<remove_pointer_t<T>, delete_global_ref_t>;
 
   template <class>
   struct is_global_ref_t : std::false_type {};
 
   template <class T>
-  struct is_global_ref_t<std::unique_ptr<T, delete_global_ref>> : std::true_type {};
+  struct is_global_ref_t<std::unique_ptr<T, delete_global_ref_t>> : std::true_type {};
 
   template <class T>
   inline global_ref_t<T> make_global_ref(enable_if_t<is_jobject_t<T>::value>* = nullptr) {
-    return global_ref_t<T>(nullptr, delete_global_ref());
+    return global_ref_t<T>(nullptr, delete_global_ref_t());
   }
 
   template <class T>
   inline global_ref_t<typename T::pointer> make_global_ref(const T& source, enable_if_t<(is_local_ref_t<T>::value && is_jobject_t<typename T::pointer>::value)>* = nullptr) {
-    global_ref_t<typename T::pointer> result(reinterpret_cast<typename T::pointer>(get_env()->NewGlobalRef(source.get())), delete_global_ref());
+    global_ref_t<typename T::pointer> result(reinterpret_cast<typename T::pointer>(get_env()->NewGlobalRef(source.get())), delete_global_ref_t());
     check(result.get());
     return result;
   }
@@ -243,8 +243,8 @@ namespace brigid {
       : method_(check(get_env()->GetStaticMethodID(unref(clazz), name, signature))) {}
 
     template <class U, class... U_args>
-    result_type operator()(const U& object, const U_args&... args) const {
-      return static_method_impl<T>::call(unref(object), method_, unref(args)...);
+    result_type operator()(const U& clazz, const U_args&... args) const {
+      return static_method_impl<T>::call(unref(clazz), method_, unref(args)...);
     }
 
   private:
