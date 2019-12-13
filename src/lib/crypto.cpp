@@ -3,9 +3,6 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/crypto.hpp>
-#include <brigid/error.hpp>
-
-#include <stddef.h>
 
 namespace brigid {
   cryptor::~cryptor() {}
