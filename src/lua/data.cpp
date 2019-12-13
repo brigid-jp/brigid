@@ -2,6 +2,7 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include <brigid/error.hpp>
 #include "common.hpp"
 #include "data.hpp"
 #include "view.hpp"
@@ -13,19 +14,19 @@
 
 namespace brigid {
   namespace {
-    bool test_love2d_data(lua_State* L, int index, data_t& result) {
+    bool is_love2d_data(lua_State* L, int index, data_t& result) {
       stack_guard guard(L);
       index = abs_index(L, index);
-      if (get_field(L, LUA_REGISTRYINDEX, "brigid.common.test_love2d_data") == LUA_TFUNCTION) {
-        lua_pushvalue(L, index);
-        if (lua_pcall(L, 1, 2, 0) == 0) {
-          if (!lua_isnil(L, -2)) {
-            size_t size = 0;
-            const char* data = lua_tolstring(L, -2, &size);
-            result = data_t(decode_pointer<const char*>(data, size), lua_tointeger(L, -1));
-            return true;
-          }
-        }
+      get_field(L, LUA_REGISTRYINDEX, "brigid.common.is_love2d_data");
+      lua_pushvalue(L, index);
+      if (lua_pcall(L, 1, 2, 0) != 0) {
+        throw BRIGID_ERROR(lua_tostring(L, -1));
+      }
+      if (!lua_isnil(L, -2)) {
+        size_t size = 0;
+        const char* data = lua_tolstring(L, -2, &size);
+        result = data_t(decode_pointer<const char*>(data, size), lua_tointeger(L, -1));
+        return true;
       }
       return false;
     }
@@ -58,7 +59,7 @@ namespace brigid {
   data_t to_data(lua_State* L, int index) {
     if (lua_isuserdata(L, index)) {
       data_t result;
-      if (test_love2d_data(L, index, result)) {
+      if (is_love2d_data(L, index, result)) {
         return result;
       } else if (view_t* view = test_view(L, index)) {
         return data_t(view->data(), view->size());
@@ -75,7 +76,7 @@ namespace brigid {
   data_t check_data(lua_State* L, int arg) {
     if (lua_isuserdata(L, arg)) {
       data_t result;
-      if (test_love2d_data(L, arg, result)) {
+      if (is_love2d_data(L, arg, result)) {
         return result;
       } else {
         view_t* view = check_view(L, arg);

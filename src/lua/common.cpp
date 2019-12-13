@@ -27,7 +27,8 @@ namespace brigid {
         lua_settop(L, top);
         return luaL_error(L, "%s", e.what());
       }
-      throw BRIGID_ERROR("attempt to call an invalid closure");
+      lua_settop(L, top);
+      return luaL_error(L, "attempt to call an invalid upvalue");
     }
 
     void impl_encode_pointer(lua_State* L) {
@@ -203,8 +204,8 @@ namespace brigid {
       set_field(L, LUA_REGISTRYINDEX, "brigid.common.encode_pointer");
       get_field(L, -1, "decode_pointer");
       set_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
-      get_field(L, -1, "test_love2d_data");
-      set_field(L, LUA_REGISTRYINDEX, "brigid.common.test_love2d_data");
+      get_field(L, -1, "is_love2d_data");
+      set_field(L, LUA_REGISTRYINDEX, "brigid.common.is_love2d_data");
     }
     lua_pop(L, 1);
   }
