@@ -77,14 +77,14 @@ namespace brigid {
             sizeof(size),
             &result,
             0));
-        buffer_.resize(size);
+        key_buffer_.resize(size);
 
         BCRYPT_KEY_HANDLE key = nullptr;
         check(BCryptGenerateSymmetricKey(
             alg_.get(),
             &key,
-            buffer_.data(),
-            static_cast<ULONG>(buffer_.size()),
+            key_buffer_.data(),
+            static_cast<ULONG>(key_buffer_.size()),
             reinterpret_cast<PUCHAR>(const_cast<char*>(key_data)),
             static_cast<ULONG>(key_size),
             0));
@@ -101,7 +101,7 @@ namespace brigid {
 
     private:
       alg_handle_t alg_;
-      std::vector<UCHAR> buffer_;
+      std::vector<UCHAR> key_buffer_;
       key_handle_t key_;
       std::vector<UCHAR> iv_;
     };
