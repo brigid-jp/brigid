@@ -5,7 +5,7 @@ source = {
   file = "brigid-0.9.tar.gz";
 }
 description = {
-  summary = "brigid";
+  summary = "A small but useful module linked with native platform backends";
   license = "MIT";
   homepage = "https://github.com/brigid-jp/brigid/";
   maintainer = "dev@brigid.jp";
