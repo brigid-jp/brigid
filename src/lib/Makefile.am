@@ -15,6 +15,7 @@ libbrigid_la_SOURCES = \
 	crypto.cpp \
 	http.cpp \
 	http_impl.cpp \
+	stdio.cpp \
 	version.cpp
 
 if CRYPTO_APPLE
