@@ -16,3 +16,15 @@ writer:close()
 local result, message = pcall(function() writer:get_size() end)
 print(message)
 assert(not result)
+
+local writer = brigid.file_writer("test.dat")
+writer:write "foo\n"
+writer:write "bar\n"
+writer:write "baz\n"
+writer:write "qux\n"
+writer:close()
+
+local handle = assert(io.open "test.dat")
+assert(handle:read "*a" == "foo\nbar\nbaz\nqux\n")
+handle:close()
+os.remove "test.dat"

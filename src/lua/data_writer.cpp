@@ -112,7 +112,6 @@ namespace brigid {
       set_field(L, -1, "get_pointer", impl_get_pointer);
       set_field(L, -1, "get_size", impl_get_size);
       set_field(L, -1, "close", impl_close);
-
     }
     set_field(L, -2, "data_writer");
   }

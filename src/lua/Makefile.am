@@ -19,6 +19,7 @@ brigid_la_SOURCES = \
 	crypto.cpp \
 	data.cpp \
 	data_writer.cpp \
+	file_writer.cpp \
 	http.cpp \
 	module.cpp \
 	scope_exit.cpp \
