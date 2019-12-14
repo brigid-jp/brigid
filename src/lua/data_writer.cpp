@@ -17,7 +17,7 @@ namespace brigid {
   namespace {
     class data_writer_t : private noncopyable {
     public:
-      explicit data_writer_t()
+      data_writer_t()
         : buffer_(),
           closed_() {}
 
