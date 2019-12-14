@@ -124,6 +124,7 @@ namespace {
     client.request("GET", "https://brigid.jp/");
     BRIGID_CHECK(client.code() == 200);
     BRIGID_CHECK(client.progress_count() == 0);
+    BRIGID_CHECK(client.header_count() == 1);
     BRIGID_CHECK(client.write_count() == 0);
     BRIGID_CHECK(client.header("Content-Length") == "0");
     BRIGID_CHECK(client.header("Content-Type") == "text/html; charset=UTF-8");
@@ -136,6 +137,7 @@ namespace {
     test_client client;
     client.request("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", empty_header, brigid::http_request_body::data, data.data(), data.size());
     BRIGID_CHECK(client.progress_count() > 0);
+    BRIGID_CHECK(client.header_count() == 1);
     BRIGID_CHECK(client.code() == 201 || client.code() == 204);
     if (client.code() == 204) {
       BRIGID_CHECK(client.write_count() == 0);
@@ -144,6 +146,7 @@ namespace {
 
     client.request("GET", "https://brigid.jp/test/dav/auth-none/test.txt");
     BRIGID_CHECK(client.progress_count() == 0);
+    BRIGID_CHECK(client.header_count() == 1);
     BRIGID_CHECK(client.write_count() > 0);
     BRIGID_CHECK(client.code() == 200);
     BRIGID_CHECK(client.body() == data);
