@@ -45,8 +45,8 @@ local ciphertexts = {
 
 local function encrypt(cipher, key, iv, plaintext)
   local result = {}
-  local cryptor = brigid.encryptor(cipher, key, iv, function (out)
-    result[#result + 1] = tostring(out)
+  local cryptor = brigid.encryptor(cipher, key, iv, function (view)
+    result[#result + 1] = view:get_string()
   end)
   cryptor:update(plaintext, true)
   return table.concat(result)
@@ -54,8 +54,8 @@ end
 
 local function decrypt(cipher, key, iv, ciphertext)
   local result = {}
-  local cryptor = brigid.decryptor(cipher, key, iv, function (out)
-    result[#result + 1] = tostring(out)
+  local cryptor = brigid.decryptor(cipher, key, iv, function (view)
+    result[#result + 1] = view:get_string()
   end)
   cryptor:update(ciphertext, true)
   return table.concat(result)
@@ -80,17 +80,17 @@ local result, message = pcall(function () cryptor:update("0") end)
 print(message)
 assert(not result)
 
-local view
+local closed_view
 local cryptor
-cryptor = brigid.encryptor(cipher, key, iv, function (out)
-  view = out
+cryptor = brigid.encryptor(cipher, key, iv, function (view)
+  closed_view = view
   local result, message = pcall(function () cryptor:update(plaintext, true) end)
   print(message)
   assert(not result)
 end)
 cryptor:update(plaintext, true)
-assert(view)
-local result, message = pcall(function () tostring(view) end)
+assert(closed_view)
+local result, message = pcall(function () closed_view:get_string() end)
 print(message)
 assert(not result)
 

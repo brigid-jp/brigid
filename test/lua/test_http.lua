@@ -39,7 +39,7 @@ end
 
 function class:write_cb(out)
   local buffer = self.buffer
-  buffer[#buffer + 1] = tostring(out)
+  buffer[#buffer + 1] = out:get_string()
 end
 
 function class:request(method, url, header, request)

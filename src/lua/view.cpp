@@ -10,18 +10,17 @@
 
 namespace brigid {
   namespace {
-    void impl_tostring(lua_State* L) {
+    void impl_get_string(lua_State* L) {
       view_t* self = check_view(L, 1);
       push(L, self->data(), self->size());
     }
 
     void impl_get_pointer(lua_State* L) {
       view_t* self = check_view(L, 1);
-      if (get_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer") == LUA_TFUNCTION) {
-        push(L, encode_pointer(self->data()));
-        if (lua_pcall(L, 1, 1, 0) != 0) {
-          throw BRIGID_ERROR(lua_tostring(L, -1));
-        }
+      get_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
+      push(L, encode_pointer(self->data()));
+      if (lua_pcall(L, 1, 1, 0) != 0) {
+        throw BRIGID_ERROR(lua_tostring(L, -1));
       }
     }
 
@@ -79,9 +78,9 @@ namespace brigid {
       luaL_newmetatable(L, "brigid.view");
       lua_pushvalue(L, -2);
       set_field(L, -2, "__index");
-      set_field(L, -1, "__tostring", impl_tostring);
       lua_pop(L, 1);
 
+      set_field(L, -1, "get_string", impl_get_string);
       set_field(L, -1, "get_pointer", impl_get_pointer);
       set_field(L, -1, "get_size", impl_get_size);
     }
