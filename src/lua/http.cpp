@@ -153,7 +153,7 @@ namespace brigid {
     }
 
     void impl_gc(lua_State* L) {
-      check_http_session(L, -1, false)->~http_session_t();
+      check_http_session(L, 1, false)->~http_session_t();
     }
 
     void impl_call(lua_State* L) {
