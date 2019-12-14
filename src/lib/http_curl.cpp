@@ -93,7 +93,8 @@ namespace brigid {
     class http_task : private noncopyable {
     public:
       http_task(http_session_impl& session)
-        : session_(session) {}
+        : session_(session),
+          code_() {}
 
       ~http_task() {
         curl_easy_reset(session_.handle.get());
@@ -144,6 +145,10 @@ namespace brigid {
           std::rethrow_exception(exception_);
         }
         check(code);
+
+        if (!process_header_once()) {
+          throw BRIGID_ERROR("canceled");
+        }
       }
 
     private:
@@ -151,6 +156,7 @@ namespace brigid {
       string_list header_;
       std::unique_ptr<http_reader> reader_;
       http_header_parser parser_;
+      long code_;
       std::exception_ptr exception_;
 
       static size_t read_cb(char* data, size_t size, size_t count, void* self) {
@@ -190,11 +196,7 @@ namespace brigid {
       size_t header(const char* data, size_t size) {
         try {
           if (parser_.parse(data, size)) {
-            long code = 0;
-            check(curl_easy_getinfo(session_.handle.get(), CURLINFO_RESPONSE_CODE, &code));
-            if (!session_.header_cb(code, parser_.get())) {
-              return 0;
-            }
+            check(curl_easy_getinfo(session_.handle.get(), CURLINFO_RESPONSE_CODE, &code_));
           }
           return size;
         } catch (...) {
@@ -205,8 +207,19 @@ namespace brigid {
         return 0;
       }
 
+      bool process_header_once() {
+        if (long code = code_) {
+          code_ = 0;
+          return session_.header_cb(code, parser_.get());
+        }
+        return true;
+      }
+
       size_t write(const char* data, size_t size) {
         try {
+          if (!process_header_once()) {
+            return 0;
+          }
           if (!session_.write_cb(data, size)) {
             return 0;
           }
