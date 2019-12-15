@@ -12,6 +12,7 @@ OBJS = \
 	http.obj \
 	http_impl.obj \
 	http_windows.obj \
+	stdio.obj \
 	version.obj
 TARGET = brigid.lib
 

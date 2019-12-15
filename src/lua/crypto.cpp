@@ -105,7 +105,7 @@ namespace brigid {
     }
 
     void impl_gc(lua_State* L) {
-      check_cryptor(L, -1, false)->~cryptor_t();
+      check_cryptor(L, 1, false)->~cryptor_t();
     }
 
     void impl_update(lua_State* L) {

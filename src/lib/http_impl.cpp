@@ -5,6 +5,7 @@
 #include <brigid/error.hpp>
 #include <brigid/http.hpp>
 #include <brigid/noncopyable.hpp>
+#include <brigid/stdio.hpp>
 #include "http_impl.hpp"
 
 #include <sys/types.h>
@@ -236,12 +237,6 @@ namespace brigid {
   http_reader::~http_reader() {}
 
   namespace {
-    using file_t = std::unique_ptr<FILE, decltype(&fclose)>;
-
-    file_t make_file(FILE* handle = nullptr) {
-      return file_t(handle, &fclose);
-    }
-
     class http_reader_impl : public http_reader {
     public:
       http_reader_impl()
@@ -295,7 +290,7 @@ namespace brigid {
     class http_file_reader : public http_reader_impl, private noncopyable {
     public:
       http_file_reader(const char* data, size_t size)
-        : handle_(make_file()) {
+        : handle_(make_file_handle()) {
         std::string path(data, size);
 
         struct stat status = {};
@@ -305,11 +300,7 @@ namespace brigid {
         }
         set_total(status.st_size);
 
-        handle_ = make_file(fopen(path.c_str(), "rb"));
-        if (!handle_) {
-          int code = errno;
-          throw BRIGID_ERROR(std::generic_category().message(code), make_error_code("error number", code));
-        }
+        handle_ = open_file_handle(path.c_str(), "rb");
       }
 
       virtual size_t read(char* data, size_t size) {
@@ -319,7 +310,7 @@ namespace brigid {
       }
 
     private:
-      file_t handle_;
+      file_handle_t handle_;
     };
   }
 

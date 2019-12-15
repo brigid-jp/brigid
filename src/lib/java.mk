@@ -13,6 +13,7 @@ OBJS = \
 	http.o \
 	http_impl.o \
 	http_java.o \
+	stdio.o \
 	version.o
 TARGET = libbrigid.a
 
