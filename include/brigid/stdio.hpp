@@ -12,7 +12,7 @@
 namespace brigid {
   using file_handle_t = std::unique_ptr<FILE, decltype(&fclose)>;
 
-  file_handle_t make_file_handle();
+  file_handle_t make_file_handle(FILE* = nullptr);
   file_handle_t open_file_handle(const std::string&, const char*);
 }
 
