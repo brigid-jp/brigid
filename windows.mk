@@ -17,6 +17,8 @@ OBJS = \
 	src\lua\common.obj \
 	src\lua\crypto.obj \
 	src\lua\data.obj \
+	src\lua\data_writer.obj \
+	src\lua\file_writer.obj \
 	src\lua\http.obj \
 	src\lua\module.obj \
 	src\lua\scope_exit.obj \
