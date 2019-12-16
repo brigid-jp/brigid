@@ -71,6 +71,7 @@ namespace brigid {
   };
 }
 
-#define BRIGID_ERROR(...) brigid::error<std::runtime_error>(__FILE__, __LINE__, __VA_ARGS__)
+#define BRIGID_LOGIC_ERROR(...) brigid::error<std::logic_error>(__FILE__, __LINE__, __VA_ARGS__)
+#define BRIGID_RUNTIME_ERROR(...) brigid::error<std::runtime_error>(__FILE__, __LINE__, __VA_ARGS__)
 
 #endif

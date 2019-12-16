@@ -147,7 +147,7 @@ namespace brigid {
       std::lock_guard<std::mutex> req_lock(req_mutex_);
       req_ = nullptr;
       if (error && !exception_) {
-        exception_ = std::make_exception_ptr(BRIGID_ERROR(encode_utf8(error.localizedDescription), make_error_code("NSError", error.code)));
+        exception_ = std::make_exception_ptr(BRIGID_RUNTIME_ERROR(encode_utf8(error.localizedDescription), make_error_code("NSError", error.code)));
       }
       req_condition_.notify_all();
     }

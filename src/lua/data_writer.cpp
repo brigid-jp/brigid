@@ -83,7 +83,7 @@ namespace brigid {
       get_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
       push(L, encode_pointer(self->data()));
       if (lua_pcall(L, 1, 1, 0) != 0) {
-        throw BRIGID_ERROR(lua_tostring(L, -1));
+        throw BRIGID_RUNTIME_ERROR(lua_tostring(L, -1));
       }
     }
 

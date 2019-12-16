@@ -86,7 +86,7 @@ namespace brigid {
             running_ = false;
           });
           if (lua_pcall(L, 2, 1, 0) != 0) {
-            throw BRIGID_ERROR(lua_tostring(L, -1));
+            throw BRIGID_RUNTIME_ERROR(lua_tostring(L, -1));
           }
           if (is_false(L, -1)) {
             return false;
@@ -109,7 +109,7 @@ namespace brigid {
             running_ = false;
           });
           if (lua_pcall(L, 2, 1, 0) != 0) {
-            throw BRIGID_ERROR(lua_tostring(L, -1));
+            throw BRIGID_RUNTIME_ERROR(lua_tostring(L, -1));
           }
           if (is_false(L, -1)) {
             return false;
@@ -129,7 +129,7 @@ namespace brigid {
             view->close();
           });
           if (lua_pcall(L, 1, 1, 0) != 0) {
-            throw BRIGID_ERROR(lua_tostring(L, -1));
+            throw BRIGID_RUNTIME_ERROR(lua_tostring(L, -1));
           }
           if (is_false(L, -1)) {
             return false;

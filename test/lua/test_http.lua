@@ -149,9 +149,7 @@ assert(code == 200)
 assert(body == "ok\n")
 assert(not header.Locatuion)
 
-local result, message = pcall(function ()
-  client:request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=21")
-end)
+local result, message = client:request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=21")
 print(message)
 assert(not result)
 
@@ -159,9 +157,7 @@ local code, header, body = client:request("GET", "https://brigid.jp/test/dav/aut
 assert(code == 401)
 
 client:close()
-local result, message = pcall(function()
-  client:request("GET", "https://brigid.jp/")
-end)
+local result, message = pcall(function () client:request("GET", "https://brigid.jp/") end)
 print(message)
 assert(not result)
 
@@ -183,9 +179,7 @@ local code, header, body = client:request_data("POST", "https://brigid.jp/test/c
 assert(code == 200)
 assert(body:find("CONTENT_TYPE=application/json; charset=UTF-8\n", 1, true))
 
-local result, message = pcall(function ()
-  client:request("GET", "https://133.242.153.239/")
-end)
+local result, message = client:request("GET", "https://133.242.153.239/")
 print(message)
 assert(not result)
 
@@ -211,15 +205,11 @@ local code, header, body = client:request_data("POST", "https://brigid.jp/test/c
 assert(code == 200)
 assert(body:find("CONTENT_TYPE=application/x-www-form-urlencoded\n", 1, true))
 
-local result, message = pcall(function ()
-  client:request("GET", "https://no-such-host.brigid.jp/")
-end)
+local result, message = client:request("GET", "https://no-such-host.brigid.jp/")
 print(message)
 assert(not result)
 
-local result, message = pcall(function ()
-  client:request("GET", "!!! invalid url !!!")
-end)
+local result, message = client:request("GET", "!!! invalid url !!!")
 print(message)
 assert(not result)
 

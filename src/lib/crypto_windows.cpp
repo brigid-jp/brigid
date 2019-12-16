@@ -25,9 +25,9 @@ namespace brigid {
       if (!BCRYPT_SUCCESS(code)) {
         std::string message;
         if (get_error_message("ntdll.dll", code, message)) {
-          throw BRIGID_ERROR(message, make_error_code("bcrypt error", code));
+          throw BRIGID_RUNTIME_ERROR(message, make_error_code("bcrypt error", code));
         } else {
-          throw BRIGID_ERROR(make_error_code("bcrypt error", code));
+          throw BRIGID_RUNTIME_ERROR(make_error_code("bcrypt error", code));
         }
       }
     }
@@ -221,11 +221,11 @@ namespace brigid {
       case crypto_cipher::aes_192_cbc:
       case crypto_cipher::aes_256_cbc:
         if (iv_size != 16) {
-          throw BRIGID_ERROR("invalid initialization vector size");
+          throw BRIGID_RUNTIME_ERROR("invalid initialization vector size");
         }
         return std::unique_ptr<cryptor>(new aes_encryptor_impl(key_data, key_size, iv_data, iv_size));
     }
-    throw BRIGID_ERROR("unsupported cipher");
+    throw BRIGID_RUNTIME_ERROR("unsupported cipher");
   }
 
   std::unique_ptr<cryptor> make_decryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
@@ -234,10 +234,10 @@ namespace brigid {
       case crypto_cipher::aes_192_cbc:
       case crypto_cipher::aes_256_cbc:
         if (iv_size != 16) {
-          throw BRIGID_ERROR("invalid initialization vector size");
+          throw BRIGID_RUNTIME_ERROR("invalid initialization vector size");
         }
         return std::unique_ptr<cryptor>(new aes_decryptor_impl(key_data, key_size, iv_data, iv_size));
     }
-    throw BRIGID_ERROR("unsupported cipher");
+    throw BRIGID_RUNTIME_ERROR("unsupported cipher");
   }
 }

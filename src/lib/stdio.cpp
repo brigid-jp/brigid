@@ -20,7 +20,7 @@ namespace brigid {
       return result;
     } else {
       int code = errno;
-      throw BRIGID_ERROR(std::generic_category().message(code), make_error_code("error number", code));
+      throw BRIGID_RUNTIME_ERROR(std::generic_category().message(code), make_error_code("error number", code));
     }
   }
 }

@@ -139,7 +139,7 @@ namespace brigid {
             session_.vt.write(instance_, session_.jbuffer, 0, result);
 
             if (!session_.progress_cb(reader->now(), reader->total())) {
-              throw BRIGID_ERROR("canceled");
+              throw BRIGID_RUNTIME_ERROR("canceled");
             }
           }
         } else {
@@ -163,7 +163,7 @@ namespace brigid {
           }
 
           if (!session_.header_cb(code, header)) {
-            throw BRIGID_ERROR("canceled");
+            throw BRIGID_RUNTIME_ERROR("canceled");
           }
         }
 
@@ -177,7 +177,7 @@ namespace brigid {
             get_byte_array_region(session_.jbuffer, 0, result, session_.nbuffer.data());
 
             if (!session_.write_cb(session_.nbuffer.data(), result)) {
-              throw BRIGID_ERROR("canceled");
+              throw BRIGID_RUNTIME_ERROR("canceled");
             }
           }
         }

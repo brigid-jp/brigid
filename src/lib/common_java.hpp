@@ -131,7 +131,7 @@ namespace brigid {
   inline std::string get_byte_array_region(const T& source, size_t position = 0, enable_if_t<std::is_same<unref_t<T>, jbyteArray>::value>* = nullptr) {
     size_t size = get_array_length(source);
     if (size < position) {
-      throw BRIGID_ERROR("invalid position");
+      throw BRIGID_RUNTIME_ERROR("invalid position");
     }
     return get_byte_array_region(source, position, size - position);
   }

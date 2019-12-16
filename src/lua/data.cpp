@@ -20,7 +20,7 @@ namespace brigid {
       get_field(L, LUA_REGISTRYINDEX, "brigid.common.is_love2d_data");
       lua_pushvalue(L, index);
       if (lua_pcall(L, 1, 2, 0) != 0) {
-        throw BRIGID_ERROR(lua_tostring(L, -1));
+        throw BRIGID_RUNTIME_ERROR(lua_tostring(L, -1));
       }
       if (!lua_isnil(L, -2)) {
         size_t size = 0;

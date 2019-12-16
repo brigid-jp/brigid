@@ -13,7 +13,7 @@ assert(writer:get_string() == "foo\nbar\nbaz\nqux\n")
 assert(writer:get_size() == 16)
 
 writer:close()
-local result, message = pcall(function() writer:get_size() end)
+local result, message = pcall(function () writer:get_size() end)
 print(message)
 assert(not result)
 

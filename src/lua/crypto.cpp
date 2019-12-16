@@ -27,7 +27,7 @@ namespace brigid {
       } else if (cipher == "aes-256-cbc") {
         return crypto_cipher::aes_256_cbc;
       }
-      throw BRIGID_ERROR("unsupported cipher");
+      throw BRIGID_RUNTIME_ERROR("unsupported cipher");
     }
 
     class cryptor_t : private noncopyable {
@@ -55,7 +55,7 @@ namespace brigid {
               view->close();
             });
             if (lua_pcall(L, 1, 0, 0) != 0) {
-              throw BRIGID_ERROR(lua_tostring(L, -1));
+              throw BRIGID_RUNTIME_ERROR(lua_tostring(L, -1));
             }
           }
         }

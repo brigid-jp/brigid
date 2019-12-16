@@ -20,7 +20,7 @@ namespace brigid {
   namespace {
     void check(CURLcode code) {
       if (code != CURLE_OK) {
-        throw BRIGID_ERROR(curl_easy_strerror(code), make_error_code("curl error", code));
+        throw BRIGID_RUNTIME_ERROR(curl_easy_strerror(code), make_error_code("curl error", code));
       }
     }
 
@@ -78,7 +78,7 @@ namespace brigid {
         if (curl_slist* slist = curl_slist_append(slist_, string.c_str())) {
           slist_ = slist;
         } else {
-          throw BRIGID_ERROR("cannot curl_slist_append");
+          throw BRIGID_RUNTIME_ERROR("cannot curl_slist_append");
         }
       }
 
@@ -147,7 +147,7 @@ namespace brigid {
         check(code);
 
         if (!process_header_once()) {
-          throw BRIGID_ERROR("canceled");
+          throw BRIGID_RUNTIME_ERROR("canceled");
         }
       }
 

@@ -29,7 +29,7 @@ namespace brigid {
         nullptr,
         nullptr);
     if (result == 0) {
-      throw BRIGID_ERROR("cannot WideCharToMultiByte");
+      throw BRIGID_RUNTIME_ERROR("cannot WideCharToMultiByte");
     }
 
     std::vector<char> buffer(result);
@@ -44,7 +44,7 @@ namespace brigid {
         nullptr,
         nullptr);
     if (result == 0) {
-      throw BRIGID_ERROR("cannot WideCharToMultiByte");
+      throw BRIGID_RUNTIME_ERROR("cannot WideCharToMultiByte");
     }
 
     return std::string(buffer.data(), buffer.size());
@@ -63,7 +63,7 @@ namespace brigid {
         nullptr,
         0);
     if (result == 0) {
-      throw BRIGID_ERROR("cannot MultiByteToWideChar");
+      throw BRIGID_RUNTIME_ERROR("cannot MultiByteToWideChar");
     }
 
     std::vector<WCHAR> buffer(result);
@@ -76,7 +76,7 @@ namespace brigid {
         buffer.data(),
         static_cast<int>(buffer.size()));
     if (result == 0) {
-      throw BRIGID_ERROR("cannot MultiByteToWideChar");
+      throw BRIGID_RUNTIME_ERROR("cannot MultiByteToWideChar");
     }
 
     return std::wstring(buffer.data(), buffer.size());
