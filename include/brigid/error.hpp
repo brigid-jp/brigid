@@ -48,28 +48,29 @@ namespace brigid {
     return out.str();
   }
 
-  class error : public std::runtime_error {
+  template <class T>
+  class error : public T {
   public:
     error(const char* file, int line, const char* message)
-      : std::runtime_error(make_error_impl(file, line, message)) {}
+      : T(make_error_impl(file, line, message)) {}
 
     error(const char* file, int line, const std::string& message)
-      : std::runtime_error(make_error_impl(file, line, message.c_str())) {}
+      : T(make_error_impl(file, line, message.c_str())) {}
 
-    template <class T>
-    error(const char* file, int line, const error_code<T>& code)
-      : std::runtime_error(make_error_impl(file, line, code)) {}
+    template <class U>
+    error(const char* file, int line, const error_code<U>& code)
+      : T(make_error_impl(file, line, code)) {}
 
-    template <class T>
-    error(const char* file, int line, const char* message, const error_code<T>& code)
-      : std::runtime_error(make_error_impl(file, line, message, code)) {}
+    template <class U>
+    error(const char* file, int line, const char* message, const error_code<U>& code)
+      : T(make_error_impl(file, line, message, code)) {}
 
-    template <class T>
-    error(const char* file, int line, const std::string& message, const error_code<T>& code)
-      : std::runtime_error(make_error_impl(file, line, message.c_str(), code)) {}
+    template <class U>
+    error(const char* file, int line, const std::string& message, const error_code<U>& code)
+      : T(make_error_impl(file, line, message.c_str(), code)) {}
   };
 }
 
-#define BRIGID_ERROR(...) brigid::error(__FILE__, __LINE__, __VA_ARGS__)
+#define BRIGID_ERROR(...) brigid::error<std::runtime_error>(__FILE__, __LINE__, __VA_ARGS__)
 
 #endif
