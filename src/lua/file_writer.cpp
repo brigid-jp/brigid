@@ -36,9 +36,9 @@ namespace brigid {
       file_handle_t handle_;
     };
 
-    file_writer_t* check_file_writer(lua_State* L, int arg, bool validate = true) {
+    file_writer_t* check_file_writer(lua_State* L, int arg, int validate = check_validate_all) {
       file_writer_t* self = check_udata<file_writer_t>(L, arg, "brigid.file_writer");
-      if (validate) {
+      if (validate & check_validate_not_closed) {
         if (self->closed()) {
           luaL_error(L, "attempt to use a closed brigid.file_writer");
         }
@@ -47,7 +47,14 @@ namespace brigid {
     }
 
     void impl_gc(lua_State* L) {
-      check_file_writer(L, 1, false)->~file_writer_t();
+      check_file_writer(L, 1, check_validate_none)->~file_writer_t();
+    }
+
+    void impl_close(lua_State* L) {
+      file_writer_t* self = check_file_writer(L, 1);
+      if (!self->closed()) {
+        self->close();
+      }
     }
 
     void impl_call(lua_State* L) {
@@ -60,10 +67,6 @@ namespace brigid {
       data_t data = check_data(L, 2);
       self->write(data.data(), data.size());
     }
-
-    void impl_close(lua_State* L) {
-      check_file_writer(L, 1)->close();
-    }
   }
 
   void initialize_file_writer(lua_State* L) {
@@ -73,6 +76,7 @@ namespace brigid {
       lua_pushvalue(L, -2);
       set_field(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);
+      set_field(L, -1, "__close", impl_close);
       lua_pop(L, 1);
 
       set_metafield(L, -1, "__call", impl_call);

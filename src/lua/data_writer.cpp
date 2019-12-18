@@ -49,9 +49,9 @@ namespace brigid {
       bool closed_;
     };
 
-    data_writer_t* check_data_writer(lua_State* L, int arg, bool validate = true) {
+    data_writer_t* check_data_writer(lua_State* L, int arg, int validate = check_validate_all) {
       data_writer_t* self = check_udata<data_writer_t>(L, arg, "brigid.data_writer");
-      if (validate) {
+      if (validate & check_validate_not_closed) {
         if (self->closed()) {
           luaL_error(L, "attempt to use a closed brigid.data_writer");
         }
@@ -60,9 +60,16 @@ namespace brigid {
     }
 
     void impl_gc(lua_State* L) {
-      check_data_writer(L, 1, false)->~data_writer_t();
+      check_data_writer(L, 1, check_validate_none)->~data_writer_t();
     }
 
+
+    void impl_close(lua_State* L) {
+      data_writer_t* self = check_data_writer(L, 1, check_validate_none);
+      if (!self->closed()) {
+        self->close();
+      }
+    }
     void impl_call(lua_State* L) {
       new_userdata<data_writer_t>(L, "brigid.data_writer");
     }
@@ -91,10 +98,6 @@ namespace brigid {
       data_writer_t* self = check_data_writer(L, 1);
       push(L, self->size());
     }
-
-    void impl_close(lua_State* L) {
-      check_data_writer(L, 1)->close();
-    }
   }
 
   void initialize_data_writer(lua_State* L) {
@@ -104,6 +107,7 @@ namespace brigid {
       lua_pushvalue(L, -2);
       set_field(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);
+      set_field(L, -1, "__close", impl_close);
       lua_pop(L, 1);
 
       set_metafield(L, -1, "__call", impl_call);
