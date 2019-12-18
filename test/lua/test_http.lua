@@ -9,7 +9,7 @@ local metatable = { __index = class }
 
 function class.new(username, password)
   local self = {}
-  self.session = brigid.http_session {
+  self.session = assert(brigid.http_session {
     progress = function (now, total)
       return self:progress_cb(now, total)
     end;
@@ -18,13 +18,13 @@ function class.new(username, password)
       return self:header_cb(code, header)
     end;
 
-    write = function (out)
-      return self:write_cb(out)
+    write = function (view)
+      return self:write_cb(view)
     end;
 
     username = username;
     password = password;
-  }
+  })
   return self
 end
 
@@ -37,9 +37,9 @@ function class:header_cb(code, header)
   self.header = header
 end
 
-function class:write_cb(out)
+function class:write_cb(view)
   local buffer = self.buffer
-  buffer[#buffer + 1] = out:get_string()
+  buffer[#buffer + 1] = view:get_string()
 end
 
 function class:request(method, url, header, request)
@@ -53,7 +53,10 @@ function class:request(method, url, header, request)
   request.method = method
   request.url = url
   request.header = header
-  self.session:request(request)
+  local result, message = self.session:request(request)
+  if not result then
+    return result, message
+  end
 
   local code = self.code
   local header = self.header
@@ -120,11 +123,11 @@ assert(code == 404)
 assert(body == "")
 
 local data = ("0123456789ABCDE\n"):rep(4096 / 16)
-local out = assert(io.open("test.dat", "wb"))
+local view = assert(io.open("test.dat", "wb"))
 for i = 1, 1024 * 1024 / #data do
-  out:write(data)
+  view:write(data)
 end
-out:close()
+view:close()
 
 local code, header, body = client:request_file("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", nil, "test.dat")
 assert(code == 201 or code == 204)

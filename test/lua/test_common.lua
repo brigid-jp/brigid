@@ -7,6 +7,7 @@ local brigid = require "brigid"
 local registry = assert(debug.getregistry())
 local encode_pointer = registry["brigid.common.encode_pointer"]
 local decode_pointer = registry["brigid.common.decode_pointer"]
+local is_love2d_data = registry["brigid.common.is_love2d_data"]
 
 local session = brigid.http_session {}
 print(session)
@@ -22,3 +23,7 @@ io.write "\n"
 
 local decoded = decode_pointer(encoded)
 print(decoded)
+
+local data, size = is_love2d_data(session)
+assert(data == nil)
+assert(size == nil)

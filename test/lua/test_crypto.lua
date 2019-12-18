@@ -45,19 +45,19 @@ local ciphertexts = {
 
 local function encrypt(cipher, key, iv, plaintext)
   local result = {}
-  local cryptor = brigid.encryptor(cipher, key, iv, function (view)
+  local cryptor = assert(brigid.encryptor(cipher, key, iv, function (view)
     result[#result + 1] = view:get_string()
-  end)
-  cryptor:update(plaintext, true)
+  end))
+  assert(cryptor:update(plaintext, true))
   return table.concat(result)
 end
 
 local function decrypt(cipher, key, iv, ciphertext)
   local result = {}
-  local cryptor = brigid.decryptor(cipher, key, iv, function (view)
+  local cryptor = assert(brigid.decryptor(cipher, key, iv, function (view)
     result[#result + 1] = view:get_string()
-  end)
-  cryptor:update(ciphertext, true)
+  end))
+  assert(cryptor:update(ciphertext, true))
   return table.concat(result)
 end
 
@@ -73,22 +73,22 @@ local cipher = "aes-256-cbc"
 local key = keys[cipher]
 local ciphertext = ciphertexts[cipher]
 
-local cryptor = brigid.encryptor(cipher, key, iv)
-cryptor:update(plaintext, true)
-cryptor:close()
+local cryptor = assert(brigid.encryptor(cipher, key, iv))
+assert(cryptor:update(plaintext, true))
+assert(cryptor:close())
 local result, message = pcall(function () cryptor:update("0") end)
 print(message)
 assert(not result)
 
 local closed_view
 local cryptor
-cryptor = brigid.encryptor(cipher, key, iv, function (view)
+cryptor = assert(brigid.encryptor(cipher, key, iv, function (view)
   closed_view = view
   local result, message = pcall(function () cryptor:update(plaintext, true) end)
   print(message)
   assert(not result)
-end)
-cryptor:update(plaintext, true)
+end))
+assert(cryptor:update(plaintext, true))
 assert(closed_view)
 local result, message = pcall(function () closed_view:get_string() end)
 print(message)
@@ -97,15 +97,15 @@ assert(not result)
 local ffi
 pcall(function () ffi = require "ffi" end)
 
-local cryptor = brigid.decryptor(cipher, key, iv, function (out)
-  local ptr = out:get_pointer()
+local cryptor = assert(brigid.decryptor(cipher, key, iv, function (view)
+  local ptr = view:get_pointer()
   print(tostring(ptr))
   if ffi then
     assert(type(ptr) == "cdata")
-    assert(ffi.string(ptr, out:get_size()) == plaintext)
+    assert(ffi.string(ptr, view:get_size()) == plaintext)
   else
     assert(type(ptr) == "userdata")
   end
-  assert(out:get_size() == #plaintext)
-end)
-cryptor:update(ciphertext, true)
+  assert(view:get_size() == #plaintext)
+end))
+assert(cryptor:update(ciphertext, true))
