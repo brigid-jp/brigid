@@ -91,12 +91,14 @@ namespace brigid {
       }
     };
 
-    cryptor_t* check_cryptor(lua_State* L, int arg, bool validate = true) {
+    cryptor_t* check_cryptor(lua_State* L, int arg, int validate = check_validate_all) {
       cryptor_t* self = check_udata<cryptor_t>(L, arg, "brigid.cryptor");
-      if (validate) {
+      if (validate & check_validate_not_closed) {
         if (self->closed()) {
           luaL_error(L, "attempt to use a closed brigid.cryptor");
         }
+      }
+      if (validate & check_validate_not_running) {
         if (self->running()) {
           luaL_error(L, "attempt to use a running brigid.cryptor");
         }
@@ -105,7 +107,14 @@ namespace brigid {
     }
 
     void impl_gc(lua_State* L) {
-      check_cryptor(L, 1, false)->~cryptor_t();
+      check_cryptor(L, 1, check_validate_none)->~cryptor_t();
+    }
+
+    void impl_close(lua_State* L) {
+      cryptor_t* self = check_cryptor(L, 1, check_validate_not_running);
+      if (!self->closed()) {
+        self->close();
+      }
     }
 
     void impl_update(lua_State* L) {
@@ -113,10 +122,6 @@ namespace brigid {
       const auto in = check_data(L, 2);
       bool padding = lua_toboolean(L, 3);
       self->update(in.data(), in.size(), padding);
-    }
-
-    void impl_close(lua_State* L) {
-      check_cryptor(L, 1)->close();
     }
 
     void impl_encryptor(lua_State* L) {
@@ -157,6 +162,7 @@ namespace brigid {
       lua_pushvalue(L, -2);
       set_field(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);
+      set_field(L, -1, "__close", impl_close);
       lua_pop(L, 1);
 
       set_field(L, -1, "update", impl_update);

@@ -76,6 +76,7 @@ local ciphertext = ciphertexts[cipher]
 local cryptor = assert(brigid.encryptor(cipher, key, iv))
 assert(cryptor:update(plaintext, true))
 assert(cryptor:close())
+assert(cryptor:close()) -- can close
 local result, message = pcall(function () cryptor:update("0") end)
 print(message)
 assert(not result)
@@ -109,3 +110,9 @@ local cryptor = assert(brigid.decryptor(cipher, key, iv, function (view)
   assert(view:get_size() == #plaintext)
 end))
 assert(cryptor:update(ciphertext, true))
+
+local close = assert(getmetatable(cryptor).__close)
+close(cryptor)
+local result, message = pcall(function () cryptor:update("0") end)
+print(message)
+assert(not result)
