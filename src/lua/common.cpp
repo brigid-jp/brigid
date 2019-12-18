@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <exception>
+#include <stdexcept>
 #include <string>
 
 namespace brigid {
