@@ -27,7 +27,7 @@ namespace brigid {
       } else if (cipher == "aes-256-cbc") {
         return crypto_cipher::aes_256_cbc;
       }
-      throw BRIGID_RUNTIME_ERROR("unsupported cipher");
+      throw BRIGID_LOGIC_ERROR("unsupported cipher");
     }
 
     class cryptor_t : private noncopyable {

@@ -33,11 +33,14 @@ namespace brigid {
             return 1;
           }
         }
-      } catch (const std::exception& e) {
+      } catch (const std::runtime_error& e) {
         lua_settop(L, top);
         lua_pushnil(L),
         push(L, e.what());
         return 2;
+      } catch (const std::exception& e) {
+        lua_settop(L, top);
+        return luaL_error(L, "%s", e.what());
       }
       lua_settop(L, top);
       return luaL_error(L, "attempt to call an invalid upvalue");

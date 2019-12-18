@@ -128,13 +128,10 @@ namespace brigid {
   }
 
   template <class T>
-  inline std::string get_byte_array_region(const T& source, size_t position = 0, enable_if_t<std::is_same<unref_t<T>, jbyteArray>::value>* = nullptr) {
-    size_t size = get_array_length(source);
-    if (size < position) {
-      throw BRIGID_RUNTIME_ERROR("invalid position");
-    }
-    return get_byte_array_region(source, position, size - position);
+  inline std::string get_byte_array_region(const T& source, enable_if_t<std::is_same<unref_t<T>, jbyteArray>::value>* = nullptr) {
+    return get_byte_array_region(source, 0, get_array_length(source));
   }
+
 
   template <class T>
   inline void set_byte_array_region(const T& target, size_t position, size_t size, const char* source, enable_if_t<std::is_same<unref_t<T>, jbyteArray>::value>* = nullptr) {

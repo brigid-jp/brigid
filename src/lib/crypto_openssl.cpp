@@ -114,10 +114,10 @@ namespace brigid {
         evp_cipher = EVP_aes_256_cbc();
         break;
       default:
-        throw BRIGID_RUNTIME_ERROR("unsupported cipher");
+        throw BRIGID_LOGIC_ERROR("unsupported cipher");
     }
     if (iv_size != 16) {
-      throw BRIGID_RUNTIME_ERROR("invalid initialization vector size");
+      throw BRIGID_LOGIC_ERROR("invalid initialization vector size");
     }
     return std::unique_ptr<cryptor>(new aes_encryptor_impl(evp_cipher, key_data, key_size, iv_data));
   }
@@ -135,10 +135,10 @@ namespace brigid {
         evp_cipher = EVP_aes_256_cbc();
         break;
       default:
-        throw BRIGID_RUNTIME_ERROR("unsupported cipher");
+        throw BRIGID_LOGIC_ERROR("unsupported cipher");
     }
     if (iv_size != 16) {
-      throw BRIGID_RUNTIME_ERROR("invalid initialization vector size");
+      throw BRIGID_LOGIC_ERROR("invalid initialization vector size");
     }
     return std::unique_ptr<cryptor>(new aes_decryptor_impl(evp_cipher, key_data, key_size, iv_data));
   }

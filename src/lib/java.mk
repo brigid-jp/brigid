@@ -10,6 +10,7 @@ OBJS = \
 	common_java.o \
 	crypto.o \
 	crypto_java.o \
+	error.o \
 	http.o \
 	http_impl.o \
 	http_java.o \
