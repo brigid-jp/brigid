@@ -106,7 +106,7 @@ namespace brigid {
           case 14: s = c == ' ' || c == '\t' || is_vchar(c) ? 14 : -1; break;
         }
         if (s == -1) {
-          throw BRIGID_ERROR("cannot parse header");
+          throw BRIGID_RUNTIME_ERROR("cannot parse header");
         } else if (s == 0) {
           break;
         }
@@ -219,12 +219,12 @@ namespace brigid {
           break;
       }
       if (s == -1) {
-        throw BRIGID_ERROR("cannot parse header");
+        throw BRIGID_RUNTIME_ERROR("cannot parse header");
       }
     }
 
     if (!q1) {
-      throw BRIGID_ERROR("cannot parse header");
+      throw BRIGID_RUNTIME_ERROR("cannot parse header");
     }
 
     if (q2) {
@@ -296,7 +296,7 @@ namespace brigid {
         struct stat status = {};
         if (stat(path.c_str(), &status) == -1) {
           int code = errno;
-          throw BRIGID_ERROR(std::generic_category().message(code), make_error_code("error number", code));
+          throw BRIGID_RUNTIME_ERROR(std::generic_category().message(code), make_error_code("error number", code));
         }
         set_total(status.st_size);
 

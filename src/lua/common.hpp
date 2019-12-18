@@ -20,6 +20,11 @@
 namespace brigid {
   using cxx_function_t = void (*)(lua_State*);
 
+  static const int check_validate_none = 0;
+  static const int check_validate_not_closed = 1;
+  static const int check_validate_not_running = 2;
+  static const int check_validate_all = 3;
+
   int abs_index(lua_State*, int);
   int get_table(lua_State*, int);
   void set_metatable(lua_State*, const char*);

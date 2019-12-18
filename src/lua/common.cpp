@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <exception>
+#include <stdexcept>
 #include <string>
 
 namespace brigid {
@@ -21,8 +22,23 @@ namespace brigid {
         const char* data = lua_tolstring(L, lua_upvalueindex(1), &size);
         if (cxx_function_t function = decode_pointer<cxx_function_t>(data, size)) {
           function(L);
-          return lua_gettop(L) - top;
+          int result = lua_gettop(L) - top;
+          if (result > 0) {
+            return result;
+          } else {
+            if (lua_toboolean(L, 1)) {
+              lua_pushvalue(L, 1);
+            } else {
+              lua_pushboolean(L, true);
+            }
+            return 1;
+          }
         }
+      } catch (const std::runtime_error& e) {
+        lua_settop(L, top);
+        lua_pushnil(L),
+        push(L, e.what());
+        return 2;
       } catch (const std::exception& e) {
         lua_settop(L, top);
         return luaL_error(L, "%s", e.what());

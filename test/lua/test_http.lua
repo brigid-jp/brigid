@@ -9,7 +9,7 @@ local metatable = { __index = class }
 
 function class.new(username, password)
   local self = {}
-  self.session = brigid.http_session {
+  self.session = assert(brigid.http_session {
     progress = function (now, total)
       return self:progress_cb(now, total)
     end;
@@ -18,13 +18,13 @@ function class.new(username, password)
       return self:header_cb(code, header)
     end;
 
-    write = function (out)
-      return self:write_cb(out)
+    write = function (view)
+      return self:write_cb(view)
     end;
 
     username = username;
     password = password;
-  }
+  })
   return self
 end
 
@@ -37,9 +37,9 @@ function class:header_cb(code, header)
   self.header = header
 end
 
-function class:write_cb(out)
+function class:write_cb(view)
   local buffer = self.buffer
-  buffer[#buffer + 1] = out:get_string()
+  buffer[#buffer + 1] = view:get_string()
 end
 
 function class:request(method, url, header, request)
@@ -53,7 +53,10 @@ function class:request(method, url, header, request)
   request.method = method
   request.url = url
   request.header = header
-  self.session:request(request)
+  local result, message = self.session:request(request)
+  if not result then
+    return result, message
+  end
 
   local code = self.code
   local header = self.header
@@ -149,9 +152,7 @@ assert(code == 200)
 assert(body == "ok\n")
 assert(not header.Locatuion)
 
-local result, message = pcall(function ()
-  client:request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=21")
-end)
+local result, message = client:request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=21")
 print(message)
 assert(not result)
 
@@ -159,9 +160,7 @@ local code, header, body = client:request("GET", "https://brigid.jp/test/dav/aut
 assert(code == 401)
 
 client:close()
-local result, message = pcall(function()
-  client:request("GET", "https://brigid.jp/")
-end)
+local result, message = pcall(function () client:request("GET", "https://brigid.jp/") end)
 print(message)
 assert(not result)
 
@@ -183,9 +182,7 @@ local code, header, body = client:request_data("POST", "https://brigid.jp/test/c
 assert(code == 200)
 assert(body:find("CONTENT_TYPE=application/json; charset=UTF-8\n", 1, true))
 
-local result, message = pcall(function ()
-  client:request("GET", "https://133.242.153.239/")
-end)
+local result, message = client:request("GET", "https://133.242.153.239/")
 print(message)
 assert(not result)
 
@@ -211,15 +208,11 @@ local code, header, body = client:request_data("POST", "https://brigid.jp/test/c
 assert(code == 200)
 assert(body:find("CONTENT_TYPE=application/x-www-form-urlencoded\n", 1, true))
 
-local result, message = pcall(function ()
-  client:request("GET", "https://no-such-host.brigid.jp/")
-end)
+local result, message = client:request("GET", "https://no-such-host.brigid.jp/")
 print(message)
 assert(not result)
 
-local result, message = pcall(function ()
-  client:request("GET", "!!! invalid url !!!")
-end)
+local result, message = client:request("GET", "!!! invalid url !!!")
 print(message)
 assert(not result)
 
@@ -246,3 +239,6 @@ local ua = "brigid/" .. brigid.get_version()
 local code, header, body = client:request("GET", "https://brigid.jp/test/cgi/env.cgi", { ["User-Agent"] = ua })
 assert(code == 200)
 assert(body:find("USER_AGENT=" .. ua .. "\n", 1, true))
+
+client.session:close()
+client.session:close()

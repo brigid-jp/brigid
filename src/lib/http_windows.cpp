@@ -28,9 +28,9 @@ namespace brigid {
         DWORD code = GetLastError();
         std::string message;
         if (get_error_message("winhttp.dll", code, message)) {
-          throw BRIGID_ERROR(message, make_error_code("winhttp error", code));
+          throw BRIGID_RUNTIME_ERROR(message, make_error_code("winhttp error", code));
         } else {
-          throw BRIGID_ERROR(make_error_code("winhttp error", code));
+          throw BRIGID_RUNTIME_ERROR(make_error_code("winhttp error", code));
         }
       }
       return result;
@@ -148,7 +148,7 @@ namespace brigid {
           parser.parse(header.data(), header.size());
 
           if (!header_cb_(code, parser.get())) {
-            throw BRIGID_ERROR("canceled");
+            throw BRIGID_RUNTIME_ERROR("canceled");
           }
         }
 
@@ -169,7 +169,7 @@ namespace brigid {
               &size));
 
           if (!write_cb_(buffer_.data(), size)) {
-            throw BRIGID_ERROR("canceled");
+            throw BRIGID_RUNTIME_ERROR("canceled");
           }
         }
       }
@@ -223,7 +223,7 @@ namespace brigid {
                 static_cast<DWORD>(result),
                 nullptr));
             if (!progress_cb_(reader->now(), reader->total())) {
-              throw BRIGID_ERROR("canceled");
+              throw BRIGID_RUNTIME_ERROR("canceled");
             }
           }
         } else {

@@ -22,7 +22,7 @@ namespace brigid {
     JNIEnv* env = get_env();
     if (!env->ExceptionCheck()) {
       if (null_pointer) {
-        throw BRIGID_ERROR("null pointer");
+        throw BRIGID_RUNTIME_ERROR("null pointer");
       }
       return;
     }
@@ -35,7 +35,7 @@ namespace brigid {
       clazz.reset();
     }
     if (!clazz) {
-      throw BRIGID_ERROR("cannot FindClass");
+      throw BRIGID_LOGIC_ERROR("cannot FindClass");
     }
 
     jmethodID method = env->GetMethodID(clazz.get(), "toString", "()Ljava/lang/String;");
@@ -44,7 +44,7 @@ namespace brigid {
       method = nullptr;
     }
     if (!method) {
-      throw BRIGID_ERROR("cannot GetMethodID");
+      throw BRIGID_LOGIC_ERROR("cannot GetMethodID");
     }
 
     local_ref_t<jstring> result = make_local_ref(reinterpret_cast<jstring>(env->CallObjectMethod(instance.get(), method)));
@@ -53,17 +53,17 @@ namespace brigid {
       result.reset();
     }
     if (!result) {
-      throw BRIGID_ERROR("cannot CallObjectMethod");
+      throw BRIGID_LOGIC_ERROR("cannot CallObjectMethod");
     }
 
     std::vector<char> buffer(env->GetStringUTFLength(result.get()) + 1);
     env->GetStringUTFRegion(result.get(), 0, env->GetStringLength(result.get()), buffer.data());
     if (env->ExceptionCheck()) {
       env->ExceptionClear();
-      throw BRIGID_ERROR("cannot GetStringUTFRegion");
+      throw BRIGID_LOGIC_ERROR("cannot GetStringUTFRegion");
     }
 
-    throw BRIGID_ERROR(buffer.data());
+    throw BRIGID_RUNTIME_ERROR(buffer.data());
   }
 
   void check() {
