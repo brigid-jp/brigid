@@ -139,12 +139,14 @@ namespace brigid {
       }
     };
 
-    http_session_t* check_http_session(lua_State* L, int arg, bool validate = true) {
+    http_session_t* check_http_session(lua_State* L, int arg, int validate = check_validate_all) {
       http_session_t* self = check_udata<http_session_t>(L, arg, "brigid.http_session");
-      if (validate) {
+      if (validate & check_validate_not_closed) {
         if (self->closed()) {
           luaL_error(L, "attempt to use a closed brigid.http_session");
         }
+      }
+      if (validate & check_validate_not_running) {
         if (self->running()) {
           luaL_error(L, "attempt to use a running brigid.http_session");
         }
@@ -153,7 +155,14 @@ namespace brigid {
     }
 
     void impl_gc(lua_State* L) {
-      check_http_session(L, 1, false)->~http_session_t();
+      check_http_session(L, 1, check_validate_none)->~http_session_t();
+    }
+
+    void impl_close(lua_State* L) {
+      http_session_t* self = check_http_session(L, 1, check_validate_not_running);
+      if (!self->closed()) {
+        self->close();
+      }
     }
 
     void impl_call(lua_State* L) {
@@ -245,10 +254,6 @@ namespace brigid {
       self->request(method, url, header, body, data.data(), data.size());
       lua_pop(L, 2);
     }
-
-    void impl_close(lua_State* L) {
-      check_http_session(L, 1)->close();
-    }
   }
 
   void initialize_http(lua_State* L) {
@@ -258,6 +263,7 @@ namespace brigid {
       lua_pushvalue(L, -2);
       set_field(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);
+      set_field(L, -1, "__close", impl_close);
       lua_pop(L, 1);
 
       set_metafield(L, -1, "__call", impl_call);

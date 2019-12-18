@@ -123,11 +123,11 @@ assert(code == 404)
 assert(body == "")
 
 local data = ("0123456789ABCDE\n"):rep(4096 / 16)
-local view = assert(io.open("test.dat", "wb"))
+local out = assert(io.open("test.dat", "wb"))
 for i = 1, 1024 * 1024 / #data do
-  view:write(data)
+  out:write(data)
 end
-view:close()
+out:close()
 
 local code, header, body = client:request_file("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", nil, "test.dat")
 assert(code == 201 or code == 204)
@@ -239,3 +239,6 @@ local ua = "brigid/" .. brigid.get_version()
 local code, header, body = client:request("GET", "https://brigid.jp/test/cgi/env.cgi", { ["User-Agent"] = ua })
 assert(code == 200)
 assert(body:find("USER_AGENT=" .. ua .. "\n", 1, true))
+
+client.session:close()
+client.session:close()
