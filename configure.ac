@@ -2,7 +2,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
-m4_include([version.m4])
+m4_include([brigid_version.m4])
 AC_INIT([brigid], BRIGID_VERSION, [dev@brigid.jp], [], [https://github.com/brigid-jp/brigid/])
 AM_INIT_AUTOMAKE([foreign])
 LT_INIT
