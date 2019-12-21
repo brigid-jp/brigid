@@ -9,6 +9,7 @@ OBJS = \
 	common_windows.obj \
 	crypto.obj \
 	crypto_windows.obj \
+	error.obj \
 	http.obj \
 	http_impl.obj \
 	http_windows.obj \
