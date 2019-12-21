@@ -2,61 +2,107 @@
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
+local ffi = require "ffi"
 local love = love
-local t = {}
 
-local ciphers = {
-  "aes-128-cbc",
-  "aes-192-cbc",
-  "aes-256-cbc",
-}
-local plaintext = "The quick brown fox jumps over the lazy dog"
-local keys = {
-  ["aes-128-cbc"] = "0123456789012345";
-  ["aes-192-cbc"] = "012345678901234567890123";
-  ["aes-256-cbc"] = "01234567890123456789012345678901";
-}
-local iv = "0123456789012345"
-local ciphertexts = {
-  ["aes-128-cbc"] = "\048\137\230\188\034\075\217\091\133\207\086\244\185\103\017\138\170\071\005\067\015\037\182\180\217\083\024\138\209\093\215\143\056\103\087\126\125\088\225\140\156\179\064\100\124\139\079\216";
-  ["aes-192-cbc"] = "\112\238\215\052\099\031\255\042\126\000\177\112\122\237\025\187\169\081\032\139\127\241\047\040\208\067\200\108\082\006\044\062\063\214\193\084\142\078\121\132\005\208\057\208\070\063\028\021";
-  ["aes-256-cbc"] = "\224\111\099\167\017\232\183\170\159\148\064\016\125\070\128\161\023\153\067\128\234\049\210\162\153\185\083\002\212\057\185\112\044\142\101\169\146\054\236\146\007\004\145\092\241\169\138\068";
-}
+local text = {}
+
+local function write(...)
+  local data = {...}
+  for i = 1, #data do
+    text[#text + 1] = data[i]
+  end
+end
 
 function love.load()
-  local a, b = pcall(require, "brigid")
+  local data = love.data.newByteData("foo bar baz qux")
+  write("pointer ", tostring(data:getPointer()), "\n")
+  if data.getFFIPointer then
+    write("ffipointer ", tostring(data:getFFIPointer()), "\n")
+  end
+  write("size ", data:getSize(), "\n")
+  write("string [[", data:getString(), "]]\n")
 
-  if not a then
-    t[#t + 1] = ("FAIL require %s\n"):format(b)
-    return
+  local data2 = love.data.newByteData "FUCKINGOM "
+
+  ffi.copy(data:getFFIPointer(), data2:getFFIPointer(), 4);
+
+  write("string [[", data:getString(), "]]\n")
+
+  local metatable = getmetatable(data)
+  write("metatable ", tostring(metatable), "\n")
+  for k, v in pairs(metatable) do
+    write("  ", tostring(k), "=", tostring(v), "\n")
   end
 
-  local brigid = b
+  local registry = debug.getregistry()
+  write("registry ", tostring(registry), "\n")
+  -- for k, v in pairs(registry) do
+  --   write("  ", tostring(k), "=", tostring(v), "\n")
+  -- end
 
-  for i = 1, #ciphers do
-    local cipher = ciphers[i]
-    local key = keys[cipher]
-    local ciphertext = ciphertexts[cipher]
-    local a, b = pcall(brigid.encrypt_string, cipher, plaintext, key, iv)
-    if not a then
-      t[#t + 1] = ("FAIL encrypt_string %s %s\n"):format(cipher, b)
-    elseif b == ciphertext then
-        t[#t + 1] = ("PASS encrypt_string %s\n"):format(cipher)
-    else
-      t[#t + 1] = ("FAIL encrypt_string %s\n"):format(cipher)
+  if rawequal(registry.ByteData, metatable) then
+    write "rawequal(registry.ByteData, metatable)\n"
+  end
+
+  if data.getFFIPointer then
+    write("getPointer is_void_pointer ", tostring(ffi.istype("void*", data:getPointer())), "\n")
+    write("getPointer is_const_void_pointer ", tostring(ffi.istype("const void*", data:getPointer())), "\n")
+    write("getFFIPointer is_void_pointer ", tostring(ffi.istype("void*", data:getFFIPointer())), "\n")
+    write("getFFIPointer is_const_void_pointer ", tostring(ffi.istype("const void*", data:getFFIPointer())), "\n")
+    -- local ptr = ffi.new("const void*[1]", data:getPointer())
+    local ptr = ffi.new("const void*[1]", data:getFFIPointer())
+    write("test1 ", ffi.sizeof(ptr), " ", tostring(ptr), "\n")
+    write("test2 ", ffi.sizeof(ptr[0]), " ", tostring(ptr[0]), "\n")
+    local str = ffi.string(ptr, ffi.sizeof(ptr))
+    for i = 1, #str do
+      if i > 1 then
+        write " "
+      end
+      write(("%02x"):format(str:byte(i, i)))
     end
-    local a, b = pcall(brigid.decrypt_string, cipher, ciphertext, key, iv)
-    if not a then
-      t[#t + 1] = ("FAIL decrypt_string %s %s\n"):format(cipher, b)
-    elseif b == plaintext then
-        t[#t + 1] = ("PASS decrypt_string %s\n"):format(cipher)
-    else
-      t[#t + 1] = ("FAIL decrypt_string %s\n"):format(cipher)
-    end
+    write "\n"
+
+    local ptr = ffi.new("const void*[1]")
+    write("test3 ", ffi.sizeof(ptr), " ", tostring(ptr), "\n")
+    write("test4 ", ffi.sizeof(ptr[0]), " ", tostring(ptr[0]), "\n")
+    ffi.copy(ptr, str);
+    write("test5 ", ffi.sizeof(ptr), " ", tostring(ptr), "\n")
+    write("test6 ", ffi.sizeof(ptr[0]), " ", tostring(ptr[0]), "\n")
+  end
+
+  write("package.cpath ", package.cpath, "\n")
+  package.cpath = "../lua/.libs/?.so;" .. package.cpath
+  write("package.cpath ", package.cpath, "\n")
+  local brigid
+  pcall(function () brigid = require "brigid" end)
+  write("brigid ", tostring(brigid), "\n")
+  if brigid then
+    write("brigid.version ", brigid.get_version(), "\n")
+
+    local plaintext = love.data.newByteData "The quick brown fox jumps over the lazy dog"
+    local key = love.data.newByteData "01234567890123456789012345678901"
+    local iv = love.data.newByteData "0123456789012345"
+    local ciphertext = love.data.newByteData(table.concat {
+      "\224\111\099\167\017\232\183\170";
+      "\159\148\064\016\125\070\128\161";
+      "\023\153\067\128\234\049\210\162";
+      "\153\185\083\002\212\057\185\112";
+      "\044\142\101\169\146\054\236\146";
+      "\007\004\145\092\241\169\138\068";
+    })
+    local out = love.data.newByteData(plaintext:getSize())
+    love.filesystem.write("test1.dat", out)
+    local cryptor = brigid.decryptor("aes-256-cbc", key, iv, function (view)
+      write("view {", view:get_string(), "}\n")
+      ffi.copy(out:getFFIPointer(), view:get_pointer(), view:get_size())
+    end)
+    cryptor:update(ciphertext, true)
+    love.filesystem.write("test2.dat", out)
   end
 end
 
 function love.draw()
   local width = love.window.getMode()
-  love.graphics.printf(table.concat(t), 50, 50, width - 100)
+  love.graphics.printf(table.concat(text), 50, 50, width - 100)
 end
