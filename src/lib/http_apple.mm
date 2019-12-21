@@ -2,6 +2,10 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#if !__has_feature(objc_arc)
+#error http_apple.mm should be compiled with -fobjc-arc
+#endif
+
 #include <brigid/http.hpp>
 #include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
