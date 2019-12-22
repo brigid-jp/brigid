@@ -50,6 +50,8 @@ namespace brigid {
       return internet_handle_t(handle, &WinHttpCloseHandle);
     }
 
+    class canceled {};
+
     class http_session_impl : public http_session, private noncopyable {
     public:
       http_session_impl(
@@ -72,7 +74,7 @@ namespace brigid {
           username_(decode_utf8(username)),
           password_(decode_utf8(password)) {}
 
-      virtual void http_session_impl::request(
+      virtual bool http_session_impl::request(
           const std::string& method,
           const std::string& url,
           const std::map<std::string, std::string>& header,
@@ -118,7 +120,12 @@ namespace brigid {
               WINHTTP_ADDREQ_FLAG_ADD));
         }
 
-        DWORD code = send(request.get(), 0, body, data, size);
+        DWORD code = 0;
+        try {
+          code = send(request.get(), 0, body, data, size);
+        } catch (const canceled&) {
+          return false;
+        }
 
         {
           DWORD size = 0;
@@ -148,7 +155,7 @@ namespace brigid {
           parser.parse(header.data(), header.size());
 
           if (!header_cb_(code, parser.get())) {
-            throw BRIGID_RUNTIME_ERROR("canceled");
+            return false;
           }
         }
 
@@ -169,9 +176,11 @@ namespace brigid {
               &size));
 
           if (!write_cb_(buffer_.data(), size)) {
-            throw BRIGID_RUNTIME_ERROR("canceled");
+            return false;
           }
         }
+
+        return true;
       }
 
     private:
@@ -223,7 +232,7 @@ namespace brigid {
                 static_cast<DWORD>(result),
                 nullptr));
             if (!progress_cb_(reader->now(), reader->total())) {
-              throw BRIGID_RUNTIME_ERROR("canceled");
+              throw canceled();
             }
           }
         } else {
