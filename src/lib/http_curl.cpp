@@ -54,7 +54,7 @@ namespace brigid {
           username(username),
           password(password) {}
 
-      virtual void request(const std::string&, const std::string&, const std::map<std::string, std::string>&, http_request_body, const char*, size_t);
+      virtual bool request(const std::string&, const std::string&, const std::map<std::string, std::string>&, http_request_body, const char*, size_t);
 
       easy_t handle;
       std::function<bool (size_t, size_t)> progress_cb;
@@ -94,13 +94,14 @@ namespace brigid {
     public:
       http_task(http_session_impl& session)
         : session_(session),
-          code_() {}
+          code_(),
+          canceled_() {}
 
       ~http_task() {
         curl_easy_reset(session_.handle.get());
       }
 
-      void request(
+      bool request(
           const std::string& method,
           const std::string& url,
           const std::map<std::string, std::string>& header,
@@ -141,14 +142,19 @@ namespace brigid {
         }
 
         CURLcode code = curl_easy_perform(session_.handle.get());
+        if (canceled_) {
+          return false;
+        }
         if (exception_) {
           std::rethrow_exception(exception_);
         }
         check(code);
 
         if (!process_header_once()) {
-          throw BRIGID_RUNTIME_ERROR("canceled");
+          return false;
         }
+
+        return true;
       }
 
     private:
@@ -157,6 +163,7 @@ namespace brigid {
       std::unique_ptr<http_reader> reader_;
       http_header_parser parser_;
       long code_;
+      bool canceled_;
       std::exception_ptr exception_;
 
       static size_t read_cb(char* data, size_t size, size_t count, void* self) {
@@ -181,6 +188,7 @@ namespace brigid {
           if (reader_) {
             size_t result = reader_->read(data, size);
             if (!session_.progress_cb(reader_->now(), reader_->total())) {
+              canceled_ = true;
               return CURL_READFUNC_ABORT;
             }
             return result;
@@ -218,9 +226,11 @@ namespace brigid {
       size_t write(const char* data, size_t size) {
         try {
           if (!process_header_once()) {
+            canceled_ = true;
             return 0;
           }
           if (!session_.write_cb(data, size)) {
+            canceled_ = true;
             return 0;
           }
           return size;
@@ -233,7 +243,7 @@ namespace brigid {
       }
     };
 
-    void http_session_impl::request(
+    bool http_session_impl::request(
         const std::string& method,
         const std::string& url,
         const std::map<std::string, std::string>& header,
@@ -241,7 +251,7 @@ namespace brigid {
         const char* data,
         size_t size) {
       http_task task(*this);
-      task.request(method, url, header, body, data, size);
+      return task.request(method, url, header, body, data, size);
     }
 
     int http_initializer_count = 0;
