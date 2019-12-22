@@ -34,4 +34,6 @@ diff -qr love love-11.3-ios-source
 open love/platform/xcode/love.xcodeproj
 ```
 
-## xcode
+## android
+
+
