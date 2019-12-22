@@ -385,6 +385,29 @@ namespace {
     BRIGID_CHECK(client.body().find("USER_AGENT=" + ua + "\n") != std::string::npos);
   }
 
+  void test16() {
+    std::unique_ptr<brigid::http_session> session = brigid::make_http_session(
+        [](size_t, size_t) -> bool {
+          return true;
+        },
+        [](int code, const std::map<std::string, std::string>&) -> bool {
+          std::cout << code << "\n";
+          return false;
+        },
+        [](const char*, size_t) -> bool {
+          return true;
+        },
+        false, "", "");
+    bool result = session->request(
+        "GET",
+        "https://brigid.jp/test/cgi/env.cgi",
+        empty_header,
+        brigid::http_request_body::none,
+        nullptr,
+        0);
+    BRIGID_CHECK(result == false);
+  }
+
   BRIGID_MAKE_TEST_CASE(test1);
   BRIGID_MAKE_TEST_CASE(test2);
   BRIGID_MAKE_TEST_CASE(test3);
@@ -400,4 +423,5 @@ namespace {
   BRIGID_MAKE_TEST_CASE(test13);
   BRIGID_MAKE_TEST_CASE(test14);
   BRIGID_MAKE_TEST_CASE(test15);
+  BRIGID_MAKE_TEST_CASE(test16);
 }
