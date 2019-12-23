@@ -94,8 +94,8 @@ namespace brigid {
     public:
       http_task(http_session_impl& session)
         : session_(session),
-          code_(),
-          canceled_() {}
+          code_(-1),
+          canceling_() {}
 
       ~http_task() {
         curl_easy_reset(session_.handle.get());
@@ -142,7 +142,7 @@ namespace brigid {
         }
 
         CURLcode code = curl_easy_perform(session_.handle.get());
-        if (canceled_) {
+        if (canceling_) {
           return false;
         }
         if (exception_) {
@@ -163,7 +163,7 @@ namespace brigid {
       std::unique_ptr<http_reader> reader_;
       http_header_parser parser_;
       long code_;
-      bool canceled_;
+      bool canceling_;
       std::exception_ptr exception_;
 
       static size_t read_cb(char* data, size_t size, size_t count, void* self) {
@@ -188,7 +188,7 @@ namespace brigid {
           if (reader_) {
             size_t result = reader_->read(data, size);
             if (!session_.progress_cb(reader_->now(), reader_->total())) {
-              canceled_ = true;
+              canceling_ = true;
               return CURL_READFUNC_ABORT;
             }
             return result;
@@ -216,8 +216,9 @@ namespace brigid {
       }
 
       bool process_header_once() {
-        if (long code = code_) {
-          code_ = 0;
+        if (code_ != -1) {
+          long code = code_;
+          code_ = -1;
           return session_.header_cb(code, parser_.get());
         }
         return true;
@@ -226,11 +227,11 @@ namespace brigid {
       size_t write(const char* data, size_t size) {
         try {
           if (!process_header_once()) {
-            canceled_ = true;
+            canceling_ = true;
             return 0;
           }
           if (!session_.write_cb(data, size)) {
-            canceled_ = true;
+            canceling_ = true;
             return 0;
           }
           return size;
