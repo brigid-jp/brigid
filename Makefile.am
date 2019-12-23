@@ -11,6 +11,7 @@ EXTRA_DIST = \
 	README.md \
 	brigid-*.rockspec \
 	brigid.def \
+	brigid.hpp \
 	docs \
 	include \
 	m4/update.sh \
