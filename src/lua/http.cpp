@@ -44,13 +44,13 @@ namespace brigid {
           write_cb_(std::move(write_cb)),
           running_() {}
 
-      void request(
+      bool request(
           const std::string& method,
           const std::string& url,
           const std::map<std::string, std::string>& header,
           http_request_body body,
           const char* data, size_t size) {
-        session_->request(method, url, header, body, data, size);
+        return session_->request(method, url, header, body, data, size);
       }
 
       void close() {
@@ -251,8 +251,13 @@ namespace brigid {
         data = to_data(L, -1);
       }
 
-      self->request(method, url, header, body, data.data(), data.size());
+      bool result = self->request(method, url, header, body, data.data(), data.size());
       lua_pop(L, 2);
+
+      if (!result) {
+        lua_pushnil(L);
+        push(L, "canceled");
+      }
     }
   }
 

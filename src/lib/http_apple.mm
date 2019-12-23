@@ -50,7 +50,7 @@ namespace brigid {
       std::mutex rep_mutex_;
       std::condition_variable rep_condition_;
       bool rep_;
-      bool canceled_;
+      bool canceling_;
       std::exception_ptr exception_;
     };
   }
@@ -143,7 +143,7 @@ namespace brigid {
         write_cb_(write_cb),
         credential_(),
         rep_(),
-        canceled_() {
+        canceling_() {
       if (credential) {
         credential_ = [NSURLCredential credentialWithUser:decode_utf8(username) password:decode_utf8(password) persistence:NSURLCredentialPersistenceForSession];
       }
@@ -219,7 +219,7 @@ namespace brigid {
     }
 
     bool http_session_delegate_impl::wait(NSURLSessionTask* task) {
-      canceled_ = false;
+      canceling_ = false;
 
       {
         std::unique_lock<std::mutex> req_lock(req_mutex_);
@@ -233,9 +233,11 @@ namespace brigid {
           rep_ = false;
           if (req) {
             try {
-              rep_ = req();
+              if (!canceling_) {
+                rep_ = req();
+              }
               if (!rep_) {
-                canceled_ = true;
+                canceling_ = true;
               }
             } catch (...) {
               if (!exception_) {
@@ -251,8 +253,8 @@ namespace brigid {
         }
       }
 
-      if (canceled_) {
-        canceled_ = false;
+      if (canceling_) {
+        canceling_ = false;
         return false;
       }
 

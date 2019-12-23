@@ -87,6 +87,13 @@ local test_client = setmetatable(class, {
   end;
 })
 
+local data4k = ("0123456789ABCDE\n"):rep(4096 / 16)
+local out = assert(io.open("test.dat", "wb"))
+for i = 1, 1024 * 1024 / #data4k do
+  out:write(data4k)
+end
+out:close()
+
 local client = test_client()
 
 local code, header, body = client:request("GET", "https://brigid.jp/")
@@ -122,25 +129,16 @@ local code, header, body = client:request("HEAD", "https://brigid.jp/test/dav/au
 assert(code == 404)
 assert(body == "")
 
-local data = ("0123456789ABCDE\n"):rep(4096 / 16)
-local out = assert(io.open("test.dat", "wb"))
-for i = 1, 1024 * 1024 / #data do
-  out:write(data)
-end
-out:close()
-
 local code, header, body = client:request_file("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", nil, "test.dat")
 assert(code == 201 or code == 204)
 
 local code, header, body = client:request_file("GET", "https://brigid.jp/test/dav/auth-none/test.txt")
 assert(code == 200)
-assert(body == data:rep(1024 * 1024 / #data))
+assert(body == data4k:rep(1024 * 1024 / #data4k))
 
 local code, header, body = client:request_file("DELETE", "https://brigid.jp/test/dav/auth-none/test.txt")
 assert(code == 204)
 assert(body == "")
-
-os.remove "test.dat"
 
 local code, header, body = client:request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=1")
 assert(code == 200)
@@ -242,3 +240,44 @@ assert(body:find("USER_AGENT=" .. ua .. "\n", 1, true))
 
 client.session:close()
 client.session:close()
+
+--
+-- explicitly cancel in the progress callback
+--
+-- NSURLSession backend is not canceled immediately
+
+local canceling = 0
+
+local session = brigid.http_session {
+  progress = function (now, total)
+    print(("progress %5.1f%%"):format(now * 100 / total))
+    if now * 2 >= total then
+      print "explicitly cancel in the progress callback"
+      canceling = canceling + 1
+      return false
+    end
+  end;
+
+  header = function ()
+    canceling = canceling + 1
+  end;
+
+  write = function ()
+    canceling = canceling + 1
+  end;
+}
+local result, message = session:request {
+  method = "PUT",
+  url = "https://brigid.jp/test/dav/auth-none/test.txt";
+  file = "test.dat";
+}
+print(message, canceling)
+assert(not result)
+assert(message == "canceled")
+assert(canceling == 1)
+
+-- explicitly cancel in the header callback
+
+-- explicitly cancel in the write callback
+
+os.remove "test.dat"
