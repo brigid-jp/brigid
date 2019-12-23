@@ -23,7 +23,8 @@ namespace {
     explicit test_client(
         bool credential = false,
         const std::string& username = std::string(),
-        const std::string& password = std::string())
+        const std::string& password = std::string(),
+        int cancel = 0)
       : session_(brigid::make_http_session(
             std::bind(&test_client::progress_cb, this, _1, _2),
             std::bind(&test_client::header_cb, this, _1, _2),
@@ -31,11 +32,13 @@ namespace {
             credential,
             username,
             password)),
+        cancel_(cancel),
+        cancel_count_(),
         progress_count_(),
         header_count_(),
         write_count_(),
-        code_() {
-    }
+        code_(),
+        canceled_() {}
 
     int request(
         const std::string& method,
@@ -44,15 +47,20 @@ namespace {
         brigid::http_request_body body = brigid::http_request_body::none,
         const char* data = nullptr,
         size_t size = 0) {
+      cancel_count_ = 0;
       progress_count_ = 0;
       header_count_ = 0;
       write_count_ = 0;
       code_ = 0;
-      session_->request(method, url, header, body, data, size);
+      canceled_ = !session_->request(method, url, header, body, data, size);
       body_ = out_.str();
       out_.str(std::string());
       out_.clear();
       return code_;
+    }
+
+    size_t cancel_count() const {
+      return cancel_count_;
     }
 
     size_t progress_count() const {
@@ -88,8 +96,14 @@ namespace {
       return body_;
     }
 
+    bool canceled() const {
+      return canceled_;
+    }
+
   private:
     std::unique_ptr<brigid::http_session> session_;
+    int cancel_;
+    size_t cancel_count_;
     size_t progress_count_;
     size_t header_count_;
     size_t write_count_;
@@ -97,14 +111,29 @@ namespace {
     std::map<std::string, std::string> header_;
     std::ostringstream out_;
     std::string body_;
+    bool canceled_;
 
     bool progress_cb(size_t now, size_t total) {
+      if (cancel_ == 1) {
+        if (now * 2 >= total) {
+          ++cancel_count_;
+          std::cout << "explicitly cancel in the progress callback\n";
+          return false;
+        }
+      }
+
       ++progress_count_;
       std::cout << "progress " << now << "/" << total << "\n";
       return true;
     }
 
     bool header_cb(int code, const std::map<std::string, std::string>& header) {
+      if (cancel_ == 2) {
+        ++cancel_count_;
+        std::cout << "explicitly cancel in the header callback\n";
+        return false;
+      }
+
       ++header_count_;
       code_ = code;
       header_ = header;
@@ -113,6 +142,12 @@ namespace {
     }
 
     bool write_cb(const char* data, size_t size) {
+      if (cancel_ == 3) {
+        ++cancel_count_;
+        std::cout << "explicitly cancel in the writer callback\n";
+        return false;
+      }
+
       ++write_count_;
       out_.write(data, size);
       return true;
@@ -386,26 +421,42 @@ namespace {
   }
 
   void test16() {
-    std::unique_ptr<brigid::http_session> session = brigid::make_http_session(
-        [](size_t, size_t) -> bool {
-          return true;
-        },
-        [](int code, const std::map<std::string, std::string>&) -> bool {
-          std::cout << code << "\n";
-          return false;
-        },
-        [](const char*, size_t) -> bool {
-          return true;
-        },
-        false, "", "");
-    bool result = session->request(
-        "GET",
-        "https://brigid.jp/test/cgi/env.cgi",
-        empty_header,
-        brigid::http_request_body::none,
-        nullptr,
-        0);
-    BRIGID_CHECK(result == false);
+    std::string filename = "test.dat";
+    std::string data;
+    for (size_t i = 0; i < 4096; i += 16) {
+      data += "0123456789ABCDE\n";
+    }
+    {
+      std::ofstream out(filename.c_str(), std::ios::out | std::ios::binary);
+      for (size_t i = 0; i < 1024 * 1024; i += data.size()) {
+        out << data;
+      }
+    }
+
+    test_client client(false, "", "", 1);;
+    client.request("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", empty_header, brigid::http_request_body::file, filename.data(), filename.size());
+    BRIGID_CHECK(client.progress_count() > 0);
+    BRIGID_CHECK(client.cancel_count() == 1);
+    BRIGID_CHECK(client.code() == 0);
+    BRIGID_CHECK(client.canceled());
+
+    remove(filename.c_str());
+  }
+
+  void test17() {
+    test_client client(false, "", "", 2);
+    client.request("GET", "https://brigid.jp/test/cgi/env.cgi");
+    BRIGID_CHECK(client.cancel_count() == 1);
+    BRIGID_CHECK(client.code() == 0);
+    BRIGID_CHECK(client.canceled());
+  }
+
+  void test18() {
+    test_client client(false, "", "", 3);
+    client.request("GET", "https://brigid.jp/test/cgi/env.cgi");
+    BRIGID_CHECK(client.cancel_count() == 1);
+    BRIGID_CHECK(client.code() == 0);
+    BRIGID_CHECK(client.canceled());
   }
 
   BRIGID_MAKE_TEST_CASE(test1);
@@ -424,4 +475,6 @@ namespace {
   BRIGID_MAKE_TEST_CASE(test14);
   BRIGID_MAKE_TEST_CASE(test15);
   BRIGID_MAKE_TEST_CASE(test16);
+  BRIGID_MAKE_TEST_CASE(test17);
+  BRIGID_MAKE_TEST_CASE(test18);
 }

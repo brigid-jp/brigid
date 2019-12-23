@@ -241,23 +241,40 @@ assert(body:find("USER_AGENT=" .. ua .. "\n", 1, true))
 client.session:close()
 client.session:close()
 
+--
+-- explicitly cancel in the progress callback
+--
+-- NSURLSession backend is not canceled immediately
+
+local canceling = 0
+
 local session = brigid.http_session {
   progress = function (now, total)
     print(("progress %5.1f%%"):format(now * 100 / total))
     if now * 2 >= total then
       print "explicitly cancel in the progress callback"
+      canceling = canceling + 1
       return false
     end
-  end
+  end;
+
+  header = function ()
+    canceling = canceling + 1
+  end;
+
+  write = function ()
+    canceling = canceling + 1
+  end;
 }
 local result, message = session:request {
   method = "PUT",
   url = "https://brigid.jp/test/dav/auth-none/test.txt";
   file = "test.dat";
 }
-print(message)
+print(message, canceling)
 assert(not result)
 assert(message == "canceled")
+assert(canceled == 1)
 
 -- explicitly cancel in the header callback
 
