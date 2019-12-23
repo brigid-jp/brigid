@@ -15,7 +15,7 @@ if ffi then
   end
 
   function class.decode_pointer(source)
-    local buffer = ffi.new "void*[1]"
+    local buffer = ffi.new "void*[2]"
     ffi.copy(buffer, source)
     return buffer[0]
   end

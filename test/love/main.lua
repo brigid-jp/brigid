@@ -63,7 +63,7 @@ function love.load()
     end
     write "\n"
 
-    local ptr = ffi.new("const void*[1]")
+    local ptr = ffi.new("const void*[2]")
     write("test3 ", ffi.sizeof(ptr), " ", tostring(ptr), "\n")
     write("test4 ", ffi.sizeof(ptr[0]), " ", tostring(ptr[0]), "\n")
     ffi.copy(ptr, str);
