@@ -50,8 +50,6 @@ namespace brigid {
       return internet_handle_t(handle, &WinHttpCloseHandle);
     }
 
-    class canceled {};
-
     class http_session_impl : public http_session, private noncopyable {
     public:
       http_session_impl(
@@ -120,10 +118,8 @@ namespace brigid {
               WINHTTP_ADDREQ_FLAG_ADD));
         }
 
-        DWORD code = 0;
-        try {
-          code = send(request.get(), 0, body, data, size);
-        } catch (const canceled&) {
+        int code = send(request.get(), 0, body, data, size);
+        if (code == -1) {
           return false;
         }
 
@@ -199,7 +195,7 @@ namespace brigid {
         }
       }
 
-      DWORD send(HINTERNET request, DWORD auth_scheme, http_request_body body, const char* data, size_t size) {
+      int send(HINTERNET request, DWORD auth_scheme, http_request_body body, const char* data, size_t size) {
         if (auth_scheme) {
           check(WinHttpSetCredentials(
               request,
@@ -232,7 +228,7 @@ namespace brigid {
                 static_cast<DWORD>(result),
                 nullptr));
             if (!progress_cb_(reader->now(), reader->total())) {
-              throw canceled();
+              return -1;
             }
           }
         } else {
