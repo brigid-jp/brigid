@@ -274,7 +274,7 @@ local result, message = session:request {
 print(message, canceling)
 assert(not result)
 assert(message == "canceled")
-assert(canceled == 1)
+assert(canceling == 1)
 
 -- explicitly cancel in the header callback
 

@@ -233,7 +233,9 @@ namespace brigid {
           rep_ = false;
           if (req) {
             try {
-              rep_ = req();
+              if (!canceling_) {
+                rep_ = req();
+              }
               if (!rep_) {
                 canceling_ = true;
               }

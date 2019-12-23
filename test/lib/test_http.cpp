@@ -455,7 +455,7 @@ namespace {
     test_client client(false, "", "", 3);
     client.request("GET", "https://brigid.jp/test/cgi/env.cgi");
     BRIGID_CHECK(client.cancel_count() == 1);
-    BRIGID_CHECK(client.code() == 0);
+    BRIGID_CHECK(client.code() == 200);
     BRIGID_CHECK(client.canceled());
   }
 
