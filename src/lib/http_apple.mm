@@ -69,7 +69,7 @@ namespace brigid {
   return self;
 }
 
-- (void)URLSession:(NSURLSession *)_session
+- (void)URLSession:(NSURLSession *)session
               task:(NSURLSessionTask *)task
 didCompleteWithError:(NSError *)error {
   impl_->did_complete_with_error(error);
