@@ -7,7 +7,7 @@
 namespace brigid {
   const char* get_version() {
 #define m4_define(_, value) return #value;
-#include "version.m4"
+#include "brigid_version.m4"
 #undef m4_define
   }
 }

@@ -29,7 +29,7 @@ namespace brigid {
   class http_session {
   public:
     virtual ~http_session() = 0;
-    virtual void request(
+    virtual bool request(
         const std::string&,
         const std::string&,
         const std::map<std::string, std::string>&,

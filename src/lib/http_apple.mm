@@ -2,6 +2,10 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#if !__has_feature(objc_arc)
+#error http_apple.mm should be compiled with -fobjc-arc
+#endif
+
 #include <brigid/http.hpp>
 #include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
@@ -33,7 +37,7 @@ namespace brigid {
       NSURLCredential* did_receive_challenge(NSURLAuthenticationChallenge*);
       bool did_receive_response(NSHTTPURLResponse*);
       bool did_receive_data(NSData*);
-      void wait(NSURLSessionTask*);
+      bool wait(NSURLSessionTask*);
 
     private:
       std::function<bool (size_t, size_t)> progress_cb_;
@@ -46,6 +50,7 @@ namespace brigid {
       std::mutex rep_mutex_;
       std::condition_variable rep_condition_;
       bool rep_;
+      bool canceling_;
       std::exception_ptr exception_;
     };
   }
@@ -137,7 +142,8 @@ namespace brigid {
         header_cb_(header_cb),
         write_cb_(write_cb),
         credential_(),
-        rep_() {
+        rep_(),
+        canceling_() {
       if (credential) {
         credential_ = [NSURLCredential credentialWithUser:decode_utf8(username) password:decode_utf8(password) persistence:NSURLCredentialPersistenceForSession];
       }
@@ -212,7 +218,9 @@ namespace brigid {
       return rep_;
     }
 
-    void http_session_delegate_impl::wait(NSURLSessionTask* task) {
+    bool http_session_delegate_impl::wait(NSURLSessionTask* task) {
+      canceling_ = false;
+
       {
         std::unique_lock<std::mutex> req_lock(req_mutex_);
 
@@ -225,7 +233,12 @@ namespace brigid {
           rep_ = false;
           if (req) {
             try {
-              rep_ = req();
+              if (!canceling_) {
+                rep_ = req();
+              }
+              if (!rep_) {
+                canceling_ = true;
+              }
             } catch (...) {
               if (!exception_) {
                 exception_ = std::current_exception();
@@ -240,11 +253,18 @@ namespace brigid {
         }
       }
 
+      if (canceling_) {
+        canceling_ = false;
+        return false;
+      }
+
       if (exception_) {
         std::exception_ptr exception = exception_;
         exception_ = nullptr;
         std::rethrow_exception(exception);
       }
+
+      return true;
     }
 
     class http_session_impl : public http_session {
@@ -267,7 +287,7 @@ namespace brigid {
         [session_ invalidateAndCancel];
       }
 
-      virtual void request(
+      virtual bool request(
           const std::string& method,
           const std::string& url,
           const std::map<std::string, std::string>& headers,
@@ -292,7 +312,7 @@ namespace brigid {
             task = [session_ uploadTaskWithRequest:request fromFile:[NSURL fileURLWithPath:decode_utf8(data, size)]];
             break;
         }
-        impl_->wait(task);
+        return impl_->wait(task);
       }
 
     private:

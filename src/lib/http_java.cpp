@@ -87,7 +87,7 @@ namespace brigid {
         }
       }
 
-      virtual void request(const std::string&, const std::string&, const std::map<std::string, std::string>&, http_request_body, const char*, size_t);
+      virtual bool request(const std::string&, const std::string&, const std::map<std::string, std::string>&, http_request_body, const char*, size_t);
 
       vtable vt;
       std::function<bool (size_t, size_t)> progress_cb;
@@ -112,7 +112,7 @@ namespace brigid {
         } catch (...) {}
       }
 
-      void request(
+      bool request(
           const std::string& method,
           const std::string& url,
           const std::map<std::string, std::string>& header,
@@ -139,7 +139,7 @@ namespace brigid {
             session_.vt.write(instance_, session_.jbuffer, 0, result);
 
             if (!session_.progress_cb(reader->now(), reader->total())) {
-              throw BRIGID_RUNTIME_ERROR("canceled");
+              return false;
             }
           }
         } else {
@@ -163,7 +163,7 @@ namespace brigid {
           }
 
           if (!session_.header_cb(code, header)) {
-            throw BRIGID_RUNTIME_ERROR("canceled");
+            return false;
           }
         }
 
@@ -177,10 +177,12 @@ namespace brigid {
             get_byte_array_region(session_.jbuffer, 0, result, session_.nbuffer.data());
 
             if (!session_.write_cb(session_.nbuffer.data(), result)) {
-              throw BRIGID_RUNTIME_ERROR("canceled");
+              return false;
             }
           }
         }
+
+        return true;
       }
 
     private:
@@ -188,7 +190,7 @@ namespace brigid {
       global_ref_t<jobject> instance_;
     };
 
-    void http_session_impl::request(
+    bool http_session_impl::request(
         const std::string& method,
         const std::string& url,
         const std::map<std::string, std::string>& header,
@@ -196,7 +198,7 @@ namespace brigid {
         const char* data,
         size_t size) {
       http_task task(*this);
-      task.request(method, url, header, body, data, size);
+      return task.request(method, url, header, body, data, size);
     }
   }
 
