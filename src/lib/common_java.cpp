@@ -10,6 +10,7 @@
 extern "C" void* SDL_AndroidGetJNIEnv();
 
 #include <stddef.h>
+#include <string.h>
 #include <string>
 #include <vector>
 
@@ -88,6 +89,10 @@ namespace brigid {
     local_ref_t<jbyteArray> result = make_byte_array(size);
     set_byte_array_region(result, 0, size, data);
     return result;
+  }
+
+  local_ref_t<jbyteArray> make_byte_array(const char* source) {
+    return make_byte_array(source, strlen(source));
   }
 
   local_ref_t<jbyteArray> make_byte_array(const std::string& source) {
