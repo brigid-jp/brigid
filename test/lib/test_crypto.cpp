@@ -142,6 +142,104 @@ namespace {
     BRIGID_CHECK(decryptor->calculate_buffer_size(32) == 32);
   }
 
+  void test_sha256_empty() {
+    static const char expect_data[] = {
+      '\xE3', '\xB0', '\xC4', '\x42', '\x98', '\xFC', '\x1C', '\x14',
+      '\x9A', '\xFB', '\xF4', '\xC8', '\x99', '\x6F', '\xB9', '\x24',
+      '\x27', '\xAE', '\x41', '\xE4', '\x64', '\x9B', '\x93', '\x4C',
+      '\xA4', '\x95', '\x99', '\x1B', '\x78', '\x52', '\xB8', '\x55',
+    };
+    static const std::string expect(expect_data, 32);
+
+    auto hasher = brigid::make_hasher(brigid::crypto_hash::sha256);
+    BRIGID_CHECK(hasher->digest() == expect);
+  }
+
+  void test_sha256_1() {
+    static const char expect_data[] = {
+      '\xD7', '\xA8', '\xFB', '\xB3', '\x07', '\xD7', '\x80', '\x94',
+      '\x69', '\xCA', '\x9A', '\xBC', '\xB0', '\x08', '\x2E', '\x4F',
+      '\x8D', '\x56', '\x51', '\xE4', '\x6D', '\x3C', '\xDB', '\x76',
+      '\x2D', '\x02', '\xD0', '\xBF', '\x37', '\xC9', '\xE5', '\x92',
+    };
+    static const std::string expect(expect_data, 32);
+
+    auto hasher = brigid::make_hasher(brigid::crypto_hash::sha256);
+    hasher->update(plaintext.data(), plaintext.size());
+    BRIGID_CHECK(hasher->digest() == expect);
+  }
+
+  void test_sha256_2() {
+    static const char expect_data[] = {
+      '\xD7', '\xA8', '\xFB', '\xB3', '\x07', '\xD7', '\x80', '\x94',
+      '\x69', '\xCA', '\x9A', '\xBC', '\xB0', '\x08', '\x2E', '\x4F',
+      '\x8D', '\x56', '\x51', '\xE4', '\x6D', '\x3C', '\xDB', '\x76',
+      '\x2D', '\x02', '\xD0', '\xBF', '\x37', '\xC9', '\xE5', '\x92',
+    };
+    static const std::string expect(expect_data, 32);
+
+    auto hasher = brigid::make_hasher(brigid::crypto_hash::sha256);
+    for (size_t i = 0; i < plaintext.size(); ++i) {
+      hasher->update(plaintext.data() + i, 1);
+    }
+    BRIGID_CHECK(hasher->digest() == expect);
+  }
+
+  void test_sha512_empty() {
+    static const char expect_data[] = {
+      '\xCF', '\x83', '\xE1', '\x35', '\x7E', '\xEF', '\xB8', '\xBD',
+      '\xF1', '\x54', '\x28', '\x50', '\xD6', '\x6D', '\x80', '\x07',
+      '\xD6', '\x20', '\xE4', '\x05', '\x0B', '\x57', '\x15', '\xDC',
+      '\x83', '\xF4', '\xA9', '\x21', '\xD3', '\x6C', '\xE9', '\xCE',
+      '\x47', '\xD0', '\xD1', '\x3C', '\x5D', '\x85', '\xF2', '\xB0',
+      '\xFF', '\x83', '\x18', '\xD2', '\x87', '\x7E', '\xEC', '\x2F',
+      '\x63', '\xB9', '\x31', '\xBD', '\x47', '\x41', '\x7A', '\x81',
+      '\xA5', '\x38', '\x32', '\x7A', '\xF9', '\x27', '\xDA', '\x3E',
+    };
+    static const std::string expect(expect_data, 64);
+
+    auto hasher = brigid::make_hasher(brigid::crypto_hash::sha512);
+    BRIGID_CHECK(hasher->digest() == expect);
+  }
+
+  void test_sha512_1() {
+    static const char expect_data[] = {
+      '\x07', '\xE5', '\x47', '\xD9', '\x58', '\x6F', '\x6A', '\x73',
+      '\xF7', '\x3F', '\xBA', '\xC0', '\x43', '\x5E', '\xD7', '\x69',
+      '\x51', '\x21', '\x8F', '\xB7', '\xD0', '\xC8', '\xD7', '\x88',
+      '\xA3', '\x09', '\xD7', '\x85', '\x43', '\x6B', '\xBB', '\x64',
+      '\x2E', '\x93', '\xA2', '\x52', '\xA9', '\x54', '\xF2', '\x39',
+      '\x12', '\x54', '\x7D', '\x1E', '\x8A', '\x3B', '\x5E', '\xD6',
+      '\xE1', '\xBF', '\xD7', '\x09', '\x78', '\x21', '\x23', '\x3F',
+      '\xA0', '\x53', '\x8F', '\x3D', '\xB8', '\x54', '\xFE', '\xE6',
+    };
+    static const std::string expect(expect_data, 64);
+
+    auto hasher = brigid::make_hasher(brigid::crypto_hash::sha512);
+    hasher->update(plaintext.data(), plaintext.size());
+    BRIGID_CHECK(hasher->digest() == expect);
+  }
+
+  void test_sha512_2() {
+    static const char expect_data[] = {
+      '\x07', '\xE5', '\x47', '\xD9', '\x58', '\x6F', '\x6A', '\x73',
+      '\xF7', '\x3F', '\xBA', '\xC0', '\x43', '\x5E', '\xD7', '\x69',
+      '\x51', '\x21', '\x8F', '\xB7', '\xD0', '\xC8', '\xD7', '\x88',
+      '\xA3', '\x09', '\xD7', '\x85', '\x43', '\x6B', '\xBB', '\x64',
+      '\x2E', '\x93', '\xA2', '\x52', '\xA9', '\x54', '\xF2', '\x39',
+      '\x12', '\x54', '\x7D', '\x1E', '\x8A', '\x3B', '\x5E', '\xD6',
+      '\xE1', '\xBF', '\xD7', '\x09', '\x78', '\x21', '\x23', '\x3F',
+      '\xA0', '\x53', '\x8F', '\x3D', '\xB8', '\x54', '\xFE', '\xE6',
+    };
+    static const std::string expect(expect_data, 64);
+
+    auto hasher = brigid::make_hasher(brigid::crypto_hash::sha512);
+    for (size_t i = 0; i < plaintext.size(); ++i) {
+      hasher->update(plaintext.data() + i, 1);
+    }
+    BRIGID_CHECK(hasher->digest() == expect);
+  }
+
   BRIGID_MAKE_TEST_CASE([](){ test_encryptor1(brigid::crypto_cipher::aes_128_cbc, key128, ciphertext128); });
   BRIGID_MAKE_TEST_CASE([](){ test_encryptor2(brigid::crypto_cipher::aes_128_cbc, key128, ciphertext128); });
   BRIGID_MAKE_TEST_CASE([](){ test_encryptor3(brigid::crypto_cipher::aes_128_cbc, key128, ciphertext128); });
@@ -163,4 +261,10 @@ namespace {
   BRIGID_MAKE_TEST_CASE(test_error1);
   BRIGID_MAKE_TEST_CASE(test_error2);
   BRIGID_MAKE_TEST_CASE(test_buffer_size);
+  BRIGID_MAKE_TEST_CASE(test_sha256_empty);
+  BRIGID_MAKE_TEST_CASE(test_sha256_1);
+  BRIGID_MAKE_TEST_CASE(test_sha256_2);
+  BRIGID_MAKE_TEST_CASE(test_sha512_empty);
+  BRIGID_MAKE_TEST_CASE(test_sha512_1);
+  BRIGID_MAKE_TEST_CASE(test_sha512_2);
 }

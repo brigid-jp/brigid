@@ -6,4 +6,6 @@
 
 namespace brigid {
   cryptor::~cryptor() {}
+
+  hasher::~hasher() {}
 }
