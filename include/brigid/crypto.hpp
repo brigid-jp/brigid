@@ -9,7 +9,7 @@
 
 #include <stddef.h>
 #include <memory>
-#include <string>
+#include <vector>
 
 namespace brigid {
   enum class crypto_cipher { aes_128_cbc, aes_192_cbc, aes_256_cbc };
@@ -39,7 +39,7 @@ namespace brigid {
   public:
     virtual ~hasher() = 0;
     virtual void update(const char*, size_t) = 0;
-    virtual std::string digest() = 0;
+    virtual std::vector<char> digest() = 0;
   };
 
   std::unique_ptr<hasher> make_hasher(crypto_hash);
