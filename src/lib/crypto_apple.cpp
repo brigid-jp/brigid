@@ -11,9 +11,7 @@
 
 #include <stddef.h>
 #include <memory>
-#include <string>
-
-#include <iostream>
+#include <vector>
 
 namespace brigid {
   namespace {
@@ -84,7 +82,6 @@ namespace brigid {
     public:
       sha256_hasher_impl()
         : ctx_() {
-        std::cout << "init\n";
         CC_SHA256_Init(&ctx_);
       }
 
@@ -92,10 +89,10 @@ namespace brigid {
         CC_SHA256_Update(&ctx_, data, size);
       }
 
-      virtual std::string digest() {
-        char buffer[CC_SHA256_DIGEST_LENGTH] = {};
-        CC_SHA256_Final(reinterpret_cast<unsigned char*>(buffer), &ctx_);
-        return std::string(buffer, CC_SHA256_DIGEST_LENGTH);
+      virtual std::vector<char> digest() {
+        std::vector<char> buffer(CC_SHA256_DIGEST_LENGTH);
+        CC_SHA256_Final(reinterpret_cast<unsigned char*>(buffer.data()), &ctx_);
+        return buffer;
       }
 
     private:
@@ -113,10 +110,10 @@ namespace brigid {
         CC_SHA512_Update(&ctx_, data, size);
       }
 
-      virtual std::string digest() {
-        char buffer[CC_SHA512_DIGEST_LENGTH] = {};
-        CC_SHA512_Final(reinterpret_cast<unsigned char*>(buffer), &ctx_);
-        return std::string(buffer, CC_SHA512_DIGEST_LENGTH);
+      virtual std::vector<char> digest() {
+        std::vector<char> buffer(CC_SHA512_DIGEST_LENGTH);
+        CC_SHA512_Final(reinterpret_cast<unsigned char*>(buffer.data()), &ctx_);
+        return buffer;
       }
 
     private:
