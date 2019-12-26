@@ -11,7 +11,7 @@
 
 #include <stddef.h>
 #include <memory>
-#include <string>
+#include <vector>
 
 namespace brigid {
   namespace {
@@ -80,8 +80,11 @@ namespace brigid {
         vt_.update(instance_, make_direct_byte_buffer(const_cast<char*>(data), size));
       }
 
-      virtual std::string digest() {
-        return get_byte_array_region(vt_.digest(instance_));
+      virtual std::vector<char> digest() {
+        local_ref_t<jbyteArray> result = vt_.digest(instance_);
+        std::vector<char> buffer(get_array_length(result));
+        get_byte_array_region(result, 0, buffer.size(), buffer.data());
+        return buffer;
       }
 
     private:
