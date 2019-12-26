@@ -12,7 +12,6 @@
 
 #include <stddef.h>
 #include <memory>
-#include <string>
 #include <vector>
 
 namespace brigid {
@@ -99,10 +98,10 @@ namespace brigid {
         check(SHA256_Update(&ctx_, data, size));
       }
 
-      virtual std::string digest() {
-        char buffer[SHA256_DIGEST_LENGTH] = {};
-        check(SHA256_Final(reinterpret_cast<unsigned char*>(buffer), &ctx_));
-        return std::string(buffer, SHA256_DIGEST_LENGTH);
+      virtual std::vector<char> digest() {
+        std::vector<char> buffer(SHA256_DIGEST_LENGTH);
+        check(SHA256_Final(reinterpret_cast<unsigned char*>(buffer.data()), &ctx_));
+        return buffer;
       }
 
     private:
@@ -120,10 +119,10 @@ namespace brigid {
         check(SHA512_Update(&ctx_, data, size));
       }
 
-      virtual std::string digest() {
-        char buffer[SHA512_DIGEST_LENGTH] = {};
-        check(SHA512_Final(reinterpret_cast<unsigned char*>(buffer), &ctx_));
-        return std::string(buffer, SHA512_DIGEST_LENGTH);
+      virtual std::vector<char> digest() {
+        std::vector<char> buffer(SHA512_DIGEST_LENGTH);
+        check(SHA512_Final(reinterpret_cast<unsigned char*>(buffer.data()), &ctx_));
+        return buffer;
       }
 
     private:
