@@ -15,8 +15,8 @@
 #include <stddef.h>
 #include <string.h>
 #include <algorithm>
-#include <string>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace brigid {
@@ -261,7 +261,7 @@ namespace brigid {
             0));
       }
 
-      virtual std::string digest() {
+      virtual std::vector<char> digest() {
         DWORD size = 0;
         DWORD result = 0;
         check(BCryptGetProperty(
@@ -279,7 +279,7 @@ namespace brigid {
             static_cast<ULONG>(buffer.size()),
             0));
 
-        return std::string(buffer.data(), buffer.size());
+        return buffer;
       }
 
     private:

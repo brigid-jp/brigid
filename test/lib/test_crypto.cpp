@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <string>
 #include <vector>
 
 namespace {
@@ -142,6 +143,12 @@ namespace {
     BRIGID_CHECK(decryptor->calculate_buffer_size(32) == 32);
   }
 
+  namespace {
+    std::string to_string(const std::vector<char>& source) {
+      return std::string(source.data(), source.size());
+    }
+  }
+
   void test_sha256_empty() {
     static const char expect_data[] = {
       '\xE3', '\xB0', '\xC4', '\x42', '\x98', '\xFC', '\x1C', '\x14',
@@ -152,7 +159,7 @@ namespace {
     static const std::string expect(expect_data, 32);
 
     auto hasher = brigid::make_hasher(brigid::crypto_hash::sha256);
-    BRIGID_CHECK(hasher->digest() == expect);
+    BRIGID_CHECK(to_string(hasher->digest()) == expect);
   }
 
   void test_sha256_1() {
@@ -166,7 +173,7 @@ namespace {
 
     auto hasher = brigid::make_hasher(brigid::crypto_hash::sha256);
     hasher->update(plaintext.data(), plaintext.size());
-    BRIGID_CHECK(hasher->digest() == expect);
+    BRIGID_CHECK(to_string(hasher->digest()) == expect);
   }
 
   void test_sha256_2() {
@@ -182,7 +189,7 @@ namespace {
     for (size_t i = 0; i < plaintext.size(); ++i) {
       hasher->update(plaintext.data() + i, 1);
     }
-    BRIGID_CHECK(hasher->digest() == expect);
+    BRIGID_CHECK(to_string(hasher->digest()) == expect);
   }
 
   void test_sha512_empty() {
@@ -199,7 +206,7 @@ namespace {
     static const std::string expect(expect_data, 64);
 
     auto hasher = brigid::make_hasher(brigid::crypto_hash::sha512);
-    BRIGID_CHECK(hasher->digest() == expect);
+    BRIGID_CHECK(to_string(hasher->digest()) == expect);
   }
 
   void test_sha512_1() {
@@ -217,7 +224,7 @@ namespace {
 
     auto hasher = brigid::make_hasher(brigid::crypto_hash::sha512);
     hasher->update(plaintext.data(), plaintext.size());
-    BRIGID_CHECK(hasher->digest() == expect);
+    BRIGID_CHECK(to_string(hasher->digest()) == expect);
   }
 
   void test_sha512_2() {
@@ -237,7 +244,7 @@ namespace {
     for (size_t i = 0; i < plaintext.size(); ++i) {
       hasher->update(plaintext.data() + i, 1);
     }
-    BRIGID_CHECK(hasher->digest() == expect);
+    BRIGID_CHECK(to_string(hasher->digest()) == expect);
   }
 
   BRIGID_MAKE_TEST_CASE([](){ test_encryptor1(brigid::crypto_cipher::aes_128_cbc, key128, ciphertext128); });
