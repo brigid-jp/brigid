@@ -32,6 +32,9 @@ all: $(TARGET)
 clean:
 	del $(OBJS) $(TARGET)
 
+check:
+	cd test\lua && test.bat
+
 install:
 	xcopy "$(TARGET)" "$(LIBDIR)"
 
