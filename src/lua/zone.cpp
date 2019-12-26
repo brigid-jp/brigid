@@ -17,8 +17,8 @@ namespace brigid {
     uint8_t zone[zone_size];
 
     void impl_put(lua_State* L) {
-      int position = luaL_checkinteger(L, 1);
-      int value = luaL_checkinteger(L, 2);
+      lua_Integer position = luaL_checkinteger(L, 1);
+      lua_Integer value = luaL_checkinteger(L, 2);
       if (position < 1 || position > zone_size) {
         throw BRIGID_LOGIC_ERROR("invalid position");
       }
@@ -41,10 +41,10 @@ namespace brigid {
 
   void initialize_zone(lua_State* L) {
 #if BRIGID_ZONE1+0
-    zone[0] = BRIGID_ZONE1 >> 24;
-    zone[1] = BRIGID_ZONE1 >> 16;
-    zone[2] = BRIGID_ZONE1 >> 8;
-    zone[3] = BRIGID_ZONE1;
+    zone[0] = (uint8_t) (BRIGID_ZONE1 >> 24);
+    zone[1] = (uint8_t) (BRIGID_ZONE1 >> 16);
+    zone[2] = (uint8_t) (BRIGID_ZONE1 >> 8);
+    zone[3] = (uint8_t) (BRIGID_ZONE1);
 #else
     zone[0] = 0xFE;
     zone[1] = 0xED;
