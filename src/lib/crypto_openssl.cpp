@@ -8,6 +8,7 @@
 
 #include <openssl/err.h>
 #include <openssl/evp.h>
+#include <openssl/sha.h>
 
 #include <stddef.h>
 #include <memory>
@@ -86,6 +87,48 @@ namespace brigid {
       cipher_ctx_t ctx_;
     };
 
+    class sha256_hasher_impl : public hasher, private noncopyable {
+    public:
+      sha256_hasher_impl()
+        : ctx_() {
+        check(SHA256_Init(&ctx_));
+      }
+
+      virtual void update(const char* data, size_t size) {
+        check(SHA256_Update(&ctx_, data, size));
+      }
+
+      virtual std::vector<char> digest() {
+        std::vector<char> buffer(SHA256_DIGEST_LENGTH);
+        check(SHA256_Final(reinterpret_cast<unsigned char*>(buffer.data()), &ctx_));
+        return buffer;
+      }
+
+    private:
+      SHA256_CTX ctx_;
+    };
+
+    class sha512_hasher_impl : public hasher, private noncopyable {
+    public:
+      sha512_hasher_impl()
+        : ctx_() {
+        check(SHA512_Init(&ctx_));
+      }
+
+      virtual void update(const char* data, size_t size) {
+        check(SHA512_Update(&ctx_, data, size));
+      }
+
+      virtual std::vector<char> digest() {
+        std::vector<char> buffer(SHA512_DIGEST_LENGTH);
+        check(SHA512_Final(reinterpret_cast<unsigned char*>(buffer.data()), &ctx_));
+        return buffer;
+      }
+
+    private:
+      SHA512_CTX ctx_;
+    };
+
     int crypto_initializer_count = 0;
   }
 
@@ -141,5 +184,15 @@ namespace brigid {
       throw BRIGID_LOGIC_ERROR("invalid initialization vector size");
     }
     return std::unique_ptr<cryptor>(new aes_decryptor_impl(evp_cipher, key_data, key_size, iv_data));
+  }
+
+  std::unique_ptr<hasher> make_hasher(crypto_hash hash) {
+    switch (hash) {
+      case crypto_hash::sha256:
+        return std::unique_ptr<hasher>(new sha256_hasher_impl());
+      case crypto_hash::sha512:
+        return std::unique_ptr<hasher>(new sha512_hasher_impl());
+    }
+    throw BRIGID_LOGIC_ERROR("unsupported hash");
   }
 }

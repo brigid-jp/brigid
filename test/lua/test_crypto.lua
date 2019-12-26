@@ -77,7 +77,7 @@ local cryptor = assert(brigid.encryptor(cipher, key, iv))
 assert(cryptor:update(plaintext, true))
 assert(cryptor:close())
 assert(cryptor:close()) -- can close
-local result, message = pcall(function () cryptor:update("0") end)
+local result, message = pcall(function () cryptor:update "0" end)
 print(message)
 assert(not result)
 
@@ -114,5 +114,52 @@ assert(cryptor:update(ciphertext, true))
 local close = assert(getmetatable(cryptor).__close)
 close(cryptor)
 local result, message = pcall(function () cryptor:update("0") end)
+print(message)
+assert(not result)
+
+local result = brigid.hasher "sha256":update "":digest()
+assert(result == table.concat {
+  "\227\176\196\066\152\252\028\020";
+  "\154\251\244\200\153\111\185\036";
+  "\039\174\065\228\100\155\147\076";
+  "\164\149\153\027\120\082\184\085";
+})
+
+local result = brigid.hasher "sha256":update "The quick brown fox jumps over the lazy dog":digest()
+assert(result == table.concat {
+  "\215\168\251\179\007\215\128\148";
+  "\105\202\154\188\176\008\046\079";
+  "\141\086\081\228\109\060\219\118";
+  "\045\002\208\191\055\201\229\146";
+})
+
+local result = brigid.hasher "sha512":update "":digest()
+assert(result == table.concat {
+  "\207\131\225\053\126\239\184\189";
+  "\241\084\040\080\214\109\128\007";
+  "\214\032\228\005\011\087\021\220";
+  "\131\244\169\033\211\108\233\206";
+  "\071\208\209\060\093\133\242\176";
+  "\255\131\024\210\135\126\236\047";
+  "\099\185\049\189\071\065\122\129";
+  "\165\056\050\122\249\039\218\062";
+})
+
+local result = brigid.hasher "sha512":update "The quick brown fox jumps over the lazy dog":digest()
+assert(result == table.concat {
+  "\007\229\071\217\088\111\106\115";
+  "\247\063\186\192\067\094\215\105";
+  "\081\033\143\183\208\200\215\136";
+  "\163\009\215\133\067\107\187\100";
+  "\046\147\162\082\169\084\242\057";
+  "\018\084\125\030\138\059\094\214";
+  "\225\191\215\009\120\033\035\063";
+  "\160\083\143\061\184\084\254\230";
+})
+
+local hasher = brigid.hasher "sha256"
+assert(hasher:close())
+assert(hasher:close()) -- can close
+local result, message = pcall(function () hasher:update "0" end)
 print(message)
 assert(not result)

@@ -104,6 +104,7 @@ namespace brigid {
 
   local_ref_t<jbyteArray> make_byte_array(size_t);
   local_ref_t<jbyteArray> make_byte_array(const char*, size_t);
+  local_ref_t<jbyteArray> make_byte_array(const char*);
   local_ref_t<jbyteArray> make_byte_array(const std::string&);
   local_ref_t<jobject> make_direct_byte_buffer(void*, size_t);
 

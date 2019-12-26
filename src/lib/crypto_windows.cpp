@@ -15,8 +15,8 @@
 #include <stddef.h>
 #include <string.h>
 #include <algorithm>
-#include <string>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace brigid {
@@ -46,6 +46,12 @@ namespace brigid {
 
     key_handle_t make_key_handle(BCRYPT_KEY_HANDLE handle = nullptr) {
       return key_handle_t(handle, &BCryptDestroyKey);
+    }
+
+    using hash_handle_t = std::unique_ptr<remove_pointer_t<BCRYPT_HASH_HANDLE>, decltype(&BCryptDestroyHash)>;
+
+    hash_handle_t make_hash_handle(BCRYPT_HASH_HANDLE handle = nullptr) {
+      return hash_handle_t(handle, &BCryptDestroyHash);
     }
 
     class aes_cryptor_impl : public cryptor {
@@ -210,6 +216,77 @@ namespace brigid {
         return result;
       }
     };
+
+    class hasher_impl : public hasher, private noncopyable {
+    public:
+      explicit hasher_impl(LPCWSTR algorithm)
+        : alg_(make_alg_handle()),
+          hash_(make_hash_handle()) {
+        BCRYPT_ALG_HANDLE alg = nullptr;
+        check(BCryptOpenAlgorithmProvider(
+            &alg,
+            algorithm,
+            nullptr,
+            0));
+        alg_ = make_alg_handle(alg);
+
+        DWORD size = 0;
+        DWORD result = 0;
+        check(BCryptGetProperty(
+            alg_.get(),
+            BCRYPT_OBJECT_LENGTH,
+            reinterpret_cast<PUCHAR>(&size),
+            sizeof(size),
+            &result,
+            0));
+        hash_buffer_.resize(size);
+
+        BCRYPT_HASH_HANDLE hash = nullptr;
+        check(BCryptCreateHash(
+            alg_.get(),
+            &hash,
+            hash_buffer_.data(),
+            static_cast<ULONG>(hash_buffer_.size()),
+            nullptr,
+            0,
+            0));
+        hash_ = make_hash_handle(hash);
+      }
+
+      virtual void update(const char* data, size_t size) {
+        check(BCryptHashData(
+            hash_.get(),
+            reinterpret_cast<PUCHAR>(const_cast<char*>(data)),
+            static_cast<ULONG>(size),
+            0));
+      }
+
+      virtual std::vector<char> digest() {
+        DWORD size = 0;
+        DWORD result = 0;
+        check(BCryptGetProperty(
+            alg_.get(),
+            BCRYPT_HASH_LENGTH,
+            reinterpret_cast<PUCHAR>(&size),
+            sizeof(size),
+            &result,
+            0));
+        std::vector<char> buffer(size);
+
+        check(BCryptFinishHash(
+            hash_.get(),
+            reinterpret_cast<PUCHAR>(buffer.data()),
+            static_cast<ULONG>(buffer.size()),
+            0));
+
+        return buffer;
+      }
+
+    private:
+      alg_handle_t alg_;
+      std::vector<UCHAR> hash_buffer_;
+      hash_handle_t hash_;
+    };
   }
 
   crypto_initializer::crypto_initializer() {}
@@ -239,5 +316,15 @@ namespace brigid {
         return std::unique_ptr<cryptor>(new aes_decryptor_impl(key_data, key_size, iv_data, iv_size));
     }
     throw BRIGID_LOGIC_ERROR("unsupported cipher");
+  }
+
+  std::unique_ptr<hasher> make_hasher(crypto_hash hash) {
+    switch (hash) {
+      case crypto_hash::sha256:
+        return std::unique_ptr<hasher>(new hasher_impl(BCRYPT_SHA256_ALGORITHM));
+      case crypto_hash::sha512:
+        return std::unique_ptr<hasher>(new hasher_impl(BCRYPT_SHA512_ALGORITHM));
+    }
+    throw BRIGID_LOGIC_ERROR("unsupported hash");
   }
 }

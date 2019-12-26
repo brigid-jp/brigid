@@ -11,6 +11,7 @@
 
 #include <stddef.h>
 #include <memory>
+#include <vector>
 
 namespace brigid {
   namespace {
@@ -76,6 +77,48 @@ namespace brigid {
       cryptor_ref_t cryptor_;
       size_t buffer_size_;
     };
+
+    class sha256_hasher_impl : public hasher, private noncopyable {
+    public:
+      sha256_hasher_impl()
+        : ctx_() {
+        CC_SHA256_Init(&ctx_);
+      }
+
+      virtual void update(const char* data, size_t size) {
+        CC_SHA256_Update(&ctx_, data, size);
+      }
+
+      virtual std::vector<char> digest() {
+        std::vector<char> buffer(CC_SHA256_DIGEST_LENGTH);
+        CC_SHA256_Final(reinterpret_cast<unsigned char*>(buffer.data()), &ctx_);
+        return buffer;
+      }
+
+    private:
+      CC_SHA256_CTX ctx_;
+    };
+
+    class sha512_hasher_impl : public hasher, private noncopyable {
+    public:
+      sha512_hasher_impl()
+        : ctx_() {
+        CC_SHA512_Init(&ctx_);
+      }
+
+      virtual void update(const char* data, size_t size) {
+        CC_SHA512_Update(&ctx_, data, size);
+      }
+
+      virtual std::vector<char> digest() {
+        std::vector<char> buffer(CC_SHA512_DIGEST_LENGTH);
+        CC_SHA512_Final(reinterpret_cast<unsigned char*>(buffer.data()), &ctx_);
+        return buffer;
+      }
+
+    private:
+      CC_SHA512_CTX ctx_;
+    };
   }
 
   crypto_initializer::crypto_initializer() {}
@@ -105,5 +148,15 @@ namespace brigid {
         return std::unique_ptr<cryptor>(new aes_cryptor_impl(kCCDecrypt, key_data, key_size, iv_data, 0));
     }
     throw BRIGID_LOGIC_ERROR("unsupported cipher");
+  }
+
+  std::unique_ptr<hasher> make_hasher(crypto_hash hash) {
+    switch (hash) {
+      case crypto_hash::sha256:
+        return std::unique_ptr<hasher>(new sha256_hasher_impl());
+      case crypto_hash::sha512:
+        return std::unique_ptr<hasher>(new sha512_hasher_impl());
+    }
+    throw BRIGID_LOGIC_ERROR("unsupported hash");
   }
 }

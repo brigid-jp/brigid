@@ -6,6 +6,7 @@
 
 CLASSES = \
 	jp/brigid/AESCryptor.class \
+	jp/brigid/Hasher.class \
 	jp/brigid/HttpAuthenticator.class \
 	jp/brigid/HttpTask.class
 
