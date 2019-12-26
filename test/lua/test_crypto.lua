@@ -77,7 +77,7 @@ local cryptor = assert(brigid.encryptor(cipher, key, iv))
 assert(cryptor:update(plaintext, true))
 assert(cryptor:close())
 assert(cryptor:close()) -- can close
-local result, message = pcall(function () cryptor:update("0") end)
+local result, message = pcall(function () cryptor:update "0" end)
 print(message)
 assert(not result)
 
@@ -156,3 +156,10 @@ assert(result == table.concat {
   "\225\191\215\009\120\033\035\063";
   "\160\083\143\061\184\084\254\230";
 })
+
+local hasher = brigid.hasher "sha256"
+assert(hasher:close())
+assert(hasher:close()) -- can close
+local result, message = pcall(function () hasher:update "0" end)
+print(message)
+assert(not result)
