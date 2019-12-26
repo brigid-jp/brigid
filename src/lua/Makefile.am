@@ -11,7 +11,7 @@ noinst_HEADERS = \
 	scope_exit.hpp \
 	view.hpp
 
-brigid_la_CPPFLAGS = -I$(top_srcdir)/include
+brigid_la_CPPFLAGS = -I$(top_srcdir)/include -DBRIGID_ZONE1=$(BRIGID_ZONE1)
 brigid_la_LDFLAGS = -module -avoid-version -shared
 brigid_la_LIBADD = $(top_srcdir)/src/lib/libbrigid.la
 brigid_la_SOURCES = \
@@ -24,7 +24,8 @@ brigid_la_SOURCES = \
 	module.cpp \
 	scope_exit.cpp \
 	version.cpp \
-	view.cpp
+	view.cpp \
+	zone.cpp
 
 if CRYPTO_OPENSSL
 brigid_la_LDFLAGS += $(OPENSSL_LDFLAGS)
