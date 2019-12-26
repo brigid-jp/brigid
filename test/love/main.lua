@@ -100,6 +100,16 @@ function love.load()
     cryptor:update(ciphertext, true)
     love.filesystem.write("test2.dat", out)
   end
+
+  if brigid and brigid.hasher then
+    local hasher = brigid.hasher "sha256"
+    hasher:update "The quick brown fox jumps over the lazy dog"
+    local result = hasher:digest()
+    for i = 1, #result do
+      write(("%02X"):format(result:byte(i)))
+    end
+    write "\n"
+  end
 end
 
 function love.draw()

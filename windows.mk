@@ -2,7 +2,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
-CPPFLAGS = /I$(LUA_INCDIR) /I. /Iinclude /D_CRT_SECURE_NO_WARNINGS
+CPPFLAGS = /I$(LUA_INCDIR) /I. /Iinclude /D_CRT_SECURE_NO_WARNINGS /DBRIGID_ZONE1=$(BRIGID_ZONE1)
 CXXFLAGS = $(CFLAGS) /W3 /EHsc
 
 OBJS = \
@@ -24,7 +24,8 @@ OBJS = \
 	src\lua\module.obj \
 	src\lua\scope_exit.obj \
 	src\lua\version.obj \
-	src\lua\view.obj
+	src\lua\view.obj \
+	src\lua\zone.obj
 TARGET = brigid.dll
 
 all: $(TARGET)
