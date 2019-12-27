@@ -16,10 +16,11 @@ OBJS = \
 	src\lib\stdio.obj \
 	src\lib\version.obj \
 	src\lua\common.obj \
-	src\lua\crypto.obj \
+	src\lua\cryptor.obj \
 	src\lua\data.obj \
 	src\lua\data_writer.obj \
 	src\lua\file_writer.obj \
+	src\lua\hasher.obj \
 	src\lua\http.obj \
 	src\lua\module.obj \
 	src\lua\scope_exit.obj \
