@@ -8,5 +8,3 @@ brigid.zone.put(5, 0xA1)
 brigid.zone.put(6, 0xB2)
 brigid.zone.put(7, 0xC3)
 brigid.zone.put(8, 0xD4)
-
-brigid.zone.dump()

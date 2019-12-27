@@ -11,7 +11,9 @@
 #include <lua.hpp>
 
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
+#include <limits>
 #include <new>
 #include <string>
 #include <type_traits>
@@ -52,6 +54,19 @@ namespace brigid {
       memmove(&result, data, size);
     }
     return result;
+  }
+
+  template <class T>
+  inline T check_integer(lua_State* L, int arg, T min, T max, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value)>* = nullptr) {
+    intmax_t v = luaL_checkinteger(L, arg);
+    if (v < 0) {
+      return luaL_argerror(L, arg, "out of bounds");
+    }
+    uintmax_t u = v;
+    if (u < min || u > max) {
+      return luaL_argerror(L, arg, "out of bounds");
+    }
+    return static_cast<T>(u);
   }
 
   template <class T, class... T_args>

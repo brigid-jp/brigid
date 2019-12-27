@@ -13,72 +13,54 @@
 
 #include "brigid_zone.hpp"
 
-#define BRIGID_ZONE_INITIALIZE(v, i) \
+#define BRIGID_ZONE_SET(v, i) \
   do { \
-    zone[i + 0] = static_cast<uint8_t>(0xFF & (v) >> 24); \
-    zone[i + 1] = static_cast<uint8_t>(0xFF & (v) >> 16); \
-    zone[i + 2] = static_cast<uint8_t>(0xFF & (v) >> 8); \
-    zone[i + 3] = static_cast<uint8_t>(0xFF & (v)); \
+    zone[(i - 1) * 4 + 0] = static_cast<uint8_t>(0xFF & (v) >> 24); \
+    zone[(i - 1) * 4 + 1] = static_cast<uint8_t>(0xFF & (v) >> 16); \
+    zone[(i - 1) * 4 + 2] = static_cast<uint8_t>(0xFF & (v) >> 8); \
+    zone[(i - 1) * 4 + 3] = static_cast<uint8_t>(0xFF & (v)); \
   } while (false)
 
 namespace brigid {
   namespace {
-    static const int zone_size = 32;
-    uint8_t zone[zone_size];
+    uint8_t zone[32];
 
     void impl_put(lua_State* L) {
-      lua_Integer position = luaL_checkinteger(L, 1);
-      lua_Integer value = luaL_checkinteger(L, 2);
-      if (position < 1 || position > zone_size) {
-        throw BRIGID_LOGIC_ERROR("invalid position");
-      }
-      if (value < 0 || value > 255) {
-        throw BRIGID_LOGIC_ERROR("invalid value");
-      }
+      size_t position = check_integer<size_t>(L, 1, 1, 32);
+      uint8_t value = check_integer<uint8_t>(L, 2, 0, 255);
       zone[position - 1] = value;
-    }
-
-    void impl_dump(lua_State*) {
-      for (size_t i = 0; i < zone_size; i += 8) {
-        printf("%02X", zone[i]);
-        for (size_t j = i + 1; j < i + 8; ++j) {
-          printf(" %02X", zone[j]);
-        }
-        printf("\n");
-      }
     }
   }
 
   void initialize_zone(lua_State* L) {
 #if BRIGID_ZONE1+0
-    BRIGID_ZONE_INITIALIZE(BRIGID_ZONE1, 0);
+    BRIGID_ZONE_SET(BRIGID_ZONE1, 1);
 #endif
 #if BRIGID_ZONE2+0
-    BRIGID_ZONE_INITIALIZE(BRIGID_ZONE2, 4);
+    BRIGID_ZONE_SET(BRIGID_ZONE2, 2);
 #endif
 #if BRIGID_ZONE3+0
-    BRIGID_ZONE_INITIALIZE(BRIGID_ZONE3, 8);
+    BRIGID_ZONE_SET(BRIGID_ZONE3, 3);
 #endif
 #if BRIGID_ZONE4+0
-    BRIGID_ZONE_INITIALIZE(BRIGID_ZONE4, 12);
+    BRIGID_ZONE_SET(BRIGID_ZONE4, 4);
 #endif
 #if BRIGID_ZONE5+0
-    BRIGID_ZONE_INITIALIZE(BRIGID_ZONE5, 16);
+    BRIGID_ZONE_SET(BRIGID_ZONE5, 5);
 #endif
 #if BRIGID_ZONE6+0
-    BRIGID_ZONE_INITIALIZE(BRIGID_ZONE6, 20);
+    BRIGID_ZONE_SET(BRIGID_ZONE6, 6);
 #endif
 #if BRIGID_ZONE7+0
-    BRIGID_ZONE_INITIALIZE(BRIGID_ZONE7, 24);
+    BRIGID_ZONE_SET(BRIGID_ZONE7, 7);
 #endif
 #if BRIGID_ZONE8+0
-    BRIGID_ZONE_INITIALIZE(BRIGID_ZONE8, 28);
+    BRIGID_ZONE_SET(BRIGID_ZONE8, 8);
 #endif
 
     lua_newtable(L);
     {
       set_field(L, -1, "put", impl_put);
-      set_field(L, -1, "dump", impl_dump);
     }
     set_field(L, -2, "zone");
   }
