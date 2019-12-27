@@ -27,12 +27,27 @@
 
 namespace brigid {
   namespace {
-    uint8_t zone[32];
+    static const size_t zone_size = 32;
+    uint8_t zone[zone_size];
 
     void impl_put(lua_State* L) {
-      size_t position = check_integer<size_t>(L, 1, 1, 32);
+      size_t position = check_integer<size_t>(L, 1, 1, zone_size);
       uint8_t value = check_integer<uint8_t>(L, 2, 0, 255);
       zone[position - 1] = value;
+    }
+
+    void impl_sha256(lua_State* L) {
+      std::unique_ptr<hasher> hasher = make_hasher(crypto_hash::sha256);
+      hasher->update(reinterpret_cast<const char*>(zone), zone_size);
+      std::vector<char> result = hasher->digest();
+      push(L, result.data(), result.size());
+    }
+
+    void impl_sha512(lua_State* L) {
+      std::unique_ptr<hasher> hasher = make_hasher(crypto_hash::sha512);
+      hasher->update(reinterpret_cast<const char*>(zone), zone_size);
+      std::vector<char> result = hasher->digest();
+      push(L, result.data(), result.size());
     }
 
     void impl_decryptor(lua_State* L) {
@@ -46,7 +61,7 @@ namespace brigid {
       }
 
       std::unique_ptr<hasher> key_hasher = make_hasher(hash);
-      key_hasher->update(reinterpret_cast<const char*>(zone), 32);
+      key_hasher->update(reinterpret_cast<const char*>(zone), zone_size);
       key_hasher->update(salt.data(), salt.size());
       std::vector<char> key = key_hasher->digest();
       switch (cipher) {
@@ -63,7 +78,7 @@ namespace brigid {
 
       std::unique_ptr<hasher> iv_hasher = make_hasher(hash);
       iv_hasher->update(key.data(), key.size());
-      iv_hasher->update(reinterpret_cast<const char*>(zone), 32);
+      iv_hasher->update(reinterpret_cast<const char*>(zone), zone_size);
       iv_hasher->update(salt.data(), salt.size());
       std::vector<char> iv = iv_hasher->digest();
       iv.resize(16);
@@ -101,6 +116,8 @@ namespace brigid {
     lua_newtable(L);
     {
       set_field(L, -1, "put", impl_put);
+      set_field(L, -1, "sha256", impl_sha256);
+      set_field(L, -1, "sha512", impl_sha512);
       set_field(L, -1, "decryptor", impl_decryptor);
     }
     set_field(L, -2, "zone");
