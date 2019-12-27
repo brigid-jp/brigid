@@ -6,6 +6,7 @@
 #include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
 #include "common.hpp"
+#include "cryptor.hpp"
 #include "data.hpp"
 #include "scope_exit.hpp"
 #include "view.hpp"
@@ -20,21 +21,6 @@
 
 namespace brigid {
   namespace {
-    crypto_cipher check_cipher(lua_State* L, int arg) {
-      {
-        std::string cipher = check_data(L, arg).str();
-        if (cipher == "aes-128-cbc") {
-          return crypto_cipher::aes_128_cbc;
-        } else if (cipher == "aes-192-cbc") {
-          return crypto_cipher::aes_192_cbc;
-        } else if (cipher == "aes-256-cbc") {
-          return crypto_cipher::aes_256_cbc;
-        }
-      }
-      luaL_argerror(L, arg, "unsupported cipher");
-      throw BRIGID_LOGIC_ERROR("unreachable");
-    }
-
     class cryptor_t : private noncopyable {
     public:
       cryptor_t(std::unique_ptr<cryptor>&& cryptor, reference&& write_cb)
@@ -158,6 +144,21 @@ namespace brigid {
           make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size()),
           std::move(write_cb));
     }
+  }
+
+  crypto_cipher check_cipher(lua_State* L, int arg) {
+    {
+      std::string cipher = check_data(L, arg).str();
+      if (cipher == "aes-128-cbc") {
+        return crypto_cipher::aes_128_cbc;
+      } else if (cipher == "aes-192-cbc") {
+        return crypto_cipher::aes_192_cbc;
+      } else if (cipher == "aes-256-cbc") {
+        return crypto_cipher::aes_256_cbc;
+      }
+    }
+    luaL_argerror(L, arg, "unsupported cipher");
+    throw BRIGID_LOGIC_ERROR("unreachable");
   }
 
   void initialize_cryptor(lua_State* L) {

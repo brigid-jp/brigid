@@ -7,6 +7,7 @@
 #include <brigid/noncopyable.hpp>
 #include "common.hpp"
 #include "data.hpp"
+#include "hasher.hpp"
 
 #include <lua.hpp>
 
@@ -18,19 +19,6 @@
 
 namespace brigid {
   namespace {
-    crypto_hash check_hash(lua_State* L, int arg) {
-      {
-        std::string hash = check_data(L, arg).str();
-        if (hash == "sha256") {
-          return crypto_hash::sha256;
-        } else if (hash == "sha512") {
-          return crypto_hash::sha512;
-        }
-      }
-      luaL_argerror(L, arg, "unsupported hash");
-      throw BRIGID_LOGIC_ERROR("unreachable");
-    }
-
     class hasher_t : private noncopyable {
     public:
       explicit hasher_t(std::unique_ptr<hasher>&& hasher)
@@ -93,6 +81,19 @@ namespace brigid {
       std::vector<char> result = self->digest();
       push(L, result.data(), result.size());
     }
+  }
+
+  crypto_hash check_hash(lua_State* L, int arg) {
+    {
+      std::string hash = check_data(L, arg).str();
+      if (hash == "sha256") {
+        return crypto_hash::sha256;
+      } else if (hash == "sha512") {
+        return crypto_hash::sha512;
+      }
+    }
+    luaL_argerror(L, arg, "unsupported hash");
+    throw BRIGID_LOGIC_ERROR("unreachable");
   }
 
   void initialize_hasher(lua_State* L) {
