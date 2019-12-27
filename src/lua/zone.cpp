@@ -30,6 +30,41 @@ namespace brigid {
     static const size_t zone_size = 32;
     uint8_t zone[zone_size];
 
+    std::vector<char> make_key(crypto_cipher cipher, crypto_hash hash, const data_t& salt) {
+      std::unique_ptr<hasher> hasher = make_hasher(hash);
+      hasher->update(reinterpret_cast<const char*>(zone), zone_size);
+      hasher->update(salt.data(), salt.size());
+      std::vector<char> result = hasher->digest();
+      switch (cipher) {
+        case crypto_cipher::aes_128_cbc:
+          result.resize(16);
+          break;
+        case crypto_cipher::aes_192_cbc:
+          result.resize(24);
+          break;
+        case crypto_cipher::aes_256_cbc:
+          result.resize(32);
+          break;
+      }
+      return result;
+    }
+
+    std::vector<char> make_iv(crypto_cipher cipher, crypto_hash hash, const data_t& salt, const std::vector<char>& key) {
+      std::unique_ptr<hasher> hasher = make_hasher(hash);
+      hasher->update(key.data(), key.size());
+      hasher->update(reinterpret_cast<const char*>(zone), zone_size);
+      hasher->update(salt.data(), salt.size());
+      std::vector<char> result = hasher->digest();
+      switch (cipher) {
+        case crypto_cipher::aes_128_cbc:
+        case crypto_cipher::aes_192_cbc:
+        case crypto_cipher::aes_256_cbc:
+          result.resize(16);
+          break;
+      }
+      return result;
+    }
+
     void impl_put(lua_State* L) {
       size_t position = check_integer<size_t>(L, 1, 1, zone_size);
       uint8_t value = check_integer<uint8_t>(L, 2, 0, 255);
@@ -60,29 +95,8 @@ namespace brigid {
         write_cb = reference(L, 4);
       }
 
-      std::unique_ptr<hasher> key_hasher = make_hasher(hash);
-      key_hasher->update(reinterpret_cast<const char*>(zone), zone_size);
-      key_hasher->update(salt.data(), salt.size());
-      std::vector<char> key = key_hasher->digest();
-      switch (cipher) {
-        case crypto_cipher::aes_128_cbc:
-          key.resize(16);
-          break;
-        case crypto_cipher::aes_192_cbc:
-          key.resize(24);
-          break;
-        case crypto_cipher::aes_256_cbc:
-          key.resize(32);
-          break;
-      }
-
-      std::unique_ptr<hasher> iv_hasher = make_hasher(hash);
-      iv_hasher->update(key.data(), key.size());
-      iv_hasher->update(reinterpret_cast<const char*>(zone), zone_size);
-      iv_hasher->update(salt.data(), salt.size());
-      std::vector<char> iv = iv_hasher->digest();
-      iv.resize(16);
-
+      std::vector<char> key = make_key(cipher, hash, salt);
+      std::vector<char> iv = make_iv(cipher, hash, salt, key);
       new_decryptor(L, make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size()), std::move(write_cb));
     }
   }
