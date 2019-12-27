@@ -35,19 +35,6 @@ namespace brigid {
       throw BRIGID_LOGIC_ERROR("unreachable");
     }
 
-    crypto_hash check_hash(lua_State* L, int arg) {
-      {
-        std::string hash = check_data(L, arg).str();
-        if (hash == "sha256") {
-          return crypto_hash::sha256;
-        } else if (hash == "sha512") {
-          return crypto_hash::sha512;
-        }
-      }
-      luaL_argerror(L, arg, "unsupported hash");
-      throw BRIGID_LOGIC_ERROR("unreachable");
-    }
-
     class cryptor_t : private noncopyable {
     public:
       cryptor_t(std::unique_ptr<cryptor>&& cryptor, reference&& write_cb)
@@ -109,31 +96,6 @@ namespace brigid {
       }
     };
 
-    class hasher_t : private noncopyable {
-    public:
-      explicit hasher_t(std::unique_ptr<hasher>&& hasher)
-        : hasher_(std::move(hasher)) {}
-
-      void update(const char* data, size_t size) {
-        hasher_->update(data, size);
-      }
-
-      std::vector<char> digest() {
-        return hasher_->digest();
-      }
-
-      void close() {
-        hasher_ = nullptr;
-      }
-
-      bool closed() const {
-        return !hasher_;
-      }
-
-    private:
-      std::unique_ptr<hasher> hasher_;
-    };
-
     cryptor_t* check_cryptor(lua_State* L, int arg, int validate = check_validate_all) {
       cryptor_t* self = check_udata<cryptor_t>(L, arg, "brigid.cryptor");
       if (validate & check_validate_not_closed) {
@@ -144,16 +106,6 @@ namespace brigid {
       if (validate & check_validate_not_running) {
         if (self->running()) {
           luaL_error(L, "attempt to use a running brigid.cryptor");
-        }
-      }
-      return self;
-    }
-
-    hasher_t* check_hasher(lua_State* L, int arg, int validate = check_validate_all) {
-      hasher_t* self = check_udata<hasher_t>(L, arg, "brigid.hasher");
-      if (validate & check_validate_not_closed) {
-        if (self->closed()) {
-          luaL_error(L, "attempt to use a closed brigid.hasher");
         }
       }
       return self;
@@ -175,34 +127,6 @@ namespace brigid {
       data_t source = check_data(L, 2);
       bool padding = lua_toboolean(L, 3);
       self->update(source.data(), source.size(), padding);
-    }
-
-    void impl_hasher_gc(lua_State* L) {
-      check_hasher(L, 1, check_validate_none)->~hasher_t();
-    }
-
-    void impl_hasher_close(lua_State* L) {
-      hasher_t* self = check_hasher(L, 1, check_validate_none);
-      if (!self->closed()) {
-        self->close();
-      }
-    }
-
-    void impl_hasher_call(lua_State* L) {
-      crypto_hash hash = check_hash(L, 2);
-      new_userdata<hasher_t>(L, "brigid.hasher", make_hasher(hash));
-    }
-
-    void impl_hasher_update(lua_State* L) {
-      hasher_t* self = check_hasher(L, 1);
-      data_t source = check_data(L, 2);
-      self->update(source.data(), source.size());
-    }
-
-    void impl_hasher_digest(lua_State* L) {
-      hasher_t* self = check_hasher(L, 1);
-      std::vector<char> result = self->digest();
-      push(L, result.data(), result.size());
     }
 
     void impl_encryptor(lua_State* L) {
@@ -236,7 +160,7 @@ namespace brigid {
     }
   }
 
-  void initialize_crypto(lua_State* L) {
+  void initialize_cryptor(lua_State* L) {
     lua_newtable(L);
     {
       luaL_newmetatable(L, "brigid.cryptor");
@@ -250,22 +174,6 @@ namespace brigid {
       set_field(L, -1, "close", impl_cryptor_close);
     }
     set_field(L, -2, "cryptor");
-
-    lua_newtable(L);
-    {
-      luaL_newmetatable(L, "brigid.hasher");
-      lua_pushvalue(L, -2);
-      set_field(L, -2, "__index");
-      set_field(L, -1, "__gc", impl_hasher_gc);
-      set_field(L, -1, "__close", impl_hasher_close);
-      lua_pop(L, 1);
-
-      set_metafield(L, -1, "__call", impl_hasher_call);
-      set_field(L, -1, "update", impl_hasher_update);
-      set_field(L, -1, "digest", impl_hasher_digest);
-      set_field(L, -1, "close", impl_hasher_close);
-    }
-    set_field(L, -2, "hasher");
 
     set_field(L, -1, "encryptor", impl_encryptor);
     set_field(L, -1, "decryptor", impl_decryptor);
