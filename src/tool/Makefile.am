@@ -2,6 +2,6 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
-noinst_PROGRAMS = brigid_zone_generate
+noinst_PROGRAMS = brigid_zone_random_exe
 
-brigid_zone_generate_SOURCES = brigid_zone_generate.cpp
+brigid_zone_random_exe_SOURCES = brigid_zone_random.cpp

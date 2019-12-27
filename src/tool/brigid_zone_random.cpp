@@ -20,7 +20,10 @@ std::string encode(uint32_t value) {
 }
 
 int main(int, char*[]) {
-  std::independent_bits_engine<std::random_device, 32, uint32_t> engine;
+  std::independent_bits_engine<std::random_device, 8, uint8_t> engine;
+
+
+
 
   std::string data[] = {
     encode(engine()),
