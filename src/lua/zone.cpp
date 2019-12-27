@@ -5,6 +5,9 @@
 #include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
 #include "common.hpp"
+#include "cryptor.hpp"
+#include "data.hpp"
+#include "hasher.hpp"
 
 #include <lua.hpp>
 
@@ -30,6 +33,42 @@ namespace brigid {
       size_t position = check_integer<size_t>(L, 1, 1, 32);
       uint8_t value = check_integer<uint8_t>(L, 2, 0, 255);
       zone[position - 1] = value;
+    }
+
+    void impl_decryptor(lua_State* L) {
+      crypto_cipher cipher = check_cipher(L, 1);
+      crypto_hash hash = check_hash(L, 2);
+      data_t salt = check_data(L, 3);
+      reference write_cb;
+
+      if (!lua_isnoneornil(L, 4)) {
+        write_cb = reference(L, 4);
+      }
+
+      std::unique_ptr<hasher> key_hasher = make_hasher(hash);
+      key_hasher->update(reinterpret_cast<const char*>(zone), 32);
+      key_hasher->update(salt.data(), salt.size());
+      std::vector<char> key = key_hasher->digest();
+      switch (cipher) {
+        case crypto_cipher::aes_128_cbc:
+          key.resize(16);
+          break;
+        case crypto_cipher::aes_192_cbc:
+          key.resize(24);
+          break;
+        case crypto_cipher::aes_256_cbc:
+          key.resize(32);
+          break;
+      }
+
+      std::unique_ptr<hasher> iv_hasher = make_hasher(hash);
+      iv_hasher->update(key.data(), key.size());
+      iv_hasher->update(reinterpret_cast<const char*>(zone), 32);
+      iv_hasher->update(salt.data(), salt.size());
+      std::vector<char> iv = iv_hasher->digest();
+      iv.resize(16);
+
+      new_decryptor(L, make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size()), std::move(write_cb));
     }
   }
 
@@ -62,6 +101,7 @@ namespace brigid {
     lua_newtable(L);
     {
       set_field(L, -1, "put", impl_put);
+      set_field(L, -1, "decryptor", impl_decryptor);
     }
     set_field(L, -2, "zone");
   }

@@ -9,8 +9,11 @@
 
 #include <lua.hpp>
 
+#include <memory>
+
 namespace brigid {
   crypto_cipher check_cipher(lua_State*, int);
+  void new_decryptor(lua_State*, std::unique_ptr<cryptor>&&, reference&&);
 }
 
 #endif

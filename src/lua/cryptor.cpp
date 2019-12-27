@@ -140,9 +140,7 @@ namespace brigid {
         write_cb = reference(L, 4);
       }
 
-      new_userdata<cryptor_t>(L, "brigid.cryptor",
-          make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size()),
-          std::move(write_cb));
+      new_decryptor(L, make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size()), std::move(write_cb));
     }
   }
 
@@ -159,6 +157,10 @@ namespace brigid {
     }
     luaL_argerror(L, arg, "unsupported cipher");
     throw BRIGID_LOGIC_ERROR("unreachable");
+  }
+
+  void new_decryptor(lua_State* L, std::unique_ptr<cryptor>&& cryptor, reference&& write_cb) {
+    new_userdata<cryptor_t>(L, "brigid.cryptor", std::move(cryptor), std::move(write_cb));
   }
 
   void initialize_cryptor(lua_State* L) {
