@@ -24,6 +24,17 @@ end
 
 local commands = {}
 
+function commands.help()
+  io.write [[
+lua brigid_zone.lua generate >brigid_zone.bin
+lua brigid_zone.lua export_hpp <brigid_zone.bin >brigid_zone.hpp
+lua brigid_zone.lua export_sh  <brigid_zone.bin >brigid_zone.sh
+lua brigid_zone.lua export_dos <brigid_zone.bin >brigid_zone.bat
+]]
+end
+
+-- dd if=/dev/urandom of=brigiz_zone.bin bs=32 count=1
+-- openssl rand 32 -out brigid_zone.bin
 function commands.generate()
   local handle = assert(io.open("/dev/urandom", "rb"))
   io.write(handle:read(zone_size))
@@ -64,4 +75,9 @@ set BRIGID_ZONE%d=0x%08X
   end
 end
 
-assert(commands[command])(...)
+local f = commands[command]
+if f then
+  f(...)
+else
+  commands.help()
+end
