@@ -12,6 +12,8 @@ EXTRA_DIST = \
 	brigid-*.rockspec \
 	brigid.def \
 	brigid.hpp \
+	brigid_zone.hpp \
+	brigid_zone.lua \
 	docs \
 	include \
 	m4/update.sh \
