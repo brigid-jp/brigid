@@ -112,13 +112,13 @@ check("aes-256-cbc", "sha512", ciphertext_256_512)
 
 -- local chunk = brigid.zone.load(cipher, hash, code, "sha256", check)
 
-local chunk = assert(brigid.zone.load("aes-256-cbc", "sha256", ciphertext_chunk:sub(9, 16), ciphertext_chunk:sub(17)))
+local chunk = assert(brigid.zone.load("aes-256-cbc", "sha256", ciphertext_chunk))
 assert(chunk() == 42)
 
-local chunk = assert(brigid.zone.load("aes-256-cbc", "sha256", ciphertext_chunk:sub(9, 16), ciphertext_chunk:sub(17), sha256_chunk))
+local chunk = assert(brigid.zone.load("aes-256-cbc", "sha256", ciphertext_chunk, sha256_chunk))
 assert(chunk() == 42)
 
-local result, message = brigid.zone.load("aes-256-cbc", "sha256", ciphertext_chunk:sub(9, 16), ciphertext_chunk:sub(17), ("0"):rep(32))
+local result, message = brigid.zone.load("aes-256-cbc", "sha256", ciphertext_chunk, ("0"):rep(32))
 print(message)
 assert(not result)
 -- assert(chunk() == 42)

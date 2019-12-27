@@ -102,16 +102,23 @@ namespace brigid {
     void impl_load(lua_State* L) {
       crypto_cipher cipher = check_cipher(L, 1);
       crypto_hash hash = check_hash(L, 2);
-      data_t salt = check_data(L, 3);
-      data_t source = check_data(L, 4);
-      data_t check_hash = to_data(L, 5);
+      data_t source = check_data(L, 3);
+      data_t check_hash = to_data(L, 4);
 
+      if (source.size() < 16) {
+        luaL_argerror(L, 4, "invalid source");
+      }
+      if (data_t(source.data(), 8).str() != "Salted__") {
+        luaL_argerror(L, 4, "invalid source");
+      }
+
+      data_t salt(source.data() + 8, 8);
       std::vector<char> key = make_key(cipher, hash, salt);
       std::vector<char> iv = make_iv(cipher, hash, salt, key);
 
       std::unique_ptr<cryptor> decryptor = make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size());
       std::vector<char> buffer(decryptor->calculate_buffer_size(source.size()));
-      size_t result = decryptor->update(source.data(), source.size(), buffer.data(), buffer.size(), true);
+      size_t result = decryptor->update(source.data() + 16, source.size() - 16, buffer.data(), buffer.size(), true);
       buffer.resize(result);
 
       std::unique_ptr<hasher> check_hasher;
