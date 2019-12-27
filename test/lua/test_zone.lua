@@ -11,6 +11,9 @@ local password = table.concat {
   "\147\008\056\214\030\104\215\147";
 }
 
+-- io.write(password)
+-- os.exit()
+
 local sha256 = table.concat {
   "\183\068\145\017\168\130\179\105";
   "\080\036\178\241\053\137\078\236";
@@ -73,6 +76,20 @@ local ciphertext_256_512 = table.concat {
   "\060\005\144\201\241\201\157\094";
 }
 
+local ciphertext_chunk = table.concat {
+  "\083\097\108\116\101\100\095\095";
+  "\097\141\000\181\099\092\002\216";
+  "\113\072\165\134\134\209\119\155";
+  "\023\144\149\110\066\225\064\162";
+}
+
+local sha256_chunk = table.concat {
+  "\225\021\201\185\149\247\064\024";
+  "\099\107\255\017\031\101\237\177";
+  "\125\200\134\007\152\122\249\071";
+  "\224\085\176\115\096\151\255\110";
+}
+
 local function check(cipher, hash, ciphertext)
   assert(ciphertext:sub(1, 8) == "Salted__")
   local decryptor = brigid.zone.decryptor(cipher, hash, ciphertext:sub(9, 16), function (out)
@@ -93,5 +110,15 @@ check("aes-192-cbc", "sha256", ciphertext_192_256)
 check("aes-256-cbc", "sha256", ciphertext_256_256)
 check("aes-256-cbc", "sha512", ciphertext_256_512)
 
+-- local chunk = brigid.zone.load(cipher, hash, code, "sha256", check)
 
+local chunk = assert(brigid.zone.load("aes-256-cbc", "sha256", ciphertext_chunk:sub(9, 16), ciphertext_chunk:sub(17)))
+assert(chunk() == 42)
 
+local chunk = assert(brigid.zone.load("aes-256-cbc", "sha256", ciphertext_chunk:sub(9, 16), ciphertext_chunk:sub(17), sha256_chunk))
+assert(chunk() == 42)
+
+local result, message = brigid.zone.load("aes-256-cbc", "sha256", ciphertext_chunk:sub(9, 16), ciphertext_chunk:sub(17), ("0"):rep(32))
+print(message)
+assert(not result)
+-- assert(chunk() == 42)

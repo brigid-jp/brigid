@@ -13,7 +13,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 
 #include "brigid_zone.hpp"
 
@@ -99,6 +98,43 @@ namespace brigid {
       std::vector<char> iv = make_iv(cipher, hash, salt, key);
       new_decryptor(L, make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size()), std::move(write_cb));
     }
+
+    void impl_load(lua_State* L) {
+      crypto_cipher cipher = check_cipher(L, 1);
+      crypto_hash hash = check_hash(L, 2);
+      data_t salt = check_data(L, 3);
+      data_t source = check_data(L, 4);
+      data_t check_hash = to_data(L, 5);
+
+      std::vector<char> key = make_key(cipher, hash, salt);
+      std::vector<char> iv = make_iv(cipher, hash, salt, key);
+
+      std::unique_ptr<cryptor> decryptor = make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size());
+      std::vector<char> buffer(decryptor->calculate_buffer_size(source.size()));
+      size_t result = decryptor->update(source.data(), source.size(), buffer.data(), buffer.size(), true);
+      buffer.resize(result);
+
+      std::unique_ptr<hasher> check_hasher;
+      switch (check_hash.size()) {
+        case 32:
+          check_hasher = make_hasher(crypto_hash::sha256);
+          break;
+        case 64:
+          check_hasher = make_hasher(crypto_hash::sha512);
+          break;
+      }
+      if (check_hasher) {
+        check_hasher->update(buffer.data(), buffer.size());
+        std::vector<char> result = check_hasher->digest();
+        if (!std::equal(result.begin(), result.end(), check_hash.data())) {
+          throw BRIGID_RUNTIME_ERROR("invalid hash");
+        }
+      }
+
+      if (luaL_loadbuffer(L, buffer.data(), buffer.size(), "=(load)") != 0) {
+        throw BRIGID_RUNTIME_ERROR(lua_tostring(L, -1));
+      }
+    }
   }
 
   void initialize_zone(lua_State* L) {
@@ -133,6 +169,7 @@ namespace brigid {
       set_field(L, -1, "sha256", impl_sha256);
       set_field(L, -1, "sha512", impl_sha512);
       set_field(L, -1, "decryptor", impl_decryptor);
+      set_field(L, -1, "load", impl_load);
     }
     set_field(L, -2, "zone");
   }
