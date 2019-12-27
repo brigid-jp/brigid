@@ -16,10 +16,11 @@ brigid_la_LDFLAGS = -module -avoid-version -shared
 brigid_la_LIBADD = $(top_srcdir)/src/lib/libbrigid.la
 brigid_la_SOURCES = \
 	common.cpp \
-	crypto.cpp \
+	cryptor.cpp \
 	data.cpp \
 	data_writer.cpp \
 	file_writer.cpp \
+	hasher.cpp \
 	http.cpp \
 	module.cpp \
 	scope_exit.cpp \

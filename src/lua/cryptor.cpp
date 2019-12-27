@@ -6,9 +6,12 @@
 #include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
 #include "common.hpp"
+#include "cryptor.hpp"
 #include "data.hpp"
 #include "scope_exit.hpp"
 #include "view.hpp"
+
+#include <lua.hpp>
 
 #include <stddef.h>
 #include <memory>
@@ -18,28 +21,6 @@
 
 namespace brigid {
   namespace {
-    crypto_cipher check_cipher(lua_State* L, int arg) {
-      std::string cipher = check_data(L, arg).str();
-      if (cipher == "aes-128-cbc") {
-        return crypto_cipher::aes_128_cbc;
-      } else if (cipher == "aes-192-cbc") {
-        return crypto_cipher::aes_192_cbc;
-      } else if (cipher == "aes-256-cbc") {
-        return crypto_cipher::aes_256_cbc;
-      }
-      throw BRIGID_LOGIC_ERROR("unsupported cipher");
-    }
-
-    crypto_hash check_hash(lua_State* L, int arg) {
-      std::string hash = check_data(L, arg).str();
-      if (hash == "sha256") {
-        return crypto_hash::sha256;
-      } else if (hash == "sha512") {
-        return crypto_hash::sha512;
-      }
-      throw BRIGID_LOGIC_ERROR("unsupported cipher");
-    }
-
     class cryptor_t : private noncopyable {
     public:
       cryptor_t(std::unique_ptr<cryptor>&& cryptor, reference&& write_cb)
@@ -101,31 +82,6 @@ namespace brigid {
       }
     };
 
-    class hasher_t : private noncopyable {
-    public:
-      explicit hasher_t(std::unique_ptr<hasher>&& hasher)
-        : hasher_(std::move(hasher)) {}
-
-      void update(const char* data, size_t size) {
-        hasher_->update(data, size);
-      }
-
-      std::vector<char> digest() {
-        return hasher_->digest();
-      }
-
-      void close() {
-        hasher_ = nullptr;
-      }
-
-      bool closed() const {
-        return !hasher_;
-      }
-
-    private:
-      std::unique_ptr<hasher> hasher_;
-    };
-
     cryptor_t* check_cryptor(lua_State* L, int arg, int validate = check_validate_all) {
       cryptor_t* self = check_udata<cryptor_t>(L, arg, "brigid.cryptor");
       if (validate & check_validate_not_closed) {
@@ -141,60 +97,22 @@ namespace brigid {
       return self;
     }
 
-    hasher_t* check_hasher(lua_State* L, int arg, int validate = check_validate_all) {
-      hasher_t* self = check_udata<hasher_t>(L, arg, "brigid.hasher");
-      if (validate & check_validate_not_closed) {
-        if (self->closed()) {
-          luaL_error(L, "attempt to use a closed brigid.hasher");
-        }
-      }
-      return self;
-    }
-
-    void impl_cryptor_gc(lua_State* L) {
+    void impl_gc(lua_State* L) {
       check_cryptor(L, 1, check_validate_none)->~cryptor_t();
     }
 
-    void impl_cryptor_close(lua_State* L) {
+    void impl_close(lua_State* L) {
       cryptor_t* self = check_cryptor(L, 1, check_validate_not_running);
       if (!self->closed()) {
         self->close();
       }
     }
 
-    void impl_cryptor_update(lua_State* L) {
+    void impl_update(lua_State* L) {
       cryptor_t* self = check_cryptor(L, 1);
       data_t source = check_data(L, 2);
       bool padding = lua_toboolean(L, 3);
       self->update(source.data(), source.size(), padding);
-    }
-
-    void impl_hasher_gc(lua_State* L) {
-      check_hasher(L, 1, check_validate_none)->~hasher_t();
-    }
-
-    void impl_hasher_close(lua_State* L) {
-      hasher_t* self = check_hasher(L, 1, check_validate_none);
-      if (!self->closed()) {
-        self->close();
-      }
-    }
-
-    void impl_hasher_call(lua_State* L) {
-      crypto_hash hash = check_hash(L, 2);
-      new_userdata<hasher_t>(L, "brigid.hasher", make_hasher(hash));
-    }
-
-    void impl_hasher_update(lua_State* L) {
-      hasher_t* self = check_hasher(L, 1);
-      data_t source = check_data(L, 2);
-      self->update(source.data(), source.size());
-    }
-
-    void impl_hasher_digest(lua_State* L) {
-      hasher_t* self = check_hasher(L, 1);
-      std::vector<char> result = self->digest();
-      push(L, result.data(), result.size());
     }
 
     void impl_encryptor(lua_State* L) {
@@ -222,42 +140,43 @@ namespace brigid {
         write_cb = reference(L, 4);
       }
 
-      new_userdata<cryptor_t>(L, "brigid.cryptor",
-          make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size()),
-          std::move(write_cb));
+      new_decryptor(L, make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size()), std::move(write_cb));
     }
   }
 
-  void initialize_crypto(lua_State* L) {
+  crypto_cipher check_cipher(lua_State* L, int arg) {
+    {
+      std::string cipher = check_data(L, arg).str();
+      if (cipher == "aes-128-cbc") {
+        return crypto_cipher::aes_128_cbc;
+      } else if (cipher == "aes-192-cbc") {
+        return crypto_cipher::aes_192_cbc;
+      } else if (cipher == "aes-256-cbc") {
+        return crypto_cipher::aes_256_cbc;
+      }
+    }
+    luaL_argerror(L, arg, "unsupported cipher");
+    throw BRIGID_LOGIC_ERROR("unreachable");
+  }
+
+  void new_decryptor(lua_State* L, std::unique_ptr<cryptor>&& cryptor, reference&& write_cb) {
+    new_userdata<cryptor_t>(L, "brigid.cryptor", std::move(cryptor), std::move(write_cb));
+  }
+
+  void initialize_cryptor(lua_State* L) {
     lua_newtable(L);
     {
       luaL_newmetatable(L, "brigid.cryptor");
       lua_pushvalue(L, -2);
       set_field(L, -2, "__index");
-      set_field(L, -1, "__gc", impl_cryptor_gc);
-      set_field(L, -1, "__close", impl_cryptor_close);
+      set_field(L, -1, "__gc", impl_gc);
+      set_field(L, -1, "__close", impl_close);
       lua_pop(L, 1);
 
-      set_field(L, -1, "update", impl_cryptor_update);
-      set_field(L, -1, "close", impl_cryptor_close);
+      set_field(L, -1, "update", impl_update);
+      set_field(L, -1, "close", impl_close);
     }
     set_field(L, -2, "cryptor");
-
-    lua_newtable(L);
-    {
-      luaL_newmetatable(L, "brigid.hasher");
-      lua_pushvalue(L, -2);
-      set_field(L, -2, "__index");
-      set_field(L, -1, "__gc", impl_hasher_gc);
-      set_field(L, -1, "__close", impl_hasher_close);
-      lua_pop(L, 1);
-
-      set_metafield(L, -1, "__call", impl_hasher_call);
-      set_field(L, -1, "update", impl_hasher_update);
-      set_field(L, -1, "digest", impl_hasher_digest);
-      set_field(L, -1, "close", impl_hasher_close);
-    }
-    set_field(L, -2, "hasher");
 
     set_field(L, -1, "encryptor", impl_encryptor);
     set_field(L, -1, "decryptor", impl_decryptor);
