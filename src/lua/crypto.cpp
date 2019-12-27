@@ -10,6 +10,8 @@
 #include "scope_exit.hpp"
 #include "view.hpp"
 
+#include <lua.hpp>
+
 #include <stddef.h>
 #include <memory>
 #include <utility>
@@ -19,25 +21,31 @@
 namespace brigid {
   namespace {
     crypto_cipher check_cipher(lua_State* L, int arg) {
-      std::string cipher = check_data(L, arg).str();
-      if (cipher == "aes-128-cbc") {
-        return crypto_cipher::aes_128_cbc;
-      } else if (cipher == "aes-192-cbc") {
-        return crypto_cipher::aes_192_cbc;
-      } else if (cipher == "aes-256-cbc") {
-        return crypto_cipher::aes_256_cbc;
+      {
+        std::string cipher = check_data(L, arg).str();
+        if (cipher == "aes-128-cbc") {
+          return crypto_cipher::aes_128_cbc;
+        } else if (cipher == "aes-192-cbc") {
+          return crypto_cipher::aes_192_cbc;
+        } else if (cipher == "aes-256-cbc") {
+          return crypto_cipher::aes_256_cbc;
+        }
       }
-      throw BRIGID_LOGIC_ERROR("unsupported cipher");
+      luaL_argerror(L, arg, "unsupported cipher");
+      throw BRIGID_LOGIC_ERROR("unreachable");
     }
 
     crypto_hash check_hash(lua_State* L, int arg) {
-      std::string hash = check_data(L, arg).str();
-      if (hash == "sha256") {
-        return crypto_hash::sha256;
-      } else if (hash == "sha512") {
-        return crypto_hash::sha512;
+      {
+        std::string hash = check_data(L, arg).str();
+        if (hash == "sha256") {
+          return crypto_hash::sha256;
+        } else if (hash == "sha512") {
+          return crypto_hash::sha512;
+        }
       }
-      throw BRIGID_LOGIC_ERROR("unsupported cipher");
+      luaL_argerror(L, arg, "unsupported hash");
+      throw BRIGID_LOGIC_ERROR("unreachable");
     }
 
     class cryptor_t : private noncopyable {
