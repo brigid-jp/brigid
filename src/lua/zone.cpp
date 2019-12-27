@@ -11,6 +11,16 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "brigid_zone.hpp"
+
+#define BRIGID_ZONE_INITIALIZE(v, i) \
+  do { \
+    zone[i + 0] = static_cast<uint8_t>(0xFF & (v) >> 24); \
+    zone[i + 1] = static_cast<uint8_t>(0xFF & (v) >> 16); \
+    zone[i + 2] = static_cast<uint8_t>(0xFF & (v) >> 8); \
+    zone[i + 3] = static_cast<uint8_t>(0xFF & (v)); \
+  } while (false)
+
 namespace brigid {
   namespace {
     static const int zone_size = 32;
@@ -28,7 +38,7 @@ namespace brigid {
       zone[position - 1] = value;
     }
 
-    void impl_dump(lua_State* L) {
+    void impl_dump(lua_State*) {
       for (size_t i = 0; i < zone_size; i += 8) {
         printf("%02X", zone[i]);
         for (size_t j = i + 1; j < i + 8; ++j) {
@@ -41,15 +51,7 @@ namespace brigid {
 
   void initialize_zone(lua_State* L) {
 #if BRIGID_ZONE1+0
-    zone[0] = (uint8_t) (BRIGID_ZONE1 >> 24);
-    zone[1] = (uint8_t) (BRIGID_ZONE1 >> 16);
-    zone[2] = (uint8_t) (BRIGID_ZONE1 >> 8);
-    zone[3] = (uint8_t) (BRIGID_ZONE1);
-#else
-    zone[0] = 0xFE;
-    zone[1] = 0xED;
-    zone[2] = 0xFA;
-    zone[3] = 0xCE;
+    BRIGID_ZONE_INITIALIZE(BRIGID_ZONE1, 0);
 #endif
 
     lua_newtable(L);
