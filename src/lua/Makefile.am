@@ -13,8 +13,7 @@ noinst_HEADERS = \
 	scope_exit.hpp \
 	view.hpp
 
-brigid_la_CPPFLAGS = \
-	-I$(top_srcdir)/include \
+brigid_la_CPPFLAGS = -I$(top_srcdir)/include \
 	-DBRIGID_ZONE1=$(BRIGID_ZONE1) \
 	-DBRIGID_ZONE2=$(BRIGID_ZONE2) \
 	-DBRIGID_ZONE3=$(BRIGID_ZONE3) \
