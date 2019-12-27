@@ -7,8 +7,6 @@
 #include <brigid/noncopyable.hpp>
 #include "common.hpp"
 #include "data.hpp"
-#include "scope_exit.hpp"
-#include "view.hpp"
 
 #include <lua.hpp>
 

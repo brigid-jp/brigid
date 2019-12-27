@@ -111,18 +111,18 @@ namespace brigid {
       return self;
     }
 
-    void impl_cryptor_gc(lua_State* L) {
+    void impl_gc(lua_State* L) {
       check_cryptor(L, 1, check_validate_none)->~cryptor_t();
     }
 
-    void impl_cryptor_close(lua_State* L) {
+    void impl_close(lua_State* L) {
       cryptor_t* self = check_cryptor(L, 1, check_validate_not_running);
       if (!self->closed()) {
         self->close();
       }
     }
 
-    void impl_cryptor_update(lua_State* L) {
+    void impl_update(lua_State* L) {
       cryptor_t* self = check_cryptor(L, 1);
       data_t source = check_data(L, 2);
       bool padding = lua_toboolean(L, 3);
@@ -166,12 +166,12 @@ namespace brigid {
       luaL_newmetatable(L, "brigid.cryptor");
       lua_pushvalue(L, -2);
       set_field(L, -2, "__index");
-      set_field(L, -1, "__gc", impl_cryptor_gc);
-      set_field(L, -1, "__close", impl_cryptor_close);
+      set_field(L, -1, "__gc", impl_gc);
+      set_field(L, -1, "__close", impl_close);
       lua_pop(L, 1);
 
-      set_field(L, -1, "update", impl_cryptor_update);
-      set_field(L, -1, "close", impl_cryptor_close);
+      set_field(L, -1, "update", impl_update);
+      set_field(L, -1, "close", impl_close);
     }
     set_field(L, -2, "cryptor");
 
