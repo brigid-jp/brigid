@@ -3,7 +3,6 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/error.hpp>
-#include <brigid/noncopyable.hpp>
 #include "common.hpp"
 #include "cryptor.hpp"
 #include "data.hpp"
