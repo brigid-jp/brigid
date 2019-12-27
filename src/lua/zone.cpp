@@ -31,9 +31,6 @@ namespace brigid {
       uint8_t value = check_integer<uint8_t>(L, 2, 0, 255);
       zone[position - 1] = value;
     }
-
-    class decryptor_t : private noncopyable {
-    };
   }
 
   void initialize_zone(lua_State* L) {
