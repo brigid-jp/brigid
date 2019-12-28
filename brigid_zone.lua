@@ -40,6 +40,29 @@ function commands.generate()
   io.write(handle:read(zone_size))
 end
 
+function commands.import_env()
+  local zone = {
+    tonumber(os.getenv "BRIGID_ZONE1") or 0;
+    tonumber(os.getenv "BRIGID_ZONE2") or 0;
+    tonumber(os.getenv "BRIGID_ZONE3") or 0;
+    tonumber(os.getenv "BRIGID_ZONE4") or 0;
+    tonumber(os.getenv "BRIGID_ZONE5") or 0;
+    tonumber(os.getenv "BRIGID_ZONE6") or 0;
+    tonumber(os.getenv "BRIGID_ZONE7") or 0;
+    tonumber(os.getenv "BRIGID_ZONE8") or 0;
+  }
+  for i = 1, #zone do
+    local a = zone[i]
+    local d = a % 0x100
+    a = (a - d) / 0x100
+    local c = a % 0x100
+    a = (a - c) / 0x100
+    local b = a % 0x100
+    a = (a - b) / 0x100
+    io.write(string.char(a, b, c, d))
+  end
+end
+
 function commands.export_hpp()
   local zone = read()
   for i = 1, #zone do
