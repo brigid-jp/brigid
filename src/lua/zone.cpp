@@ -102,25 +102,17 @@ namespace brigid {
       crypto_cipher cipher = check_cipher(L, 1);
       crypto_hash hash = check_hash(L, 2);
       data_t source = check_data(L, 3);
-      data_t checksum = to_data(L, 4);
 
       if (source.size() < 16 || data_t(source.data(), 8).str() != "Salted__") {
         luaL_argerror(L, 3, "invalid source");
       }
 
       std::unique_ptr<hasher> checksum_hasher;
-      switch (checksum.size()) {
-        case 0:
-          break;
-        case 32:
-          checksum_hasher = make_hasher(crypto_hash::sha256);
-          break;
-        case 64:
-          checksum_hasher = make_hasher(crypto_hash::sha512);
-          break;
-        default:
-          luaL_argerror(L, 4, "invalid checksum");
-          break;
+      data_t checksum;
+      if (!lua_isnoneornil(L, 4)) {
+        crypto_hash checksum_hash = check_hash(L, 4);
+        checksum = check_data(L, 5);
+        checksum_hasher = make_hasher(checksum_hash);
       }
 
       data_t salt(source.data() + 8, 8);
