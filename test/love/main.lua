@@ -110,6 +110,13 @@ function love.load()
     end
     write "\n"
   end
+
+  if brigid and brigid.zone then
+    local result = brigid.zone.sha256()
+    for i = 1, #result do
+      write(("%02X"):format(result:byte(i)))
+    end
+  end
 end
 
 function love.draw()
