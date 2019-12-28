@@ -210,9 +210,12 @@ namespace brigid {
       static const char code[] =
       #include "common.lua"
       ;
-      if (luaL_loadstring(L, code) == 0) {
-        lua_pushvalue(L, -2);
-        lua_pcall(L, 1, 0, 0);
+      if (luaL_loadbuffer(L, code, strlen(code), "=(load)") != 0) {
+        throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
+      }
+      lua_pushvalue(L, -2);
+      if (lua_pcall(L, 1, 0, 0) != 0) {
+        throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
       }
     }
     {

@@ -6,21 +6,25 @@
 
 namespace brigid {
   void initialize_common(lua_State*);
-  void initialize_crypto(lua_State*);
+  void initialize_cryptor(lua_State*);
   void initialize_data_writer(lua_State*);
   void initialize_file_writer(lua_State*);
+  void initialize_hasher(lua_State*);
   void initialize_http(lua_State*);
   void initialize_version(lua_State*);
   void initialize_view(lua_State*);
+  void initialize_zone(lua_State*);
 
   void initialize(lua_State* L) {
     initialize_common(L);
-    initialize_crypto(L);
+    initialize_cryptor(L);
     initialize_data_writer(L);
     initialize_file_writer(L);
+    initialize_hasher(L);
     initialize_http(L);
     initialize_version(L);
     initialize_view(L);
+    initialize_zone(L);
   }
 }
 
