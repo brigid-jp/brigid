@@ -12,6 +12,9 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <memory>
+#include <utility>
+#include <vector>
 
 #include "brigid_zone.hpp"
 
@@ -103,7 +106,7 @@ namespace brigid {
       crypto_hash hash = check_hash(L, 2);
       data_t source = check_data(L, 3);
 
-      if (source.size() < 16 || data_t(source.data(), 8).str() != "Salted__") {
+      if (source.size() < 16 || !std::equal(source.data(), source.data() + 8, "Salted__")) {
         luaL_argerror(L, 3, "invalid source");
       }
 
