@@ -111,7 +111,7 @@ namespace brigid {
     void impl_update(lua_State* L) {
       cryptor_t* self = check_cryptor(L, 1);
       data_t source = check_data(L, 2);
-      bool padding = lua_toboolean(L, 3);
+      bool padding = lua_toboolean(L, 3) ? true : false;
       self->update(source.data(), source.size(), padding);
     }
 
