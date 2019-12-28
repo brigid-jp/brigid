@@ -98,9 +98,9 @@ local function check(cipher, hash, ciphertext)
   decryptor:update(ciphertext:sub(17), true)
 end
 
-local sha256 = brigid.zone.sha256()
-for i = 1, #sha256 do
-  io.write(("%02X"):format(sha256:byte(i)))
+local result = brigid.zone.sha256()
+for i = 1, #result do
+  io.write(("%02X"):format(result:byte(i)))
 end
 io.write "\n"
 
