@@ -61,3 +61,21 @@ diff -qr love love-11.3-ios-source
 ```
 open love/platform/xcode/love.xcodeproj
 ```
+
+## sync
+
+```
+git checkout 11.3-develop
+git stash
+git checkout master
+git-clean -f
+rm -fr src/libraries/brigid
+git merge upstream/master
+```
+
+minorの初回チェックアウトとマージ。
+
+```
+git checkout -b minor origin/minor
+git merge upstream/minor
+```
