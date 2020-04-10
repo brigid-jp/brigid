@@ -1,4 +1,4 @@
-# Copyright (c) 2019 <dev@brigid.jp>
+# Copyright (c) 2019,2020 <dev@brigid.jp>
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
@@ -12,8 +12,6 @@ EXTRA_DIST = \
 	brigid-*.rockspec \
 	brigid.def \
 	brigid.hpp \
-	brigid_zone.hpp \
-	brigid_zone.lua \
 	docs \
 	include \
 	m4/update.sh \

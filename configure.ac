@@ -1,4 +1,4 @@
-# Copyright (c) 2019 <dev@brigid.jp>
+# Copyright (c) 2019,2020 <dev@brigid.jp>
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
@@ -52,14 +52,5 @@ AX_LIB_CURL([7.17.0], [
   http_curl=yes
 ])
 AM_CONDITIONAL([HTTP_CURL], [test "X$http_curl" = Xyes])
-
-AC_SUBST([BRIGID_ZONE1])
-AC_SUBST([BRIGID_ZONE2])
-AC_SUBST([BRIGID_ZONE3])
-AC_SUBST([BRIGID_ZONE4])
-AC_SUBST([BRIGID_ZONE5])
-AC_SUBST([BRIGID_ZONE6])
-AC_SUBST([BRIGID_ZONE7])
-AC_SUBST([BRIGID_ZONE8])
 
 AC_OUTPUT

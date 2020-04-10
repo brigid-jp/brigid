@@ -1,4 +1,4 @@
-// Copyright (c) 2019 <dev@brigid.jp>
+// Copyright (c) 2019,2020 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -13,7 +13,6 @@ namespace brigid {
   void initialize_http(lua_State*);
   void initialize_version(lua_State*);
   void initialize_view(lua_State*);
-  void initialize_zone(lua_State*);
 
   void initialize(lua_State* L) {
     initialize_common(L);
@@ -24,7 +23,6 @@ namespace brigid {
     initialize_http(L);
     initialize_version(L);
     initialize_view(L);
-    initialize_zone(L);
   }
 }
 

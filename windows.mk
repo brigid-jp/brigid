@@ -1,16 +1,8 @@
-# Copyright (c) 2019 <dev@brigid.jp>
+# Copyright (c) 2019,2020 <dev@brigid.jp>
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
-CPPFLAGS = /I$(LUA_INCDIR) /I. /Iinclude /D_CRT_SECURE_NO_WARNINGS \
-	/DBRIGID_ZONE1=$(BRIGID_ZONE1) \
-	/DBRIGID_ZONE2=$(BRIGID_ZONE2) \
-	/DBRIGID_ZONE3=$(BRIGID_ZONE3) \
-	/DBRIGID_ZONE4=$(BRIGID_ZONE4) \
-	/DBRIGID_ZONE5=$(BRIGID_ZONE5) \
-	/DBRIGID_ZONE6=$(BRIGID_ZONE6) \
-	/DBRIGID_ZONE7=$(BRIGID_ZONE7) \
-	/DBRIGID_ZONE8=$(BRIGID_ZONE8)
+CPPFLAGS = /I$(LUA_INCDIR) /I. /Iinclude /D_CRT_SECURE_NO_WARNINGS
 CXXFLAGS = $(CFLAGS) /W3 /EHsc
 
 OBJS = \
@@ -33,8 +25,7 @@ OBJS = \
 	src\lua\module.obj \
 	src\lua\scope_exit.obj \
 	src\lua\version.obj \
-	src\lua\view.obj \
-	src\lua\zone.obj
+	src\lua\view.obj
 TARGET = brigid.dll
 
 all: $(TARGET)

@@ -1,4 +1,4 @@
--- Copyright (c) 2019 <dev@brigid.jp>
+-- Copyright (c) 2019,2020 <dev@brigid.jp>
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
@@ -109,13 +109,6 @@ function love.load()
       write(("%02X"):format(result:byte(i)))
     end
     write "\n"
-  end
-
-  if brigid and brigid.zone then
-    local result = brigid.zone.sha256()
-    for i = 1, #result do
-      write(("%02X"):format(result:byte(i)))
-    end
   end
 end
 
