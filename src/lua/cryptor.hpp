@@ -1,4 +1,4 @@
-// Copyright (c) 2019 <dev@brigid.jp>
+// Copyright (c) 2019,2020 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -9,11 +9,8 @@
 
 #include <lua.hpp>
 
-#include <memory>
-
 namespace brigid {
   crypto_cipher check_cipher(lua_State*, int);
-  void new_decryptor(lua_State*, std::unique_ptr<cryptor>&&, reference&&);
 }
 
 #endif
