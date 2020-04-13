@@ -10,7 +10,7 @@
 #include <lua.hpp>
 
 namespace brigid {
-  crypto_cipher check_cipher(lua_State*, int);
+  // crypto_cipher check_cipher(lua_State*, int);
 }
 
 #endif

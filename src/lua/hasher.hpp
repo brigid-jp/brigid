@@ -10,7 +10,7 @@
 #include <lua.hpp>
 
 namespace brigid {
-  crypto_hash check_hash(lua_State*, int);
+  // crypto_hash check_hash(lua_State*, int);
 }
 
 #endif
