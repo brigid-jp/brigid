@@ -1,4 +1,4 @@
-// Copyright (c) 2019 <dev@brigid.jp>
+// Copyright (c) 2019,2020 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <exception>
+#include <functional>
 #include <stdexcept>
 #include <string>
 
@@ -197,6 +198,15 @@ namespace brigid {
     state_ = nullptr;
     state_ref_ = LUA_NOREF;
     ref_ = LUA_NOREF;
+  }
+
+  scope_exit::scope_exit(std::function<void ()> function)
+    : function_(function) {}
+
+  scope_exit::~scope_exit() {
+    try {
+      function_();
+    } catch (...) {}
   }
 
   void initialize_common(lua_State* L) {
