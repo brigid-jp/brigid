@@ -23,7 +23,6 @@ OBJS = \
 	src\lua\hasher.obj \
 	src\lua\http.obj \
 	src\lua\module.obj \
-	src\lua\scope_exit.obj \
 	src\lua\version.obj \
 	src\lua\view.obj
 TARGET = brigid.dll

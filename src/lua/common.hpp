@@ -1,4 +1,4 @@
-// Copyright (c) 2019 <dev@brigid.jp>
+// Copyright (c) 2019,2020 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -13,6 +13,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <functional>
 #include <limits>
 #include <new>
 #include <string>
@@ -148,6 +149,14 @@ namespace brigid {
     int ref_;
     void unref();
     void reset();
+  };
+
+  class scope_exit : private noncopyable {
+  public:
+    explicit scope_exit(std::function<void ()>);
+    ~scope_exit();
+  private:
+    std::function<void ()> function_;
   };
 }
 
