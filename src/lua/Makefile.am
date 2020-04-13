@@ -7,9 +7,7 @@ luaexec_LTLIBRARIES = brigid.la
 noinst_HEADERS = \
 	common.hpp \
 	common.lua \
-	cryptor.hpp \
 	data.hpp \
-	hasher.hpp \
 	scope_exit.hpp \
 	view.hpp
 
