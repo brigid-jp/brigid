@@ -259,7 +259,7 @@ namespace {
     BRIGID_CHECK(client.body() == "ok\n");
     BRIGID_CHECK(client.header("Location") == "");
 
-    BRIGID_CHECK_THROW([&](){ client.request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=21"); });
+    BRIGID_CHECK_THROW([&](){ client.request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=22"); });
   }
 
   void test5() {
