@@ -296,6 +296,7 @@ namespace brigid {
           size_t size) {
         NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:decode_utf8(url)]];
         request.HTTPMethod = decode_utf8(method);
+        request.cachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
         for (const auto& header : headers) {
           [request setValue:decode_utf8(header.second) forHTTPHeaderField:decode_utf8(header.first)];
         }
