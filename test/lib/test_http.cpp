@@ -114,6 +114,8 @@ namespace {
     bool canceled_;
 
     bool progress_cb(size_t now, size_t total) {
+      std::cout << "[debug] progress " << now << "/" << total << "\n";
+
       if (cancel_ == 1) {
         if (now * 2 >= total) {
           ++cancel_count_;
@@ -259,7 +261,7 @@ namespace {
     BRIGID_CHECK(client.body() == "ok\n");
     BRIGID_CHECK(client.header("Location") == "");
 
-    BRIGID_CHECK_THROW([&](){ client.request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=21"); });
+    BRIGID_CHECK_THROW([&](){ client.request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=22"); });
   }
 
   void test5() {
@@ -428,14 +430,16 @@ namespace {
     }
     {
       std::ofstream out(filename.c_str(), std::ios::out | std::ios::binary);
-      for (size_t i = 0; i < 1024 * 1024; i += data.size()) {
+      for (size_t i = 0; i < 8 * 1024 * 1024; i += data.size()) {
         out << data;
       }
     }
 
     test_client client(false, "", "", 1);;
     client.request("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", empty_header, brigid::http_request_body::file, filename.data(), filename.size());
+    std::cout << "[debug] progress_count " << client.progress_count() << "\n";
     BRIGID_CHECK(client.progress_count() > 0);
+    std::cout << "[debug] cancel_count " << client.cancel_count() << "\n";
     BRIGID_CHECK(client.cancel_count() == 1);
     BRIGID_CHECK(client.code() == 0);
     BRIGID_CHECK(client.canceled());
