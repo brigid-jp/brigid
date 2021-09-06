@@ -45,37 +45,4 @@ cp bin/lua5.1.dll bin/lua5.1.exe bin/lua51.dll "mod/luarocks-${mod_version}-wind
 cp lib/include/*.h* "$out/include"
 cp lib/lua51.lib "$out/lib/lua5.1.lib"
 
-# bin
-# bin/lua51.dll.manifest
-# bin/bin2c5.1.exe
-# bin/lua5.1.dll
-# bin/lua5.1.exe.manifest
-# bin/sample.wlua
-# bin/lua5.1.exe
-# bin/lua51.dll
-# bin/lua5.1.dll.manifest
-# bin/wlua5.1.exe
-# bin/wlua5.1.exe.manifest
-# bin/Microsoft.VC80.CRT
-# bin/Microsoft.VC80.CRT/Microsoft.VC80.CRT.manifest
-# bin/Microsoft.VC80.CRT/msvcm80.dll
-# bin/Microsoft.VC80.CRT/msvcr80.dll
-# bin/Microsoft.VC80.CRT/msvcp80.dll
-# bin/luac5.1.exe
-# lib
-# lib/lua5.1.lib
-# lib/lua5.1.dll
-# lib/include
-# lib/include/luaconf.h
-# lib/include/lua.hpp
-# lib/include/lualib.h
-# lib/include/lauxlib.h
-# lib/include/lua.h
-# lib/lua51.lib
-# lib/lua51.dll
-# mod
-# mod/luarocks-3.7.0-windows-32
-# mod/luarocks-3.7.0-windows-32/luarocks-admin.exe
-# mod/luarocks-3.7.0-windows-32/luarocks.exe
-
 zip -r9 "$here/$out.zip" "$out"
