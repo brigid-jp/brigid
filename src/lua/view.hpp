@@ -1,4 +1,4 @@
-// Copyright (c) 2019 <dev@brigid.jp>
+// Copyright (c) 2019,2020 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -12,7 +12,7 @@
 #include <stddef.h>
 
 namespace brigid {
-  class view_t {
+  class view_t : private noncopyable {
   public:
     view_t(const char*, size_t);
     void close();

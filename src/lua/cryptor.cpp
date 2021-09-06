@@ -1,4 +1,4 @@
-// Copyright (c) 2019 <dev@brigid.jp>
+// Copyright (c) 2019,2020 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -6,9 +6,7 @@
 #include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
 #include "common.hpp"
-#include "cryptor.hpp"
 #include "data.hpp"
-#include "scope_exit.hpp"
 #include "view.hpp"
 
 #include <lua.hpp>
@@ -21,6 +19,21 @@
 
 namespace brigid {
   namespace {
+    crypto_cipher check_cipher(lua_State* L, int arg) {
+      {
+        std::string cipher = check_data(L, arg).str();
+        if (cipher == "aes-128-cbc") {
+          return crypto_cipher::aes_128_cbc;
+        } else if (cipher == "aes-192-cbc") {
+          return crypto_cipher::aes_192_cbc;
+        } else if (cipher == "aes-256-cbc") {
+          return crypto_cipher::aes_256_cbc;
+        }
+      }
+      luaL_argerror(L, arg, "unsupported cipher");
+      throw BRIGID_LOGIC_ERROR("unreachable");
+    }
+
     class cryptor_t : private noncopyable {
     public:
       cryptor_t(std::unique_ptr<cryptor>&& cryptor, reference&& write_cb)
@@ -140,27 +153,10 @@ namespace brigid {
         write_cb = reference(L, 4);
       }
 
-      new_decryptor(L, make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size()), std::move(write_cb));
+      new_userdata<cryptor_t>(L, "brigid.cryptor",
+          make_decryptor(cipher, key.data(), key.size(), iv.data(), iv.size()),
+          std::move(write_cb));
     }
-  }
-
-  crypto_cipher check_cipher(lua_State* L, int arg) {
-    {
-      std::string cipher = check_data(L, arg).str();
-      if (cipher == "aes-128-cbc") {
-        return crypto_cipher::aes_128_cbc;
-      } else if (cipher == "aes-192-cbc") {
-        return crypto_cipher::aes_192_cbc;
-      } else if (cipher == "aes-256-cbc") {
-        return crypto_cipher::aes_256_cbc;
-      }
-    }
-    luaL_argerror(L, arg, "unsupported cipher");
-    throw BRIGID_LOGIC_ERROR("unreachable");
-  }
-
-  void new_decryptor(lua_State* L, std::unique_ptr<cryptor>&& cryptor, reference&& write_cb) {
-    new_userdata<cryptor_t>(L, "brigid.cryptor", std::move(cryptor), std::move(write_cb));
   }
 
   void initialize_cryptor(lua_State* L) {

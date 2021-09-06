@@ -1,4 +1,4 @@
-// Copyright (c) 2019 <dev@brigid.jp>
+// Copyright (c) 2019,2020 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -7,7 +7,6 @@
 #include <brigid/noncopyable.hpp>
 #include "common.hpp"
 #include "data.hpp"
-#include "scope_exit.hpp"
 #include "view.hpp"
 
 #include <lua.hpp>

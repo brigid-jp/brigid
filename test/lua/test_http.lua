@@ -1,4 +1,4 @@
--- Copyright (c) 2019 <dev@brigid.jp>
+-- Copyright (c) 2019,2021 <dev@brigid.jp>
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
@@ -150,7 +150,7 @@ assert(code == 200)
 assert(body == "ok\n")
 assert(not header.Locatuion)
 
-local result, message = client:request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=21")
+local result, message = client:request("GET", "https://brigid.jp/test/cgi/redirect.cgi?count=22")
 print(message)
 assert(not result)
 
