@@ -75,8 +75,12 @@ function love.load()
   package.cpath = "../lua/.libs/?.so;" .. package.cpath
   write("package.cpath ", package.cpath, "\n")
   local brigid
-  pcall(function () brigid = require "brigid" end)
-  write("brigid ", tostring(brigid), "\n")
+  local result, message = pcall(function () brigid = require "brigid" end)
+  if result then
+    write("brigid ", tostring(brigid), "\n")
+  else
+    write("cannot require brigid: ", message, "\n")
+  end
   if brigid then
     write("brigid.version ", brigid.get_version(), "\n")
 
