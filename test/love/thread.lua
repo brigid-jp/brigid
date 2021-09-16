@@ -23,6 +23,10 @@ local function boot()
     brigid = require "brigid"
   end)
   if result then
+    -- ensure save directory
+    love.filesystem.write("dummy.dat", os.date "%Y-%m-%d %H:%M:%S")
+    send("real directory: ", love.filesystem.getRealDirectory "dummy.dat")
+    love.filesystem.remove "dummy.dat"
     return
   end
   send("could not require brigid: ", message)
@@ -71,7 +75,7 @@ local function boot()
               love.filesystem.append(module_info.filename, chunk)
             end
             now = now + #chunk
-            send("progress ", now, " / ", module_info.size)
+            -- send("progress ", now, " / ", module_info.size)
             return true
           elseif e then
             error(e)
@@ -254,13 +258,7 @@ function test_cases.test_writer1()
 end
 
 function test_cases.test_writer2()
-  local save_dir = love.filesystem.getSaveDirectory()
-  send("save_dir: ", save_dir)
-
-  -- ensure save_dir
-  love.filesystem.write("dummy.dat", "dummy")
-
-  local filename = save_dir .. "/test.dat"
+  local filename = love.filesystem.getSaveDirectory().. "/test.dat"
   send("filename: ", filename)
 
   local writer = assert(brigid.file_writer(filename))
