@@ -25,7 +25,8 @@ namespace brigid {
     crypto_initializer crypto_initializer_instance;
   }
 
-  void open_crypto();
+  void open_cryptor();
+  void open_hasher();
 
   class cryptor {
   public:

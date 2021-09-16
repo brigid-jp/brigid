@@ -292,7 +292,8 @@ namespace brigid {
   crypto_initializer::crypto_initializer() {}
   crypto_initializer::~crypto_initializer() {}
 
-  void open_crypto() {}
+  void open_cryptor() {}
+  void open_hasher() {}
 
   std::unique_ptr<cryptor> make_encryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
     switch (cipher) {

@@ -6,6 +6,7 @@
 #include "test.hpp"
 
 int main(int ac, char* av[]) {
-  brigid::open_crypto();
+  brigid::open_cryptor();
+  brigid::open_hasher();
   return brigid::run_test_cases(ac, av);
 }

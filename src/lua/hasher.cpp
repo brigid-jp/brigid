@@ -96,6 +96,8 @@ namespace brigid {
   }
 
   void initialize_hasher(lua_State* L) {
+    open_hasher();
+
     lua_newtable(L);
     {
       luaL_newmetatable(L, "brigid.hasher");

@@ -160,6 +160,8 @@ namespace brigid {
   }
 
   void initialize_cryptor(lua_State* L) {
+    open_cryptor();
+
     lua_newtable(L);
     {
       luaL_newmetatable(L, "brigid.cryptor");

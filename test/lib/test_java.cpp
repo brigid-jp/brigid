@@ -20,6 +20,7 @@ extern "C" void* SDL_AndroidGetJNIEnv() {
 
 JNIEXPORT jint JNICALL Java_JavaTest_test(JNIEnv* env, jclass) {
   access_jnienv(env);
-  brigid::open_crypto();
+  brigid::open_cryptor();
+  brigid::open_hasher();
   return brigid::run_test_cases(0, nullptr);
 }
