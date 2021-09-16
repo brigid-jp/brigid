@@ -4,7 +4,7 @@
 
 UNAME = $(shell uname | tr [:upper:] [:lower:])
 CPPFLAGS = "-I$(JAVA_HOME)/include" "-I$(JAVA_HOME)/include/$(UNAME)" -I../.. -I../../include
-CXXFLAGS = -Wall -W -O2 -std=c++11 -fPIC
+CXXFLAGS = -Wall -W -Wno-missing-field-initializers -O2 -std=c++11 -fPIC
 
 OBJS = \
 	common_java.o \
