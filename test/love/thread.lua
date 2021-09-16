@@ -254,17 +254,25 @@ function test_cases.test_writer1()
 end
 
 function test_cases.test_writer2()
-  local writer = assert(brigid.file_writer "test.dat")
+  local save_dir = love.filesystem.getSaveDirectory()
+  send("save_dir: ", save_dir)
+
+  love.filesystem.createDirectory(save_dir)
+
+  local filename = save_dir .. "/test.dat"
+  send("filename: ", filename)
+
+  local writer = assert(brigid.file_writer(filename))
   assert(writer:write "foo\n")
   assert(writer:write "bar\n")
   assert(writer:write "baz\n")
   assert(writer:write "qux\n")
   assert(writer:close())
 
-  local handle = assert(io.open "test.dat")
+  local handle = assert(io.open(filename))
   assert(handle:read "*a" == "foo\nbar\nbaz\nqux\n")
   handle:close()
-  os.remove "test.dat"
+  os.remove(filename)
 
   local writer, message = brigid.file_writer "no such directory/test.dat"
   send("message: ", message)
