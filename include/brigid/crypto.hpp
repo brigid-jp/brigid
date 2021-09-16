@@ -1,4 +1,4 @@
-// Copyright (c) 2019 <dev@brigid.jp>
+// Copyright (c) 2019,2021 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -25,7 +25,8 @@ namespace brigid {
     crypto_initializer crypto_initializer_instance;
   }
 
-  void open_crypto();
+  void open_cryptor();
+  void open_hasher();
 
   class cryptor {
   public:
