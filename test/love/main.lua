@@ -4,8 +4,13 @@
 
 local ffi = require "ffi"
 local love = love
+local brigid
 
 local text = {}
+
+local recv_channel = love.thread.newChannel()
+local send_channel = love.thread.newChannel()
+local intr_channel = love.thread.newChannel()
 
 local function write(...)
   local data = {...}
@@ -14,7 +19,43 @@ local function write(...)
   end
 end
 
+local module_informations = {
+  ["OS X"] = {
+    x64 = {
+      url = "http://brigid.jp/pub/brigid-1.5-osx-x64.so";
+      size = 155144;
+      sha256 = "\254\203\187\192\165\020\082\180\239\165\179\145\085\065\033\132\201\014\108\146\215\069\064\026\046\102\159\210\021\106\065\212";
+    }
+  };
+  Windows = {
+    x64 = {
+      url = "http://brigid.jp/pub/brigid-1.5-win-x64.dll";
+      size = 103936;
+      sha256 = "\143\033\140\230\053\206\239\088\056\200\179\217\233\105\241\172\035\184\172\020\183\131\065\147\219\067\107\088\168\142\246\245";
+    };
+    x86 = {
+      url = "http://brigid.jp/pub/brigid-1.5-win-x86.dll";
+      size = 82432;
+      sha256 = "\189\032\147\219\246\006\150\196\200\185\117\241\098\112\208\059\189\051\236\125\127\171\053\079\167\048\236\018\136\007\093\090";
+    };
+  }
+}
+
 function love.load()
+  local thread = love.thread.newThread("thread.lua")
+  thread:start(recv_channel, send_channel, intr_channel)
+
+  do
+    return
+  end
+
+  local result, message = pcall(function ()
+    brigid = require "brigid"
+  end)
+  if not result then
+    write("could not require brigid: ", message)
+  end
+
   local data = love.data.newByteData("foo bar baz qux")
   write("pointer ", tostring(data:getPointer()), "\n")
   if data.getFFIPointer then
@@ -113,6 +154,16 @@ function love.load()
       write(("%02X"):format(result:byte(i)))
     end
     write "\n"
+  end
+end
+
+function love.update(dt)
+  while true do
+    local message = recv_channel:pop()
+    if not message then
+      break
+    end
+    print(message)
   end
 end
 
