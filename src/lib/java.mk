@@ -2,8 +2,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
-JAVA_HOME = /Library/Java/JavaVirtualMachines/jdk1.8.0_131.jdk/Contents/Home
-CPPFLAGS = -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/darwin -I../.. -I../../include
+CPPFLAGS = "-I$(JAVA_HOME)/include" "-I$(JAVA_HOME)/include/darwin" -I../.. -I../../include
 CXXFLAGS = -Wall -W -O2 -std=c++11
 
 OBJS = \
