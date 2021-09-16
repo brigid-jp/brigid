@@ -11,7 +11,7 @@ ifeq ($(UNAME),linux)
 endif
 
 CPPFLAGS = "-I$(JAVA_HOME)/include" "-I$(JAVA_HOME)/include/$(UNAME)" -I../../include -I../../src/lib
-CXXFLAGS = -Wall -W -O2 -std=c++11 -fPIC
+CXXFLAGS = -Wall -W -Wno-missing-field-initializers -O2 -std=c++11 -fPIC
 LDFLAGS = -shared
 
 OBJS = \

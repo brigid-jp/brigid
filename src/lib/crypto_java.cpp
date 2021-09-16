@@ -101,7 +101,7 @@ namespace brigid {
   crypto_initializer::~crypto_initializer() {}
 
   void open_cryptor() {
-    std::lock_guard<std::mutex> lock(open_crypto_mutex);
+    std::lock_guard<std::mutex> lock(open_cryptor_mutex);
     if (!aes_cryptor_clazz) {
       aes_cryptor_clazz = make_global_ref(find_class("jp/brigid/AESCryptor")).release();
     }
