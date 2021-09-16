@@ -11,18 +11,19 @@
 
 #include <stddef.h>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 namespace brigid {
   namespace {
+    jclass aes_cryptor_class;
+
     class aes_cryptor_vtable : private noncopyable {
     public:
       aes_cryptor_vtable()
-        : clazz(make_global_ref(find_class("jp/brigid/AESCryptor"))),
-          constructor(clazz, "(Z[B[B)V"),
-          update(clazz, "update", "(Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Z)I") {}
+        : constructor(aes_cryptor_class, "(Z[B[B)V"),
+          update(aes_cryptor_class, "update", "(Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Z)I") {}
 
-      global_ref_t<jclass> clazz;
       constructor_method constructor;
       method<jint> update;
     };
@@ -31,7 +32,7 @@ namespace brigid {
     public:
       aes_cryptor_impl(bool encrypt, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, size_t buffer_size)
         : instance_(make_global_ref(vt_.constructor(
-              vt_.clazz,
+              aes_cryptor_class,
               to_boolean(encrypt),
               make_byte_array(key_data, key_size),
               make_byte_array(iv_data, iv_size)))),
@@ -55,15 +56,15 @@ namespace brigid {
       size_t buffer_size_;
     };
 
+    jclass hasher_class;
+
     class hasher_vtable : private noncopyable {
     public:
       hasher_vtable()
-        : clazz(make_global_ref(find_class("jp/brigid/Hasher"))),
-          constructor(clazz, "([B)V"),
-          update(clazz, "update", "(Ljava/nio/ByteBuffer;)V"),
-          digest(clazz, "digest", "()[B") {}
+        : constructor(hasher_class, "([B)V"),
+          update(hasher_class, "update", "(Ljava/nio/ByteBuffer;)V"),
+          digest(hasher_class, "digest", "()[B") {}
 
-      global_ref_t<jclass> clazz;
       constructor_method constructor;
       method<void> update;
       method<jbyteArray> digest;
@@ -73,7 +74,7 @@ namespace brigid {
     public:
       hasher_impl(const char* algorithm)
         : instance_(make_global_ref(vt_.constructor(
-              vt_.clazz,
+              hasher_class,
               make_byte_array(algorithm)))) {}
 
       virtual void update(const char* data, size_t size) {
@@ -91,10 +92,22 @@ namespace brigid {
       hasher_vtable vt_;
       global_ref_t<jobject> instance_;
     };
+
+    std::mutex open_crypto_mutex;
   }
 
   crypto_initializer::crypto_initializer() {}
   crypto_initializer::~crypto_initializer() {}
+
+  void open_crypto() {
+    std::lock_guard<std::mutex> lock(open_crypto_mutex);
+    if (!aes_cryptor_class) {
+      aes_cryptor_class = make_global_ref(find_class("jp/brigid/AESCryptor")).release();
+    }
+    if (!hasher_class) {
+      hasher_class = make_global_ref(find_class("jp/brigid/Hasher")).release();
+    }
+  }
 
   std::unique_ptr<cryptor> make_encryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
     switch (cipher) {
