@@ -313,9 +313,9 @@ local function main()
   send("FAIL:  ", test_count_fail)
 end
 
-send "thread opened"
+send "thread started"
 local result, message = pcall(main)
 if not result then
-  send("error: ", message)
+  send("ERROR: ", message)
 end
-send "thread closed"
+send "thread finished"
