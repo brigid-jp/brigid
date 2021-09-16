@@ -25,6 +25,8 @@ namespace brigid {
     crypto_initializer crypto_initializer_instance;
   }
 
+  void open_crypto();
+
   class cryptor {
   public:
     virtual ~cryptor() = 0;

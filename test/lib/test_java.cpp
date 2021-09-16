@@ -2,6 +2,7 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include <brigid/crypto.hpp>
 #include "test.hpp"
 #include "JavaTest.h"
 
@@ -19,5 +20,6 @@ extern "C" void* SDL_AndroidGetJNIEnv() {
 
 JNIEXPORT jint JNICALL Java_JavaTest_test(JNIEnv* env, jclass) {
   access_jnienv(env);
+  brigid::open_crypto();
   return brigid::run_test_cases(0, nullptr);
 }
