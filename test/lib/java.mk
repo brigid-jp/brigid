@@ -2,9 +2,16 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
-JAVA_HOME = /Library/Java/JavaVirtualMachines/jdk1.8.0_131.jdk/Contents/Home
-CPPFLAGS = -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/darwin -I../../include -I../../src/lib
-CXXFLAGS = -Wall -W -O2 -std=c++11
+UNAME = $(shell uname | tr [:upper:] [:lower:])
+ifeq ($(UNAME),darwin)
+	TARGET_SUFFIX = .dylib
+endif
+ifeq ($(UNAME),linux)
+	TARGET_SUFFIX = .so
+endif
+
+CPPFLAGS = "-I$(JAVA_HOME)/include" "-I$(JAVA_HOME)/include/$(UNAME)" -I../../include -I../../src/lib
+CXXFLAGS = -Wall -W -O2 -std=c++11 -fPIC
 LDFLAGS = -shared
 
 OBJS = \
@@ -14,7 +21,7 @@ OBJS = \
 	test_http.o \
 	test_http_impl.o \
 	test_version.o
-TARGET = libjavatest.dylib
+TARGET = libjavatest$(TARGET_SUFFIX)
 
 all: all-recursive $(TARGET)
 
@@ -31,7 +38,7 @@ check:
 JavaTest.h: JavaTest.java
 	javac -h . JavaTest.java
 
-libjavatest.dylib: JavaTest.h $(OBJS) ../../src/lib/libbrigid.a
+$(TARGET): JavaTest.h $(OBJS) ../../src/lib/libbrigid.a
 	$(CXX) $(LDFLAGS) $(OBJS) ../../src/lib/libbrigid.a -o $@
 
 .cpp.o:
