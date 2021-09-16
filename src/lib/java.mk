@@ -2,8 +2,9 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
-CPPFLAGS = "-I$(JAVA_HOME)/include" "-I$(JAVA_HOME)/include/darwin" -I../.. -I../../include
-CXXFLAGS = -Wall -W -O2 -std=c++11
+UNAME = $(shell uname | tr [:upper:] [:lower:])
+CPPFLAGS = "-I$(JAVA_HOME)/include" "-I$(JAVA_HOME)/include/$(UNAME)" -I../.. -I../../include
+CXXFLAGS = -Wall -W -O2 -std=c++11 -fPIC
 
 OBJS = \
 	common_java.o \
