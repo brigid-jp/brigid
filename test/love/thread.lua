@@ -257,7 +257,8 @@ function test_cases.test_writer2()
   local save_dir = love.filesystem.getSaveDirectory()
   send("save_dir: ", save_dir)
 
-  love.filesystem.createDirectory(save_dir)
+  -- ensure save_dir
+  love.filesystem.write("dummy.dat", "dummy")
 
   local filename = save_dir .. "/test.dat"
   send("filename: ", filename)
