@@ -14,16 +14,17 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
 namespace brigid {
   namespace {
+    jclass clazz;
     class vtable {
     public:
       vtable()
-        : clazz(make_global_ref(find_class("jp/brigid/HttpTask"))),
-          set_credential(clazz, "setCredential", "([B[B)V"),
+        : set_credential(clazz, "setCredential", "([B[B)V"),
           reset_credential(clazz, "resetCredential", "()V"),
           constructor(clazz, "([B[B)V"),
           set_header(clazz, "setHeader", "([B[B)V"),
@@ -37,7 +38,6 @@ namespace brigid {
           read(clazz, "read", "([B)I"),
           close(clazz, "close", "()V") {}
 
-      global_ref_t<jclass> clazz;
       static_method<void> set_credential;
       static_method<void> reset_credential;
       constructor_method constructor;
@@ -68,14 +68,14 @@ namespace brigid {
           credential(credential),
           jbuffer(make_global_ref<jbyteArray>()) {
         if (credential) {
-          vt.set_credential(vt.clazz, make_byte_array(username), make_byte_array(password));
+          vt.set_credential(clazz, make_byte_array(username), make_byte_array(password));
         }
       }
 
       ~http_session_impl() {
         try {
           if (credential) {
-            vt.reset_credential(vt.clazz);
+            vt.reset_credential(clazz);
           }
         } catch (...) {}
       }
@@ -119,7 +119,7 @@ namespace brigid {
           http_request_body body,
           const char* data,
           size_t size) {
-        instance_ = make_global_ref(session_.vt.constructor(session_.vt.clazz, make_byte_array(method), make_byte_array(url)));
+        instance_ = make_global_ref(session_.vt.constructor(clazz, make_byte_array(method), make_byte_array(url)));
 
         for (const auto& field : header) {
           session_.vt.set_header(instance_, make_byte_array(field.first), make_byte_array(field.second));
@@ -200,10 +200,19 @@ namespace brigid {
       http_task task(*this);
       return task.request(method, url, header, body, data, size);
     }
+
+    std::mutex mutex;
   }
 
   http_initializer::http_initializer() {}
   http_initializer::~http_initializer() {}
+
+  void open_http() {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (!clazz) {
+      clazz = clazz(make_global_ref(find_class("jp/brigid/HttpTask"))),
+    }
+  }
 
   std::unique_ptr<http_session> make_http_session(
       std::function<bool (size_t, size_t)> progress_cb,

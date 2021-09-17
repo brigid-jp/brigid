@@ -3,6 +3,7 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/crypto.hpp>
+#include <brigid/http.hpp>
 #include "test.hpp"
 #include "JavaTest.h"
 
@@ -22,5 +23,6 @@ JNIEXPORT jint JNICALL Java_JavaTest_test(JNIEnv* env, jclass) {
   access_jnienv(env);
   brigid::open_cryptor();
   brigid::open_hasher();
+  brigid::open_http();
   return brigid::run_test_cases(0, nullptr);
 }
