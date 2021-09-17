@@ -237,6 +237,149 @@ function test_cases.test_crpto_sha512_2()
   })
 end
 
+local test_client
+do
+  local class = {}
+  local metatable = { __index = class }
+
+  function class.new(username, password)
+    local self = {}
+    self.session = assert(brigid.http_session {
+      progress = function (now, total)
+        return self:progress_cb(now, total)
+      end;
+
+      header = function (code, header)
+        return self:header_cb(code, header)
+      end;
+
+      write = function (view)
+        return self:write_cb(view)
+      end;
+
+      username = username;
+      password = password;
+    })
+    return self
+  end
+
+  function class:progress_cb(now, total)
+    print(("%s %s %5.1f%%"):format(self.method, self.url, now * 100 / total))
+  end
+
+  function class:header_cb(code, header)
+    self.code = code
+    self.header = header
+  end
+
+  function class:write_cb(view)
+    local buffer = self.buffer
+    buffer[#buffer + 1] = view:get_string()
+  end
+
+  function class:request(method, url, header, request)
+    self.buffer = {}
+    self.method = method
+    self.url = url
+
+    if not request then
+      request = {}
+    end
+    request.method = method
+    request.url = url
+    request.header = header
+    local result, message = self.session:request(request)
+    if not result then
+      return result, message
+    end
+
+    local code = self.code
+    local header = self.header
+    local body = table.concat(self.buffer)
+
+    self.buffer = nil
+    self.code = nil
+    self.header = nil
+
+    return code, header, body
+  end
+
+  function class:request_data(method, url, header, data)
+    return self:request(method, url, header, { data = data })
+  end
+
+  function class:request_file(method, url, header, file)
+    return self:request(method, url, header, { file = file })
+  end
+
+  function class:close()
+    return self.session:close()
+  end
+
+  test_client = setmetatable(class, {
+    __call = function (_, username, password)
+      return setmetatable(class.new(username, password), metatable)
+    end;
+  })
+end
+
+local client
+local data = "foo\nbar\nbaz\nqux\n";
+
+function test_cases.test_http0000()
+  client = test_client()
+end
+
+function test_cases.test_http0001()
+  local code, header, body = client:request("GET", "https://brigid.jp/")
+  assert(code == 200)
+  assert(header["Content-Length"] == "0")
+  assert(header["Content-Type"] == "text/html; charset=UTF-8")
+  assert(body == "")
+end
+
+function test_cases.test_http0002()
+  local code, header, body = client:request_data("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", nil, data)
+  assert(code == 201 or code == 204)
+  if code == 204 then
+    assert(body == "")
+  end
+end
+
+function test_cases.test_http0003()
+  local code, header, body = client:request("GET", "https://brigid.jp/test/dav/auth-none/test.txt");
+  assert(code == 200)
+  assert(body == data)
+end
+
+function test_cases.test_http0004()
+  local code, header, body = client:request("HEAD", "https://brigid.jp/test/dav/auth-none/test.txt");
+  assert(code == 200)
+  assert(body == "")
+end
+
+function test_cases.test_http0005()
+  local code, header, body = client:request("DELETE", "https://brigid.jp/test/dav/auth-none/test.txt");
+  assert(code == 204)
+  assert(body == "")
+end
+
+function test_cases.test_http0006()
+  local code, header, body = client:request("GET", "https://brigid.jp/test/dav/auth-none/test.txt")
+  assert(code == 404)
+end
+
+function test_cases.test_http0007()
+  local code, header, body = client:request("HEAD", "https://brigid.jp/test/dav/auth-none/test.txt")
+  assert(code == 404)
+  assert(body == "")
+end
+
+function test_cases.test_http9999()
+  client:close()
+  client = nil
+end
+
 function test_cases.test_version()
   local version = brigid.get_version()
   send("version: ", version)
