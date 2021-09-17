@@ -38,6 +38,7 @@
 /test-driver
 /test/lib/JavaTest.h
 /test/lib/libjavatest.dylib
+/test/love/brigid-*-test.love
 Makefile
 test*.exe
 test*.log
