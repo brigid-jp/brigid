@@ -2,7 +2,12 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
-TARGET = brigid-version-test.love
+VERSION = $(shell ./version.sh)
+ifeq ($(VERSION),)
+	VERSION = unknown
+endif
+
+TARGET = brigid-$(VERSION)-test.love
 
 all: $(TARGET)
 
