@@ -17,6 +17,7 @@ local intr_channel
 
 function love.load()
   -- cache java classes for android
+  --[[
   local result, message = pcall(function ()
     require "brigid"
   end)
@@ -25,6 +26,7 @@ function love.load()
   else
     text_source[#text_source + 1] = "[FAIL] main thread require: " .. message
   end
+  ]]
 
   text = love.graphics.newText(love.graphics.getFont())
   recv_channel = love.thread.newChannel()
