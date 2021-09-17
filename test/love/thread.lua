@@ -75,7 +75,7 @@ local function boot()
               love.filesystem.append(module_info.filename, chunk)
             end
             now = now + #chunk
-            -- send("progress ", now, " / ", module_info.size)
+            send("progress ", now, " / ", module_info.size)
             return true
           elseif e then
             error(e)

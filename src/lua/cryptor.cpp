@@ -160,7 +160,12 @@ namespace brigid {
   }
 
   void initialize_cryptor(lua_State* L) {
-    open_cryptor();
+    try {
+      open_cryptor();
+    } catch (const std::exception& e) {
+      luaL_error(L, "%s", e.what());
+      return;
+    }
 
     lua_newtable(L);
     {

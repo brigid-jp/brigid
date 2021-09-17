@@ -96,7 +96,12 @@ namespace brigid {
   }
 
   void initialize_hasher(lua_State* L) {
-    open_hasher();
+    try {
+      open_hasher();
+    } catch (const std::exception& e) {
+      luaL_error(L, "%s", e.what());
+      return;
+    }
 
     lua_newtable(L);
     {
