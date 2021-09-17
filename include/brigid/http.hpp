@@ -26,6 +26,8 @@ namespace brigid {
     http_initializer http_initializer_instance;
   }
 
+  void open_http();
+
   class http_session {
   public:
     virtual ~http_session() = 0;

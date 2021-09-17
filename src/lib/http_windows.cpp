@@ -280,6 +280,8 @@ namespace brigid {
   http_initializer::http_initializer() {}
   http_initializer::~http_initializer() {}
 
+  void open_http() {}
+
   std::unique_ptr<http_session> make_http_session(
       std::function<bool (size_t, size_t)> progress_cb,
       std::function<bool (int, const std::map<std::string, std::string>&)> header_cb,
