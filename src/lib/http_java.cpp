@@ -210,7 +210,7 @@ namespace brigid {
   void open_http() {
     std::lock_guard<std::mutex> lock(mutex);
     if (!clazz) {
-      clazz = clazz(make_global_ref(find_class("jp/brigid/HttpTask"))),
+      clazz = make_global_ref(find_class("jp/brigid/HttpTask")).release();
     }
   }
 
