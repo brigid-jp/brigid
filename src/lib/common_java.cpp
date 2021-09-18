@@ -113,6 +113,10 @@ namespace brigid {
     }
   }
 
+  jlong to_long(size_t source) {
+    return static_cast<jlong>(source);
+  }
+
   local_ref_t<jclass> find_class(const char* name) {
     local_ref_t<jclass> result = make_local_ref(get_env()->FindClass(name));
     check(result.get());

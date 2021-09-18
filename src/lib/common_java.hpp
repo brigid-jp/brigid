@@ -109,6 +109,7 @@ namespace brigid {
   local_ref_t<jobject> make_direct_byte_buffer(void*, size_t);
 
   jboolean to_boolean(bool);
+  jlong to_long(size_t);
 
   template <class T>
   inline size_t get_array_length(const T& source) {
