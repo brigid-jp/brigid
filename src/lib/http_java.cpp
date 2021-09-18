@@ -126,7 +126,7 @@ namespace brigid {
         }
 
         if (std::unique_ptr<http_reader> reader = make_http_reader(body, data, size)) {
-          session_.vt.send_body(instance_, static_cast<jlong>(reader->total()));
+          session_.vt.send_body(instance_, to_long(reader->total()));
 
           session_.ensure_buffer_size(http_buffer_size);
           while (true) {
