@@ -288,10 +288,7 @@ do
     request.method = method
     request.url = url
     request.header = header
-    local result, message = self.session:request(request)
-    if not result then
-      return result, message
-    end
+    assert(self.session:request(request))
 
     local code = self.code
     local header = self.header
