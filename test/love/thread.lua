@@ -264,7 +264,7 @@ do
   end
 
   function class:progress_cb(now, total)
-    print(("%s %s %5.1f%%"):format(self.method, self.url, now * 100 / total))
+    send(("%s %s %5.1f%%"):format(self.method, self.url, now * 100 / total))
   end
 
   function class:header_cb(code, header)
