@@ -152,13 +152,22 @@ namespace brigid {
           jint code = session_.vt.get_response_code(instance_);
 
           std::map<std::string, std::string> header;
+
+          std::string prev_key;
           for (jint i = 0; ; ++i) {
             local_ref_t<jbyteArray> value = session_.vt.get_header_value(instance_, i);
             if (!value) {
               break;
             }
             if (local_ref_t<jbyteArray> key = session_.vt.get_header_key(instance_, i)) {
-              header[get_byte_array_region(key)] = get_byte_array_region(value);
+              std::string k = get_byte_array_region(key);
+              std::string v = get_byte_array_region(value);
+              if (k.empty()) {
+                header[prev_key] += " " + v;
+              } else {
+                header[k] = v;
+                prev_key = k;
+              }
             }
           }
 
