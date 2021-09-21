@@ -4,12 +4,10 @@
 
 local brigid = require "brigid"
 
-local url = ...
+local url, version = ...
 
-io.write "return {\n"
-
-for i = 2, #arg do
-  local filename = arg[i]
+local function process(system, arch, suffix)
+  local filename = ("brigid-%s-%s-%s.%s"):format(version, system, arch, suffix)
   local handle = assert(io.open(filename, "rb"))
   local data = handle:read "*a"
   handle:close()
@@ -23,12 +21,30 @@ for i = 2, #arg do
   end
 
   io.write(([[
-  {
-    url = "%s%s";
-    size = %d;
-    sha256 = "%s";
-  };
-]]):format(url, filename, #data, table.concat(buffer)))
+    %s = {
+      url = "%s%s";
+      filename = "brigid.%s";
+      size = %d;
+      sha256 = "%s";
+    };
+]]):format(arch, url, filename, suffix, #data, table.concat(buffer)))
 end
 
-io.write "}\n"
+io.write [[return {
+  ["OS X"] = {
+]]
+
+process("osx", "x64", "so")
+
+io.write [[
+  };
+  Windows = {
+]]
+
+process("win", "x64", "dll")
+process("win", "x86", "dll")
+
+io.write [[
+  };
+}
+]]
