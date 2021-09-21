@@ -56,4 +56,22 @@ function suite:test_love()
   assert(data == ffi_data)
 end
 
+function suite:test_ffi()
+  local ffi
+  pcall(function ()
+    ffi = require "ffi"
+  end)
+  if not ffi then
+    return self:skip()
+  end
+
+  local data_writer = brigid.data_writer()
+  data_writer:write "foobarbazqux"
+  assert(data_writer:get_string() == "foobarbazqux")
+
+  ffi.copy(data_writer:get_pointer(), "ABCDEF", 6)
+  print(data_writer:get_string())
+  assert(data_writer:get_string() == "ABCDEFbazqux")
+end
+
 return suite

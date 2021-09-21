@@ -7,7 +7,7 @@ local test_suite = require "test_suite"
 
 local suite = test_suite "test_version"
 
-function suite.test()
+function suite:test()
   local version = brigid.get_version()
   print(brigid.get_version())
   assert(version:match "^%d+%.%d+$")

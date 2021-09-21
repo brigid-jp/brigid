@@ -106,29 +106,6 @@ end
 --[====[
 local test_cases = {}
 
-function test_cases.test_common()
-  local registry = assert(debug.getregistry())
-  local encode_pointer = assert(registry["brigid.common.encode_pointer"])
-  local decode_pointer = assert(registry["brigid.common.decode_pointer"])
-  local is_love2d_data = assert(registry["brigid.common.is_love2d_data"])
-
-  local byte_data = love.data.newByteData "foobarbazqux"
-  local data, size = is_love2d_data(byte_data)
-  assert(data)
-  assert(type(data) == "string")
-  assert(size == 12)
-
-  local ptr = decode_pointer(data)
-  assert(ptr)
-  assert(type(ptr) == "cdata")
-
-  local ffi_ptr = byte_data:getFFIPointer()
-  assert(ptr == ffi_ptr)
-
-  local ffi_data = encode_pointer(ffi_ptr)
-  assert(data == ffi_data)
-end
-
 local plaintext = "The quick brown fox jumps over the lazy dog"
 local ciphers = {
   "aes-128-cbc",

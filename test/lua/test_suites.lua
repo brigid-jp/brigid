@@ -9,6 +9,7 @@ local function new()
   return {
     (require "test_common");
     (require "test_version");
+    (require "test_crypto");
   }
 end
 
