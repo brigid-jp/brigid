@@ -8,6 +8,12 @@ local metatable = { __index = class }
 local private_impl = function () end
 local private_skip = function () end
 
+assert(test_cwd)
+
+function test_skip()
+  error(private_skip)
+end
+
 local function new(name)
   return {
     [private_impl] = {
@@ -16,18 +22,6 @@ local function new(name)
       cases = {};
     }
   }
-end
-
-function class:skip()
-  error(private_skip)
-end
-
-function class:set_cwd(cwd)
-  self[private_impl].cwd = cwd
-end
-
-function class:get_cwd()
-  return self[private_impl].cwd
 end
 
 function metatable:__newindex(key, value)

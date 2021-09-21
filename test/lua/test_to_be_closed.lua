@@ -11,7 +11,7 @@ local suite = test_suite "test_to_be_closed"
 
 function suite:test()
   if version < 504 then
-    return self:skip()
+    return test_skip()
   end
 
   assert(load [[

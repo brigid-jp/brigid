@@ -22,21 +22,21 @@ function suite:test1()
 end
 
 function suite:test2()
-  local writer = assert(brigid.file_writer(self:get_cwd() .. "/test.dat"))
+  local writer = assert(brigid.file_writer(test_cwd .. "/test.dat"))
   assert(writer:write "foo\n")
   assert(writer:write "bar\n")
   assert(writer:write "baz\n")
   assert(writer:write "qux\n")
   assert(writer:close())
 
-  local handle = assert(io.open(self:get_cwd() .. "/test.dat"))
+  local handle = assert(io.open(test_cwd .. "/test.dat"))
   assert(handle:read "*a" == "foo\nbar\nbaz\nqux\n")
   handle:close()
   os.remove "test.dat"
 end
 
 function suite:test3()
-  local writer, message = brigid.file_writer(self:get_cwd() .. "/no such directory/test.dat")
+  local writer, message = brigid.file_writer(test_cwd .. "/no such directory/test.dat")
   print(message)
   assert(not writer)
 end

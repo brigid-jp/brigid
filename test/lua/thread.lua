@@ -425,9 +425,9 @@ table.sort(test_case_names)
 
 local function main()
   boot()
-
+  test_cwd = love.filesystem.getSaveDirectory()
   local suites = test_suites()
-  suites(love.filesystem.getSaveDirectory())
+  suites()
 end
 
 local result, message = pcall(main)
