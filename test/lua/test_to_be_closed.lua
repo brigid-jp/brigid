@@ -2,10 +2,18 @@
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
+local test_suite = require "test_suite"
+
 local major, minor = assert(_VERSION:match "^Lua (%d+)%.(%d+)$")
 local version = major * 100 + minor
 
-if version >= 504 then
+local suite = test_suite "test_to_be_closed"
+
+function suite:test()
+  if version < 504 then
+    return self:skip()
+  end
+
   assert(load [[
     local brigid = require "brigid"
 
@@ -22,5 +30,9 @@ if version >= 504 then
     local result, message = pcall(function () writer:write "qux\n" end)
     print(message)
     assert(not result)
+
+    os.remove "test.dat"
   ]])()
 end
+
+return suite

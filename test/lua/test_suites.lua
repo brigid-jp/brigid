@@ -10,6 +10,7 @@ local function new()
     (require "test_common");
     (require "test_version");
     (require "test_crypto");
+    (require "test_to_be_closed");
   }
 end
 
