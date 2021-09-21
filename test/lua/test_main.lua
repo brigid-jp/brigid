@@ -5,7 +5,7 @@
 local test_suites = require "test_suites"
 
 local suites = test_suites()
-if suites() then
+if suites "." then
   os.exit(0)
 else
   os.exit(1)

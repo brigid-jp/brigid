@@ -17,7 +17,7 @@ function suite:test()
   assert(load [[
     local brigid = require "brigid"
 
-    local writer = assert(brigid.file_writer "test.dat")
+    local writer = brigid.data_writer()
 
     do
       local writer_to_be_closed <close> = writer
@@ -30,8 +30,6 @@ function suite:test()
     local result, message = pcall(function () writer:write "qux\n" end)
     print(message)
     assert(not result)
-
-    os.remove "test.dat"
   ]])()
 end
 

@@ -22,6 +22,14 @@ function class:skip()
   error(private_skip)
 end
 
+function class:set_cwd(cwd)
+  self[private_impl].cwd = cwd
+end
+
+function class:get_cwd()
+  return self[private_impl].cwd
+end
+
 function metatable:__newindex(key, value)
   local impl = self[private_impl]
   local case_keys = impl.case_keys

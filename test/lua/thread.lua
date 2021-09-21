@@ -385,7 +385,7 @@ function test_cases.test_writer1()
 end
 
 function test_cases.test_writer2()
-  local filename = love.filesystem.getSaveDirectory().. "/test.dat"
+  local filename = love.filesystem.getSaveDirectory() .. "/test.dat"
   send("filename: ", filename)
 
   local writer = assert(brigid.file_writer(filename))
@@ -427,7 +427,7 @@ local function main()
   boot()
 
   local suites = test_suites()
-  suites()
+  suites(love.filesystem.getSaveDirectory())
 end
 
 local result, message = pcall(main)
