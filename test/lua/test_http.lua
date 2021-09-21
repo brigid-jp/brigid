@@ -167,7 +167,7 @@ function suite:test19()
   assert(code == 200)
 
   for k, v in pairs(header) do
-    print("[" .. k .. "]", "[" .. v .. "]")
+    print("[" .. k .. "]=[" .. v .. "]")
   end
 
   assert(header["X-Test1"] == "foo bar")
