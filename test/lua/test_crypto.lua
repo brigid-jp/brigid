@@ -1,8 +1,9 @@
--- Copyright (c) 2019 <dev@brigid.jp>
+-- Copyright (c) 2019,2021 <dev@brigid.jp>
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
 local brigid = require "brigid"
+local test_suite = require "test_suite"
 
 local plaintext = "The quick brown fox jumps over the lazy dog"
 local ciphers = {
@@ -61,105 +62,127 @@ local function decrypt(cipher, key, iv, ciphertext)
   return table.concat(result)
 end
 
-for i = 1, #ciphers do
-  local cipher = ciphers[i]
-  local key = keys[cipher]
-  local ciphertext = ciphertexts[cipher]
-  assert(encrypt(cipher, key, iv, plaintext) == ciphertext)
-  assert(decrypt(cipher, key, iv, ciphertext) == plaintext)
-end
+local suite = test_suite "test_crypto"
 
 local cipher = "aes-256-cbc"
 local key = keys[cipher]
 local ciphertext = ciphertexts[cipher]
 
-local cryptor = assert(brigid.encryptor(cipher, key, iv))
-assert(cryptor:update(plaintext, true))
-assert(cryptor:close())
-assert(cryptor:close()) -- can close
-local result, message = pcall(function () cryptor:update "0" end)
-print(message)
-assert(not result)
-
-local closed_view
-local cryptor
-cryptor = assert(brigid.encryptor(cipher, key, iv, function (view)
-  closed_view = view
-  local result, message = pcall(function () cryptor:update(plaintext, true) end)
+function suite:test_cryptor1()
+  local cryptor = assert(brigid.encryptor(cipher, key, iv))
+  assert(cryptor:update(plaintext, true))
+  assert(cryptor:close())
+  assert(cryptor:close()) -- can close
+  local result, message = pcall(function () cryptor:update "0" end)
   print(message)
   assert(not result)
-end))
-assert(cryptor:update(plaintext, true))
-assert(closed_view)
-local result, message = pcall(function () closed_view:get_string() end)
-print(message)
-assert(not result)
+end
 
-local ffi
-pcall(function () ffi = require "ffi" end)
+function suite:test_cryptor2()
+  local closed_view
+  local cryptor
+  cryptor = assert(brigid.encryptor(cipher, key, iv, function (view)
+    closed_view = view
+    local result, message = pcall(function () cryptor:update(plaintext, true) end)
+    print(message)
+    assert(not result)
+  end))
+  assert(cryptor:update(plaintext, true))
+  assert(closed_view)
+  local result, message = pcall(function () closed_view:get_string() end)
+  print(message)
+  assert(not result)
+end
 
-local cryptor = assert(brigid.decryptor(cipher, key, iv, function (view)
-  local ptr = view:get_pointer()
-  print(tostring(ptr))
-  if ffi then
-    assert(type(ptr) == "cdata")
-    assert(ffi.string(ptr, view:get_size()) == plaintext)
-  else
-    assert(type(ptr) == "userdata")
+function suite:test_cryptor3()
+  local ffi
+  pcall(function ()
+    ffi = require "ffi"
+  end)
+
+  local cryptor = assert(brigid.decryptor(cipher, key, iv, function (view)
+    local ptr = view:get_pointer()
+    print(tostring(ptr))
+    if ffi then
+      assert(type(ptr) == "cdata")
+      assert(ffi.string(ptr, view:get_size()) == plaintext)
+    else
+      assert(type(ptr) == "userdata")
+    end
+    assert(view:get_size() == #plaintext)
+  end))
+  assert(cryptor:update(ciphertext, true))
+end
+
+for i = 1, #ciphers do
+  local cipher = ciphers[i]
+  local key = keys[cipher]
+  local ciphertext = ciphertexts[cipher]
+  local cipher_name = cipher:gsub("%-", "_")
+  suite["test_encrypt_" .. cipher_name] = function ()
+    assert(encrypt(cipher, key, iv, plaintext) == ciphertext)
   end
-  assert(view:get_size() == #plaintext)
-end))
-assert(cryptor:update(ciphertext, true))
+  suite["test_decrypt_" .. cipher_name] = function ()
+    assert(decrypt(cipher, key, iv, ciphertext) == plaintext)
+  end
+end
 
-local close = assert(getmetatable(cryptor).__close)
-close(cryptor)
-local result, message = pcall(function () cryptor:update("0") end)
-print(message)
-assert(not result)
+function suite:test_hasher()
+  local hasher = brigid.hasher "sha256"
+  assert(getmetatable(hasher).__close)
+  assert(hasher:close())
+  assert(hasher:close()) -- can close
+  local result, message = pcall(function () hasher:update "0" end)
+  print(message)
+  assert(not result)
+end
 
-local result = brigid.hasher "sha256":update "":digest()
-assert(result == table.concat {
-  "\227\176\196\066\152\252\028\020";
-  "\154\251\244\200\153\111\185\036";
-  "\039\174\065\228\100\155\147\076";
-  "\164\149\153\027\120\082\184\085";
-})
+function suite:test_sha256_1()
+  local result = brigid.hasher "sha256":update "":digest()
+  assert(result == table.concat {
+    "\227\176\196\066\152\252\028\020";
+    "\154\251\244\200\153\111\185\036";
+    "\039\174\065\228\100\155\147\076";
+    "\164\149\153\027\120\082\184\085";
+  })
+end
 
-local result = brigid.hasher "sha256":update "The quick brown fox jumps over the lazy dog":digest()
-assert(result == table.concat {
-  "\215\168\251\179\007\215\128\148";
-  "\105\202\154\188\176\008\046\079";
-  "\141\086\081\228\109\060\219\118";
-  "\045\002\208\191\055\201\229\146";
-})
+function suite:test_sha256_2()
+  local result = brigid.hasher "sha256":update "The quick brown fox jumps over the lazy dog":digest()
+  assert(result == table.concat {
+    "\215\168\251\179\007\215\128\148";
+    "\105\202\154\188\176\008\046\079";
+    "\141\086\081\228\109\060\219\118";
+    "\045\002\208\191\055\201\229\146";
+  })
+end
 
-local result = brigid.hasher "sha512":update "":digest()
-assert(result == table.concat {
-  "\207\131\225\053\126\239\184\189";
-  "\241\084\040\080\214\109\128\007";
-  "\214\032\228\005\011\087\021\220";
-  "\131\244\169\033\211\108\233\206";
-  "\071\208\209\060\093\133\242\176";
-  "\255\131\024\210\135\126\236\047";
-  "\099\185\049\189\071\065\122\129";
-  "\165\056\050\122\249\039\218\062";
-})
+function suite:test_sha512_1()
+  local result = brigid.hasher "sha512":update "":digest()
+  assert(result == table.concat {
+    "\207\131\225\053\126\239\184\189";
+    "\241\084\040\080\214\109\128\007";
+    "\214\032\228\005\011\087\021\220";
+    "\131\244\169\033\211\108\233\206";
+    "\071\208\209\060\093\133\242\176";
+    "\255\131\024\210\135\126\236\047";
+    "\099\185\049\189\071\065\122\129";
+    "\165\056\050\122\249\039\218\062";
+  })
+end
 
-local result = brigid.hasher "sha512":update "The quick brown fox jumps over the lazy dog":digest()
-assert(result == table.concat {
-  "\007\229\071\217\088\111\106\115";
-  "\247\063\186\192\067\094\215\105";
-  "\081\033\143\183\208\200\215\136";
-  "\163\009\215\133\067\107\187\100";
-  "\046\147\162\082\169\084\242\057";
-  "\018\084\125\030\138\059\094\214";
-  "\225\191\215\009\120\033\035\063";
-  "\160\083\143\061\184\084\254\230";
-})
+function suite:test_sha512_2()
+  local result = brigid.hasher "sha512":update "The quick brown fox jumps over the lazy dog":digest()
+  assert(result == table.concat {
+    "\007\229\071\217\088\111\106\115";
+    "\247\063\186\192\067\094\215\105";
+    "\081\033\143\183\208\200\215\136";
+    "\163\009\215\133\067\107\187\100";
+    "\046\147\162\082\169\084\242\057";
+    "\018\084\125\030\138\059\094\214";
+    "\225\191\215\009\120\033\035\063";
+    "\160\083\143\061\184\084\254\230";
+  })
+end
 
-local hasher = brigid.hasher "sha256"
-assert(hasher:close())
-assert(hasher:close()) -- can close
-local result, message = pcall(function () hasher:update "0" end)
-print(message)
-assert(not result)
+return suite

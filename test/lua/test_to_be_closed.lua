@@ -2,14 +2,22 @@
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
+local test_suite = require "test_suite"
+
 local major, minor = assert(_VERSION:match "^Lua (%d+)%.(%d+)$")
 local version = major * 100 + minor
 
-if version >= 504 then
+local suite = test_suite "test_to_be_closed"
+
+function suite:test()
+  if version < 504 then
+    return self:skip()
+  end
+
   assert(load [[
     local brigid = require "brigid"
 
-    local writer = assert(brigid.file_writer "test.dat")
+    local writer = brigid.data_writer()
 
     do
       local writer_to_be_closed <close> = writer
@@ -24,3 +32,5 @@ if version >= 504 then
     assert(not result)
   ]])()
 end
+
+return suite

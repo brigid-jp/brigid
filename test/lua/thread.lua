@@ -2,34 +2,47 @@
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
-local love = {
+local channel = ...
+
+local saver = {
+  print = print;
+  love = love;
+  socket = socket;
+}
+
+function print(...)
+  local buffer = {}
+  for i = 1, select("#", ...) do
+    buffer[i] = tostring(select(i, ...))
+  end
+  channel:push(table.concat(buffer, "\t"))
+end
+
+love = {
   data = require "love.data";
   filesystem = require "love.filesystem";
   system = require "love.system";
 }
-local socket = {
+
+socket = {
   http = require "socket.http";
 }
+
 local brigid
-
-local send_channel, recv_channel, intr_channel = ...
-
-local function send(...)
-  return send_channel:push(table.concat {...})
-end
+local test_suites = require "test_suites"
 
 local function boot()
+  -- ensure save directory
+  love.filesystem.write("dummy.dat", "")
+  love.filesystem.remove "dummy.dat"
+
   local result, message = pcall(function ()
     brigid = require "brigid"
   end)
   if result then
-    -- ensure save directory
-    love.filesystem.write("dummy.dat", os.date "%Y-%m-%d %H:%M:%S")
-    send("real directory: ", love.filesystem.getRealDirectory "dummy.dat")
-    love.filesystem.remove "dummy.dat"
     return
   end
-  send("could not require brigid: ", message)
+  print("could not require brigid: " .. message)
 
   local module_informations = {
     ["OS X"] = {
@@ -56,13 +69,9 @@ local function boot()
     };
   }
 
-  local os = love.system.getOS()
-  send("os: ", os)
-  local system = module_informations[os]
+  local system = module_informations[love.system.getOS()]
   if system then
-    local arch = jit.arch
-    send("arch: ", arch)
-    local module_info = system[arch]
+    local module_info = system[jit.arch]
     if module_info then
       local now = 0
       assert(socket.http.request {
@@ -75,7 +84,7 @@ local function boot()
               love.filesystem.append(module_info.filename, chunk)
             end
             now = now + #chunk
-            send("progress ", now, " / ", module_info.size)
+            print("progress " .. now .. " / " .. module_info.size)
             return true
           elseif e then
             error(e)
@@ -94,30 +103,8 @@ local function boot()
   end
 end
 
+--[====[
 local test_cases = {}
-
-function test_cases.test_common()
-  local registry = assert(debug.getregistry())
-  local encode_pointer = assert(registry["brigid.common.encode_pointer"])
-  local decode_pointer = assert(registry["brigid.common.decode_pointer"])
-  local is_love2d_data = assert(registry["brigid.common.is_love2d_data"])
-
-  local byte_data = love.data.newByteData "foobarbazqux"
-  local data, size = is_love2d_data(byte_data)
-  assert(data)
-  assert(type(data) == "string")
-  assert(size == 12)
-
-  local ptr = decode_pointer(data)
-  assert(ptr)
-  assert(type(ptr) == "cdata")
-
-  local ffi_ptr = byte_data:getFFIPointer()
-  assert(ptr == ffi_ptr)
-
-  local ffi_data = encode_pointer(ffi_ptr)
-  assert(data == ffi_data)
-end
 
 local plaintext = "The quick brown fox jumps over the lazy dog"
 local ciphers = {
@@ -398,7 +385,7 @@ function test_cases.test_writer1()
 end
 
 function test_cases.test_writer2()
-  local filename = love.filesystem.getSaveDirectory().. "/test.dat"
+  local filename = love.filesystem.getSaveDirectory() .. "/test.dat"
   send("filename: ", filename)
 
   local writer = assert(brigid.file_writer(filename))
@@ -434,35 +421,16 @@ for test_case_name in pairs(test_cases) do
   test_case_names[#test_case_names + 1] = test_case_name
 end
 table.sort(test_case_names)
+]====]
 
 local function main()
   boot()
 
-  local test_count_pass = 0
-  local test_count_fail = 0
-
-  for i = 1, #test_case_names do
-    local test_case_name = test_case_names[i]
-    local test_case = test_cases[test_case_name]
-
-    local result, message = pcall(test_case)
-    if result then
-      test_count_pass = test_count_pass + 1
-      send("[PASS] ", test_case_name)
-    else
-      test_count_fail = test_count_fail + 1
-      send("[FAIL] ", test_case_name, " ", message)
-    end
-  end
-
-  send("TOTAL: ", #test_case_names)
-  send("PASS:  ", test_count_pass)
-  send("FAIL:  ", test_count_fail)
+  local suites = test_suites()
+  suites(love.filesystem.getSaveDirectory())
 end
 
-send "thread started"
 local result, message = pcall(main)
 if not result then
-  send("ERROR: ", message)
+  print("error: " .. message)
 end
-send "thread finished"
