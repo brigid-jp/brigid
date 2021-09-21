@@ -4,22 +4,8 @@
 
 local test_suites = require "test_suites"
 
-local pass = 0
-local fail = 0
-
-for i = 1, #test_suites do
-  local suite = test_suites[i]
-  pass, fail = suite(pass, fail)
-end
-
-print(([[
-============================================================
-TOTAL: %d
-PASS:  %d
-FAIL:  %d
-============================================================]]):format(pass + fail, pass, fail))
-
-if fail == 0 then
+local suites = test_suites()
+if suites() then
   os.exit(0)
 else
   os.exit(1)

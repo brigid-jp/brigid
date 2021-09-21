@@ -6,6 +6,7 @@ local class = {}
 local metatable = { __index = class }
 
 local private_impl = function () end
+local private_skip = function () end
 
 local function new(name)
   return {
@@ -17,6 +18,10 @@ local function new(name)
   }
 end
 
+function class:skip()
+  error(private_skip)
+end
+
 function metatable:__newindex(key, value)
   local impl = self[private_impl]
   local case_keys = impl.case_keys
@@ -26,7 +31,7 @@ function metatable:__newindex(key, value)
   cases[key] = value
 end
 
-function metatable:__call(pass, fail)
+function metatable:__call(pass, fail, skip)
   local impl = self[private_impl]
   local case_keys = impl.case_keys
   local cases = impl.cases
@@ -34,16 +39,19 @@ function metatable:__call(pass, fail)
   local suite_name = impl.name
   for i = 1, #case_keys do
     local key = case_keys[i]
-    local result, message = pcall(cases[key])
+    local result, message = pcall(cases[key], self)
     if result then
       pass = pass + 1
       print("[PASS] " .. suite_name .. "." .. key)
+    elseif message == private_skip then
+      skip = skip + 1
+      print("[SKIP] " .. suite_name .. "." .. key)
     else
       fail = fail + 1
       print("[FAIL] " .. suite_name .. "." .. key .. ": " .. message)
     end
   end
-  return pass, fail
+  return pass, fail, skip
 end
 
 return setmetatable(class, {

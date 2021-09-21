@@ -2,38 +2,31 @@
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
-local ffi = require "ffi"
-local love = love
+local text
+local channel
 
-local text_source = {}
 local text_x = 0
 local text_y = 0
 local text_h = 0
 local text_drag
 
-local recv_channel
-local send_channel
-local intr_channel
 
 function love.load()
-  -- cache java classes for android
-  local result, message = pcall(function ()
+  -- cache Java classes on Android
+  pcall(function ()
     require "brigid"
   end)
 
   text = love.graphics.newText(love.graphics.getFont())
-  recv_channel = love.thread.newChannel()
-  send_channel = love.thread.newChannel()
-  intr_channel = love.thread.newChannel()
+  channel = love.thread.newChannel()
 
   local thread = love.thread.newThread("thread.lua")
-  thread:start(recv_channel, send_channel, intr_channel)
+  thread:start(channel)
 end
 
 function love.update(dt)
-  local width, height = love.window.getMode()
   while true do
-    local message = recv_channel:pop()
+    local message = channel:pop()
     if not message then
       break
     end
@@ -63,8 +56,4 @@ function love.mousereleased(x, y, button, is_touch, presses)
   if button == 1 then
     text_drag = nil
   end
-end
-
-function love.wheelmoved(x, y)
-  print("W", x, y)
 end
