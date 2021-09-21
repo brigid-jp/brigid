@@ -5,6 +5,6 @@
 # https://opensource.org/licenses/mit-license.php
 
 case X$# in
-  X0) lua test_main.lua;;
-  *) "$@" test_main.lua;;
+  X0) lua test.lua;;
+  *) "$@" test.lua;;
 esac
