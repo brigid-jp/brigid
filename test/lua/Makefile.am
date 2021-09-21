@@ -5,7 +5,7 @@
 TESTS = test.sh
 
 EXTRA_DIST = \
+	*.lua \
+	love.mk \
 	test.bat \
-	test.lua \
-	test.sh \
-	test_*.lua
+	test.sh

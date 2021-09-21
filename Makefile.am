@@ -18,7 +18,6 @@ EXTRA_DIST = \
 	src/java/java.mk \
 	src/java/jp/brigid/*.java \
 	test/cgi \
-	test/love \
 	windows.mk
 
 dist-hook:
