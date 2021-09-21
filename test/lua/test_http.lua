@@ -72,7 +72,7 @@ function suite:test7()
 end
 
 function suite:test8()
-  local code, header, body = client:request_file("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", nil, "test.dat")
+  local code, header, body = client:request_file("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", nil, self:get_cwd() .. "/test.dat")
   assert(code == 201 or code == 204)
 end
 
@@ -269,7 +269,7 @@ function suite:test29()
   local result, message = session:request {
     method = "PUT",
     url = "https://brigid.jp/test/dav/auth-none/test.txt";
-    file = "test.dat";
+    file = self:get_cwd() .. "/test.dat";
   }
   print(message, canceling)
   assert(not result)
