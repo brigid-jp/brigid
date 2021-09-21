@@ -165,12 +165,15 @@ end
 function suite:test19()
   local code, header, body = client:request("GET", "https://brigid.jp/test/cgi/nph-header.cgi")
   assert(code == 200)
+
+  for k, v in pairs(header) do
+    print("[" .. k .. "]", "[" .. v .. "]")
+  end
+
   assert(header["X-Test1"] == "foo bar")
   assert(header["X-Test2"] == "foo bar")
   assert(header["X-Test3"] == "foo  bar")
-  print(header["X-Test4"])
   assert(header["X-Test4"]:find "^foo[ \t]+bar$")
-  print(header["X-Test5"])
   assert(header["X-Test5"]:find "^foo[ \t]+bar$")
   assert(header["X-Test6"] == "foo bar")
   assert(header["x-test7"] == "foo bar")
