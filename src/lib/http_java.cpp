@@ -151,22 +151,22 @@ namespace brigid {
         {
           jint code = session_.vt.get_response_code(instance_);
 
-          std::map<std::string, std::string> header;
+          // Android's java.net.HttpURLConnection does not handle obs-folds correctly.
+          // I found the problem in API level 17 and 21.
 
-          std::string prev_key;
+          std::map<std::string, std::string> header;
+          std::string key;
           for (jint i = 0; ; ++i) {
-            local_ref_t<jbyteArray> value = session_.vt.get_header_value(instance_, i);
-            if (!value) {
+            local_ref_t<jbyteArray> v = session_.vt.get_header_value(instance_, i);
+            if (!v) {
               break;
             }
-            if (local_ref_t<jbyteArray> key = session_.vt.get_header_key(instance_, i)) {
-              std::string k = get_byte_array_region(key);
-              std::string v = get_byte_array_region(value);
-              if (k.empty()) {
-                header[prev_key] += " " + v;
+            if (local_ref_t<jbyteArray> k = session_.vt.get_header_key(instance_, i)) {
+              if (get_array_length(k) > 0) {
+                key = get_byte_array_region(k);
+                header[key] = get_byte_array_region(v);
               } else {
-                header[k] = v;
-                prev_key = k;
+                header[key].append(" ").append(get_byte_array_region(v));
               }
             }
           }
