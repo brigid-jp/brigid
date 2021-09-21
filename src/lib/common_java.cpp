@@ -1,4 +1,4 @@
-// Copyright (c) 2019 <dev@brigid.jp>
+// Copyright (c) 2019,2021 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -111,6 +111,10 @@ namespace brigid {
     } else {
       return JNI_FALSE;
     }
+  }
+
+  jlong to_long(size_t source) {
+    return static_cast<jlong>(source);
   }
 
   local_ref_t<jclass> find_class(const char* name) {

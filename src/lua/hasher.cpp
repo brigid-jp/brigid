@@ -1,4 +1,4 @@
-// Copyright (c) 2019,2020 <dev@brigid.jp>
+// Copyright (c) 2019-2021 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -96,6 +96,13 @@ namespace brigid {
   }
 
   void initialize_hasher(lua_State* L) {
+    try {
+      open_hasher();
+    } catch (const std::exception& e) {
+      luaL_error(L, "%s", e.what());
+      return;
+    }
+
     lua_newtable(L);
     {
       luaL_newmetatable(L, "brigid.hasher");

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 <dev@brigid.jp>
+// Copyright (c) 2019,2021 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -269,6 +269,8 @@ namespace brigid {
       curl_global_cleanup();
     }
   }
+
+  void open_http() {}
 
   std::unique_ptr<http_session> make_http_session(
       std::function<bool (size_t, size_t)> progress_cb,

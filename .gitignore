@@ -15,6 +15,7 @@
 .libs
 /aclocal.m4
 /autom4te.cache
+/brigid-*.tar.gz
 /compile
 /config.guess
 /config.h
@@ -38,6 +39,7 @@
 /test-driver
 /test/lib/JavaTest.h
 /test/lib/libjavatest.dylib
+/test/lua/brigid-test.love
 Makefile
 test*.exe
 test*.log

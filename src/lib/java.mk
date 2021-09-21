@@ -1,10 +1,10 @@
-# Copyright (c) 2019 <dev@brigid.jp>
+# Copyright (c) 2019,2021 <dev@brigid.jp>
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
-JAVA_HOME = /Library/Java/JavaVirtualMachines/jdk1.8.0_131.jdk/Contents/Home
-CPPFLAGS = -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/darwin -I../.. -I../../include
-CXXFLAGS = -Wall -W -O2 -std=c++11
+UNAME = $(shell uname | tr [:upper:] [:lower:])
+CPPFLAGS = "-I$(JAVA_HOME)/include" "-I$(JAVA_HOME)/include/$(UNAME)" -I../.. -I../../include
+CXXFLAGS = -Wall -W -Wno-missing-field-initializers -O2 -std=c++11 -fPIC
 
 OBJS = \
 	common_java.o \
