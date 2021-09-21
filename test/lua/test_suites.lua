@@ -12,6 +12,7 @@ local function new()
     (require "test_crypto");
     (require "test_writer");
     (require "test_to_be_closed");
+    (require "test_http");
   }
 end
 
