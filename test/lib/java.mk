@@ -5,9 +5,10 @@
 UNAME = $(shell uname | tr [:upper:] [:lower:])
 ifeq ($(UNAME),darwin)
 	TARGET_SUFFIX = .dylib
-endif
+else
 ifeq ($(UNAME),linux)
 	TARGET_SUFFIX = .so
+endif
 endif
 
 CPPFLAGS = "-I$(JAVA_HOME)/include" "-I$(JAVA_HOME)/include/$(UNAME)" -I../../include -I../../src/lib
