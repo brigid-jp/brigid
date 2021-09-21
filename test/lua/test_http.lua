@@ -13,7 +13,7 @@ local suite = test_suite "test_http"
 local client
 
 function suite:test_create_data()
-  local out = assert(io.open(self:get_cwd() .. "/test.dat", "wb"))
+  local out = assert(io.open(test_cwd .. "/test.dat", "wb"))
   for i = 1, 1024 * 1024 / #data4k do
     out:write(data4k)
   end
@@ -72,7 +72,7 @@ function suite:test7()
 end
 
 function suite:test8()
-  local code, header, body = client:request_file("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", nil, self:get_cwd() .. "/test.dat")
+  local code, header, body = client:request_file("PUT", "https://brigid.jp/test/dav/auth-none/test.txt", nil, test_cwd .. "/test.dat")
   assert(code == 201 or code == 204)
 end
 
@@ -269,7 +269,7 @@ function suite:test29()
   local result, message = session:request {
     method = "PUT",
     url = "https://brigid.jp/test/dav/auth-none/test.txt";
-    file = self:get_cwd() .. "/test.dat";
+    file = test_cwd .. "/test.dat";
   }
   print(message, canceling)
   assert(not result)
@@ -278,7 +278,7 @@ function suite:test29()
 end
 
 function suite:test_remove_data()
-  os.remove(self:get_cwd() .. "/test.dat")
+  os.remove(test_cwd .. "/test.dat")
 end
 
 return suite

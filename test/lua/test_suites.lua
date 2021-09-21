@@ -16,13 +16,12 @@ local function new()
   }
 end
 
-function metatable:__call(cwd)
+function metatable:__call()
   local pass = 0
   local fail = 0
   local skip = 0
   for i = 1, #self do
     local suite = self[i]
-    suite:set_cwd(cwd)
     pass, fail, skip = suite(pass, fail, skip)
   end
   local total = pass + fail + skip

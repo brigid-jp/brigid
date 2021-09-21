@@ -35,7 +35,7 @@ end
 
 function suite:test_love()
   if not love then
-    return self:skip()
+    return test_skip()
   end
 
   local byte_data = love.data.newByteData "foobarbazqux"
@@ -62,7 +62,7 @@ function suite:test_ffi()
     ffi = require "ffi"
   end)
   if not ffi then
-    return self:skip()
+    return test_skip()
   end
 
   local data_writer = brigid.data_writer()

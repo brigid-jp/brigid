@@ -4,9 +4,9 @@
 
 local test_suites = require "test_suites"
 
+test_cwd = "."
+
 local suites = test_suites()
-if suites "." then
-  os.exit(0)
-else
-  os.exit(1)
+if not suites() then
+  error "test failed"
 end
