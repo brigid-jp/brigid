@@ -347,9 +347,7 @@ namespace {
     BRIGID_CHECK(client.header("X-Test1") == "foo bar");
     BRIGID_CHECK(client.header("X-Test2") == "foo bar");
     BRIGID_CHECK(client.header("X-Test3") == "foo  bar");
-    std::cout << "[debug] X-Test4 " << client.header("X-Test4") << "\n";
     BRIGID_CHECK(check(client.header("X-Test4")));
-    std::cout << "[debug] X-Test5 " << client.header("X-Test5") << "\n";
     BRIGID_CHECK(check(client.header("X-Test5")));
     BRIGID_CHECK(client.header("X-Test6") == "foo bar");
     BRIGID_CHECK(client.header("x-test7") == "foo bar");
