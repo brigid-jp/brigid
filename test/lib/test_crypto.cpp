@@ -149,6 +149,46 @@ namespace {
     }
   }
 
+  void test_sha1_empty() {
+    static const char expect_data[] = {
+      '\xDA', '\x39', '\xA3', '\xEE', '\x5E', '\x6B', '\x4B', '\x0D',
+      '\x32', '\x55', '\xBF', '\xEF', '\x95', '\x60', '\x18', '\x90',
+      '\xAF', '\xD8', '\x07', '\x09'
+    };
+    static const std::string expect(expect_data, 20);
+
+    auto hasher = brigid::make_hasher(brigid::crypto_hash::sha1);
+    BRIGID_CHECK(to_string(hasher->digest()) == expect);
+  }
+
+  void test_sha1_1() {
+    static const char expect_data[] = {
+      '\x2F', '\xD4', '\xE1', '\xC6', '\x7A', '\x2D', '\x28', '\xFC',
+      '\xED', '\x84', '\x9E', '\xE1', '\xBB', '\x76', '\xE7', '\x39',
+      '\x1B', '\x93', '\xEB', '\x12'
+    };
+    static const std::string expect(expect_data, 20);
+
+    auto hasher = brigid::make_hasher(brigid::crypto_hash::sha1);
+    hasher->update(plaintext.data(), plaintext.size());
+    BRIGID_CHECK(to_string(hasher->digest()) == expect);
+  }
+
+  void test_sha1_2() {
+    static const char expect_data[] = {
+      '\x2F', '\xD4', '\xE1', '\xC6', '\x7A', '\x2D', '\x28', '\xFC',
+      '\xED', '\x84', '\x9E', '\xE1', '\xBB', '\x76', '\xE7', '\x39',
+      '\x1B', '\x93', '\xEB', '\x12'
+    };
+    static const std::string expect(expect_data, 20);
+
+    auto hasher = brigid::make_hasher(brigid::crypto_hash::sha1);
+    for (size_t i = 0; i < plaintext.size(); ++i) {
+      hasher->update(plaintext.data() + i, 1);
+    }
+    BRIGID_CHECK(to_string(hasher->digest()) == expect);
+  }
+
   void test_sha256_empty() {
     static const char expect_data[] = {
       '\xE3', '\xB0', '\xC4', '\x42', '\x98', '\xFC', '\x1C', '\x14',
@@ -268,6 +308,9 @@ namespace {
   BRIGID_MAKE_TEST_CASE(test_error1);
   BRIGID_MAKE_TEST_CASE(test_error2);
   BRIGID_MAKE_TEST_CASE(test_buffer_size);
+  BRIGID_MAKE_TEST_CASE(test_sha1_empty);
+  BRIGID_MAKE_TEST_CASE(test_sha1_1);
+  BRIGID_MAKE_TEST_CASE(test_sha1_2);
   BRIGID_MAKE_TEST_CASE(test_sha256_empty);
   BRIGID_MAKE_TEST_CASE(test_sha256_1);
   BRIGID_MAKE_TEST_CASE(test_sha256_2);
