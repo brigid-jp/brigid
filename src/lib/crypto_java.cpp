@@ -136,6 +136,8 @@ namespace brigid {
 
   std::unique_ptr<hasher> make_hasher(crypto_hash hash) {
     switch (hash) {
+      case crypto_hash::sha1:
+        return std::unique_ptr<hasher>(new hasher_impl("SHA-1"));
       case crypto_hash::sha256:
         return std::unique_ptr<hasher>(new hasher_impl("SHA-256"));
       case crypto_hash::sha512:
