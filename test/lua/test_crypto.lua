@@ -137,6 +137,24 @@ function suite:test_hasher()
   assert(not result)
 end
 
+function suite:test_sha1_1()
+  local result = brigid.hasher "sha1":update "":digest()
+  assert(result == table.concat {
+    "\218\057\163\238\094\107\075\013";
+    "\050\085\191\239\149\096\024\144";
+    "\175\216\007\009"
+  })
+end
+
+function suite:test_sha1_2()
+  local result = brigid.hasher "sha1":update "The quick brown fox jumps over the lazy dog":digest()
+  assert(result == table.concat {
+    "\047\212\225\198\122\045\040\252";
+    "\237\132\158\225\187\118\231\057";
+    "\027\147\235\018"
+  })
+end
+
 function suite:test_sha256_1()
   local result = brigid.hasher "sha256":update "":digest()
   assert(result == table.concat {

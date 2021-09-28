@@ -13,7 +13,7 @@
 
 namespace brigid {
   enum class crypto_cipher { aes_128_cbc, aes_192_cbc, aes_256_cbc };
-  enum class crypto_hash { sha256, sha512 };
+  enum class crypto_hash { sha1, sha256, sha512 };
 
   class crypto_initializer : private noncopyable {
   public:

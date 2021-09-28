@@ -78,6 +78,27 @@ namespace brigid {
       size_t buffer_size_;
     };
 
+    class sha1_hasher_impl : public hasher, private noncopyable {
+    public:
+      sha1_hasher_impl()
+        : ctx_() {
+        CC_SHA1_Init(&ctx_);
+      }
+
+      virtual void update(const char* data, size_t size) {
+        CC_SHA1_Update(&ctx_, data, size);
+      }
+
+      virtual std::vector<char> digest() {
+        std::vector<char> buffer(CC_SHA1_DIGEST_LENGTH);
+        CC_SHA1_Final(reinterpret_cast<unsigned char*>(buffer.data()), &ctx_);
+        return buffer;
+      }
+
+    private:
+      CC_SHA1_CTX ctx_;
+    };
+
     class sha256_hasher_impl : public hasher, private noncopyable {
     public:
       sha256_hasher_impl()
@@ -155,6 +176,8 @@ namespace brigid {
 
   std::unique_ptr<hasher> make_hasher(crypto_hash hash) {
     switch (hash) {
+      case crypto_hash::sha1:
+        return std::unique_ptr<hasher>(new sha1_hasher_impl());
       case crypto_hash::sha256:
         return std::unique_ptr<hasher>(new sha256_hasher_impl());
       case crypto_hash::sha512:
