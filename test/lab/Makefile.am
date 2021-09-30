@@ -2,8 +2,8 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
-noinst_bin_PROGRAMS = \
-	server.exe
+noinst_PROGRAMS = \
+	test_client.exe
 
-server_exe_SOURCES = \
-	server.cpp
+test_client_exe_SOURCES = \
+	test_client.cpp
