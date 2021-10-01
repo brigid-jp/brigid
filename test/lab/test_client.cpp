@@ -115,20 +115,21 @@ namespace brigid {
     t.stop();
     t.print("write");
 
-
     t.start();
     {
       std::vector<char> buffer(2048);
+      ssize_t total = 0;
       while (true) {
         ssize_t size = read(fd, buffer.data(), buffer.size());
         if (size > 0) {
-          std::cout << "[";
-          for (ssize_t i = 0; i < size; ++i) {
-            std::cout << buffer[i];
-          }
-          std::cout << "]\n";
+          // std::cout << "[";
+          // for (ssize_t i = 0; i < size; ++i) {
+          //   std::cout << buffer[i];
+          // }
+          // std::cout << "]\n";
+          total += size;
         } else if (size == 0) {
-          std::cout << "closed\n";
+          std::cout << "closed " << total << "\n";
           break;
         } else {
           int code = errno;
