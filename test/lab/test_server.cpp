@@ -17,50 +17,46 @@
 namespace brigid {
   namespace {
     void run(const char* node, const char* serv) {
+      int server_fd = -1;
       int fd = -1;
       try {
         std::cout << std::setfill('0');
         timer t;
 
         t.start();
-        addrinfo_t ai = getaddrinfo(node, serv, AI_ADDRCONFIG, AF_INET, SOCK_STREAM);
+        addrinfo_t ai = getaddrinfo(node, serv, AI_ADDRCONFIG | AI_PASSIVE, AF_INET, SOCK_STREAM);
         t.stop();
         t.print("getaddrinfo");
 
         t.start();
-        fd = socket(ai->ai_family, ai->ai_socktype, 0);
-        if (fd == -1) {
+        server_fd = socket(ai->ai_family, ai->ai_socktype, 0);
+        if (server_fd == -1) {
           throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
         }
         t.stop();
         t.print("socket");
 
         t.start();
-        if (connect(fd, ai->ai_addr, ai->ai_addrlen) == -1) {
+        if (bind(server_fd, ai->ai_addr, ai->ai_addrlen) == -1) {
           throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
         }
         t.stop();
-        t.print("connect");
+        t.print("bind");
 
         t.start();
-        {
-          std::string buffer = "GET / HTTP/1.0\r\n\r\n";
-          if (write(fd, buffer.data(), buffer.size()) == -1) {
-            throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
-          }
+        if (listen(server_fd, SOMAXCONN) == -1) {
+          throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
         }
         t.stop();
-        t.print("write");
+        t.print("listen");
 
         t.start();
-        {
-          if (shutdown(fd, SHUT_WR) == -1) {
-            throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
-          }
+        fd = accept(server_fd, nullptr, nullptr);
+        if (fd == -1) {
+          throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
         }
         t.stop();
-        t.print("shutdown");
-
+        t.print("accept");
 
         t.start();
         {
@@ -87,10 +83,24 @@ namespace brigid {
         t.stop();
         t.print("read");
 
+        t.start();
+        {
+          std::string buffer = "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n";
+          if (write(fd, buffer.data(), buffer.size()) == -1) {
+            throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
+          }
+        }
+        t.stop();
+        t.print("write");
+
         close(fd);
+        close(server_fd);
       } catch (...) {
         if (fd != -1) {
           close(fd);
+        }
+        if (server_fd != -1) {
+          close(server_fd);
         }
         throw;
       }
