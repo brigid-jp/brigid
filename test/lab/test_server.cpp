@@ -10,6 +10,8 @@
 #include <iostream>
 #include <vector>
 
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <sys/socket.h>
 #include <errno.h>
 #include <unistd.h>
@@ -60,21 +62,20 @@ namespace brigid {
             t.stop();
             t.print("accept");
 
+            int v = 1;
+            if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &v, sizeof(v)) == -1) {
+              throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
+            }
+
             t.start();
             {
               std::vector<char> buffer(2048);
-              ssize_t total = 0;
               while (true) {
                 ssize_t size = read(fd, buffer.data(), buffer.size());
                 if (size > 0) {
-                  // std::cout << "[";
-                  // for (ssize_t i = 0; i < size; ++i) {
-                  //   std::cout << buffer[i];
-                  // }
-                  // std::cout << "]\n";
-                  total += size;
+                  std::cout << "read " << size << "\n";
                 } else if (size == 0) {
-                  std::cout << "closed " << total << "\n";
+                  std::cout << "closed\n";
                   break;
                 } else {
                   int code = errno;
