@@ -1,15 +1,38 @@
 // vim: syntax=cpp:
-#include <iostream>
 
-%%{
-  machine websocket;
-  request_line = 'HTTP/' digit+ '/' digit+ '\r\n';
-  main := request_line;
-}%%
+#include "test_ragel.hpp"
 
-%%write data;
+namespace brigid {
+  namespace {
+    %%{
+      machine websocket;
+      request_line = 'HTTP/' digit+ '/' digit+ '\r\n';
+      main := request_line;
+    }%%
 
-void test_ragel(int cs, const char* p, const char* pe) {
-  %%write init;
-  %%write exec;
+    %%write data;
+  }
+
+  class websocket_request_parser::impl {
+  public:
+    impl() {
+      %%write init;
+    }
+
+    void update(const char* p, const char* pe) {
+      %%write exec;
+    }
+
+  private:
+    int cs;
+  };
+
+  websocket_request_parser::websocket_request_parser()
+    : impl_(new impl()) {}
+
+  websocket_request_parser::~websocket_request_parser() {}
+
+  void websocket_request_parser::update(const char* data, size_t size) {
+    impl_->update(data, data + size);
+  }
 }
