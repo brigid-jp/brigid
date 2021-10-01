@@ -61,16 +61,9 @@ namespace brigid {
         t.stop();
         t.print("send");
 
-        // {
-        //   struct timespec t = {};
-        //   t.tv_sec = 0;
-        //   t.tv_nsec = 1000000;
-        //   nanosleep(&t, nullptr);
-        // }
-
         t.start();
         {
-          std::string buffer = "dummy";
+          std::vector<char> buffer(4096);
           if (send(fd, buffer.data(), buffer.size(), 0) == -1) {
             throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
           }
@@ -86,7 +79,6 @@ namespace brigid {
         }
         t.stop();
         t.print("shutdown");
-
 
         t.start();
         {
