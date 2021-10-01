@@ -5,5 +5,8 @@
 noinst_PROGRAMS = \
 	test_client.exe
 
+test_client_exe_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/lib
+test_client_exe_LDFLAGS =
+test_client_exe_LDADD = $(top_srcdir)/src/lib/libbrigid.la
 test_client_exe_SOURCES = \
 	test_client.cpp
