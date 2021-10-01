@@ -9,10 +9,10 @@
 #include <stddef.h>
 
 namespace brigid {
-  class websocket_request_parser : private noncopyable {
+  class websocket_server_parser : private noncopyable {
   public:
-    websocket_request_parser();
-    ~websocket_request_parser();
+    websocket_server_parser();
+    ~websocket_server_parser();
     void update(const char* data, size_t size);
   private:
     class impl;

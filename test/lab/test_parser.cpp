@@ -3,7 +3,7 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/stdio.hpp>
-#include "websocket_request_parser.hpp"
+#include "websocket_server_parser.hpp"
 
 #include <exception>
 #include <iostream>
@@ -15,7 +15,7 @@
 namespace brigid {
   namespace {
     void run(const char* path) {
-      websocket_request_parser parser;
+      websocket_server_parser parser;
 
       std::vector<char> buffer(4096);
       file_handle_t handle = open_file_handle(path, "rb");

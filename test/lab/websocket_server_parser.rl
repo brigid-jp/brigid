@@ -1,6 +1,6 @@
 // vim: syntax=ragel:
 
-#include "websocket_request_parser.hpp"
+#include "websocket_server_parser.hpp"
 
 #include <iostream>
 
@@ -49,7 +49,7 @@ namespace brigid {
     %%write data;
   }
 
-  class websocket_request_parser::impl {
+  class websocket_server_parser::impl {
   public:
     impl() {
       %%write init;
@@ -78,12 +78,12 @@ namespace brigid {
     int cs;
   };
 
-  websocket_request_parser::websocket_request_parser()
+  websocket_server_parser::websocket_server_parser()
     : impl_(new impl()) {}
 
-  websocket_request_parser::~websocket_request_parser() {}
+  websocket_server_parser::~websocket_server_parser() {}
 
-  void websocket_request_parser::update(const char* data, size_t size) {
+  void websocket_server_parser::update(const char* data, size_t size) {
     impl_->update(data, nullptr);
   }
 }
