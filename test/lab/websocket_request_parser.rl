@@ -2,12 +2,38 @@
 
 #include "websocket_request_parser.hpp"
 
+#include <iostream>
+
 namespace brigid {
   namespace {
     %%{
       machine websocket;
-      request_line = 'HTTP/' digit+ '/' digit+ '\r\n';
-      main := request_line;
+
+      # https://tools.ietf.org/html/rfc2616
+
+      CHAR = ascii;
+      CTL = cntrl | 127;
+      SP = ' ';
+      HT = '\t';
+      CRLF = "\r\n";
+
+      separators
+        = "(" | ")" | "<" | ">" | "@"
+        | "," | ";" | ":" | "\\" | "\""
+        | "/" | "[" | "]" | "?" | "="
+        | "{" | "}" | SP | HT;
+
+
+      token = (CHAR - CTL - separators)+;
+
+      Request_URI = [^ ]+;
+      HTTP_Version = "HTTP/" digit+ "." digit+;
+
+      request_line =
+        # [^\r\n]+ "\r\n";
+        token SP Request_URI SP HTTP_Version CRLF;
+
+      main := request_line @{ fbreak; };
     }%%
 
     %%write data;
@@ -19,8 +45,23 @@ namespace brigid {
       %%write init;
     }
 
-    void update(const char* p, const char* pe) {
+    void update(const char* data, const char* end) {
+      const char* p = data;
+      const char* pe = nullptr;
+
       %%write exec;
+
+      std::cout << "cs " << cs << "\n";
+      std::cout << "index " << (p - data) << "\n";
+
+      if (cs == websocket_error) {
+        std::cerr << "ERROR\n";
+      }
+
+      if (cs >= websocket_first_final) {
+        std::cerr << "FINAL\n";
+      }
+
     }
 
   private:
@@ -33,6 +74,6 @@ namespace brigid {
   websocket_request_parser::~websocket_request_parser() {}
 
   void websocket_request_parser::update(const char* data, size_t size) {
-    impl_->update(data, data + size);
+    impl_->update(data, nullptr);
   }
 }

@@ -1,0 +1,18 @@
+GET /recorder/socket HTTP/1.1
+Host: localhost:8000
+Pragma: no-cache
+Cache-Control: no-cache
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36
+Origin: https://nozomi.dromozoa.com
+Sec-WebSocket-Version: 13
+Accept-Encoding: gzip, deflate, br
+Accept-Language: ja,en-US;q=0.9,en;q=0.8
+Sec-WebSocket-Key: vq6/gETGK7FkBSBDJq771w==
+Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
+X-Forwarded-For: 220.100.118.212
+X-Forwarded-Host: nozomi.dromozoa.com
+X-Forwarded-Server: nozomi.dromozoa.com
+Upgrade: WebSocket
+Connection: Upgrade
+
+dummy
