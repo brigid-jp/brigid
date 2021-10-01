@@ -94,16 +94,25 @@ namespace brigid {
 
     timer t;
 
+    t.start();
     addrinfo_t ai = getaddrinfo(node, serv, AI_ADDRCONFIG, AF_INET, SOCK_STREAM);
+    t.stop();
+    t.print("getaddrinfo");
 
+    t.start();
     int fd = socket(ai->ai_family, ai->ai_socktype, 0);
     if (fd == -1) {
       throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
     }
+    t.stop();
+    t.print("socket");
 
+    t.start();
     if (connect(fd, ai->ai_addr, ai->ai_addrlen) == -1) {
       throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
     }
+    t.stop();
+    t.print("connect");
 
     t.start();
     {
