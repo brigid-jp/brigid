@@ -18,7 +18,6 @@ namespace brigid {
   namespace {
     void run(const char* node, const char* serv) {
       int server_fd = -1;
-      int fd = -1;
       try {
         std::cout << std::setfill('0');
         timer t;
@@ -50,55 +49,63 @@ namespace brigid {
         t.stop();
         t.print("listen");
 
-        t.start();
-        fd = accept(server_fd, nullptr, nullptr);
-        if (fd == -1) {
-          throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
-        }
-        t.stop();
-        t.print("accept");
-
-        t.start();
-        {
-          std::vector<char> buffer(2048);
-          ssize_t total = 0;
-          while (true) {
-            ssize_t size = read(fd, buffer.data(), buffer.size());
-            if (size > 0) {
-              // std::cout << "[";
-              // for (ssize_t i = 0; i < size; ++i) {
-              //   std::cout << buffer[i];
-              // }
-              // std::cout << "]\n";
-              total += size;
-            } else if (size == 0) {
-              std::cout << "closed " << total << "\n";
-              break;
-            } else {
-              int code = errno;
-              throw BRIGID_RUNTIME_ERROR(std::generic_category().message(code), make_error_code("error number", code));
+        while (true) {
+          int fd = -1;
+          try {
+            t.start();
+            fd = accept(server_fd, nullptr, nullptr);
+            if (fd == -1) {
+              throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
             }
+            t.stop();
+            t.print("accept");
+
+            t.start();
+            {
+              std::vector<char> buffer(2048);
+              ssize_t total = 0;
+              while (true) {
+                ssize_t size = read(fd, buffer.data(), buffer.size());
+                if (size > 0) {
+                  // std::cout << "[";
+                  // for (ssize_t i = 0; i < size; ++i) {
+                  //   std::cout << buffer[i];
+                  // }
+                  // std::cout << "]\n";
+                  total += size;
+                } else if (size == 0) {
+                  std::cout << "closed " << total << "\n";
+                  break;
+                } else {
+                  int code = errno;
+                  throw BRIGID_RUNTIME_ERROR(std::generic_category().message(code), make_error_code("error number", code));
+                }
+              }
+            }
+            t.stop();
+            t.print("read");
+
+            t.start();
+            {
+              std::string buffer = "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n";
+              if (write(fd, buffer.data(), buffer.size()) == -1) {
+                throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
+              }
+            }
+            t.stop();
+            t.print("write");
+
+            close(fd);
+          } catch (...) {
+            if (fd != -1) {
+              close(fd);
+            }
+            throw;
           }
         }
-        t.stop();
-        t.print("read");
 
-        t.start();
-        {
-          std::string buffer = "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n";
-          if (write(fd, buffer.data(), buffer.size()) == -1) {
-            throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
-          }
-        }
-        t.stop();
-        t.print("write");
-
-        close(fd);
         close(server_fd);
       } catch (...) {
-        if (fd != -1) {
-          close(fd);
-        }
         if (server_fd != -1) {
           close(server_fd);
         }
