@@ -4,7 +4,6 @@
 
 #include <brigid/error.hpp>
 #include "test_common.hpp"
-#include "test_ragel.hpp"
 
 #include <exception>
 #include <iomanip>

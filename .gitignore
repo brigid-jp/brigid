@@ -1,5 +1,6 @@
 *.a
 *.class
+*.cxx
 *.dll
 *.exp
 *.in
