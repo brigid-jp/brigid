@@ -1,4 +1,4 @@
-// vim: syntax=cpp:
+// vim: syntax=ragel:
 
 #include "websocket_request_parser.hpp"
 
@@ -23,15 +23,25 @@ namespace brigid {
         | "/" | "[" | "]" | "?" | "="
         | "{" | "}" | SP | HT;
 
-
       token = (CHAR - CTL - separators)+;
 
       Request_URI = [^ ]+;
-      HTTP_Version = "HTTP/" digit+ "." digit+;
+      HTTP_Version =
+        "HTTP/"
+        digit+
+          >{ std::cout << "major version enter " << fc << "\n"; }
+          @{ std::cout << "major version " << fc << "\n"; }
+        "."
+        digit+
+          >{ std::cout << "minor version enter " << fc << "\n"; }
+          @{ std::cout << "minor version " << fc << "\n"; }
+        ;
 
       request_line =
-        # [^\r\n]+ "\r\n";
-        token SP Request_URI SP HTTP_Version CRLF;
+        token @{ std::cout << "tchar " << fc << "\n"; }
+        SP Request_URI
+        SP HTTP_Version
+        CRLF;
 
       main := request_line @{ fbreak; };
     }%%
