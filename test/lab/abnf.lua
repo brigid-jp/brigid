@@ -11,6 +11,27 @@ function class:push(node)
   self[#self + 1] = node
 end
 
+local function escape(source)
+  return (source:gsub("&", "&amp;"):gsub("<", "&lt;"))
+end
+
+function class:dump_xml()
+  io.write("<", escape(self[0]))
+  if self.position then
+    io.write(" position=\"", self.position, "\"")
+  end
+  io.write ">\n"
+  for i = 1, #self do
+    local that = self[i]
+    if type(that) == "table" then
+      that:dump_xml()
+    else
+      io.write("<value>", escape(that), "</value>\n")
+    end
+  end
+  io.write("</", escape(self[0]), ">\n")
+end
+
 local abnf_node = setmetatable(class, {
   __call = function (_, name, ...)
     return setmetatable(new(name, ...), metatable)
@@ -41,6 +62,12 @@ end
 
 function class:match(pattern)
   return match(self, self.buffer:find("^" .. pattern, self.position))
+end
+
+function class:node(name, ...)
+  local node = abnf_node(name, ...)
+  node.position = self.position
+  return node
 end
 
 function class:top()
@@ -78,12 +105,8 @@ function class:restore(backup)
   self.stack = backup.stack
 end
 
-function class:error()
-  error("parser error: at position " .. self.position .. " source [" .. self.buffer:sub(self.position, self.position + 10) .. "]")
-end
-
 function class:rulelist()
-  local node = abnf_node("rulelist")
+  local node = self:node("rulelist")
   while true do
     local backup = self:backup()
     local commit
@@ -101,21 +124,16 @@ function class:rulelist()
       break
     end
   end
-
-  print(#self.buffer, self.position)
-  self:error()
-
-  -- 全部読んだかをチェックする
-  -- トップにrulelistがあるかをチェックする
-
-  self:push(node)
+  assert(#self.buffer + 1 == self.position)
+  assert(#self.stack == 0)
+  return node
 end
 
 function class:rule()
   local backup = self:backup()
 
   if self:rulename() then
-    local node = abnf_node("rule", self:pop())
+    local node = self:node("rule", self:pop())
     if self:defined_as() then
       node:push(self:pop())
       if self:elements() then
@@ -133,7 +151,7 @@ end
 
 function class:rulename()
   if self:match "%a[%a%d%-]*" then
-    self:push(abnf_node("rulename", self[0]))
+    self:push(self:node("rulename", self[0]))
     return true
   end
 end
@@ -143,7 +161,7 @@ function class:defined_as()
 
   while self:c_wsp() do end
   if self:match "=/?" then
-    self:push(abnf_node("defined_as", self[0]))
+    self:push(self:node("defined_as", self[0]))
     while self:c_wsp() do end
     return true
   end
@@ -154,7 +172,7 @@ end
 function class:elements()
   if self:alternation() then
     while self:c_wsp() do end
-    local node = abnf_node("elements", self:pop())
+    local node = self:node("elements", self:pop())
     self:push(node)
     return true
   end
@@ -194,7 +212,7 @@ function class:alternation()
   local backup = self:backup()
 
   if self:concatenation() then
-    local node = abnf_node("alternation", self:pop())
+    local node = self:node("alternation", self:pop())
     while true do
       local backup = self:backup()
       local commit
@@ -222,7 +240,7 @@ function class:concatenation()
   local backup = self:backup()
 
   if self:repetition() then
-    local node = abnf_node("concatenation", self:pop())
+    local node = self:node("concatenation", self:pop())
     while true do
       local backup = self:backup()
       local commit
@@ -254,7 +272,7 @@ function class:repetition()
   end
 
   if self:element() then
-    local node = abnf_node("repetition", self:pop(), repeat_)
+    local node = self:node("repetition", self:pop(), repeat_)
     self:push(node)
     return true
   end
@@ -263,18 +281,18 @@ function class:repetition()
 end
 
 function class:repeat_()
-  if self:match "(%d*)%*(%d*)" then -- *Rule
-    self:push(abnf_node("repeat*", self[1], self[2]))
+  if self:match "(%d*)%*(%d*)" then
+    self:push(self:node("repeat_asterisk", self[1], self[2])) -- TODO
     return true
-  elseif self:match "%d+" then -- nRule
-    self:push(abnf_node("repeat", self[0]))
+  elseif self:match "%d+" then
+    self:push(self:node("repeat", self[0]))
     return true
   end
 end
 
 function class:element()
   if self:rulename() or self:group() or self:option() or self:char_val() or self:num_val() or self:prose_val() then
-    local node = abnf_node("element", self:pop())
+    local node = self:node("element", self:pop())
     self:push(node)
     return true
   end
@@ -287,7 +305,7 @@ function class:group()
     if self:alternation() then
       while self:c_wsp() do end
       if self:match "%)" then
-        local node = abnf_node("group", self:pop())
+        local node = self:node("group", self:pop())
         self:push(node)
         return true
       end
@@ -303,7 +321,7 @@ function class:option()
     if self:alternation() then
       while self:c_wsp() do end
       if self:match "%]" then
-        local node = abnf_node("option", self:pop())
+        local node = self:node("option", self:pop())
         self:push(node)
         return true
       end
@@ -313,8 +331,8 @@ function class:option()
 end
 
 function class:char_val()
-  if self:match "\"[\32\33\35-\115]*\"" then
-    self:push(abnf_node("char_val", self[0]))
+  if self:match "\"[\32\33\35-\126]*\"" then
+    self:push(self:node("char_val", self[0]))
     return true
   end
 end
@@ -322,7 +340,7 @@ end
 function class:num_val()
   local backup = self:backup()
   if self:match "%%" and (self:bin_val() or self:dec_val() or self:hex_val()) then
-    local node = abnf_node("num_val", self:pop())
+    local node = self:node("num_val", self:pop())
     self:push(node)
     return true
   end
@@ -331,7 +349,7 @@ end
 
 function class:bin_val()
   if self:match "b[01]+" then
-    local node = abnf_node("bin_val", self[0])
+    local node = self:node("bin_val", self[0])
     if self:match "%.[01]+" then
       node:push(self[0])
       while self:match "%.[01]+" do
@@ -347,7 +365,7 @@ end
 
 function class:dec_val()
   if self:match "d%d+" then
-    local node = abnf_node("dec_val", self[0])
+    local node = self:node("dec_val", self[0])
     if self:match "%.%d+" then
       node:push(self[0])
       while self:match "%.%d+" do
@@ -363,7 +381,7 @@ end
 
 function class:hex_val()
   if self:match "x%x+" then
-    local node = abnf_node("dec_val", self[0])
+    local node = self:node("hex_val", self[0])
     if self:match "%.%x+" then
       node:push(self[0])
       while self:match "%.%x+" do
@@ -379,7 +397,7 @@ end
 
 function class:prose_val()
   if self:match "<[\32-\61\63-\126]*>" then
-    self:push(abnf_node("prose_val", self[0]))
+    self:push(self:node("prose_val", self[0]))
     return true
   end
 end
@@ -442,115 +460,12 @@ local function process(number, line_range_i, line_range_j)
   local buffer = (table.concat(buffer, "\r\n") .. "\r\n")
 
   parser = abnf_parser(buffer)
-  parser:rulelist()
-
-  -- print(buffer:sub(47, 57))
+  return parser:rulelist()
 end
 
-process(5234, 549, 627)
+local list = process(5234, 549, 627)
+list:dump_xml()
 -- process(5234, 720, 778)
-
 -- process(3986, 2697, 2788)
-
 -- process(7230, 4555, 4683)
 
---[[
-local p = abnf [[
-abc = "a" / "b"
-def = abc abc
-p:rulename()
-
-function class:rulename()
-  local v = self.data:match "^([A-Za-z][A-Za-z0-9%-]*)"
-  if v then
-    print("rulename", v)
-  else
-    error "cannot match"
-  end
-end
-
-function class:any_c_wsp()
-  while self:c_wsp() do end
-end
-
-function class:defined_as()
-  self:any_c_wsp()
-  -- "=" or "=/"
-  -- defined_as op
-  self:any_c_wsp()
-end
-]]
-
---[[
-local path = ...
-
-local handle = assert(io.open(path))
-local content = handle:read "*a"
-handle:close()
-
--- content = content:gsub("\n[^\n]+%[Page %d+%]\n\f\n[^\n]+\n", "\n")
-
-content = content
-  :gsub("\n[^\n]*\n\f\n", "\n\f\n")
-  :gsub("\f\n[^\n]*\n", "\f\n")
-  :gsub("\n*\f\n*", "\n\n")
-  :gsub("\n\n+", "\n\n")
-
-io.write(content)
-]]
-
---[[
-
-for line in io.lines(path) do
-  local state = 1
-
-  if state == 1 and line:find "^Appendix.*Collected ABNF" then
-    print(line)
-  elseif state == 2 then
-  end
-
-end
-]]
-
-
---[[
-local class = {}
-local metatable = { __index = class }
-
-local function new(source)
-  return {
-    source = source;
-    p = 1;
-  }
-end
-
-function class:rulename()
-  local v = self.source:match "^([A-Za-z][A-Za-z0-9%-]*)"
-  if v then
-    print("rulename", v)
-  else
-    error "cannot match"
-  end
-end
-
-function class:any_c_wsp()
-  while self:c_wsp() do end
-end
-
-function class:defined_as()
-  self:any_c_wsp()
-  -- "=" or "=/"
-  -- defined_as op
-  self:any_c_wsp()
-end
-
-
-
-
-return setmetatable(class, {
-  __call = function (_, source)
-    return setmetatable(new(source), metatable)
-  end;
-})
-
-]]
