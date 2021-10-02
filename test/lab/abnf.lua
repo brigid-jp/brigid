@@ -82,46 +82,50 @@ function class:error()
   error("parser error: at position " .. self.position .. " source [" .. self.buffer:sub(self.position, self.position + 10) .. "]")
 end
 
-function rulelist(self)
-  local backup = self:backup()
-
-  if self:rule() then
-    local rule = self:pop()
-    self:top():push(rule)
-    return true
-  else
-    while self:c_wsp() do end
-    if self:c_nl() then
-      return true
-    end
-  end
-
-  self:restore(backup)
-end
-
 function class:rulelist()
-  self:push(abnf_node("rulelist"))
-
-  if not rulelist(self) then
-    self:error()
-  end
-
+  local node = abnf_node("rulelist")
   while true do
-    if not rulelist(self) then
+    local backup = self:backup()
+    local commit
+    if self:rule() then
+      node:push(self:pop())
+      commit = true
+    else
+      while self:c_wsp() do end
+      if self:c_nl() then
+        commit = true
+      end
+    end
+    if not commit then
+      self:restore(backup)
       break
     end
   end
 
+  print(#self.buffer, self.position)
+  self:error()
+
   -- 全部読んだかをチェックする
   -- トップにrulelistがあるかをチェックする
+
+  self:push(node)
 end
 
 function class:rule()
   local backup = self:backup()
 
-  if self:rulename() and self:defined_as() and self:elements() and self:c_nl() then
-    -- rule nodeを作る
-    return true
+  if self:rulename() then
+    local node = abnf_node("rule", self:pop())
+    if self:defined_as() then
+      node:push(self:pop())
+      if self:elements() then
+        node:push(self:pop())
+        if self:c_nl() then
+          self:push(node)
+          return true
+        end
+      end
+    end
   end
 
   self:restore(backup)
@@ -175,13 +179,13 @@ end
 function class:c_nl()
   if self:comment() then
     return true
-  elseif self:match "\n" then
+  elseif self:match "\r\n" then
     return true
   end
 end
 
 function class:comment()
-  if self:match ";[ \t\33-\126]*\n" then
+  if self:match ";[ \t\33-\126]*\r\n" then
     return true
   end
 end
@@ -260,10 +264,10 @@ end
 
 function class:repeat_()
   if self:match "(%d*)%*(%d*)" then -- *Rule
-    self:push(abnf_node("repeat", "*", self[1], self[2]))
+    self:push(abnf_node("repeat*", self[1], self[2]))
     return true
   elseif self:match "%d+" then -- nRule
-    self:push(abnf_node("repeat", "n", self[0]))
+    self:push(abnf_node("repeat", self[0]))
     return true
   end
 end
@@ -375,6 +379,7 @@ end
 
 function class:prose_val()
   if self:match "<[\32-\61\63-\126]*>" then
+    self:push(abnf_node("prose_val", self[0]))
     return true
   end
 end
@@ -406,6 +411,7 @@ local function process(number, line_range_i, line_range_j)
     if line == "\f" then
       page_number = page_number + 1
     end
+    line = line:gsub("\r$", "")
     if line_range_i <= line_number and line_number <= line_range_j then
       buffer[#buffer + 1] = line
     end
@@ -433,12 +439,7 @@ local function process(number, line_range_i, line_range_j)
     end
   end
 
-  local buffer = (table.concat(buffer, "\n") .. "\n")
-    -- :gsub("\r\n", "\n")
-    -- :gsub("\f\n[^\n]*\n", "\f\n")   -- header
-    -- :gsub("[^\n]*\n\f\n", "\n\f\n") -- footer
-    -- :gsub("\f\n", "\n")
-  -- io.write(buffer)
+  local buffer = (table.concat(buffer, "\r\n") .. "\r\n")
 
   parser = abnf_parser(buffer)
   parser:rulelist()
