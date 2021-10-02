@@ -11,12 +11,8 @@ function class:push(node)
   self[#self + 1] = node
 end
 
-local function escape(source)
-  return (source:gsub("&", "&amp;"):gsub("<", "&lt;"))
-end
-
 function class:dump_xml()
-  io.write("<", escape(self[0]))
+  io.write("<", self[0])
   if self.position then
     io.write(" position=\"", self.position, "\"")
   end
@@ -26,10 +22,10 @@ function class:dump_xml()
     if type(that) == "table" then
       that:dump_xml()
     else
-      io.write("<value>", escape(that), "</value>\n")
+      io.write("<value>", (that:gsub("&", "&amp;"):gsub("<", "&lt;")), "</value>\n")
     end
   end
-  io.write("</", escape(self[0]), ">\n")
+  io.write("</", self[0], ">\n")
 end
 
 local abnf_node = setmetatable(class, {
@@ -282,7 +278,7 @@ end
 
 function class:repeat_()
   if self:match "(%d*)%*(%d*)" then
-    self:push(self:node("repeat_asterisk", self[1], self[2])) -- TODO
+    self:push(self:node("repeat", self[1], self[2]))
     return true
   elseif self:match "%d+" then
     self:push(self:node("repeat", self[0]))
@@ -348,15 +344,17 @@ function class:num_val()
 end
 
 function class:bin_val()
-  if self:match "b[01]+" then
-    local node = self:node("bin_val", self[0])
-    if self:match "%.[01]+" then
-      node:push(self[0])
-      while self:match "%.[01]+" do
-        node:push(self[0])
+  if self:match "b([01]+)" then
+    local node = self:node("bin_val", self[1])
+    if self:match "%.([01]+)" then
+      node:push "."
+      node:push(self[1])
+      while self:match "%.([01]+)" do
+        node:push(self[1])
       end
-    elseif self:match "%-[01]+" then
-      node:push(self[0])
+    elseif self:match "%-([01]+)" then
+      node:push "-"
+      node:push(self[1])
     end
     self:push(node)
     return true
@@ -364,15 +362,17 @@ function class:bin_val()
 end
 
 function class:dec_val()
-  if self:match "d%d+" then
-    local node = self:node("dec_val", self[0])
-    if self:match "%.%d+" then
-      node:push(self[0])
-      while self:match "%.%d+" do
-        node:push(self[0])
+  if self:match "d(%d+)" then
+    local node = self:node("dec_val", self[1])
+    if self:match "%.(%d+)" then
+      node:push "."
+      node:push(self[1])
+      while self:match "%.(%d+)" do
+        node:push(self[1])
       end
-    elseif self:match "%-%d+" then
-      node:push(self[0])
+    elseif self:match "%-(%d+)" then
+      node:push "-"
+      node:push(self[1])
     end
     self:push(node)
     return true
@@ -380,15 +380,17 @@ function class:dec_val()
 end
 
 function class:hex_val()
-  if self:match "x%x+" then
-    local node = self:node("hex_val", self[0])
-    if self:match "%.%x+" then
-      node:push(self[0])
-      while self:match "%.%x+" do
-        node:push(self[0])
+  if self:match "x(%x+)" then
+    local node = self:node("hex_val", self[1])
+    if self:match "%.(%x+)" then
+      node:push "."
+      node:push(self[1])
+      while self:match "%.(%x+)" do
+        node:push(self[1])
       end
-    elseif self:match "%-%x+" then
-      node:push(self[0])
+    elseif self:match "%-(%x+)" then
+      node:push "-"
+      node:push(self[1])
     end
     self:push(node)
     return true
@@ -396,8 +398,8 @@ function class:hex_val()
 end
 
 function class:prose_val()
-  if self:match "<[\32-\61\63-\126]*>" then
-    self:push(self:node("prose_val", self[0]))
+  if self:match "<([\32-\61\63-\126]*)>" then
+    self:push(self:node("prose_val", self[1]))
     return true
   end
 end
@@ -463,9 +465,9 @@ local function process(number, line_range_i, line_range_j)
   return parser:rulelist()
 end
 
-local list = process(5234, 549, 627)
-list:dump_xml()
--- process(5234, 720, 778)
--- process(3986, 2697, 2788)
--- process(7230, 4555, 4683)
+-- local list = process(5234, 549, 627)
+local list = process(5234, 720, 778)
+-- local list = process(3986, 2697, 2788)
+-- local list = process(7230, 4555, 4683)
 
+list:dump_xml()
