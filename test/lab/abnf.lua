@@ -25,14 +25,14 @@ local function new(buffer)
     buffer = buffer;
     position = 1;
     stack = {};
-    group = {};
+    matches = {};
   }
 end
 
 local function match(self, i, j, ...)
   if i then
     self.position = j + 1
-    self.group = { [0] = self.buffer:sub(i, j), ... }
+    self.matches = { [0] = self.buffer:sub(i, j), ... }
     return true
   else
     return false
@@ -51,7 +51,7 @@ end
 function class:push(node)
   local stack = self.stack
   stack[#stack + 1] = node
-  print("push", node[0], table.unpack(node))
+  assert(node[0])
 end
 
 function class:pop()
@@ -59,16 +59,31 @@ function class:pop()
   local n = #stack
   local node = stack[n]
   stack[n] = nil
-  print("pop", node[0], table.unpack(node))
   return node
 end
 
+function class:backup()
+  local stack = {}
+  for k, v in pairs(self.stack) do
+    stack[k] = v
+  end
+  return {
+    position = self.position;
+    stack = stack;
+  }
+end
+
+function class:restore(backup)
+  self.position = backup.position
+  self.stack = backup.stack
+end
+
 function class:error()
-  error("parser error: at position " .. self.position)
+  error("parser error: at position " .. self.position .. " source [" .. self.buffer:sub(self.position, self.position + 10) .. "]")
 end
 
 function rulelist(self)
-  local position = self.position
+  local backup = self:backup()
 
   if self:rule() then
     local rule = self:pop()
@@ -81,21 +96,18 @@ function rulelist(self)
     end
   end
 
-  self.position = position
+  self:restore(backup)
 end
 
 function class:rulelist()
   self:push(abnf_node("rulelist"))
-
-  -- RFC5234の記述では最初のruleの前の空白が許容されない
-  while self:c_wsp() do end
 
   if not rulelist(self) then
     self:error()
   end
 
   while true do
-    if not rulelist() then
+    if not rulelist(self) then
       break
     end
   end
@@ -105,14 +117,14 @@ function class:rulelist()
 end
 
 function class:rule()
-  local position = self.position
+  local backup = self:backup()
 
   if self:rulename() and self:defined_as() and self:elements() and self:c_nl() then
     -- rule nodeを作る
     return true
   end
 
-  self.position = position
+  self:restore(backup)
 end
 
 function class:rulename()
@@ -123,7 +135,7 @@ function class:rulename()
 end
 
 function class:defined_as()
-  local position = self.position
+  local backup = self:backup()
 
   while self:c_wsp() do end
   if self:match "=/?" then
@@ -132,18 +144,20 @@ function class:defined_as()
     return true
   end
 
-  self.position = position
+  self:restore(backup)
 end
 
 function class:elements()
   if self:alternation() then
     while self:c_wsp() do end
+    local node = abnf_node("elements", self:pop())
+    self:push(node)
     return true
   end
 end
 
 function class:c_wsp()
-  local position = self.position
+  local backup = self:backup()
 
   if self:match "[ \t]" then
     return true
@@ -155,7 +169,7 @@ function class:c_wsp()
     end
   end
 
-  self.position = position
+  self:restore(backup)
 end
 
 function class:c_nl()
@@ -173,46 +187,83 @@ function class:comment()
 end
 
 function class:alternation()
-  local position = self.position
+  local backup = self:backup()
 
   if self:concatenation() then
+    local node = abnf_node("alternation", self:pop())
     while true do
-      local position = self.position
-
+      local backup = self:backup()
+      local commit
       while self:c_wsp() do end
       if self:match "/" then
         while self:c_wsp() do end
         if self:concatenation() then
-          -- self:push("alternation", self[0])
-          return true
+          node:push(self:pop())
+          commit = true
         end
-
       end
-
-      self.position = position
+      if not commit then
+        self:restore(backup)
+        break
+      end
     end
+    self:push(node)
     return true
   end
 
-  self.position = position
+  self:restore(backup)
+end
+
+function class:concatenation()
+  local backup = self:backup()
+
+  if self:repetition() then
+    local node = abnf_node("concatenation", self:pop())
+    while true do
+      local backup = self:backup()
+      local commit
+      if self:c_wsp() then
+        while self:c_wsp() do end
+        if self:repetition() then
+          node:push(self:pop())
+          commit = true
+        end
+      end
+      if not commit then
+        self:restore(backup)
+        break
+      end
+    end
+    self:push(node)
+    return true
+  end
+
+  self:restore(backup)
 end
 
 function class:repetition()
-  local node = abnf_node("repetition")
+  local backup = self:backup()
+
+  local repeat_
   if self:repeat_() then
-    node:push(self:pop())
+    repeat_ = self:pop()
   end
 
+  if self:element() then
+    local node = abnf_node("repetition", self:pop(), repeat_)
+    self:push(node)
+    return true
+  end
 
-
+  self:restore(backup)
 end
 
 function class:repeat_()
   if self:match "(%d*)%*(%d*)" then -- *Rule
-    self:push("repeat", "*", self[1], self[2])
+    self:push(abnf_node("repeat", "*", self[1], self[2]))
     return true
   elseif self:match "%d+" then -- nRule
-    self:push("repeat", "n", self[0])
+    self:push(abnf_node("repeat", "n", self[0]))
     return true
   end
 end
@@ -226,23 +277,23 @@ function class:element()
 end
 
 function class:group()
-  local position = self.position
+  local backup = self:backup()
   if self:match "%(" then
     while self:c_wsp() do end
     if self:alternation() then
       while self:c_wsp() do end
-      if self:match ")" then
+      if self:match "%)" then
         local node = abnf_node("group", self:pop())
         self:push(node)
         return true
       end
     end
   end
-  self.position = position
+  self:restore(backup)
 end
 
 function class:option()
-  local position = self.position
+  local backup = self:backup()
   if self:match "%[" then
     while self:c_wsp() do end
     if self:alternation() then
@@ -254,7 +305,7 @@ function class:option()
       end
     end
   end
-  self.position = position
+  self:restore(backup)
 end
 
 function class:char_val()
@@ -265,13 +316,13 @@ function class:char_val()
 end
 
 function class:num_val()
-  local position = self.position
+  local backup = self:backup()
   if self:match "%%" and (self:bin_val() or self:dec_val() or self:hex_val()) then
     local node = abnf_node("num_val", self:pop())
     self:push(node)
     return true
   end
-  self.position = position
+  self:restore(backup)
 end
 
 function class:bin_val()
@@ -330,7 +381,7 @@ end
 
 function metatable:__index(key)
   if type(key) == "number" then
-    return self.group[key]
+    return self.matches[key]
   else
     return class[key]
   end
@@ -348,7 +399,6 @@ local function process(number, line_range_i, line_range_j)
   local page_number = 1
   local line_number = 0
 
-  local line_number_to_page_number = {}
   local buffer = {}
 
   for line in io.lines(path) do
@@ -358,34 +408,42 @@ local function process(number, line_range_i, line_range_j)
     end
     if line_range_i <= line_number and line_number <= line_range_j then
       buffer[#buffer + 1] = line
-      line_number_to_page_number[line_number] = page_number
+    end
+  end
+
+  local indent = buffer[1]:match "^ *"
+  if #indent == 0 then
+    indent = nil
+  else
+    indent = "^" .. indent
+  end
+
+  for i = 1, #buffer do
+    if buffer[i] == "\f" then
+      if buffer[i - 1] then
+        buffer[i - 1] = ""
+      end
+      buffer[i] = ""
+      if buffer[i + 1] then
+        buffer[i + 1] = ""
+      end
+    end
+    if indent then
+      buffer[i] = buffer[i]:gsub(indent, "")
     end
   end
 
   local buffer = (table.concat(buffer, "\n") .. "\n")
-    :gsub("\r\n", "\n")
-    :gsub("\f\n[^\n]*\n", "\f\n")   -- header
-    :gsub("[^\n]*\n\f\n", "\n\f\n") -- footer
-    :gsub("\f\n", "\n")
-
-  local match_position = 1
-  local match_result
-  local function match(pattern)
-    local i, j, result = buffer:find("^" .. pattern, match_position)
-    -- print(i, j, result)
-    if i then
-      match_position = j + 1
-      if result then
-        match_result = result
-      else
-        match_result = buffer:sub(i, j)
-      end
-      return true
-    end
-  end
+    -- :gsub("\r\n", "\n")
+    -- :gsub("\f\n[^\n]*\n", "\f\n")   -- header
+    -- :gsub("[^\n]*\n\f\n", "\n\f\n") -- footer
+    -- :gsub("\f\n", "\n")
+  -- io.write(buffer)
 
   parser = abnf_parser(buffer)
   parser:rulelist()
+
+  -- print(buffer:sub(47, 57))
 end
 
 process(5234, 549, 627)
