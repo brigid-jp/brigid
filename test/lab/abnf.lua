@@ -128,56 +128,51 @@ end
 
 function class:rule()
   local backup = self:backup()
-
+  local node = self:node "rule"
   if self:rulename() then
-    local node = self:node("rule", self:pop())
+    node:push(self:pop())
     if self:defined_as() then
       node:push(self:pop())
       if self:elements() then
         node:push(self:pop())
         if self:c_nl() then
-          self:push(node)
-          return true
+          return self:push(node)
         end
       end
     end
   end
-
   self:restore(backup)
 end
 
 function class:rulename()
+  local node = self:node "rulename"
   if self:match "%a[%a%d%-]*" then
-    self:push(self:node("rulename", self[0]))
-    return true
+    return self:push(node:push(self[0]))
   end
 end
 
 function class:defined_as()
   local backup = self:backup()
-
+  local node = self:node "defined_as"
   while self:c_wsp() do end
   if self:match "=/?" then
-    self:push(self:node("defined_as", self[0]))
+    node:push(self[0])
     while self:c_wsp() do end
-    return true
+    return self:push(node)
   end
-
   self:restore(backup)
 end
 
 function class:elements()
+  local node = self:node "elements"
   if self:alternation() then
     while self:c_wsp() do end
-    local node = self:node("elements", self:pop())
-    self:push(node)
-    return true
+    return self:push(node:push(self:pop()))
   end
 end
 
 function class:c_wsp()
   local backup = self:backup()
-
   if self:match "[ \t]" then
     return true
   else
@@ -187,29 +182,22 @@ function class:c_wsp()
       end
     end
   end
-
   self:restore(backup)
 end
 
 function class:c_nl()
-  if self:comment() then
-    return true
-  elseif self:match "\r\n" then
-    return true
-  end
+  return self:comment() or self:match "\r\n"
 end
 
 function class:comment()
-  if self:match ";[ \t\33-\126]*\r\n" then
-    return true
-  end
+  return self:match ";[ \t\33-\126]*\r\n"
 end
 
 function class:alternation()
   local backup = self:backup()
-
+  local node = self:node "alternation"
   if self:concatenation() then
-    local node = self:node("alternation", self:pop())
+    node:push(self:pop())
     while true do
       local backup = self:backup()
       local commit
@@ -226,18 +214,16 @@ function class:alternation()
         break
       end
     end
-    self:push(node)
-    return true
+    return self:push(node)
   end
-
   self:restore(backup)
 end
 
 function class:concatenation()
   local backup = self:backup()
-
+  local node = self:node "concatenation"
   if self:repetition() then
-    local node = self:node("concatenation", self:pop())
+    node:push(self:pop())
     while true do
       local backup = self:backup()
       local commit
@@ -253,58 +239,49 @@ function class:concatenation()
         break
       end
     end
-    self:push(node)
-    return true
+    return self:push(node)
   end
-
   self:restore(backup)
 end
 
 function class:repetition()
   local backup = self:backup()
-
-  local repeat_
+  local node = self:node "repetition"
+  local repeat_node
   if self:repeat_() then
-    repeat_ = self:pop()
+    repeat_node = self:pop()
   end
-
   if self:element() then
-    local node = self:node("repetition", self:pop(), repeat_)
-    self:push(node)
-    return true
+    return self:push(node:push(self:pop()):push(repeat_node))
   end
-
   self:restore(backup)
 end
 
 function class:repeat_()
+  local node = self:node "repeat"
   if self:match "(%d*)%*(%d*)" then
-    self:push(self:node("repeat", self[1], self[2]))
-    return true
+    return self:push(node:push(self[1]):push(self[2]))
   elseif self:match "%d+" then
-    self:push(self:node("repeat", self[0]))
-    return true
+    return self:push(node:push(self[0]))
   end
 end
 
 function class:element()
+  local node = self:node "element"
   if self:rulename() or self:group() or self:option() or self:char_val() or self:num_val() or self:prose_val() then
-    local node = self:node("element", self:pop())
-    self:push(node)
-    return true
+    return self:push(node:push(self:pop()))
   end
 end
 
 function class:group()
   local backup = self:backup()
+  local node = self:node "group"
   if self:match "%(" then
     while self:c_wsp() do end
     if self:alternation() then
       while self:c_wsp() do end
       if self:match "%)" then
-        local node = self:node("group", self:pop())
-        self:push(node)
-        return true
+        return self:push(node:push(self:pop()))
       end
     end
   end
@@ -313,14 +290,13 @@ end
 
 function class:option()
   local backup = self:backup()
+  local node = self:node "option"
   if self:match "%[" then
     while self:c_wsp() do end
     if self:alternation() then
       while self:c_wsp() do end
       if self:match "%]" then
-        local node = self:node("option", self:pop())
-        self:push(node)
-        return true
+        return self:push(node:push(self:pop()))
       end
     end
   end
@@ -328,9 +304,9 @@ function class:option()
 end
 
 function class:char_val()
+  local node = self:node "char_val"
   if self:match "\"[\32\33\35-\126]*\"" then
-    self:push(self:node("char_val", self[0]))
-    return true
+    return self:push(node:push(self[0]))
   end
 end
 
@@ -339,45 +315,40 @@ function class:num_val()
   local node = self:node "num_val"
   if self:match "%%" and (self:bin_val() or self:dec_val() or self:hex_val()) then
     node:push(self:pop())
-    self:push(node)
-    return true
+    return self:push(node)
   end
   self:restore(backup)
 end
 
 function class:bin_val()
+  local node = self:node "bin_val"
   if self:match "b([01]+)" then
-    local node = self:node("bin_val", self[1])
+    node:push(self[1])
     if self:match "%.([01]+)" then
-      node:push "."
-      node:push(self[1])
+      node:push "." :push(self[1])
       while self:match "%.([01]+)" do
         node:push(self[1])
       end
     elseif self:match "%-([01]+)" then
-      node:push "-"
-      node:push(self[1])
+      node:push "-" :push(self[1])
     end
-    self:push(node)
-    return true
+    return self:push(node)
   end
 end
 
 function class:dec_val()
+  local node = self:node "dec_val"
   if self:match "d(%d+)" then
-    local node = self:node("dec_val", self[1])
+    node:push(self[1])
     if self:match "%.(%d+)" then
-      node:push "."
-      node:push(self[1])
+      node:push "." :push(self[1])
       while self:match "%.(%d+)" do
         node:push(self[1])
       end
     elseif self:match "%-(%d+)" then
-      node:push "-"
-      node:push(self[1])
+      node:push "-" :push(self[1])
     end
-    self:push(node)
-    return true
+    return self:push(node)
   end
 end
 
