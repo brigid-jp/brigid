@@ -9,6 +9,7 @@ end
 
 function class:push(node)
   self[#self + 1] = node
+  return self
 end
 
 function class:dump_xml()
@@ -74,7 +75,7 @@ end
 function class:push(node)
   local stack = self.stack
   stack[#stack + 1] = node
-  assert(node[0])
+  return self
 end
 
 function class:pop()
@@ -335,8 +336,9 @@ end
 
 function class:num_val()
   local backup = self:backup()
+  local node = self:node "num_val"
   if self:match "%%" and (self:bin_val() or self:dec_val() or self:hex_val()) then
-    local node = self:node("num_val", self:pop())
+    node:push(self:pop())
     self:push(node)
     return true
   end
@@ -380,27 +382,25 @@ function class:dec_val()
 end
 
 function class:hex_val()
+  local node = self:node "hex_val"
   if self:match "x(%x+)" then
-    local node = self:node("hex_val", self[1])
+    node:push(self[1])
     if self:match "%.(%x+)" then
-      node:push "."
-      node:push(self[1])
+      node:push "." :push(self[1])
       while self:match "%.(%x+)" do
         node:push(self[1])
       end
     elseif self:match "%-(%x+)" then
-      node:push "-"
-      node:push(self[1])
+      node:push "-" :push(self[1])
     end
-    self:push(node)
-    return true
+    return self:push(node)
   end
 end
 
 function class:prose_val()
+  local node = self:node "prose_val"
   if self:match "<([\32-\61\63-\126]*)>" then
-    self:push(self:node("prose_val", self[1]))
-    return true
+    return self:push(node:push(self[1]))
   end
 end
 
