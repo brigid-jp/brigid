@@ -621,7 +621,7 @@ repeat
       local use_name = rulename[j][1]
       local use_rule = name_map[use_name]
       if not use_rule then
-        error(("[rfc%d.txt:%4d] rule %q use undefined rule %q"):format(rule.rfc_number, rule.line, def_name, use_name))
+        error(("[rfc%d.txt:%4d] rule %q uses undefined rule %q"):format(rule.rfc_number, rule.line, def_name, use_name))
       end
       use_id_map[use_rule.id] = true
     end
@@ -635,14 +635,63 @@ repeat
     use_map[i] = use_ids
   end
 
+  local loop_detector = function () end
+
+  local color = {}
+  local function process(id)
+    color[id] = 1
+    local use_ids = use_map[id]
+    for i = 1, #use_ids do
+      local use_id = use_ids[i]
+      local c = color[use_id]
+      if not c then
+        process(use_id)
+      elseif c == 1 then
+        local node = id_map[id]
+        local that = id_map[use_id]
+
+        local use_name = node[1][1]
+        local ref_name = that[1][1]
+
+        io.write(("[rfc%d.txt:%4d] loop detected: rule %q uses rule %q \n"):format(node.rfc_number, node.line, use_name, ref_name))
+
+        local function process(node)
+          if node[0] == "rulename" and node[1] == ref_name then
+            node[0] = "prose_val"
+          end
+          for i = 1, #node do
+            local that = node[i]
+            if getmetatable(that) == getmetatable(node) then
+              process(that)
+            end
+          end
+        end
+        process(node)
+        node.prose_val = true
+
+        error(loop_detector)
+      end
+    end
+    color[id] = 2
+  end
+
+  local result, message = pcall(function ()
+    for i = 1, #id_map do
+      process(i)
+    end
+  end)
+
   local loop_detected
-
-
-
-
+  if not result then
+    if message == loop_detector then
+      loop_detected = true
+    else
+      error(message)
+    end
+  end
 until not loop_detected
 
-local out = assert(io.open("tmp3.dot", "w"))
+local out = assert(io.open("tmp2.dot", "w"))
 
 out:write [[
 digraph {
@@ -667,7 +716,7 @@ end
 out:write "}\n"
 out:close()
 
-root:dump_xml(assert(io.open("tmp7.xml", "w")))
+root:dump_xml(assert(io.open("tmp2.xml", "w")))
 
 --[====[
 
