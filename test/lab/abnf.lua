@@ -524,7 +524,10 @@ local function process(number, line_range_i, line_range_j)
       rule_buffer[#rule_buffer + 1] = buffer[i + 1 - line_range_i]
     end
 
-    local prose_val = #(rule:find_by_name "prose_val") > 0
+    local prose_val
+    if #(rule:find_by_name "prose_val") > 0 then
+      prose_val = true
+    end
 
     rule[-1] = rule_buffer
     rule.last_line = last_line
@@ -557,8 +560,10 @@ for i = 1, #root do
 
       if rule.prose_val then
         io.write "[INFO] later rule has prose-val, win first\n"
+        rule.ignored = true
       elseif that.prose_val then
         io.write "[INFO] first rule has prose-val, win later\n"
+        that.ignored = true
         def_map[def_name] = rule
       else
         local new_name = ("rfc%d-%s"):format(rule.rfc_number, def_name)
@@ -586,7 +591,17 @@ for i = 1, #root do
   end
 end
 
-root:dump_xml(assert(io.open("tmp3.xml", "w")))
+--[[
+  グラフ構造をつくる
+
+  rule depends to rules
+
+
+
+]]
+
+
+root:dump_xml(assert(io.open("tmp5.xml", "w")))
 
 --[====[
 
