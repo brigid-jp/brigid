@@ -591,6 +591,21 @@ for i = 1, #root do
   end
 end
 
+local id_map = {}
+
+local id = 0
+for i = 1, #root do
+  local rulelist = root[i]
+  for j = 1, #rulelist do
+    local rule = rulelist[j]
+    if not rule.ignored then
+      id = id + 1
+      rule.id = id
+      id_map[id] = rule
+    end
+  end
+end
+
 --[[
   グラフ構造をつくる
 
@@ -601,7 +616,7 @@ end
 ]]
 
 
-root:dump_xml(assert(io.open("tmp5.xml", "w")))
+root:dump_xml(assert(io.open("tmp6.xml", "w")))
 
 --[====[
 
