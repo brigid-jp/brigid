@@ -4,7 +4,6 @@
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
--- TODO basename
 -- TODO prefix, postfix
 
 local class = {}
@@ -658,14 +657,10 @@ end
 
 local root = abnf_node "root"
 
-local function process(number, line_range_i, line_range_j)
-  local path = ("rfc%04d.txt"):format(number)
-
+local function process(basename, line_range_i, line_range_j)
   local line_number = 0
-
   local buffer = {}
-
-  for line in io.lines(path) do
+  for line in io.lines(basename .. ".txt") do
     line_number = line_number + 1
     line = line:gsub("\r$", ""):gsub("^[ \t]+$", "")
     if line_range_i <= line_number and line_number <= line_range_j then
@@ -751,16 +746,16 @@ local function process(number, line_range_i, line_range_j)
     rule[-1] = rule_buffer
     rule.last_line = last_line
     rule.prose_val = prose_val
-    rule.rfc_number = number
+    rule.basename = basename
   end
 
   root:push(rulelist)
 end
 
-process(5234, 720, 778)
-process(3986, 2697, 2788)
-process(7230, 4555, 4683)
--- process(5234, 549, 627)
+process("rfc5234", 720, 778)
+process("rfc3986", 2697, 2788)
+process("rfc7230", 4555, 4683)
+-- process("rfc5234", 549, 627)
 
 local name_map = {}
 
@@ -773,9 +768,9 @@ for i = 1, #root do
     local that = name_map[def_name]
     if that then
       io.write(([[
-[rfc%d.txt:%4d] redefined rule %q
-[rfc%d.txt:%4d] previously defined here
-]]):format(rule.rfc_number, rule.line, def_name, that.rfc_number, that.line))
+[%s.txt:%4d] redefined rule %q
+[%s.txt:%4d] previously defined here
+]]):format(rule.basename, rule.line, def_name, that.basename, that.line))
 
       if rule.prose_val then
         io.write "[INFO] later rule has prose-val, win first\n"
@@ -785,12 +780,12 @@ for i = 1, #root do
         that.ignored = true
         name_map[def_name] = rule
       else
-        local new_name = ("rfc%d-%s"):format(rule.rfc_number, def_name)
+        local new_name = ("%s-%s"):format(rule.basename, def_name)
         assert(not name_map[new_name])
         io.write(("[WARN] neither rule has prose-val, rename %q to %q\n"):format(def_name, new_name))
         local function process(node)
           if node[0] == "rulename" and node[1] == def_name then
-            io.write(("[rfc%d.txt:%4d] rename %q to %q\n"):format(rule.rfc_number, node.line, def_name, new_name))
+            io.write(("[%s.txt:%4d] rename %q to %q\n"):format(rule.basename, node.line, def_name, new_name))
             node[1] = new_name
           end
           for i = 1, #node do
@@ -840,7 +835,7 @@ repeat
       local use_name = rulename[j][1]
       local use_rule = name_map[use_name]
       if not use_rule then
-        error(("[rfc%d.txt:%4d] rule %q uses undefined rule %q"):format(rule.rfc_number, rule.line, def_name, use_name))
+        error(("[%s.txt:%4d] rule %q uses undefined rule %q"):format(rule.basename, rule.line, def_name, use_name))
       end
       use_id_map[use_rule.id] = true
     end
@@ -870,11 +865,11 @@ repeat
         local that = id_map[use_id]
         local use_name = that[1][1]
         io.write(([[
-[rfc%d.txt:%4d] loop detected at rule %q uses rule %q
-[rfc%d.txt:%4d] rule %q is defined here
+[%s.txt:%4d] loop detected at rule %q uses rule %q
+[%s.txt:%4d] rule %q is defined here
 [WARN] modify rulename to prose_val
 
-]]):format(node.rfc_number, node.line, node[1][1], use_name, that.rfc_number, that.line, use_name))
+]]):format(node.basename, node.line, node[1][1], use_name, that.basename, that.line, use_name))
 
         local function process(node)
           if node[0] == "rulename" and node[1] == use_name then
@@ -973,8 +968,8 @@ local out = assert(io.open("abnf.rl", "w"))
 for i = #order, 1, -1 do
   local rule = id_map[order[i]]
   out:write(([[
-# https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc%d.txt#L%d
-]]):format(rule.rfc_number, rule.line))
+# https://github.com/brigid-jp/brigid/blob/develop/test/lab/%s.txt#L%d
+]]):format(rule.basename, rule.line))
   local buffer = rule[-1]
   for k = 1, #buffer do
     out:write("# ", buffer[k], "\n")
