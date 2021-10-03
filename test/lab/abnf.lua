@@ -458,7 +458,7 @@ local function process(number, line_range_i, line_range_j)
   local source_map = {}
   local position = 0
   for i = 1, #buffer do
-    local line_number = line_range_i + i - 1
+    local line_number = i - 1 + line_range_i
     local n = #buffer[i] + 2
     for j = position + 1, position + n do
       source_map[j] = line_number
@@ -467,7 +467,7 @@ local function process(number, line_range_i, line_range_j)
   end
 
   parser = abnf_parser(source)
-  local list = parser:rulelist()
+  local rulelist = parser:rulelist()
 
   local function process(node)
     if node.position then
@@ -480,11 +480,11 @@ local function process(number, line_range_i, line_range_j)
       end
     end
   end
-  process(list)
+  process(rulelist)
 
-  for i = 1, #list do
-    local node = list[i]
-    local that = list[i + 1]
+  for i = 1, #rulelist do
+    local node = rulelist[i]
+    local that = rulelist[i + 1]
 
     local last_line
     if that then
@@ -492,17 +492,26 @@ local function process(number, line_range_i, line_range_j)
     else
       last_line = line_range_j
     end
-    while buffer[last_line - line_range_i + 1] == "" do
+    while buffer[last_line + 1 - line_range_i] == "" do
       last_line = last_line - 1
     end
+
+    local rule_buffer = {}
+    for i = node.line, last_line do
+      rule_buffer[#rule_buffer + 1] = buffer[i - 1 + line_range_i]
+    end
+
+    node[-1] = rule_buffer
     node.last_line = last_line
+    node.rfc_number = number
   end
 
-  root:push(list)
+  root:push(rulelist)
 end
 
 process(5234, 549, 627)
 process(5234, 720, 778)
 process(3986, 2697, 2788)
 process(7230, 4555, 4683)
+
 root:dump_xml()
