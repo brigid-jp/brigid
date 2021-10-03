@@ -4,8 +4,6 @@
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
--- TODO prefix, postfix
-
 local class = {}
 local metatable = { __index = class }
 
@@ -444,10 +442,12 @@ local abnf_parser = setmetatable(class, {
 local class = {}
 local metatable = { __index = class }
 
-local function new(node, endl)
+local function new(node, endl, prefix, postfix)
   return {
     node = node;
     endl = endl;
+    prefix = prefix;
+    postfix = postfix;
   }
 end
 
@@ -484,7 +484,7 @@ function class:rule(node)
 end
 
 function class:rulename(node)
-  self:push((node[1]:gsub("%-", "_")))
+  self:push(self.prefix .. node[1]:gsub("%-", "_") .. self.postfix)
 end
 
 function class:defined_as(node)
@@ -635,23 +635,23 @@ function metatable:__call()
 end
 
 local abnf_generator = setmetatable(class, {
-  __call = function (_, node, endl)
-    return setmetatable(new(node, endl), metatable)
+  __call = function (_, node, endl, prefix, postfix)
+    return setmetatable(new(node, endl, prefix, postfix), metatable)
   end;
 })
 
-local function process(node, endl)
+local function process(node, endl, prefix, postfix)
   for i = 1, #node do
     local that = node[i]
     if getmetatable(that) == getmetatable(node) then
-      process(that, endl)
+      process(that, endl, prefix, postfix)
     end
   end
-  abnf_generator(node, endl)()
+  abnf_generator(node, endl, prefix, postfix)()
 end
 
-local function generate(rule, endl)
-  process(rule, endl)
+local function generate(rule, endl, prefix, postfix)
+  process(rule, endl, prefix, postfix)
   return table.concat(rule[-2])
 end
 
@@ -975,9 +975,9 @@ for i = #order, 1, -1 do
     out:write("# ", buffer[k], "\n")
   end
   if rule.prose_val then
-    out:write("# ", generate(rule, "\n# "), "\n")
+    out:write("# ", generate(rule, "\n# ", "", ""), "\n")
   else
-    out:write(generate(rule, "\n"), "\n")
+    out:write(generate(rule, "\n", "", ""), "\n")
   end
   out:write "\n"
 end
