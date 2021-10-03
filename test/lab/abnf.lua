@@ -617,6 +617,9 @@ for i = 1, #id_map do
   for j = 1, #rulename do
     local use_name = rulename[j][1]
     local use_rule = name_map[use_name]
+    if not use_rule then
+      error(("[rfc%d.txt:%4d] rule %q use undefined rule %q"):format(rule.rfc_number, rule.line, def_name, use_name))
+    end
     use_id_map[use_rule.id] = true
   end
 
@@ -645,9 +648,7 @@ end
 
 for i = 1, #use_map do
   local ids = use_map[i]
-  -- local def_name = id_map[i][1][1]
   for j = 1, #ids do
-    -- local use_name = id_map[ids[j]][1][1]
     out:write(([[
 %d -> %d;
 ]]):format(i, ids[j]))
