@@ -4,6 +4,11 @@
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
+-- TODO semicolon
+-- TODO prose-val
+-- TODO prefix, postfix
+-- TODO basename
+
 local class = {}
 local metatable = { __index = class }
 
@@ -631,6 +636,21 @@ local abnf_generator = setmetatable(class, {
   end;
 })
 
+local function process(node)
+  for i = 1, #node do
+    local that = node[i]
+    if getmetatable(that) == getmetatable(node) then
+      process(that)
+    end
+  end
+  abnf_generator(node)()
+end
+
+local function generate(rule)
+  process(rule)
+  return table.concat(rule[-2]) .. ";"
+end
+
 local root = abnf_node "root"
 
 local function process(number, line_range_i, line_range_j)
@@ -957,17 +977,7 @@ for i = #order, 1, -1 do
 
   if rule.prose_val then
   else
-    local function process(node)
-      for i = 1, #node do
-        local that = node[i]
-        if getmetatable(that) == getmetatable(node) then
-          process(that)
-        end
-      end
-      abnf_generator(node)()
-    end
-    process(rule)
-    out:write(table.concat(rule[-2]), "\n")
+    out:write(generate(rule), "\n")
   end
 
   out:write "\n"
