@@ -653,7 +653,12 @@ repeat
         local use_name = node[1][1]
         local ref_name = that[1][1]
 
-        io.write(("[rfc%d.txt:%4d] loop detected: rule %q uses rule %q \n"):format(node.rfc_number, node.line, use_name, ref_name))
+        io.write(([[
+[rfc%d.txt:%4d] loop detected at rule %q uses rule %q
+[rfc%d.txt:%4d] rule %q is defined here
+[WARN] modify rulename to prose_val
+
+]]):format(node.rfc_number, node.line, use_name, ref_name, that.rfc_number, that.line, ref_name))
 
         local function process(node)
           if node[0] == "rulename" and node[1] == ref_name then
