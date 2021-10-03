@@ -494,14 +494,24 @@ end
 function class:alternation(node)
   self:copy(node[1])
   for i = 2, #node do
-    self:push " | " :copy(node[i])
+    if node[i - 1].line < node[i].line then
+      self:push "\n  | "
+    else
+      self:push " | "
+    end
+    self:copy(node[i])
   end
 end
 
 function class:concatenation(node)
   self:copy(node[1])
   for i = 2, #node do
-    self:push " " :copy(node[i])
+    if node[i - 1].line < node[i].line then
+      self:push "\n"
+    else
+      self:push " "
+    end
+    self:copy(node[i])
   end
 end
 
@@ -615,7 +625,7 @@ function metatable:__call()
   f(self, node)
 end
 
-local abnf_converter = setmetatable(class, {
+local abnf_generator = setmetatable(class, {
   __call = function (_, node)
     return setmetatable(new(node), metatable)
   end;
@@ -723,9 +733,9 @@ local function process(number, line_range_i, line_range_j)
 end
 
 process(5234, 720, 778)
--- process(5234, 549, 627)
 process(3986, 2697, 2788)
 process(7230, 4555, 4683)
+-- process(5234, 549, 627)
 
 local name_map = {}
 
@@ -954,7 +964,7 @@ for i = #order, 1, -1 do
           process(that)
         end
       end
-      abnf_converter(node)()
+      abnf_generator(node)()
     end
     process(rule)
     out:write(table.concat(rule[-2]), "\n")
