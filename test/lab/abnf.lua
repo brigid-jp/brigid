@@ -28,7 +28,30 @@ function class:push(node)
   return self
 end
 
+function class:find_by_name(name, result)
+  if not result then
+    result = {}
+  end
+
+  if self[0] == name then
+    result[#result + 1] = self
+  end
+
+  for i = 1, #self do
+    local that = self[i]
+    if getmetatable(that) == metatable then
+      result = that:find_by_name(name, result)
+    end
+  end
+
+  return result
+end
+
 function class:dump_xml(out)
+  if not out then
+    out = io.stdout
+  end
+
   out:write("<", self[0])
   local keys = {}
   for k, v in pairs(self) do
@@ -501,8 +524,11 @@ local function process(number, line_range_i, line_range_j)
       rule_buffer[#rule_buffer + 1] = buffer[i + 1 - line_range_i]
     end
 
+    local prose_val = #(rule:find_by_name "prose_val") > 0
+
     rule[-1] = rule_buffer
     rule.last_line = last_line
+    rule.prose_val = prose_val
     rule.rfc_number = number
   end
 
@@ -514,11 +540,55 @@ process(5234, 720, 778)
 process(3986, 2697, 2788)
 process(7230, 4555, 4683)
 
-root:dump_xml(io.stdout)
+local def_map = {}
+
+for i = 1, #root do
+  local rulelist = root[i]
+  for j = 1, #rulelist do
+    local rule = rulelist[j]
+    local def_name = rule[1][1]
+
+    local that = def_map[def_name]
+    if that then
+      io.write(([[
+[rfc%d.txt:%4d] redefined rule %q
+[rfc%d.txt:%4d] previously defined here
+]]):format(rule.rfc_number, rule.line, def_name, that.rfc_number, that.line))
+
+      if rule.prose_val then
+        io.write "[INFO] later rule has prose-val, win first\n"
+      elseif that.prose_val then
+        io.write "[INFO] first rule has prose-val, win later\n"
+        def_map[def_name] = rule
+      else
+        local new_name = ("rfc%d-%s"):format(rule.rfc_number, def_name)
+        assert(not def_map[new_name])
+        io.write(("[WARN] neither rule has prose-val, rename %q to %q\n"):format(def_name, new_name))
+        local function process(node)
+          if node[0] == "rulename" and node[1] == def_name then
+            io.write(("[rfc%d.txt:%4d] rename %q to %q\n"):format(rule.rfc_number, node.line, def_name, new_name))
+            node[1] = new_name
+          end
+          for i = 1, #node do
+            local that = node[i]
+            if getmetatable(that) == getmetatable(node) then
+              process(that)
+            end
+          end
+        end
+        process(rulelist)
+        def_map[new_name] = rule
+      end
+      io.write "\n"
+    else
+      def_map[def_name] = rule
+    end
+  end
+end
+
+root:dump_xml(assert(io.open("tmp3.xml", "w")))
 
 --[====[
-
-root:dump_xml(io.stdout)
 
 for i = 1, #root do
   local rulelist = root[i]
