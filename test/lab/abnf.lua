@@ -4,6 +4,9 @@
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
+-- TODO <undef> の追加
+-- TODO machine nameの追加
+
 local class = {}
 local metatable = { __index = class }
 
@@ -629,7 +632,7 @@ function metatable:__call()
   local name = node[0]
   local f = self[name]
   if not f then
-    error("not supported " .. name)
+    error(name .. " not supported ")
   end
   f(self, node)
 end
@@ -755,6 +758,7 @@ end
 process("rfc5234", 720, 778)
 process("rfc3986", 2697, 2788)
 process("rfc7230", 4555, 4683)
+process("rfc7230a", 1, 2)
 -- process("rfc5234", 549, 627)
 
 local name_map = {}
@@ -965,9 +969,15 @@ out:write "}\n"
 out:close()
 
 local out = assert(io.open("abnf.rl", "w"))
+out:write [[
+%%{
+# vim: syntax=ragel:
+machine abnf;
+]]
 for i = #order, 1, -1 do
   local rule = id_map[order[i]]
   out:write(([[
+
 # https://github.com/brigid-jp/brigid/blob/develop/test/lab/%s.txt#L%d
 ]]):format(rule.basename, rule.line))
   local buffer = rule[-1]
@@ -979,6 +989,8 @@ for i = #order, 1, -1 do
   else
     out:write(generate(rule, "\n", "", ""), "\n")
   end
-  out:write "\n"
 end
+out:write [[
+}%%
+]]
 out:close()
