@@ -539,7 +539,7 @@ local function process(number, line_range_i, line_range_j)
 end
 
 process(5234, 720, 778)
--- process(5234, 549, 627)
+process(5234, 549, 627)
 process(3986, 2697, 2788)
 process(7230, 4555, 4683)
 
@@ -606,33 +606,43 @@ for i = 1, #root do
   end
 end
 
-local use_map = {}
+local use_map
 
-for i = 1, #id_map do
-  local rule = id_map[i]
-  local def_name = rule[1][1]
+repeat
+  use_map = {}
 
-  local rulename = rule[3]:find_by_name "rulename"
-  local use_id_map = {}
-  for j = 1, #rulename do
-    local use_name = rulename[j][1]
-    local use_rule = name_map[use_name]
-    if not use_rule then
-      error(("[rfc%d.txt:%4d] rule %q use undefined rule %q"):format(rule.rfc_number, rule.line, def_name, use_name))
+  for i = 1, #id_map do
+    local rule = id_map[i]
+    local def_name = rule[1][1]
+
+    local rulename = rule[3]:find_by_name "rulename"
+    local use_id_map = {}
+    for j = 1, #rulename do
+      local use_name = rulename[j][1]
+      local use_rule = name_map[use_name]
+      if not use_rule then
+        error(("[rfc%d.txt:%4d] rule %q use undefined rule %q"):format(rule.rfc_number, rule.line, def_name, use_name))
+      end
+      use_id_map[use_rule.id] = true
     end
-    use_id_map[use_rule.id] = true
+
+    local use_ids = {}
+    for k in pairs(use_id_map) do
+      use_ids[#use_ids + 1] = k
+    end
+    table.sort(use_ids)
+
+    use_map[i] = use_ids
   end
 
-  local use_ids = {}
-  for k in pairs(use_id_map) do
-    use_ids[#use_ids + 1] = k
-  end
-  table.sort(use_ids)
+  local loop_detected
 
-  use_map[i] = use_ids
-end
 
-local out = assert(io.open("tmp2.dot", "w"))
+
+
+until not loop_detected
+
+local out = assert(io.open("tmp3.dot", "w"))
 
 out:write [[
 digraph {
