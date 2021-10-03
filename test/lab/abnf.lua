@@ -7,6 +7,10 @@ local function new(name, ...)
   return { [0] = name, ... }
 end
 
+local function escape(source)
+  return (source:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;"):gsub("\"", "&quot;"):gsub("'", "&apos;"))
+end
+
 function class:push(node)
   self[#self + 1] = node
   return self
@@ -14,16 +18,25 @@ end
 
 function class:dump_xml()
   io.write("<", self[0])
-  if self.position then
-    io.write(" position=\"", self.position, "\"")
+  local keys = {}
+  for k, v in pairs(self) do
+    if type(k) == "string" then
+      keys[#keys + 1] = k
+    end
+  end
+  table.sort(keys)
+  for i = 1, #keys do
+    local k = keys[i]
+    io.write(" ", escape(k), "=\"", escape(tostring(self[k])), "\"")
   end
   io.write ">\n"
+
   for i = 1, #self do
     local that = self[i]
-    if type(that) == "table" then
+    if getmetatable(that) == metatable then
       that:dump_xml()
     else
-      io.write("<value>", (that:gsub("&", "&amp;"):gsub("<", "&lt;")), "</value>\n")
+      io.write("<value>", escape(tostring(that)), "</value>\n")
     end
   end
   io.write("</", self[0], ">\n")
@@ -38,9 +51,9 @@ local abnf_node = setmetatable(class, {
 local class = {}
 local metatable = {}
 
-local function new(buffer)
+local function new(source)
   return {
-    buffer = buffer;
+    source = source;
     position = 1;
     stack = {};
     matches = {};
@@ -50,7 +63,7 @@ end
 local function match(self, i, j, ...)
   if i then
     self.position = j + 1
-    self.matches = { [0] = self.buffer:sub(i, j), ... }
+    self.matches = { [0] = self.source:sub(i, j), ... }
     return true
   else
     return false
@@ -58,7 +71,7 @@ local function match(self, i, j, ...)
 end
 
 function class:match(pattern)
-  return match(self, self.buffer:find("^" .. pattern, self.position))
+  return match(self, self.source:find("^" .. pattern, self.position))
 end
 
 function class:node(name, ...)
@@ -121,7 +134,7 @@ function class:rulelist()
       break
     end
   end
-  assert(#self.buffer + 1 == self.position)
+  assert(#self.source + 1 == self.position)
   assert(#self.stack == 0)
   return node
 end
@@ -384,25 +397,23 @@ function metatable:__index(key)
 end
 
 local abnf_parser = setmetatable(class, {
-  __call = function (_, buffer)
-    return setmetatable(new(buffer), metatable)
+  __call = function (_, source)
+    return setmetatable(new(source), metatable)
   end;
 })
+
+local root = abnf_node "root"
 
 local function process(number, line_range_i, line_range_j)
   local path = ("rfc%04d.txt"):format(number)
 
-  local page_number = 1
   local line_number = 0
 
   local buffer = {}
 
   for line in io.lines(path) do
     line_number = line_number + 1
-    if line == "\f" then
-      page_number = page_number + 1
-    end
-    line = line:gsub("\r$", "")
+    line = line:gsub("\r$", ""):gsub("^[ \t]+$", "")
     if line_range_i <= line_number and line_number <= line_range_j then
       buffer[#buffer + 1] = line
     end
@@ -430,15 +441,40 @@ local function process(number, line_range_i, line_range_j)
     end
   end
 
-  local buffer = (table.concat(buffer, "\r\n") .. "\r\n")
+  local source = (table.concat(buffer, "\r\n") .. "\r\n")
 
-  parser = abnf_parser(buffer)
-  return parser:rulelist()
+  local source_map = {}
+  local position = 0
+  for i = 1, #buffer do
+    local line_number = line_range_i + i - 1
+    local n = #buffer[i] + 2
+    for j = position + 1, position + n do
+      source_map[j] = line_number
+    end
+    position = position + n
+  end
+
+  parser = abnf_parser(source)
+  local list = parser:rulelist()
+
+  local function process(node)
+    if node.position then
+      node.line = source_map[node.position]
+    end
+    for i = 1, #node do
+      local that = node[i]
+      if getmetatable(that) == getmetatable(node) then
+        process(that)
+      end
+    end
+  end
+  process(list)
+
+  root:push(list)
 end
 
--- local list = process(5234, 549, 627)
-local list = process(5234, 720, 778)
--- local list = process(3986, 2697, 2788)
--- local list = process(7230, 4555, 4683)
-
-list:dump_xml()
+process(5234, 549, 627)
+process(5234, 720, 778)
+process(3986, 2697, 2788)
+process(7230, 4555, 4683)
+root:dump_xml()
