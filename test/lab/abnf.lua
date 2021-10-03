@@ -203,8 +203,10 @@ function class:defined_as()
   local backup = self:backup()
   local node = self:node "defined_as"
   while self:c_wsp() do end
-  if self:match "=/?" then
-    node:push(self[0])
+  if self:match "=/" then
+    error("incremental alternation not supported at position " .. self.position)
+  elseif self:match "=" then
+    node:push "="
     while self:c_wsp() do end
     return self:push(node)
   end
@@ -296,7 +298,7 @@ function class:repetition()
   local backup = self:backup()
   local node = self:node "repetition"
   local repeat_node
-  if self:repeat_() then
+  if self["repeat"](self) then
     repeat_node = self:pop()
   end
   if self:element() then
@@ -305,7 +307,7 @@ function class:repetition()
   self:restore(backup)
 end
 
-function class:repeat_()
+class["repeat"] = function (self)
   local node = self:node "repeat"
   if self:match "(%d*)%*(%d*)" then
     return self:push(node:push(self[1]):push(self[2]))
@@ -353,8 +355,8 @@ end
 
 function class:char_val()
   local node = self:node "char_val"
-  if self:match "\"[\32\33\35-\126]*\"" then
-    return self:push(node:push(self[0]))
+  if self:match "\"([\32\33\35-\126]*)\"" then
+    return self:push(node:push(self[1]))
   end
 end
 
@@ -434,6 +436,188 @@ end
 local abnf_parser = setmetatable(class, {
   __call = function (_, source)
     return setmetatable(new(source), metatable)
+  end;
+})
+
+local class = {}
+local metatable = { __index = class }
+
+local function new(node)
+  return { node = node }
+end
+
+function class:push(...)
+  local node = self.node
+  local node_buffer = node[-2]
+  local that_buffer = { ... }
+  if not node_buffer then
+    node_buffer = {}
+    node[-2] = node_buffer
+  end
+  for i = 1, #that_buffer do
+    node_buffer[#node_buffer + 1] = that_buffer[i]
+  end
+  return self
+end
+
+function class:copy(that)
+  local node = self.node
+  local node_buffer = node[-2]
+  local that_buffer = that[-2]
+  if not node_buffer then
+    node_buffer = {}
+    node[-2] = node_buffer
+  end
+  for i = 1, #that_buffer do
+    node_buffer[#node_buffer + 1] = that_buffer[i]
+  end
+  return self
+end
+
+function class:rule(node)
+  self:copy(node[1]):copy(node[2]):copy(node[3])
+end
+
+function class:rulename(node)
+  self:push((node[1]:gsub("%-", "_")))
+end
+
+function class:defined_as(node)
+  assert(node[1] == "=")
+  self:push " = "
+end
+
+function class:elements(node)
+  self:copy(node[1])
+end
+
+function class:alternation(node)
+  self:copy(node[1])
+  for i = 2, #node do
+    self:push " | " :copy(node[i])
+  end
+end
+
+function class:concatenation(node)
+  self:copy(node[1])
+  for i = 2, #node do
+    self:push " " :copy(node[i])
+  end
+end
+
+function class:repetition(node)
+  self:copy(node[1])
+  if node[2] then
+    self:copy(node[2])
+  end
+end
+
+class["repeat"] = function (self, node)
+  local a = node[1]
+  local b = node[2]
+  if b then
+    local a = tonumber(a)
+    local b = tonumber(b)
+    if a then
+      if b then
+        if a == b then
+          self:push("{", a, "}")
+        else
+          self:push("{", a, ",", b, "}")
+        end
+      else
+        if a == 0 then
+          self:push "*"
+        elseif a == 1 then
+          self:push "+"
+        else
+          self:push("{", a, ",}")
+        end
+      end
+    else
+      if b then
+        self:push("{,", b, "}")
+      else
+        self:push "*"
+      end
+    end
+  else
+    self:push("{", a, "}")
+  end
+end
+
+function class:element(node)
+  self:copy(node[1])
+end
+
+function class:group(node)
+  self:push "(" :copy(node[1]):push ")"
+end
+
+function class:option(node)
+  self:push "(" :copy(node[1]):push ")?"
+end
+
+function class:char_val(node)
+  self:push([["]], node[1]:gsub([[\]], [[\\]]), [["]])
+  if node[1]:find "%a" then
+    self:push "i"
+  end
+end
+
+function class:num_val(node)
+  self:copy(node[1])
+end
+
+function class:bin_val(node)
+  self:push(("0x%X"):format(tonumber(node[1], 2)))
+  local op = node[2]
+  if op == "." then
+    for i = 3, #node do
+      self:push((" 0x%X"):format(tonumber(node[i], 2)))
+    end
+  elseif op == "-" then
+    self:push(("..0x%X"):format(tonumber(node[3], 2)))
+  end
+end
+
+function class:dec_val(node)
+  self:push(node[1])
+  local op = node[2]
+  if op == "." then
+    for i = 3, #node do
+      self:push(" ", node[i])
+    end
+  elseif op == "-" then
+    self:push("..", node[3])
+  end
+end
+
+function class:hex_val(node)
+  self:push("0x", node[1])
+  local op = node[2]
+  if op == "." then
+    for i = 3, #node do
+      self:push(" 0x", node[i])
+    end
+  elseif op == "-" then
+    self:push("..0x", node[3])
+  end
+end
+
+function metatable:__call()
+  local node = self.node
+  local name = node[0]
+  local f = self[name]
+  if not f then
+    error("not supported " .. name)
+  end
+  f(self, node)
+end
+
+local abnf_converter = setmetatable(class, {
+  __call = function (_, node)
+    return setmetatable(new(node), metatable)
   end;
 })
 
@@ -635,7 +819,7 @@ repeat
     use_map[i] = use_ids
   end
 
-  local loop_detector = function () end
+  local loop = function () end
 
   local color = {}
   local function process(id)
@@ -669,9 +853,10 @@ repeat
           end
         end
         process(node)
+        node.loop = true
         node.prose_val = true
 
-        error(loop_detector)
+        error(loop)
       end
     end
     color[id] = 2
@@ -685,7 +870,7 @@ repeat
 
   local loop_detected
   if not result then
-    if message == loop_detector then
+    if message == loop then
       loop_detected = true
     else
       error(message)
@@ -749,21 +934,32 @@ end
 out:write "}\n"
 out:close()
 
---[====[
-
-for i = 1, #root do
-  local rulelist = root[i]
-  for j = 1, #rulelist do
-    local rule = rulelist[j]
-    io.write(([[
+local out = assert(io.open("abnf.rl", "w"))
+for i = #order, 1, -1 do
+  local rule = id_map[order[i]]
+  out:write(([[
 # https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc%d.txt#L%d
 ]]):format(rule.rfc_number, rule.line))
-    local buffer = rule[-1]
-    for k = 1, #buffer do
-      io.write("# ", buffer[k], "\n")
-    end
-    io.write "\n"
+  local buffer = rule[-1]
+  for k = 1, #buffer do
+    out:write("# ", buffer[k], "\n")
   end
-end
 
-]====]
+  if rule.prose_val then
+  else
+    local function process(node)
+      for i = 1, #node do
+        local that = node[i]
+        if getmetatable(that) == getmetatable(node) then
+          process(that)
+        end
+      end
+      abnf_converter(node)()
+    end
+    process(rule)
+    out:write(table.concat(rule[-2]), "\n")
+  end
+
+  out:write "\n"
+end
+out:close()
