@@ -7,8 +7,6 @@
 -- TODO machine nameの追加
 -- TODO modify rulenameのエラーメッセージを修正する
 -- TODO tewak.txtにコメントを追加する
--- TODO メッセージのみなおし: rule ... redefinedにする
--- TODO メッセージの全体的なみなおし
 
 local class = {}
 local metatable = { __index = class }
@@ -635,7 +633,7 @@ function metatable:__call()
   local name = node[0]
   local f = self[name]
   if not f then
-    error(name .. " not supported ")
+    error(name .. " not supported")
   end
   f(self, node)
 end
@@ -786,7 +784,7 @@ for i = 1, #root do
     local that = name_map[def_name]
     if that then
       io.write(([[
-[%s.txt:%4d] redefined rule %q
+[%s.txt:%4d] rule %q redefined
 [%s.txt:%4d] previously defined here
 ]]):format(rule.basename, rule.line, def_name, that.basename, that.line))
 
@@ -894,9 +892,9 @@ repeat
         local that = id_map[use_id]
         local use_name = that[1][1]
         io.write(([[
-[%s.txt:%4d] loop detected at rule %q uses rule %q
-[%s.txt:%4d] rule %q is defined here
-[WARN] modify rulename to prose_val
+[%s.txt:%4d] loop detected: rule %q uses rule %q
+[%s.txt:%4d] rule %q defined here
+[WARN] modify rulename to prose-val
 
 ]]):format(node.basename, node.line, node[1][1], use_name, that.basename, that.line, use_name))
 
