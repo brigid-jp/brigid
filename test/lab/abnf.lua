@@ -28,8 +28,8 @@ function class:push(node)
   return self
 end
 
-function class:dump_xml()
-  io.write("<", self[0])
+function class:dump_xml(out)
+  out:write("<", self[0])
   local keys = {}
   for k, v in pairs(self) do
     if type(k) == "string" then
@@ -39,19 +39,19 @@ function class:dump_xml()
   table.sort(keys)
   for i = 1, #keys do
     local k = keys[i]
-    io.write(" ", escape(k), "=\"", escape(tostring(self[k])), "\"")
+    out:write(" ", escape(k), "=\"", escape(tostring(self[k])), "\"")
   end
-  io.write ">\n"
+  out:write ">\n"
 
   for i = 1, #self do
     local that = self[i]
     if getmetatable(that) == metatable then
-      that:dump_xml()
+      that:dump_xml(out)
     else
-      io.write("<value>", escape(tostring(that)), "</value>\n")
+      out:write("<value>", escape(tostring(that)), "</value>\n")
     end
   end
-  io.write("</", self[0], ">\n")
+  out:write("</", self[0], ">\n")
 end
 
 local abnf_node = setmetatable(class, {
@@ -483,7 +483,7 @@ local function process(number, line_range_i, line_range_j)
   process(rulelist)
 
   for i = 1, #rulelist do
-    local node = rulelist[i]
+    local rule = rulelist[i]
     local that = rulelist[i + 1]
 
     local last_line
@@ -497,13 +497,13 @@ local function process(number, line_range_i, line_range_j)
     end
 
     local rule_buffer = {}
-    for i = node.line, last_line do
-      rule_buffer[#rule_buffer + 1] = buffer[i - 1 + line_range_i]
+    for i = rule.line, last_line do
+      rule_buffer[#rule_buffer + 1] = buffer[i + 1 - line_range_i]
     end
 
-    node[-1] = rule_buffer
-    node.last_line = last_line
-    node.rfc_number = number
+    rule[-1] = rule_buffer
+    rule.last_line = last_line
+    rule.rfc_number = number
   end
 
   root:push(rulelist)
@@ -514,4 +514,25 @@ process(5234, 720, 778)
 process(3986, 2697, 2788)
 process(7230, 4555, 4683)
 
-root:dump_xml()
+root:dump_xml(io.stdout)
+
+--[====[
+
+root:dump_xml(io.stdout)
+
+for i = 1, #root do
+  local rulelist = root[i]
+  for j = 1, #rulelist do
+    local rule = rulelist[j]
+    io.write(([[
+# https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc%d.txt#L%d
+]]):format(rule.rfc_number, rule.line))
+    local buffer = rule[-1]
+    for k = 1, #buffer do
+      io.write("# ", buffer[k], "\n")
+    end
+    io.write "\n"
+  end
+end
+
+]====]
