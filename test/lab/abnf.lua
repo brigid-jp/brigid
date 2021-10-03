@@ -11,8 +11,16 @@ local function new(name, ...)
   return { [0] = name, ... }
 end
 
+local escape_map = {
+  ["&"] = "&amp;";
+  ["<"] = "&lt;";
+  [">"] = "&gt;";
+  ["\""] = "&quot;";
+  ["'"] = "&apos;";
+}
+
 local function escape(source)
-  return (source:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;"):gsub("\"", "&quot;"):gsub("'", "&apos;"))
+  return (source:gsub("[&<>\"']", escape_map))
 end
 
 function class:push(node)
