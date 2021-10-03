@@ -4,7 +4,6 @@
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
--- TODO semicolon
 -- TODO prose-val
 -- TODO prefix, postfix
 -- TODO basename
@@ -447,8 +446,11 @@ local abnf_parser = setmetatable(class, {
 local class = {}
 local metatable = { __index = class }
 
-local function new(node)
-  return { node = node }
+local function new(node, endl)
+  return {
+    node = node;
+    endl = endl;
+  }
 end
 
 function class:push(...)
@@ -480,7 +482,7 @@ function class:copy(that)
 end
 
 function class:rule(node)
-  self:copy(node[1]):copy(node[2]):copy(node[3])
+  self:copy(node[1]):copy(node[2]):copy(node[3]):push ";"
 end
 
 function class:rulename(node)
@@ -500,7 +502,7 @@ function class:alternation(node)
   self:copy(node[1])
   for i = 2, #node do
     if node[i - 1].line < node[i].line then
-      self:push "\n  | "
+      self:push(self.endl, "  | ")
     else
       self:push " | "
     end
@@ -512,7 +514,7 @@ function class:concatenation(node)
   self:copy(node[1])
   for i = 2, #node do
     if node[i - 1].line < node[i].line then
-      self:push "\n"
+      self:push(self.endl, "  ")
     else
       self:push " "
     end
@@ -631,24 +633,24 @@ function metatable:__call()
 end
 
 local abnf_generator = setmetatable(class, {
-  __call = function (_, node)
-    return setmetatable(new(node), metatable)
+  __call = function (_, node, endl)
+    return setmetatable(new(node, endl), metatable)
   end;
 })
 
-local function process(node)
+local function process(node, endl)
   for i = 1, #node do
     local that = node[i]
     if getmetatable(that) == getmetatable(node) then
-      process(that)
+      process(that, endl)
     end
   end
-  abnf_generator(node)()
+  abnf_generator(node, endl)()
 end
 
-local function generate(rule)
-  process(rule)
-  return table.concat(rule[-2]) .. ";"
+local function generate(rule, endl)
+  process(rule, endl)
+  return table.concat(rule[-2])
 end
 
 local root = abnf_node "root"
@@ -977,7 +979,7 @@ for i = #order, 1, -1 do
 
   if rule.prose_val then
   else
-    out:write(generate(rule), "\n")
+    out:write(generate(rule, "\n"), "\n")
   end
 
   out:write "\n"
