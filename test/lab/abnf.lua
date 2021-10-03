@@ -4,8 +4,10 @@
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
--- TODO <undef> の追加
 -- TODO machine nameの追加
+-- TODO modify rulenameのエラーメッセージを修正する
+-- TODO firstでなく、earlierに変更する
+-- TODO tewak.txtにコメントを追加する
 
 local class = {}
 local metatable = { __index = class }
@@ -741,14 +743,25 @@ local function process(basename, line_range_i, line_range_j)
       rule_buffer[#rule_buffer + 1] = buffer[i + 1 - line_range_i]
     end
 
-    local prose_val
-    if #(rule:find_by_name "prose_val") > 0 then
+    local prose_val = rule:find_by_name "prose_val"
+
+    local prose_val_undef
+    for i = 1, #prose_val do
+      if prose_val[i][1] == "undef" then
+        prose_val_undef = true
+      end
+    end
+
+    if #prose_val > 0 then
       prose_val = true
+    else
+      prose_val = nil
     end
 
     rule[-1] = rule_buffer
     rule.last_line = last_line
     rule.prose_val = prose_val
+    rule.prose_val_undef = prose_val_undef
     rule.basename = basename
   end
 
@@ -758,7 +771,7 @@ end
 process("rfc5234", 720, 778)
 process("rfc3986", 2697, 2788)
 process("rfc7230", 4555, 4683)
-process("rfc7230a", 1, 2)
+process("tweak", 1, 3)
 -- process("rfc5234", 549, 627)
 
 local name_map = {}
@@ -777,12 +790,23 @@ for i = 1, #root do
 ]]):format(rule.basename, rule.line, def_name, that.basename, that.line))
 
       if rule.prose_val then
-        io.write "[INFO] later rule has prose-val, win first\n"
-        rule.ignored = true
+        if rule.prose_val_undef then
+          io.write "[INFO] later rule has prose-val <undef>, win later\n"
+          that.ignored = true
+          name_map[def_name] = rule
+        else
+          io.write "[INFO] later rule has prose-val, win first\n"
+          rule.ignored = true
+        end
       elseif that.prose_val then
-        io.write "[INFO] first rule has prose-val, win later\n"
-        that.ignored = true
-        name_map[def_name] = rule
+        if that.prose_val_undef then
+          io.write "[INFO] first rule has prose-val <undef>, win first\n"
+          rule.ignored = true
+        else
+          io.write "[INFO] first rule has prose-val, win later\n"
+          that.ignored = true
+          name_map[def_name] = rule
+        end
       else
         local new_name = ("%s-%s"):format(rule.basename, def_name)
         assert(not name_map[new_name])
