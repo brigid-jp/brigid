@@ -6,8 +6,9 @@
 
 -- TODO machine nameの追加
 -- TODO modify rulenameのエラーメッセージを修正する
--- TODO firstでなく、earlierに変更する
 -- TODO tewak.txtにコメントを追加する
+-- TODO メッセージのみなおし: rule ... redefinedにする
+-- TODO メッセージの全体的なみなおし
 
 local class = {}
 local metatable = { __index = class }
@@ -795,15 +796,15 @@ for i = 1, #root do
           that.ignored = true
           name_map[def_name] = rule
         else
-          io.write "[INFO] later rule has prose-val, win first\n"
+          io.write "[INFO] later rule has prose-val, win earlier\n"
           rule.ignored = true
         end
       elseif that.prose_val then
         if that.prose_val_undef then
-          io.write "[INFO] first rule has prose-val <undef>, win first\n"
+          io.write "[INFO] earlier rule has prose-val <undef>, win earlier\n"
           rule.ignored = true
         else
-          io.write "[INFO] first rule has prose-val, win later\n"
+          io.write "[INFO] earlier rule has prose-val, win later\n"
           that.ignored = true
           name_map[def_name] = rule
         end
