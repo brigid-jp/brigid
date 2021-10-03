@@ -637,14 +637,21 @@ digraph {
 graph[rankdir=LR];
 ]]
 
+for i = 1, #id_map do
+  local rule = id_map[i]
+  out:write(([[
+%d [label="%s"];
+]]):format(i, rule[1][1]))
+end
+
 for i = 1, #use_map do
   local ids = use_map[i]
-  local def_name = id_map[i][1][1]
+  -- local def_name = id_map[i][1][1]
   for j = 1, #ids do
-    local use_name = id_map[ids[j]][1][1]
+    -- local use_name = id_map[ids[j]][1][1]
     out:write(([[
-"%s" -> "%s";
-]]):format(def_name, use_name))
+%d -> %d;
+]]):format(i, ids[j]))
   end
 end
 out:write "}\n"
