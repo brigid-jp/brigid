@@ -613,24 +613,23 @@ for i = 1, #id_map do
   local def_name = rule[1][1]
 
   local rulename = rule[3]:find_by_name "rulename"
-  local map = {}
+  local use_id_map = {}
   for j = 1, #rulename do
     local use_name = rulename[j][1]
     local use_rule = name_map[use_name]
-    local use_id = use_rule.id
-    map[use_id] = true
+    use_id_map[use_rule.id] = true
   end
 
-  local ids = {}
-  for k in pairs(map) do
-    ids[#ids + 1] = k
+  local use_ids = {}
+  for k in pairs(use_id_map) do
+    use_ids[#use_ids + 1] = k
   end
-  table.sort(ids)
+  table.sort(use_ids)
 
-  use_map[i] = ids
+  use_map[i] = use_ids
 end
 
-local out = assert(io.open("tmp.dot", "w"))
+local out = assert(io.open("tmp2.dot", "w"))
 
 out:write [[
 digraph {
