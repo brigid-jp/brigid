@@ -538,8 +538,8 @@ local function process(number, line_range_i, line_range_j)
   root:push(rulelist)
 end
 
--- process(5234, 549, 627)
 process(5234, 720, 778)
+-- process(5234, 549, 627)
 process(3986, 2697, 2788)
 process(7230, 4555, 4683)
 
