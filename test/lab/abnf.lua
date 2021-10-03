@@ -539,7 +539,7 @@ local function process(number, line_range_i, line_range_j)
 end
 
 process(5234, 720, 778)
-process(5234, 549, 627)
+-- process(5234, 549, 627)
 process(3986, 2697, 2788)
 process(7230, 4555, 4683)
 
@@ -694,6 +694,7 @@ repeat
 until not loop_detected
 
 local ref_map = {}
+
 for i = 1, #id_map do
   ref_map[i] = {}
 end
@@ -706,7 +707,27 @@ for i = 1, #use_map do
   end
 end
 
-local out = assert(io.open("tmp4.dot", "w"))
+-- topological sort
+local order = {} -- reversed
+local color = {}
+
+local function process(id)
+  if not color[id] then
+    color[id] = true
+    local ref_ids = ref_map[id]
+    for i = 1, #ref_ids do
+      process(ref_ids[i])
+    end
+    order[#order + 1] = id
+  end
+end
+for i = 1, #id_map do
+  process(i)
+end
+
+root:dump_xml(assert(io.open("abnf.xml", "w")))
+
+local out = assert(io.open("abnf.dot", "w"))
 out:write [[
 digraph {
 graph[rankdir=LR];
@@ -727,8 +748,6 @@ for i = 1, #ref_map do
 end
 out:write "}\n"
 out:close()
-
-root:dump_xml(assert(io.open("tmp4.xml", "w")))
 
 --[====[
 
