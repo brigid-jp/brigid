@@ -482,6 +482,22 @@ local function process(number, line_range_i, line_range_j)
   end
   process(list)
 
+  for i = 1, #list do
+    local node = list[i]
+    local that = list[i + 1]
+
+    local last_line
+    if that then
+      last_line = that.line - 1
+    else
+      last_line = line_range_j
+    end
+    while buffer[last_line - line_range_i + 1] == "" do
+      last_line = last_line - 1
+    end
+    node.last_line = last_line
+  end
+
   root:push(list)
 end
 
