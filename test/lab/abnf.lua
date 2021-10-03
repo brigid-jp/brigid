@@ -4,9 +4,21 @@
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
--- TODO machine nameの追加
--- TODO modify rulenameのエラーメッセージを修正する
 -- TODO tewak.txtにコメントを追加する
+
+local config = {
+  name = "abnf";
+  prefix = "";
+  postfix = "";
+
+  dump_xml = true;
+  dump_dot = true;
+
+  { "rfc5234", 720, 778 };
+  { "rfc3986", 2697, 2788 };
+  { "rfc7230", 4555, 4683 };
+  { "tweak" };
+}
 
 local class = {}
 local metatable = { __index = class }
@@ -662,14 +674,20 @@ end
 local root = abnf_node "root"
 
 local function process(basename, line_range_i, line_range_j)
+  if not line_range_i then
+    line_range_i = 1
+  end
   local line_number = 0
   local buffer = {}
   for line in io.lines(basename .. ".txt") do
     line_number = line_number + 1
     line = line:gsub("\r$", ""):gsub("^[ \t]+$", "")
-    if line_range_i <= line_number and line_number <= line_range_j then
+    if line_range_i <= line_number and (not line_range_j or line_number <= line_range_j) then
       buffer[#buffer + 1] = line
     end
+  end
+  if not line_range_j then
+    line_range_j = line_number
   end
 
   local indent = buffer[1]:match "^ *"
@@ -767,11 +785,9 @@ local function process(basename, line_range_i, line_range_j)
   root:push(rulelist)
 end
 
-process("rfc5234", 720, 778)
-process("rfc3986", 2697, 2788)
-process("rfc7230", 4555, 4683)
-process("tweak", 1, 3)
--- process("rfc5234", 549, 627)
+for i = 1, #config do
+  process(table.unpack(config[i]))
+end
 
 local name_map = {}
 
@@ -967,31 +983,37 @@ for i = 1, #id_map do
   process(i)
 end
 
-root:dump_xml(assert(io.open("abnf.xml", "w")))
+if config.dump_xml then
+  local out = assert(io.open(config.name .. ".xml", "w"))
+  root:dump_xml(out)
+  out:close()
+end
 
-local out = assert(io.open("abnf.dot", "w"))
-out:write [[
+if config.dump_dot then
+  local out = assert(io.open(config.name .. ".dot", "w"))
+  out:write [[
 digraph {
 graph[rankdir=LR];
 ]]
-for i = 1, #id_map do
-  local rule = id_map[i]
-  out:write(([[
+  for i = 1, #id_map do
+    local rule = id_map[i]
+    out:write(([[
 %d [label="%s"];
 ]]):format(i, rule[1][1]))
-end
-for i = 1, #ref_map do
-  local ids = ref_map[i]
-  for j = 1, #ids do
-    out:write(([[
+  end
+  for i = 1, #ref_map do
+    local ids = ref_map[i]
+    for j = 1, #ids do
+      out:write(([[
 %d -> %d;
 ]]):format(i, ids[j]))
+    end
   end
+  out:write "}\n"
+  out:close()
 end
-out:write "}\n"
-out:close()
 
-local out = assert(io.open("abnf.rl", "w"))
+local out = assert(io.open(config.name .. ".rl", "w"))
 out:write [[
 %%{
 # vim: syntax=ragel:
@@ -1008,9 +1030,9 @@ for i = #order, 1, -1 do
     out:write("# ", buffer[k], "\n")
   end
   if rule.prose_val then
-    out:write("# ", generate(rule, "\n# ", "", ""), "\n")
+    out:write("# ", generate(rule, "\n# ", config.prefix, config.postfix), "\n")
   else
-    out:write(generate(rule, "\n", "", ""), "\n")
+    out:write(generate(rule, "\n", config.prefix, config.postfix), "\n")
   end
 end
 out:write [[
