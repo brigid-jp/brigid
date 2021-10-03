@@ -649,19 +649,16 @@ repeat
       elseif c == 1 then
         local node = id_map[id]
         local that = id_map[use_id]
-
-        local use_name = node[1][1]
-        local ref_name = that[1][1]
-
+        local use_name = that[1][1]
         io.write(([[
 [rfc%d.txt:%4d] loop detected at rule %q uses rule %q
 [rfc%d.txt:%4d] rule %q is defined here
 [WARN] modify rulename to prose_val
 
-]]):format(node.rfc_number, node.line, use_name, ref_name, that.rfc_number, that.line, ref_name))
+]]):format(node.rfc_number, node.line, node[1][1], use_name, that.rfc_number, that.line, use_name))
 
         local function process(node)
-          if node[0] == "rulename" and node[1] == ref_name then
+          if node[0] == "rulename" and node[1] == use_name then
             node[0] = "prose_val"
           end
           for i = 1, #node do
@@ -696,22 +693,32 @@ repeat
   end
 until not loop_detected
 
-local out = assert(io.open("tmp2.dot", "w"))
+local ref_map = {}
+for i = 1, #id_map do
+  ref_map[i] = {}
+end
+for i = 1, #use_map do
+  local use_ids = use_map[i]
+  for j = 1, #use_ids do
+    local use_id = use_ids[j]
+    local ref_ids = ref_map[use_id]
+    ref_ids[#ref_ids + 1] = i
+  end
+end
 
+local out = assert(io.open("tmp4.dot", "w"))
 out:write [[
 digraph {
 graph[rankdir=LR];
 ]]
-
 for i = 1, #id_map do
   local rule = id_map[i]
   out:write(([[
 %d [label="%s"];
 ]]):format(i, rule[1][1]))
 end
-
-for i = 1, #use_map do
-  local ids = use_map[i]
+for i = 1, #ref_map do
+  local ids = ref_map[i]
   for j = 1, #ids do
     out:write(([[
 %d -> %d;
@@ -721,7 +728,7 @@ end
 out:write "}\n"
 out:close()
 
-root:dump_xml(assert(io.open("tmp2.xml", "w")))
+root:dump_xml(assert(io.open("tmp4.xml", "w")))
 
 --[====[
 
