@@ -9,7 +9,7 @@
 local config = {
   name = "abnf";
   prefix = "";
-  postfix = "";
+  suffix = "";
 
   dump_xml = true;
   dump_dot = true;
@@ -458,12 +458,12 @@ local abnf_parser = setmetatable(class, {
 local class = {}
 local metatable = { __index = class }
 
-local function new(node, endl, prefix, postfix)
+local function new(node, endl, prefix, suffix)
   return {
     node = node;
     endl = endl;
     prefix = prefix;
-    postfix = postfix;
+    suffix = suffix;
   }
 end
 
@@ -500,7 +500,7 @@ function class:rule(node)
 end
 
 function class:rulename(node)
-  self:push(self.prefix .. node[1]:gsub("%-", "_") .. self.postfix)
+  self:push(self.prefix .. node[1]:gsub("%-", "_") .. self.suffix)
 end
 
 function class:defined_as(node)
@@ -651,23 +651,23 @@ function metatable:__call()
 end
 
 local abnf_generator = setmetatable(class, {
-  __call = function (_, node, endl, prefix, postfix)
-    return setmetatable(new(node, endl, prefix, postfix), metatable)
+  __call = function (_, node, endl, prefix, suffix)
+    return setmetatable(new(node, endl, prefix, suffix), metatable)
   end;
 })
 
-local function process(node, endl, prefix, postfix)
+local function process(node, endl, prefix, suffix)
   for i = 1, #node do
     local that = node[i]
     if getmetatable(that) == getmetatable(node) then
-      process(that, endl, prefix, postfix)
+      process(that, endl, prefix, suffix)
     end
   end
-  abnf_generator(node, endl, prefix, postfix)()
+  abnf_generator(node, endl, prefix, suffix)()
 end
 
-local function generate(rule, endl, prefix, postfix)
-  process(rule, endl, prefix, postfix)
+local function generate(rule, endl, prefix, suffix)
+  process(rule, endl, prefix, suffix)
   return table.concat(rule[-2])
 end
 
@@ -1030,9 +1030,9 @@ for i = #order, 1, -1 do
     out:write("# ", buffer[k], "\n")
   end
   if rule.prose_val then
-    out:write("# ", generate(rule, "\n# ", config.prefix, config.postfix), "\n")
+    out:write("# ", generate(rule, "\n# ", config.prefix, config.suffix), "\n")
   else
-    out:write(generate(rule, "\n", config.prefix, config.postfix), "\n")
+    out:write(generate(rule, "\n", config.prefix, config.suffix), "\n")
   end
 end
 out:write [[
