@@ -4,9 +4,8 @@
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
--- TODO prose-val
--- TODO prefix, postfix
 -- TODO basename
+-- TODO prefix, postfix
 
 local class = {}
 local metatable = { __index = class }
@@ -622,6 +621,10 @@ function class:hex_val(node)
   end
 end
 
+function class:prose_val(node)
+  self:push("<", node[1], ">")
+end
+
 function metatable:__call()
   local node = self.node
   local name = node[0]
@@ -976,12 +979,11 @@ for i = #order, 1, -1 do
   for k = 1, #buffer do
     out:write("# ", buffer[k], "\n")
   end
-
   if rule.prose_val then
+    out:write("# ", generate(rule, "\n# "), "\n")
   else
     out:write(generate(rule, "\n"), "\n")
   end
-
   out:write "\n"
 end
 out:close()
