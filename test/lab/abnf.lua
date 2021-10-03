@@ -538,12 +538,12 @@ local function process(number, line_range_i, line_range_j)
   root:push(rulelist)
 end
 
-process(5234, 549, 627)
+-- process(5234, 549, 627)
 process(5234, 720, 778)
 process(3986, 2697, 2788)
 process(7230, 4555, 4683)
 
-local def_map = {}
+local name_map = {}
 
 for i = 1, #root do
   local rulelist = root[i]
@@ -551,7 +551,7 @@ for i = 1, #root do
     local rule = rulelist[j]
     local def_name = rule[1][1]
 
-    local that = def_map[def_name]
+    local that = name_map[def_name]
     if that then
       io.write(([[
 [rfc%d.txt:%4d] redefined rule %q
@@ -564,10 +564,10 @@ for i = 1, #root do
       elseif that.prose_val then
         io.write "[INFO] first rule has prose-val, win later\n"
         that.ignored = true
-        def_map[def_name] = rule
+        name_map[def_name] = rule
       else
         local new_name = ("rfc%d-%s"):format(rule.rfc_number, def_name)
-        assert(not def_map[new_name])
+        assert(not name_map[new_name])
         io.write(("[WARN] neither rule has prose-val, rename %q to %q\n"):format(def_name, new_name))
         local function process(node)
           if node[0] == "rulename" and node[1] == def_name then
@@ -582,11 +582,11 @@ for i = 1, #root do
           end
         end
         process(rulelist)
-        def_map[new_name] = rule
+        name_map[new_name] = rule
       end
       io.write "\n"
     else
-      def_map[def_name] = rule
+      name_map[def_name] = rule
     end
   end
 end
@@ -606,17 +606,51 @@ for i = 1, #root do
   end
 end
 
---[[
-  グラフ構造をつくる
+local use_map = {}
 
-  rule depends to rules
+for i = 1, #id_map do
+  local rule = id_map[i]
+  local def_name = rule[1][1]
 
+  local rulename = rule[3]:find_by_name "rulename"
+  local map = {}
+  for j = 1, #rulename do
+    local use_name = rulename[j][1]
+    local use_rule = name_map[use_name]
+    local use_id = use_rule.id
+    map[use_id] = true
+  end
 
+  local ids = {}
+  for k in pairs(map) do
+    ids[#ids + 1] = k
+  end
+  table.sort(ids)
 
+  use_map[i] = ids
+end
+
+local out = assert(io.open("tmp.dot", "w"))
+
+out:write [[
+digraph {
+graph[rankdir=LR];
 ]]
 
+for i = 1, #use_map do
+  local ids = use_map[i]
+  local def_name = id_map[i][1][1]
+  for j = 1, #ids do
+    local use_name = id_map[ids[j]][1][1]
+    out:write(([[
+"%s" -> "%s";
+]]):format(def_name, use_name))
+  end
+end
+out:write "}\n"
+out:close()
 
-root:dump_xml(assert(io.open("tmp6.xml", "w")))
+root:dump_xml(assert(io.open("tmp7.xml", "w")))
 
 --[====[
 
