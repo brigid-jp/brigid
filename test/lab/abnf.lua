@@ -784,35 +784,35 @@ for i = 1, #root do
     local that = name_map[def_name]
     if that then
       io.write(([[
-[%s.txt:%4d] rule %q redefined
-[%s.txt:%4d] previously defined here
+[%7s.txt:%4d] rule %q redefined
+[%7s.txt:%4d] previously defined here
 ]]):format(rule.basename, rule.line, def_name, that.basename, that.line))
 
       if rule.prose_val then
         if rule.prose_val_undef then
-          io.write "[INFO] later rule has prose-val <undef>, win later\n"
+          io.write "[===== INFO =====] later rule has prose-val <undef>, win later\n"
           that.ignored = true
           name_map[def_name] = rule
         else
-          io.write "[INFO] later rule has prose-val, win earlier\n"
+          io.write "[===== INFO =====] later rule has prose-val, win earlier\n"
           rule.ignored = true
         end
       elseif that.prose_val then
         if that.prose_val_undef then
-          io.write "[INFO] earlier rule has prose-val <undef>, win earlier\n"
+          io.write "[===== INFO =====] earlier rule has prose-val <undef>, win earlier\n"
           rule.ignored = true
         else
-          io.write "[INFO] earlier rule has prose-val, win later\n"
+          io.write "[===== INFO =====] earlier rule has prose-val, win later\n"
           that.ignored = true
           name_map[def_name] = rule
         end
       else
         local new_name = ("%s-%s"):format(rule.basename, def_name)
         assert(not name_map[new_name])
-        io.write(("[WARN] neither rule has prose-val, rename %q to %q\n"):format(def_name, new_name))
+        io.write(("[===== WARN =====] neither rule has prose-val, rename %q to %q\n"):format(def_name, new_name))
         local function process(node)
           if node[0] == "rulename" and node[1] == def_name then
-            io.write(("[%s.txt:%4d] rename %q to %q\n"):format(rule.basename, node.line, def_name, new_name))
+            io.write(("[%7s.txt:%4d] rename %q to %q\n"):format(rule.basename, node.line, def_name, new_name))
             node[1] = new_name
           end
           for i = 1, #node do
@@ -862,7 +862,7 @@ repeat
       local use_name = rulename[j][1]
       local use_rule = name_map[use_name]
       if not use_rule then
-        error(("[%s.txt:%4d] rule %q uses undefined rule %q"):format(rule.basename, rule.line, def_name, use_name))
+        error(("[%7s.txt:%4d] rule %q uses undefined rule %q"):format(rule.basename, rule.line, def_name, use_name))
       end
       use_id_map[use_rule.id] = true
     end
@@ -892,9 +892,9 @@ repeat
         local that = id_map[use_id]
         local use_name = that[1][1]
         io.write(([[
-[%s.txt:%4d] loop detected: rule %q uses rule %q
-[%s.txt:%4d] rule %q defined here
-[WARN] modify rulename to prose-val
+[%7s.txt:%4d] loop detected: rule %q uses rule %q
+[%7s.txt:%4d] rule %q defined here
+[===== WARN =====] modify rulename to prose-val
 
 ]]):format(node.basename, node.line, node[1][1], use_name, that.basename, that.line, use_name))
 
