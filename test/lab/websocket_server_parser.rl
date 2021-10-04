@@ -15,18 +15,66 @@ namespace brigid {
 
       include abnf "abnf.rl";
 
-      request_line_ =
+      main :=
+
         method
-          ${ std::cout << "method [" << fc << "]\n"; }
+          ${ method_ += fc; }
         SP
         request_target
-          ${ std::cout << "request_target [" << fc << "]\n"; }
+          ${ request_target_ += fc; }
         SP
         HTTP_version
-          ${ std::cout << "HTTP_version [" << fc << "]\n"; }
-        CRLF;
+          ${ http_version_ += fc; }
+        CRLF
 
-      main := request_line_ @{ fbreak; };
+        (
+          # field_name
+          #   ${ field_name_ += fc; }
+          # ":" OWS field_value
+          #   ${ field_value_ += fc; }
+          #   %{
+          #     std::cout << "[" << field_name_ << "] => [" << field_value_ << "]\n";
+          #     field_name_.clear();
+          #     field_value_.clear();
+          #   }
+          # OWS
+          header_field
+            >{
+              std::cout << ">";
+              switch (fc) {
+                case '\r': std::cout << "\\r"; break;
+                case '\n': std::cout << "\\n"; break;
+                default: std::cout << fc << "";
+              }
+            }
+            ${
+              std::cout << "$";
+              switch (fc) {
+                case '\r': std::cout << "\\r"; break;
+                case '\n': std::cout << "\\n"; break;
+                default: std::cout << fc << "";
+              }
+            }
+            %{
+              std::cout << "%";
+              switch (fc) {
+                case '\r': std::cout << "\\r"; break;
+                case '\n': std::cout << "\\n"; break;
+                default: std::cout << fc << "";
+              }
+              std::cout << "\n";
+            }
+
+          CRLF
+            @{ std::cout << "CRLF\n"; }
+        )*
+
+        CRLF @{
+          std::cout << "fbreak\n";
+          fbreak;
+        }
+
+        ;
     }%%
 
     %%write data;
@@ -38,11 +86,16 @@ namespace brigid {
       %%write init;
     }
 
-    void update(const char* data, const char* end) {
+    void update(const char* data, size_t size) {
       const char* p = data;
-      const char* pe = nullptr;
+      const char* pe = data + size;
 
       %%write exec;
+
+      std::cout
+        << method_ << "\n"
+        << request_target_ << "\n"
+        << http_version_ << "\n";
 
       std::cout << "cs " << cs << "\n";
       std::cout << "index " << (p - data) << "\n";
@@ -59,6 +112,11 @@ namespace brigid {
 
   private:
     int cs;
+    std::string method_;
+    std::string request_target_;
+    std::string http_version_;
+    std::string field_name_;
+    std::string field_value_;
   };
 
   websocket_server_parser::websocket_server_parser()
@@ -67,6 +125,6 @@ namespace brigid {
   websocket_server_parser::~websocket_server_parser() {}
 
   void websocket_server_parser::update(const char* data, size_t size) {
-    impl_->update(data, nullptr);
+    impl_->update(data, size);
   }
 }
