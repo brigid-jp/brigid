@@ -1,5 +1,9 @@
 ; vim: syntax=abnf:
 
+; Copyright (c) 2021 <dev@brigid.jp>
+; This software is released under the MIT License.
+; https://opensource.org/licenses/mit-license.php
+
 path-empty = ""
 ; https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc3986.txt#L2769
 ; path-empty    = 0<pchar>
