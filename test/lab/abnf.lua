@@ -977,7 +977,7 @@ local function process(id)
     order[#order + 1] = id
   end
 end
-for i = 1, #id_map do
+for i = #id_map, 1, -1 do
   process(i)
 end
 
