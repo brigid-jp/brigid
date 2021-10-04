@@ -4,6 +4,20 @@
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
+local config = {
+  name = "abnf";
+  prefix = "";
+  suffix = "";
+
+  dump_xml = true;
+  dump_dot = true;
+
+  { "rfc5234", 720, 778 };
+  { "rfc3986", 2697, 2788 };
+  { "rfc7230", 4555, 4683 };
+  { "tweak" };
+}
+
 local class = {}
 local metatable = { __index = class }
 
@@ -28,7 +42,30 @@ function class:push(node)
   return self
 end
 
+function class:find_by_name(name, result)
+  if not result then
+    result = {}
+  end
+
+  if self[0] == name then
+    result[#result + 1] = self
+  end
+
+  for i = 1, #self do
+    local that = self[i]
+    if getmetatable(that) == metatable then
+      result = that:find_by_name(name, result)
+    end
+  end
+
+  return result
+end
+
 function class:dump_xml(out)
+  if not out then
+    out = io.stdout
+  end
+
   out:write("<", self[0])
   local keys = {}
   for k, v in pairs(self) do
@@ -180,8 +217,10 @@ function class:defined_as()
   local backup = self:backup()
   local node = self:node "defined_as"
   while self:c_wsp() do end
-  if self:match "=/?" then
-    node:push(self[0])
+  if self:match "=/" then
+    error("incremental alternation not supported at position " .. self.position)
+  elseif self:match "=" then
+    node:push "="
     while self:c_wsp() do end
     return self:push(node)
   end
@@ -273,7 +312,7 @@ function class:repetition()
   local backup = self:backup()
   local node = self:node "repetition"
   local repeat_node
-  if self:repeat_() then
+  if self["repeat"](self) then
     repeat_node = self:pop()
   end
   if self:element() then
@@ -282,7 +321,7 @@ function class:repetition()
   self:restore(backup)
 end
 
-function class:repeat_()
+class["repeat"] = function (self)
   local node = self:node "repeat"
   if self:match "(%d*)%*(%d*)" then
     return self:push(node:push(self[1]):push(self[2]))
@@ -330,8 +369,8 @@ end
 
 function class:char_val()
   local node = self:node "char_val"
-  if self:match "\"[\32\33\35-\126]*\"" then
-    return self:push(node:push(self[0]))
+  if self:match "\"([\32\33\35-\126]*)\"" then
+    return self:push(node:push(self[1]))
   end
 end
 
@@ -414,21 +453,239 @@ local abnf_parser = setmetatable(class, {
   end;
 })
 
+local class = {}
+local metatable = { __index = class }
+
+local function new(node, endl, prefix, suffix)
+  return {
+    node = node;
+    endl = endl;
+    prefix = prefix;
+    suffix = suffix;
+  }
+end
+
+function class:push(...)
+  local node = self.node
+  local node_buffer = node[-2]
+  local that_buffer = { ... }
+  if not node_buffer then
+    node_buffer = {}
+    node[-2] = node_buffer
+  end
+  for i = 1, #that_buffer do
+    node_buffer[#node_buffer + 1] = that_buffer[i]
+  end
+  return self
+end
+
+function class:copy(that)
+  local node = self.node
+  local node_buffer = node[-2]
+  local that_buffer = that[-2]
+  if not node_buffer then
+    node_buffer = {}
+    node[-2] = node_buffer
+  end
+  for i = 1, #that_buffer do
+    node_buffer[#node_buffer + 1] = that_buffer[i]
+  end
+  return self
+end
+
+function class:rule(node)
+  self:copy(node[1]):copy(node[2]):copy(node[3]):push ";"
+end
+
+function class:rulename(node)
+  self:push(self.prefix .. node[1]:gsub("%-", "_") .. self.suffix)
+end
+
+function class:defined_as(node)
+  assert(node[1] == "=")
+  self:push " = "
+end
+
+function class:elements(node)
+  self:copy(node[1])
+end
+
+function class:alternation(node)
+  self:copy(node[1])
+  for i = 2, #node do
+    if node[i - 1].line < node[i].line then
+      self:push(self.endl, "  | ")
+    else
+      self:push " | "
+    end
+    self:copy(node[i])
+  end
+end
+
+function class:concatenation(node)
+  self:copy(node[1])
+  for i = 2, #node do
+    if node[i - 1].line < node[i].line then
+      self:push(self.endl, "  ")
+    else
+      self:push " "
+    end
+    self:copy(node[i])
+  end
+end
+
+function class:repetition(node)
+  self:copy(node[1])
+  if node[2] then
+    self:copy(node[2])
+  end
+end
+
+class["repeat"] = function (self, node)
+  local a = node[1]
+  local b = node[2]
+  if b then
+    local a = tonumber(a)
+    local b = tonumber(b)
+    if a then
+      if b then
+        if a == b then
+          self:push("{", a, "}")
+        else
+          self:push("{", a, ",", b, "}")
+        end
+      else
+        if a == 0 then
+          self:push "*"
+        elseif a == 1 then
+          self:push "+"
+        else
+          self:push("{", a, ",}")
+        end
+      end
+    else
+      if b then
+        self:push("{,", b, "}")
+      else
+        self:push "*"
+      end
+    end
+  else
+    self:push("{", a, "}")
+  end
+end
+
+function class:element(node)
+  self:copy(node[1])
+end
+
+function class:group(node)
+  self:push "(" :copy(node[1]):push ")"
+end
+
+function class:option(node)
+  self:push "(" :copy(node[1]):push ")?"
+end
+
+function class:char_val(node)
+  self:push([["]], node[1]:gsub([[\]], [[\\]]), [["]])
+  if node[1]:find "%a" then
+    self:push "i"
+  end
+end
+
+function class:num_val(node)
+  self:copy(node[1])
+end
+
+function class:bin_val(node)
+  self:push(("0x%X"):format(tonumber(node[1], 2)))
+  local op = node[2]
+  if op == "." then
+    for i = 3, #node do
+      self:push((" 0x%X"):format(tonumber(node[i], 2)))
+    end
+  elseif op == "-" then
+    self:push(("..0x%X"):format(tonumber(node[3], 2)))
+  end
+end
+
+function class:dec_val(node)
+  self:push(node[1])
+  local op = node[2]
+  if op == "." then
+    for i = 3, #node do
+      self:push(" ", node[i])
+    end
+  elseif op == "-" then
+    self:push("..", node[3])
+  end
+end
+
+function class:hex_val(node)
+  self:push("0x", node[1])
+  local op = node[2]
+  if op == "." then
+    for i = 3, #node do
+      self:push(" 0x", node[i])
+    end
+  elseif op == "-" then
+    self:push("..0x", node[3])
+  end
+end
+
+function class:prose_val(node)
+  self:push("<", node[1], ">")
+end
+
+function metatable:__call()
+  local node = self.node
+  local name = node[0]
+  local f = self[name]
+  if not f then
+    error(name .. " not supported")
+  end
+  f(self, node)
+end
+
+local abnf_generator = setmetatable(class, {
+  __call = function (_, node, endl, prefix, suffix)
+    return setmetatable(new(node, endl, prefix, suffix), metatable)
+  end;
+})
+
+local function process(node, endl, prefix, suffix)
+  for i = 1, #node do
+    local that = node[i]
+    if getmetatable(that) == getmetatable(node) then
+      process(that, endl, prefix, suffix)
+    end
+  end
+  abnf_generator(node, endl, prefix, suffix)()
+end
+
+local function generate(rule, endl, prefix, suffix)
+  process(rule, endl, prefix, suffix)
+  return table.concat(rule[-2])
+end
+
 local root = abnf_node "root"
 
-local function process(number, line_range_i, line_range_j)
-  local path = ("rfc%04d.txt"):format(number)
-
+local function process(basename, line_range_i, line_range_j)
+  if not line_range_i then
+    line_range_i = 1
+  end
   local line_number = 0
-
   local buffer = {}
-
-  for line in io.lines(path) do
+  for line in io.lines(basename .. ".txt") do
     line_number = line_number + 1
     line = line:gsub("\r$", ""):gsub("^[ \t]+$", "")
-    if line_range_i <= line_number and line_number <= line_range_j then
+    if line_range_i <= line_number and (not line_range_j or line_number <= line_range_j) then
       buffer[#buffer + 1] = line
     end
+  end
+  if not line_range_j then
+    line_range_j = line_number
   end
 
   local indent = buffer[1]:match "^ *"
@@ -501,38 +758,282 @@ local function process(number, line_range_i, line_range_j)
       rule_buffer[#rule_buffer + 1] = buffer[i + 1 - line_range_i]
     end
 
+    local prose_val = rule:find_by_name "prose_val"
+
+    local prose_val_undef
+    for i = 1, #prose_val do
+      if prose_val[i][1] == "undef" then
+        prose_val_undef = true
+      end
+    end
+
+    if #prose_val > 0 then
+      prose_val = true
+    else
+      prose_val = nil
+    end
+
     rule[-1] = rule_buffer
     rule.last_line = last_line
-    rule.rfc_number = number
+    rule.prose_val = prose_val
+    rule.prose_val_undef = prose_val_undef
+    rule.basename = basename
   end
 
   root:push(rulelist)
 end
 
-process(5234, 549, 627)
-process(5234, 720, 778)
-process(3986, 2697, 2788)
-process(7230, 4555, 4683)
+for i = 1, #config do
+  process(table.unpack(config[i]))
+end
 
-root:dump_xml(io.stdout)
-
---[====[
-
-root:dump_xml(io.stdout)
+local name_map = {}
 
 for i = 1, #root do
   local rulelist = root[i]
   for j = 1, #rulelist do
     local rule = rulelist[j]
-    io.write(([[
-# https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc%d.txt#L%d
-]]):format(rule.rfc_number, rule.line))
-    local buffer = rule[-1]
-    for k = 1, #buffer do
-      io.write("# ", buffer[k], "\n")
+    local def_name = rule[1][1]
+
+    local that = name_map[def_name]
+    if that then
+      io.write(([[
+[%7s.txt:%4d] rule %q redefined
+[%7s.txt:%4d] previously defined here
+]]):format(rule.basename, rule.line, def_name, that.basename, that.line))
+
+      if rule.prose_val then
+        if rule.prose_val_undef then
+          io.write "[===== INFO =====] later rule has prose-val <undef>, win later\n"
+          that.ignored = true
+          name_map[def_name] = rule
+        else
+          io.write "[===== INFO =====] later rule has prose-val, win earlier\n"
+          rule.ignored = true
+        end
+      elseif that.prose_val then
+        if that.prose_val_undef then
+          io.write "[===== INFO =====] earlier rule has prose-val <undef>, win earlier\n"
+          rule.ignored = true
+        else
+          io.write "[===== INFO =====] earlier rule has prose-val, win later\n"
+          that.ignored = true
+          name_map[def_name] = rule
+        end
+      else
+        local new_name = ("%s-%s"):format(rule.basename, def_name)
+        assert(not name_map[new_name])
+        io.write(("[===== WARN =====] neither rule has prose-val, rename %q to %q\n"):format(def_name, new_name))
+        local function process(node)
+          if node[0] == "rulename" and node[1] == def_name then
+            io.write(("[%7s.txt:%4d] rename %q to %q\n"):format(rule.basename, node.line, def_name, new_name))
+            node[1] = new_name
+          end
+          for i = 1, #node do
+            local that = node[i]
+            if getmetatable(that) == getmetatable(node) then
+              process(that)
+            end
+          end
+        end
+        process(rulelist)
+        name_map[new_name] = rule
+      end
+      io.write "\n"
+    else
+      name_map[def_name] = rule
     end
-    io.write "\n"
   end
 end
 
-]====]
+local id_map = {}
+
+local id = 0
+for i = 1, #root do
+  local rulelist = root[i]
+  for j = 1, #rulelist do
+    local rule = rulelist[j]
+    if not rule.ignored then
+      id = id + 1
+      rule.id = id
+      id_map[id] = rule
+    end
+  end
+end
+
+local use_map
+
+repeat
+  use_map = {}
+
+  for i = 1, #id_map do
+    local rule = id_map[i]
+    local def_name = rule[1][1]
+
+    local rulename = rule[3]:find_by_name "rulename"
+    local use_id_map = {}
+    for j = 1, #rulename do
+      local use_name = rulename[j][1]
+      local use_rule = name_map[use_name]
+      if not use_rule then
+        error(("[%7s.txt:%4d] rule %q uses undefined rule %q"):format(rule.basename, rule.line, def_name, use_name))
+      end
+      use_id_map[use_rule.id] = true
+    end
+
+    local use_ids = {}
+    for k in pairs(use_id_map) do
+      use_ids[#use_ids + 1] = k
+    end
+    table.sort(use_ids)
+
+    use_map[i] = use_ids
+  end
+
+  local loop = function () end
+
+  local color = {}
+  local function process(id)
+    color[id] = 1
+    local use_ids = use_map[id]
+    for i = 1, #use_ids do
+      local use_id = use_ids[i]
+      local c = color[use_id]
+      if not c then
+        process(use_id)
+      elseif c == 1 then
+        local node = id_map[id]
+        local that = id_map[use_id]
+        local use_name = that[1][1]
+        io.write(([[
+[%7s.txt:%4d] loop detected: rule %q uses rule %q
+[%7s.txt:%4d] rule %q defined here
+[===== WARN =====] modify rulename to prose-val
+
+]]):format(node.basename, node.line, node[1][1], use_name, that.basename, that.line, use_name))
+
+        local function process(node)
+          if node[0] == "rulename" and node[1] == use_name then
+            node[0] = "prose_val"
+          end
+          for i = 1, #node do
+            local that = node[i]
+            if getmetatable(that) == getmetatable(node) then
+              process(that)
+            end
+          end
+        end
+        process(node)
+        node.loop = true
+        node.prose_val = true
+
+        error(loop)
+      end
+    end
+    color[id] = 2
+  end
+
+  local result, message = pcall(function ()
+    for i = 1, #id_map do
+      process(i)
+    end
+  end)
+
+  local loop_detected
+  if not result then
+    if message == loop then
+      loop_detected = true
+    else
+      error(message)
+    end
+  end
+until not loop_detected
+
+local ref_map = {}
+
+for i = 1, #id_map do
+  ref_map[i] = {}
+end
+for i = 1, #use_map do
+  local use_ids = use_map[i]
+  for j = 1, #use_ids do
+    local use_id = use_ids[j]
+    local ref_ids = ref_map[use_id]
+    ref_ids[#ref_ids + 1] = i
+  end
+end
+
+-- topological sort
+local order = {} -- reversed
+local color = {}
+
+local function process(id)
+  if not color[id] then
+    color[id] = true
+    local ref_ids = ref_map[id]
+    for i = 1, #ref_ids do
+      process(ref_ids[i])
+    end
+    order[#order + 1] = id
+  end
+end
+for i = #id_map, 1, -1 do
+  process(i)
+end
+
+if config.dump_xml then
+  local out = assert(io.open(config.name .. ".xml", "w"))
+  root:dump_xml(out)
+  out:close()
+end
+
+if config.dump_dot then
+  local out = assert(io.open(config.name .. ".dot", "w"))
+  out:write [[
+digraph {
+graph[rankdir=LR];
+]]
+  for i = 1, #id_map do
+    local rule = id_map[i]
+    out:write(([[
+%d [label="%s"];
+]]):format(i, rule[1][1]))
+  end
+  for i = 1, #ref_map do
+    local ids = ref_map[i]
+    for j = 1, #ids do
+      out:write(([[
+%d -> %d;
+]]):format(i, ids[j]))
+    end
+  end
+  out:write "}\n"
+  out:close()
+end
+
+local out = assert(io.open(config.name .. ".rl", "w"))
+out:write [[
+%%{
+# vim: syntax=ragel:
+machine abnf;
+]]
+for i = #order, 1, -1 do
+  local rule = id_map[order[i]]
+  out:write(([[
+
+# https://github.com/brigid-jp/brigid/blob/develop/test/lab/%s.txt#L%d
+]]):format(rule.basename, rule.line))
+  local buffer = rule[-1]
+  for k = 1, #buffer do
+    out:write("# ", buffer[k], "\n")
+  end
+  if rule.prose_val then
+    out:write("# ", generate(rule, "\n# ", config.prefix, config.suffix), "\n")
+  else
+    out:write(generate(rule, "\n", config.prefix, config.suffix), "\n")
+  end
+end
+out:write [[
+}%%
+]]
+out:close()
