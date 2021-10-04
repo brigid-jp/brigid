@@ -9,12 +9,16 @@ local config = {
   prefix = "";
   suffix = "";
 
-  dump_xml = true;
-  dump_dot = true;
+  -- dump_xml = true;
+  -- dump_dot = true;
 
-  { "rfc5234", 720, 778 };
+  { "rfc5234",  720,  778 };
   { "rfc3986", 2697, 2788 };
   { "rfc7230", 4555, 4683 };
+  { "rfc6455",  741,  747 };
+  { "rfc6455", 1384, 1415 };
+  { "rfc6455", 1421, 1423 };
+  { "rfc6455", 1687, 1783 };
   { "tweak" };
 }
 
@@ -110,7 +114,9 @@ local function new(source)
 end
 
 local function match(self, i, j, ...)
+  -- io.write(("[DEBUIG] match %d %q\n"):format(self.position, self.source:sub(self.position, self.position + 16)), debug.traceback(), "\n")
   if i then
+    -- io.write(("[DEBUIG] matched %d %d %q\n"):format(i, j, self.source:sub(i, j)), debug.traceback(), "\n")
     self.position = j + 1
     self.matches = { [0] = self.source:sub(i, j), ... }
     return true
@@ -266,7 +272,7 @@ function class:alternation()
       local backup = self:backup()
       local commit
       while self:c_wsp() do end
-      if self:match "/" then
+      if self:match "[/|]" then
         while self:c_wsp() do end
         if self:concatenation() then
           node:push(self:pop())
@@ -325,6 +331,12 @@ class["repeat"] = function (self)
   local node = self:node "repeat"
   if self:match "(%d*)%*(%d*)" then
     return self:push(node:push(self[1]):push(self[2]))
+  elseif self:match "(%d*)#(%d*)" then
+    if not ((self[1] == "" or self[1] == "0" or self[1] == "1") and self[2] == "") then
+      error(self[1] .. "#" .. self[2] .. "rule not supported")
+    end
+    node[0] = "list"
+    return self:push(node:push(self[1]):push(self[2]):push(self:node("rulename", "OWS")))
   elseif self:match "%d+" then
     return self:push(node:push(self[0]))
   end
@@ -535,9 +547,26 @@ function class:concatenation(node)
 end
 
 function class:repetition(node)
-  self:copy(node[1])
   if node[2] then
-    self:copy(node[2])
+    if node[2][0] == "repeat" then
+      self:copy(node[1]):copy(node[2])
+    else
+      assert(node[2][0] == "list")
+      local n = tonumber(node[2][1]) or 0
+      assert(n == 0 or n == 1)
+      assert(node[2][2] == "")
+      if n == 0 then
+        -- https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc7230.txt#L3331
+        -- #element => [ ( "," / element ) *( OWS "," [ OWS element ] ) ]
+        self:push [[(("," | ]] :copy(node[1]):push [[) (OWS "," (OWS ]] :copy(node[1]):push [[)?)*)?]]
+      else
+        -- https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc7230.txt#L3333
+        -- 1#element => *( "," OWS ) element *( OWS "," [ OWS element ] )
+        self:push [[("," OWS)* ]] :copy(node[1]):push [[ (OWS "," (OWS ]]:copy(node[1]):push [[)?)*]]
+      end
+    end
+  else
+    self:copy(node[1])
   end
 end
 
@@ -573,6 +602,9 @@ class["repeat"] = function (self, node)
   else
     self:push("{", a, "}")
   end
+end
+
+function class:list(node)
 end
 
 function class:element(node)
