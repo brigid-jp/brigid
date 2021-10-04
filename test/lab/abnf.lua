@@ -334,7 +334,7 @@ class["repeat"] = function (self)
       error(self[1] .. "#" .. self[2] .. "rule not supported")
     end
     node[0] = "list"
-    return self:push(node:push(self[1]):push(self[2]))
+    return self:push(node:push(self[1]):push(self[2]):push(self:node("rulename", "OWS")))
   elseif self:match "%d+" then
     return self:push(node:push(self[0]))
   end
@@ -556,21 +556,11 @@ function class:repetition(node)
       if n == 0 then
         -- https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc7230.txt#L3331
         -- #element => [ ( "," / element ) *( OWS "," [ OWS element ] ) ]
-        self
-          :push [[(("," | ]]
-          :copy(node[1])
-          :push [[) ([ \t]* "," ([ \t]* ]]
-          :copy(node[1])
-          :push [[)?))?]]
+        self:push [[(("," | ]] :copy(node[1]):push [[) (OWS "," (OWS ]] :copy(node[1]):push [[)?)*)?]]
       else
         -- https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc7230.txt#L3333
         -- 1#element => *( "," OWS ) element *( OWS "," [ OWS element ] )
-        self
-          :push [[("," [ \t]*)* ]]
-          :copy(node[1])
-          :push [[ ([ \t]* "," ([ \t]* ]]
-          :copy(node[1])
-          :push [[)?)*]]
+        self:push [[("," OWS)* ]] :copy(node[1]):push [[ (OWS "," (OWS ]]:copy(node[1]):push [[)?)*]]
       end
     end
   else
