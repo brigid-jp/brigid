@@ -31,12 +31,12 @@ test_parser_exe_LDADD = $(top_srcdir)/src/lib/libbrigid.la
 test_parser_exe_SOURCES = \
 	test_parser.cpp \
 	abnf.cxx \
-	websocket_server_parser.cxx
+	http_request_parser.cxx
 
 EXTRA_DIST = \
 	*.rl \
 	*.txt \
 	abnf.lua \
 	test_common.hpp \
-	websocket_server_parser.hpp \
-	websocket_server_parser.rl
+	http_request_parser.hpp \
+	http_request_parser.rl
