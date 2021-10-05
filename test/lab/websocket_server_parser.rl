@@ -7,6 +7,8 @@
 #include "websocket_server_parser.hpp"
 
 #include <iostream>
+#include <map>
+#include <utility>
 
 namespace brigid {
   namespace {
@@ -15,18 +17,52 @@ namespace brigid {
 
       include abnf "abnf.rl";
 
-      request_line_ =
+      main :=
+
         method
-          ${ std::cout << "method [" << fc << "]\n"; }
+          ${ method_ += fc; }
         SP
         request_target
-          ${ std::cout << "request_target [" << fc << "]\n"; }
+          ${ request_target_ += fc; }
         SP
         HTTP_version
-          ${ std::cout << "HTTP_version [" << fc << "]\n"; }
-        CRLF;
+          ${ http_version_ += fc; }
+        CRLF
 
-      main := request_line_ @{ fbreak; };
+        (
+          (
+            field_name
+              ${ field_name_ += fc; }
+              # %{ std::cout << "field_name [" << field_name_ << "]\n"; }
+
+            ":"
+            OWS
+            (
+              field_content
+                ${ field_value_ += fc; }
+              |
+              obs_fold
+                @{
+                  std::cout << "obs_fold\n";
+                  field_value_ += ' ';
+                }
+            )*
+            OWS
+          )
+
+          CRLF
+            %{
+              // std::cout << "field_value [" << field_value_ << "]\n";
+              std::cout << "CRLF\n";
+              header_fields_.insert(std::make_pair(field_name_, field_value_));
+              field_name_.clear();
+              field_value_.clear();
+            }
+        )*
+
+        CRLF @{ fbreak; }
+
+        ;
     }%%
 
     %%write data;
@@ -38,17 +74,30 @@ namespace brigid {
       %%write init;
     }
 
-    void update(const char* data, const char* end) {
+    void update(const char* data, size_t size) {
       const char* p = data;
-      const char* pe = nullptr;
+      const char* pe = data + size;
 
       %%write exec;
+
+      std::cout
+        << method_ << "\n"
+        << request_target_ << "\n"
+        << http_version_ << "\n";
+
+      for (auto kv : header_fields_) {
+        std::cout << "[" << kv.first << "]=>[" << kv.second << "]\n";
+      }
+      std::cout << "\n";
+
 
       std::cout << "cs " << cs << "\n";
       std::cout << "index " << (p - data) << "\n";
 
       if (cs == websocket_error) {
-        std::cerr << "ERROR\n";
+        std::cerr
+          << "ERROR\n"
+          << "[" << std::string(p, size - (p - data)) << "]\n";
       }
 
       if (cs >= websocket_first_final) {
@@ -59,6 +108,12 @@ namespace brigid {
 
   private:
     int cs;
+    std::string method_;
+    std::string request_target_;
+    std::string http_version_;
+    std::string field_name_;
+    std::string field_value_;
+    std::map<std::string, std::string> header_fields_;
   };
 
   websocket_server_parser::websocket_server_parser()
@@ -67,6 +122,6 @@ namespace brigid {
   websocket_server_parser::~websocket_server_parser() {}
 
   void websocket_server_parser::update(const char* data, size_t size) {
-    impl_->update(data, nullptr);
+    impl_->update(data, size);
   }
 }

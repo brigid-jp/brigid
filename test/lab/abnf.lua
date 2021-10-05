@@ -19,7 +19,7 @@ local config = {
   { "rfc6455", 1384, 1415 };
   { "rfc6455", 1421, 1423 };
   { "rfc6455", 1687, 1783 };
-  { "tweak" };
+  { "errata" };
 }
 
 local class = {}
@@ -179,7 +179,8 @@ function class:rulelist()
       node:push(self:pop())
       commit = true
     else
-      while self:c_wsp() do end
+      -- https://www.rfc-editor.org/errata/eid3076
+      self:match "[ \t]*"
       if self:c_nl() then
         commit = true
       end
@@ -236,7 +237,8 @@ end
 function class:elements()
   local node = self:node "elements"
   if self:alternation() then
-    while self:c_wsp() do end
+    -- https://www.rfc-editor.org/errata/eid2968
+    self:match "[ \t]*"
     return self:push(node:push(self:pop()))
   end
 end
@@ -556,12 +558,12 @@ function class:repetition(node)
       assert(n == 0 or n == 1)
       assert(node[2][2] == "")
       if n == 0 then
-        -- https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc7230.txt#L3331
-        -- #element => [ ( "," / element ) *( OWS "," [ OWS element ] ) ]
-        self:push [[(("," | ]] :copy(node[1]):push [[) (OWS "," (OWS ]] :copy(node[1]):push [[)?)*)?]]
+        -- https://www.rfc-editor.org/errata/eid5257
+        -- #element => [(("," OWS element) / element) *(OWS "," [OWS element])]
+        self:push [[((("," OWS ]] :copy(node[1]):push [[) | ]] :copy(node[1]):push [[) (OWS "," (OWS ]] :copy(node[1]):push [[)?)*)?]]
       else
         -- https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc7230.txt#L3333
-        -- 1#element => *( "," OWS ) element *( OWS "," [ OWS element ] )
+        -- 1#element => *("," OWS) element *(OWS "," [OWS element])
         self:push [[("," OWS)* ]] :copy(node[1]):push [[ (OWS "," (OWS ]]:copy(node[1]):push [[)?)*]]
       end
     end
@@ -784,31 +786,22 @@ local function process(basename, line_range_i, line_range_j)
     while buffer[last_line + 1 - line_range_i] == "" do
       last_line = last_line - 1
     end
+    rule.last_line = last_line
 
     local rule_buffer = {}
     for i = rule.line, last_line do
       rule_buffer[#rule_buffer + 1] = buffer[i + 1 - line_range_i]
     end
-
-    local prose_val = rule:find_by_name "prose_val"
-
-    local prose_val_undef
-    for i = 1, #prose_val do
-      if prose_val[i][1] == "undef" then
-        prose_val_undef = true
-      end
-    end
-
-    if #prose_val > 0 then
-      prose_val = true
-    else
-      prose_val = nil
-    end
-
     rule[-1] = rule_buffer
-    rule.last_line = last_line
-    rule.prose_val = prose_val
-    rule.prose_val_undef = prose_val_undef
+
+    if #(rule:find_by_name "prose_val") > 0 then
+      rule.prose_val = true
+    end
+
+    if basename == "errata" then
+      rule.erratum = true
+    end
+
     rule.basename = basename
   end
 
@@ -834,24 +827,18 @@ for i = 1, #root do
 [%7s.txt:%4d] previously defined here
 ]]):format(rule.basename, rule.line, def_name, that.basename, that.line))
 
-      if rule.prose_val then
-        if rule.prose_val_undef then
-          io.write "[===== INFO =====] later rule has prose-val <undef>, win later\n"
-          that.ignored = true
-          name_map[def_name] = rule
-        else
-          io.write "[===== INFO =====] later rule has prose-val, win earlier\n"
-          rule.ignored = true
-        end
+      if rule.erratum then
+        assert(not that.erratum)
+        io.write "[===== INFO =====] later rule is erratum, win later\n"
+        that.ignored = true
+        name_map[def_name] = rule
+      elseif rule.prose_val then
+        io.write "[===== INFO =====] later rule has prose-val, win earlier\n"
+        rule.ignored = true
       elseif that.prose_val then
-        if that.prose_val_undef then
-          io.write "[===== INFO =====] earlier rule has prose-val <undef>, win earlier\n"
-          rule.ignored = true
-        else
-          io.write "[===== INFO =====] earlier rule has prose-val, win later\n"
-          that.ignored = true
-          name_map[def_name] = rule
-        end
+        io.write "[===== INFO =====] earlier rule has prose-val, win later\n"
+        that.ignored = true
+        name_map[def_name] = rule
       else
         local new_name = ("%s-%s"):format(rule.basename, def_name)
         assert(not name_map[new_name])
