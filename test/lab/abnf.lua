@@ -14,10 +14,7 @@ local config = {
 
   { "rfc5234",  720,  778 };
   { "rfc3986", 2697, 2788 };
-  -- { "rfc7230", 4555, 4683 };
-  { "rfc7230", 4555, 4611 };
-  -- the field-content rule is broken
-  { "rfc7230", 4614, 4683 };
+  { "rfc7230", 4555, 4683 };
   { "rfc6455",  741,  747 };
   { "rfc6455", 1384, 1415 };
   { "rfc6455", 1421, 1423 };
@@ -828,24 +825,18 @@ for i = 1, #root do
 [%7s.txt:%4d] previously defined here
 ]]):format(rule.basename, rule.line, def_name, that.basename, that.line))
 
-      if rule.prose_val then
-        if rule.erratum then
-          io.write "[===== INFO =====] later rule is erratum, win later\n"
-          that.ignored = true
-          name_map[def_name] = rule
-        else
-          io.write "[===== INFO =====] later rule has prose-val, win earlier\n"
-          rule.ignored = true
-        end
+      if rule.erratum then
+        assert(not that.erratum)
+        io.write "[===== INFO =====] later rule is erratum, win later\n"
+        that.ignored = true
+        name_map[def_name] = rule
+      elseif rule.prose_val then
+        io.write "[===== INFO =====] later rule has prose-val, win earlier\n"
+        rule.ignored = true
       elseif that.prose_val then
-        if that.erratum then
-          io.write "[===== INFO =====] earlier rule erratum, win earlier\n"
-          rule.ignored = true
-        else
-          io.write "[===== INFO =====] earlier rule has prose-val, win later\n"
-          that.ignored = true
-          name_map[def_name] = rule
-        end
+        io.write "[===== INFO =====] earlier rule has prose-val, win later\n"
+        that.ignored = true
+        name_map[def_name] = rule
       else
         local new_name = ("%s-%s"):format(rule.basename, def_name)
         assert(not name_map[new_name])
