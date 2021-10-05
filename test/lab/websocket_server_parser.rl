@@ -42,7 +42,10 @@ namespace brigid {
                 ${ field_value_ += fc; }
               |
               obs_fold
-                @{ field_value_ += ' '; }
+                @{
+                  std::cout << "obs_fold\n";
+                  field_value_ += ' ';
+                }
             )*
             OWS
           )
@@ -82,7 +85,7 @@ namespace brigid {
         << http_version_ << "\n";
 
       for (auto kv : header_fields_) {
-        std::cout << kv.first << ": " << kv.second << "\n";
+        std::cout << "[" << kv.first << "]=>[" << kv.second << "]\n";
       }
       std::cout << "\n";
 
@@ -91,7 +94,9 @@ namespace brigid {
       std::cout << "index " << (p - data) << "\n";
 
       if (cs == websocket_error) {
-        std::cerr << "ERROR\n";
+        std::cerr
+          << "ERROR\n"
+          << "[" << std::string(p, size - (p - data)) << "]\n";
       }
 
       if (cs >= websocket_first_final) {
