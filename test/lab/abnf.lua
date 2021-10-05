@@ -179,7 +179,8 @@ function class:rulelist()
       node:push(self:pop())
       commit = true
     else
-      while self:c_wsp() do end
+      -- https://www.rfc-editor.org/errata/eid3076
+      self:match "[ \t]*"
       if self:c_nl() then
         commit = true
       end
@@ -236,7 +237,8 @@ end
 function class:elements()
   local node = self:node "elements"
   if self:alternation() then
-    while self:c_wsp() do end
+    -- https://www.rfc-editor.org/errata/eid2968
+    self:match "[ \t]*"
     return self:push(node:push(self:pop()))
   end
 end
