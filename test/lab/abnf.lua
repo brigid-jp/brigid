@@ -19,6 +19,15 @@ local config = {
   { "rfc6455", 1384, 1415 };
   { "rfc6455", 1421, 1423 };
   { "rfc6455", 1687, 1783 };
+  { "rfc8259",  257,  257 };
+  { "rfc8259",  261,  271 };
+  { "rfc8259",  290,  294 };
+  { "rfc8259",  308,  314 };
+  { "rfc8259",  324,  327 };
+  { "rfc8259",  357,  357 };
+  { "rfc8259",  380,  405 };
+  { "rfc8259",  461,  479 };
+
   { "errata" };
 }
 
@@ -514,7 +523,11 @@ function class:rule(node)
 end
 
 function class:rulename(node)
-  self:push(self.prefix .. node[1]:gsub("%-", "_") .. self.suffix)
+  local name = self.prefix .. node[1]:gsub("%-", "_") .. self.suffix
+  if name == "null" then
+    name = "null_"
+  end
+  self:push(name)
 end
 
 function class:defined_as(node)
