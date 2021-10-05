@@ -7,9 +7,18 @@
 LWSP =  1*(WSP / CRLF WSP)
 ; https://www.rfc-editor.org/errata/eid3096
 
+reg-name = *(unreserved / pct-encoded / "-" / ".")
+; https://www.rfc-editor.org/errata/eid4942
+
+relative-part = "//" authority path-abempty
+  / path-absolute
+  / path-noscheme
+  / path-abempty ; this was added
+  / path-empty
+; https://www.rfc-editor.org/errata/eid5428
+
 path-empty = ""
-; https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc3986.txt#L2769
-; path-empty    = 0<pchar>
+; https://www.rfc-editor.org/errata/eid2033
 
 uri-host = host
 ; https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc7230.txt#L4683
