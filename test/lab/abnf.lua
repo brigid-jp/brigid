@@ -22,6 +22,8 @@ local config = {
   { "errata" };
 }
 
+local unpack = table.unpack or unpack
+
 local class = {}
 local metatable = { __index = class }
 
@@ -809,7 +811,7 @@ local function process(basename, line_range_i, line_range_j)
 end
 
 for i = 1, #config do
-  process(table.unpack(config[i]))
+  process(unpack(config[i]))
 end
 
 local name_map = {}
