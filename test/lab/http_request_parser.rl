@@ -53,7 +53,7 @@ namespace brigid {
         CRLF @{ fbreak; };
     }%%
 
-    %%write data;
+    %%write data noerror nofinal noentry;
   }
 
   class http_request_parser::impl {
@@ -69,11 +69,10 @@ namespace brigid {
       %%write exec;
 
       position += p - data;
-
-      if (cs == http_request_parser_error) {
+      if (cs == %%{ write error; }%%) {
         return std::make_pair(parser_state::error, p);
       }
-      if (cs >= http_request_parser_first_final) {
+      if (cs >= %%{ write first_final; }%%) {
         return std::make_pair(parser_state::accept, p);
       }
       return std::make_pair(parser_state::running, p);
