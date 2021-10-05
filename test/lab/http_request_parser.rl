@@ -35,10 +35,7 @@ namespace brigid {
             field_content
               ${ field_value += fc; }
             |
-            (
-              CRLF
-              (SP | HTAB)+
-            )
+            obs_fold
               @{ field_value += ' '; }
           )*
           OWS
