@@ -38,32 +38,47 @@ namespace brigid {
           #     field_value_.clear();
           #   }
           # OWS
-          header_field
-            >{
-              std::cout << ">";
-              switch (fc) {
-                case '\r': std::cout << "\\r"; break;
-                case '\n': std::cout << "\\n"; break;
-                default: std::cout << fc << "";
-              }
-            }
-            ${
-              std::cout << "$";
-              switch (fc) {
-                case '\r': std::cout << "\\r"; break;
-                case '\n': std::cout << "\\n"; break;
-                default: std::cout << fc << "";
-              }
-            }
-            %{
-              std::cout << "%";
-              switch (fc) {
-                case '\r': std::cout << "\\r"; break;
-                case '\n': std::cout << "\\n"; break;
-                default: std::cout << fc << "";
-              }
-              std::cout << "\n";
-            }
+          (
+            field_name
+              # ${
+              #   switch (fc) {
+              #     case '\r': std::cout << "\\r"; break;
+              #     case '\n': std::cout << "\\n"; break;
+              #     default: std::cout << fc;
+              #   }
+              # }
+              # %{ std::cout << "%\n"; }
+
+            ":"
+            OWS
+            (
+              field_content
+                ${
+                  switch (fc) {
+                    case '\r': std::cout << "\\r"; break;
+                    case '\n': std::cout << "\\n"; break;
+                    default: std::cout << fc;
+                  }
+                }
+              # |
+              # obs_fold
+              #   @{ std::cout << "obs_fold\n"; }
+            )*
+            OWS
+              @{ std::cout << "(OWS@)\n"; }
+          )
+
+          # header_field
+          # (header_field -- "\r\n")
+          # [^\r\n]+
+            # >{
+            #   std::cout << ">";
+            #   switch (fc) {
+            #     case '\r': std::cout << "\\r"; break;
+            #     case '\n': std::cout << "\\n"; break;
+            #     default: std::cout << fc << "";
+            #   }
+            # }
 
           CRLF
             @{ std::cout << "CRLF\n"; }
