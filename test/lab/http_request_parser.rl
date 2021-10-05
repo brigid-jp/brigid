@@ -24,7 +24,7 @@ namespace brigid {
         SP
         HTTP_version
           ${ http_version += fc; }
-        CRLF @{ ++line; q = fpc; column = 1; }
+        CRLF
 
         (
           field_name
@@ -36,13 +36,13 @@ namespace brigid {
               ${ field_value += fc; }
             |
             (
-              CRLF @{ ++line; q = fpc; column = 1; }
+              CRLF
               (SP | HTAB)+
             )
               @{ field_value += ' '; }
           )*
           OWS
-          CRLF @{ ++line; q = fpc; column = 1; }
+          CRLF
             %{
               const auto result = header_fields.emplace(field_name, field_value);
               if (!result.second) {
@@ -53,7 +53,7 @@ namespace brigid {
             }
         )*
 
-        CRLF @{ ++line; q = fpc; column = 1; fbreak; };
+        CRLF @{ fbreak; };
     }%%
 
     %%write data;
@@ -61,7 +61,7 @@ namespace brigid {
 
   class http_request_parser::impl {
   public:
-    impl() : position(), line(1), column(1) {
+    impl() : position() {
       %%write init;
     }
 
@@ -69,12 +69,9 @@ namespace brigid {
       const char* p = data;
       const char* pe = data + size;
 
-      q = p;
-
       %%write exec;
 
       position += p - data;
-      column += p - q;
 
       if (cs == http_request_parser_error) {
         return std::make_pair(parser_state::error, p);
@@ -86,12 +83,7 @@ namespace brigid {
     }
 
     int cs;
-
     size_t position;
-    size_t line;
-    size_t column;
-    const char* q;
-
     std::string method;
     std::string request_target;
     std::string http_version;
@@ -111,14 +103,6 @@ namespace brigid {
 
   size_t http_request_parser::position() const {
     return impl_->position;
-  }
-
-  size_t http_request_parser::line() const {
-    return impl_->line;
-  }
-
-  size_t http_request_parser::column() const {
-    return impl_->column;
   }
 
   const std::string& http_request_parser::method() const {

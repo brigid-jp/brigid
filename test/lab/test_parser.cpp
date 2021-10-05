@@ -17,7 +17,7 @@ namespace brigid {
     void run(const char* path) {
       http_request_parser parser;
 
-      std::vector<char> buffer(1);
+      std::vector<char> buffer(4096);
       file_handle_t handle = open_file_handle(path, "rb");
 
       while (true) {
@@ -29,19 +29,18 @@ namespace brigid {
         const auto p = parser.parse(buffer.data(), result);
         if (p.first == parser_state::accept) {
           std::cout
-            << "accept position " << parser.position()
-            << " [" << parser.line() << ":" << parser.column() << "]\n"
+            << "accept position " << parser.position() << "\n"
             << "method " << parser.method() << "\n"
             << "request_target " << parser.request_target() << "\n"
             << "http_version " << parser.http_version() << "\n";
           for (const auto& header_field : parser.header_fields()) {
             std::cout << header_field.first << ": " << header_field.second << "\n";
           }
+          std::cout << "[" << p.second << "]\n";
           break;
         } else if (p.first == parser_state::error) {
-          std::cout
-            << "error position " << parser.position()
-            << " [" << parser.line() << ":" << parser.column() << "]\n";
+          std::cout << "error position " << parser.position() << "\n";
+          std::cout << "[" << p.second << "]\n";
           break;
         } else {
           std::cout << "running\n";
