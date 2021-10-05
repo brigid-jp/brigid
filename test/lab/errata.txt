@@ -45,3 +45,24 @@ Via = <undef>
 
 frame-masking-key = %x00000000-FFFFFFFF
 ; https://www.rfc-editor.org/errata/eid5288
+
+object = begin-object [<member> *(value-separator <member>)] end-object
+; https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc8259.txt#L324
+; object = begin-object [ member *( value-separator member ) ]
+;          end-object
+
+value = false / null / true / <object> / <array> / number / string
+; https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc8259.txt#L308
+; value = false / null / true / object / array / number / string
+
+array = begin-array [<value> *(value-separator <value>)] end-array
+; https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc8259.txt#L357
+; array = begin-array [ value *( value-separator value ) ] end-array
+
+member = string name-separator <value>
+; https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc8259.txt#L327
+; member = string name-separator value
+
+JSON-text = ws <value> ws
+; https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc8259.txt#L257
+; JSON-text = ws value ws
