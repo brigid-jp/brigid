@@ -14,6 +14,7 @@ local config = {
 
   { "rfc5234",  720,  778 };
   { "rfc3986", 2697, 2788 };
+  -- { "rfc7230", 4555, 4683 };
   { "rfc7230", 4555, 4611 };
   -- the field-content rule is broken
   { "rfc7230", 4614, 4683 };
@@ -21,7 +22,7 @@ local config = {
   { "rfc6455", 1384, 1415 };
   { "rfc6455", 1421, 1423 };
   { "rfc6455", 1687, 1783 };
-  { "eratta" };
+  { "errata" };
 }
 
 local class = {}
@@ -798,7 +799,7 @@ local function process(basename, line_range_i, line_range_j)
       rule.prose_val = true
     end
 
-    if basename == "eratta" then
+    if basename == "errata" then
       rule.erratum = true
     end
 
