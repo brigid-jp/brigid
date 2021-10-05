@@ -53,6 +53,7 @@ namespace brigid {
           CRLF
             @{
               // std::cout << "field_value [" << field_value_ << "]\n";
+              std::cout << "CRLF\n";
               header_fields_.insert(std::make_pair(field_name_, field_value_));
               field_name_.clear();
               field_value_.clear();
