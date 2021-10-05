@@ -2,6 +2,9 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
+abnf.rl:
+	lua abnf.lua
+
 .rl.cxx:
 	ragel -G2 $< -o $@
 
@@ -30,6 +33,12 @@ test_parser_exe_SOURCES = \
 	test_parser.cpp \
 	websocket_server_parser.cxx
 
+BUILT_SOURCES = abnf.rl
+
 EXTRA_DIST = \
+	*.txt \
+	abnf.lua \
+	test.rl \
 	test_common.hpp \
+	websocket_server_parser.hpp \
 	websocket_server_parser.rl
