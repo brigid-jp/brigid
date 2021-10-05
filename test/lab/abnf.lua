@@ -786,31 +786,22 @@ local function process(basename, line_range_i, line_range_j)
     while buffer[last_line + 1 - line_range_i] == "" do
       last_line = last_line - 1
     end
+    rule.last_line = last_line
 
     local rule_buffer = {}
     for i = rule.line, last_line do
       rule_buffer[#rule_buffer + 1] = buffer[i + 1 - line_range_i]
     end
-
-    local prose_val = rule:find_by_name "prose_val"
-
-    local prose_val_undef
-    for i = 1, #prose_val do
-      if prose_val[i][1] == "undef" then
-        prose_val_undef = true
-      end
-    end
-
-    if #prose_val > 0 then
-      prose_val = true
-    else
-      prose_val = nil
-    end
-
     rule[-1] = rule_buffer
-    rule.last_line = last_line
-    rule.prose_val = prose_val
-    rule.prose_val_undef = prose_val_undef
+
+    if #(rule:find_by_name "prose_val") > 0 then
+      rule.prose_val = true
+    end
+
+    if basename == "eratta" then
+      rule.erratum = true
+    end
+
     rule.basename = basename
   end
 
@@ -837,8 +828,8 @@ for i = 1, #root do
 ]]):format(rule.basename, rule.line, def_name, that.basename, that.line))
 
       if rule.prose_val then
-        if rule.prose_val_undef then
-          io.write "[===== INFO =====] later rule has prose-val <undef>, win later\n"
+        if rule.erratum then
+          io.write "[===== INFO =====] later rule is erratum, win later\n"
           that.ignored = true
           name_map[def_name] = rule
         else
@@ -846,8 +837,8 @@ for i = 1, #root do
           rule.ignored = true
         end
       elseif that.prose_val then
-        if that.prose_val_undef then
-          io.write "[===== INFO =====] earlier rule has prose-val <undef>, win earlier\n"
+        if that.erratum then
+          io.write "[===== INFO =====] earlier rule erratum, win earlier\n"
           rule.ignored = true
         else
           io.write "[===== INFO =====] earlier rule has prose-val, win later\n"
