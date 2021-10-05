@@ -17,7 +17,7 @@ namespace brigid {
     void run(const char* path) {
       websocket_server_parser parser;
 
-      std::vector<char> buffer(4096);
+      std::vector<char> buffer(1);
       file_handle_t handle = open_file_handle(path, "rb");
 
       while (true) {
