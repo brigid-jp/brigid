@@ -54,6 +54,8 @@ main :=
 #
 #  CRLF @A
 
+        "GET"
+
         CRLF
 
         (
@@ -79,7 +81,7 @@ main :=
           )
 
           CRLF
-            @D
+            %D
             # {
             #   // std::cout << "field_value [" << field_value_ << "]\n";
             #   std::cout << "CRLF\n";
