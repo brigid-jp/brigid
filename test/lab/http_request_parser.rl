@@ -51,9 +51,9 @@ namespace brigid {
         )*
 
         CRLF @{ fbreak; };
-    }%%
 
-    %%write data noerror nofinal noentry;
+      write data noerror nofinal noentry;
+    }%%
   }
 
   class http_request_parser::impl {
