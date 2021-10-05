@@ -40,29 +40,17 @@ namespace brigid {
           # OWS
           (
             field_name
-              ${
-                switch (fc) {
-                  case '\r': std::cout << "\\r"; break;
-                  case '\n': std::cout << "\\n"; break;
-                  default: std::cout << fc;
-                }
-              }
-              %{ std::cout << "%\n"; }
+              ${ field_name_ += fc; }
+              %{ std::cout << "field_name [" << field_name_ << "]\n"; }
 
             ":"
             OWS
             (
               field_content
-                ${
-                  switch (fc) {
-                    case '\r': std::cout << "\\r"; break;
-                    case '\n': std::cout << "\\n"; break;
-                    default: std::cout << fc;
-                  }
-                }
+                ${ field_value_ += fc; }
               |
               obs_fold
-                @{ std::cout << "obs_fold\n"; }
+                @{ field_value_ += ' '; }
             )*
             OWS
           )
@@ -80,7 +68,11 @@ namespace brigid {
             # }
 
           CRLF
-            @{ std::cout << "CRLF\n"; }
+            @{
+              std::cout << "field_value [" << field_value_ << "]\n";
+              field_name_.clear();
+              field_value_.clear();
+            }
         )*
 
         CRLF @{
