@@ -8,7 +8,6 @@
 
 #include <iostream>
 #include <map>
-#include <utility>
 
 namespace brigid {
   namespace {
@@ -18,7 +17,6 @@ namespace brigid {
       include abnf "abnf.rl";
 
       main :=
-
         method
           ${ method_ += fc; }
         SP
@@ -30,39 +28,27 @@ namespace brigid {
         CRLF
 
         (
+          field_name ${ field_name_ += fc; }
+          ":" OWS
           (
-            field_name
-              ${ field_name_ += fc; }
-              # %{ std::cout << "field_name [" << field_name_ << "]\n"; }
-
-            ":"
-            OWS
-            (
-              field_content
-                ${ field_value_ += fc; }
-              |
-              obs_fold
-                @{
-                  std::cout << "obs_fold\n";
-                  field_value_ += ' ';
-                }
-            )*
-            OWS
-          )
+            field_content ${ field_value_ += fc; }
+            |
+            obs_fold @{ field_value_ += ' '; }
+          )*
+          OWS
 
           CRLF
             %{
-              // std::cout << "field_value [" << field_value_ << "]\n";
-              std::cout << "CRLF\n";
-              header_fields_.insert(std::make_pair(field_name_, field_value_));
+              auto result = header_fields_.emplace(field_name_, field_value_);
+              if (!result.second) {
+                result.first->second.append(", ").append(field_value_);
+              }
               field_name_.clear();
               field_value_.clear();
             }
         )*
 
-        CRLF @{ fbreak; }
-
-        ;
+        CRLF @{ fbreak; };
     }%%
 
     %%write data;
@@ -78,7 +64,25 @@ namespace brigid {
       const char* p = data;
       const char* pe = data + size;
 
+      if (cs >= websocket_first_final) {
+        return;
+      }
+
       %%write exec;
+      std::cout << "cs " << cs << " index " << (p - data) << "\n";
+
+      if (cs == websocket_error) {
+        std::cerr
+          << "ERROR\n"
+          << "[" << std::string(p, size - (p - data)) << "]\n";
+        return;
+      }
+
+      if (cs < websocket_first_final) {
+        return;
+      }
+
+      std::cerr << "FINAL\n";
 
       std::cout
         << method_ << "\n"
@@ -89,21 +93,6 @@ namespace brigid {
         std::cout << "[" << kv.first << "]=>[" << kv.second << "]\n";
       }
       std::cout << "\n";
-
-
-      std::cout << "cs " << cs << "\n";
-      std::cout << "index " << (p - data) << "\n";
-
-      if (cs == websocket_error) {
-        std::cerr
-          << "ERROR\n"
-          << "[" << std::string(p, size - (p - data)) << "]\n";
-      }
-
-      if (cs >= websocket_first_final) {
-        std::cerr << "FINAL\n";
-      }
-
     }
 
   private:

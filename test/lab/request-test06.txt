@@ -1,0 +1,6 @@
+GET /recorder/socket HTTP/1.1
+X-Test: 13
+X-Test: 8
+X-Test: 7
+
+dummy
