@@ -558,12 +558,12 @@ function class:repetition(node)
       assert(n == 0 or n == 1)
       assert(node[2][2] == "")
       if n == 0 then
-        -- https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc7230.txt#L3331
-        -- #element => [ ( "," / element ) *( OWS "," [ OWS element ] ) ]
-        self:push [[(("," | ]] :copy(node[1]):push [[) (OWS "," (OWS ]] :copy(node[1]):push [[)?)*)?]]
+        -- https://www.rfc-editor.org/errata/eid5257
+        -- #element => [(("," OWS element) / element) *(OWS "," [OWS element])]
+        self:push [[((("," OWS ]] :copy(node[1]):push [[) | ]] :copy(node[1]):push [[) (OWS "," (OWS ]] :copy(node[1]):push [[)?)*)?]]
       else
         -- https://github.com/brigid-jp/brigid/blob/develop/test/lab/rfc7230.txt#L3333
-        -- 1#element => *( "," OWS ) element *( OWS "," [ OWS element ] )
+        -- 1#element => *("," OWS) element *(OWS "," [OWS element])
         self:push [[("," OWS)* ]] :copy(node[1]):push [[ (OWS "," (OWS ]]:copy(node[1]):push [[)?)*]]
       end
     end
