@@ -9,8 +9,8 @@ local config = {
   prefix = "";
   suffix = "";
 
-  -- dump_xml = true;
-  -- dump_dot = true;
+  dump_xml = true;
+  dump_dot = true;
 
   { "rfc5234",  720,  778 };
   { "rfc3986", 2697, 2788 };
@@ -21,7 +21,7 @@ local config = {
   { "rfc6455", 1384, 1415 };
   { "rfc6455", 1421, 1423 };
   { "rfc6455", 1687, 1783 };
-  { "tweak" };
+  { "eratta" };
 }
 
 local class = {}
