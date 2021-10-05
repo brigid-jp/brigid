@@ -40,14 +40,14 @@ namespace brigid {
           # OWS
           (
             field_name
-              # ${
-              #   switch (fc) {
-              #     case '\r': std::cout << "\\r"; break;
-              #     case '\n': std::cout << "\\n"; break;
-              #     default: std::cout << fc;
-              #   }
-              # }
-              # %{ std::cout << "%\n"; }
+              ${
+                switch (fc) {
+                  case '\r': std::cout << "\\r"; break;
+                  case '\n': std::cout << "\\n"; break;
+                  default: std::cout << fc;
+                }
+              }
+              %{ std::cout << "%\n"; }
 
             ":"
             OWS
@@ -60,12 +60,11 @@ namespace brigid {
                     default: std::cout << fc;
                   }
                 }
-              # |
-              # obs_fold
-              #   @{ std::cout << "obs_fold\n"; }
+              |
+              obs_fold
+                @{ std::cout << "obs_fold\n"; }
             )*
             OWS
-              @{ std::cout << "(OWS@)\n"; }
           )
 
           # header_field
