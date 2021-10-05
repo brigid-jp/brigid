@@ -29,7 +29,7 @@ namespace brigid {
         const auto p = parser.parse(buffer.data(), result);
         if (p.first == parser_state::accept) {
           std::cout
-            << "position " << parser.position()
+            << "accept position " << parser.position()
             << " [" << parser.line() << ":" << parser.column() << "]\n"
             << "method " << parser.method() << "\n"
             << "request_target " << parser.request_target() << "\n"
@@ -38,8 +38,10 @@ namespace brigid {
             std::cout << header_field.first << ": " << header_field.second << "\n";
           }
           break;
-        } else if (p.first == parser_state::accept) {
-          std::cerr << "error\n";
+        } else if (p.first == parser_state::error) {
+          std::cout
+            << "error position " << parser.position()
+            << " [" << parser.line() << ":" << parser.column() << "]\n";
           break;
         } else {
           std::cout << "running\n";

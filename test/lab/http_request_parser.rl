@@ -6,6 +6,8 @@
 
 #include "http_request_parser.hpp"
 
+#include <iostream>
+
 namespace brigid {
   namespace {
     %%{
@@ -13,7 +15,7 @@ namespace brigid {
 
       include abnf "abnf.rl";
 
-      main :=
+      parser =
         method
           ${ method += fc; }
         SP
@@ -48,7 +50,20 @@ namespace brigid {
             }
         )*
 
-        CRLF @{ fbreak; };
+        CRLF;
+
+      counter =
+        (
+          [^\r\n]+
+            ${ ++column; }
+          CRLF
+            @{ ++line; column = 1; }
+        )*
+        CRLF
+          @{ ++line; column = 1; fbreak; }
+        ;
+
+      main := parser;
     }%%
 
     %%write data;
@@ -56,7 +71,7 @@ namespace brigid {
 
   class http_request_parser::impl {
   public:
-    impl() : position(), line(), column() {
+    impl() : position(), line(1), column(1) {
       %%write init;
     }
 
@@ -103,7 +118,7 @@ namespace brigid {
   }
 
   size_t http_request_parser::line() const {
-    return impl_->column;
+    return impl_->line;
   }
 
   size_t http_request_parser::column() const {
