@@ -7,6 +7,8 @@
 #include "websocket_server_parser.hpp"
 
 #include <iostream>
+#include <map>
+#include <utility>
 
 namespace brigid {
   namespace {
@@ -28,20 +30,10 @@ namespace brigid {
         CRLF
 
         (
-          # field_name
-          #   ${ field_name_ += fc; }
-          # ":" OWS field_value
-          #   ${ field_value_ += fc; }
-          #   %{
-          #     std::cout << "[" << field_name_ << "] => [" << field_value_ << "]\n";
-          #     field_name_.clear();
-          #     field_value_.clear();
-          #   }
-          # OWS
           (
             field_name
               ${ field_name_ += fc; }
-              %{ std::cout << "field_name [" << field_name_ << "]\n"; }
+              # %{ std::cout << "field_name [" << field_name_ << "]\n"; }
 
             ":"
             OWS
@@ -55,30 +47,16 @@ namespace brigid {
             OWS
           )
 
-          # header_field
-          # (header_field -- "\r\n")
-          # [^\r\n]+
-            # >{
-            #   std::cout << ">";
-            #   switch (fc) {
-            #     case '\r': std::cout << "\\r"; break;
-            #     case '\n': std::cout << "\\n"; break;
-            #     default: std::cout << fc << "";
-            #   }
-            # }
-
           CRLF
             @{
-              std::cout << "field_value [" << field_value_ << "]\n";
+              // std::cout << "field_value [" << field_value_ << "]\n";
+              header_fields_.insert(std::make_pair(field_name_, field_value_));
               field_name_.clear();
               field_value_.clear();
             }
         )*
 
-        CRLF @{
-          std::cout << "fbreak\n";
-          fbreak;
-        }
+        CRLF @{ fbreak; }
 
         ;
     }%%
@@ -103,6 +81,12 @@ namespace brigid {
         << request_target_ << "\n"
         << http_version_ << "\n";
 
+      for (auto kv : header_fields_) {
+        std::cout << kv.first << ": " << kv.second << "\n";
+      }
+      std::cout << "\n";
+
+
       std::cout << "cs " << cs << "\n";
       std::cout << "index " << (p - data) << "\n";
 
@@ -123,6 +107,7 @@ namespace brigid {
     std::string http_version_;
     std::string field_name_;
     std::string field_value_;
+    std::map<std::string, std::string> header_fields_;
   };
 
   websocket_server_parser::websocket_server_parser()
