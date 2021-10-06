@@ -17,37 +17,37 @@ namespace brigid {
 
       main :=
         method
-          >{ method_ = buffer_.size(); }
-          ${ buffer_.push_back(fc); }
-          %{ buffer_.push_back('\0'); }
+          >{ method_ = q - qs; }
+          ${ *q++ = fc; }
+          %{ *q++ = '\0'; }
         SP
         request_target
-          >{ request_target_ = buffer_.size(); }
-          ${ buffer_.push_back(fc); }
-          %{ buffer_.push_back('\0'); }
+          >{ request_target_ = q - qs; }
+          ${ *q++ = fc; }
+          %{ *q++ = '\0'; }
         SP
         HTTP_version
-          >{ http_version_ = buffer_.size(); }
-          ${ buffer_.push_back(fc); }
-          %{ buffer_.push_back('\0'); }
+          >{ http_version_ = q - qs; }
+          ${ *q++ = fc; }
+          %{ *q++ = '\0'; }
         CRLF
 
         (
           field_name
-            >{ field_name_ = buffer_.size(); }
-            ${ buffer_.push_back(fc); }
-            %{ buffer_.push_back('\0'); }
+            >{ field_name_ = q - qs; }
+            ${ *q++ = fc; }
+            %{ *q++ = '\0'; }
           ":"
           OWS
           (
             field_content
-              ${ buffer_.push_back(fc); }
+              ${ *q++ = fc; }
             |
             obs_fold
-              @{ buffer_.push_back(' '); }
+              @{ *q++ = ' '; }
           )*
-            >{ field_value_ = buffer_.size(); }
-            %{ buffer_.push_back('\0'); }
+            >{ field_value_ = q - qs; }
+            %{ *q++ = '\0'; }
           OWS
           CRLF
             %{ header_fields_.emplace_back(field_name_, field_value_); }
@@ -70,6 +70,7 @@ namespace brigid {
     void reset() {
       %%write init;
       buffer_.clear();
+      q_ = 0;
       position_ = 0;
       method_ = 0;
       request_target_ = 0;
@@ -83,9 +84,18 @@ namespace brigid {
       const char* p = data;
       const char* pe = data + size;
 
+      size_t n = q_ + size;
+      if (buffer_.size() < n) {
+        buffer_.resize(n);
+      }
+      char* qs = &buffer_[0];
+      char* q = &buffer_[q_];
+
       %%write exec;
 
       position_ += p - data;
+      q_ = q - qs;
+
       if (cs == %%{ write error; }%%) {
         return std::make_pair(parser_state::error, p);
       }
@@ -123,6 +133,7 @@ namespace brigid {
   private:
     int cs;
     std::vector<char> buffer_;
+    size_t q_;
     size_t position_;
     size_t method_;
     size_t request_target_;
