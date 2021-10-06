@@ -21,14 +21,15 @@ namespace brigid {
   public:
     http_request_parser();
     ~http_request_parser();
+    void clear();
     std::pair<parser_state, const char*> parse(const char* data, size_t size);
     size_t position() const;
     size_t line() const;
     size_t column() const;
-    const std::string& method() const;
-    const std::string& request_target() const;
-    const std::string& http_version() const;
-    const std::map<std::string, std::string>& header_fields() const;
+    std::string method() const;
+    std::string request_target() const;
+    std::string http_version() const;
+    std::map<std::string, std::string> header_fields() const;
 
   private:
     class impl;
