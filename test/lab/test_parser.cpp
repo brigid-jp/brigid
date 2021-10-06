@@ -4,7 +4,7 @@
 
 #include <brigid/stdio.hpp>
 #include "http_request_parser.hpp"
-#include "test_common.hpp"
+// #include "test_common.hpp"
 
 #include <exception>
 #include <iostream>
@@ -74,16 +74,16 @@ namespace brigid {
       size_t result = fread(buffer.data(), 1, buffer.size(), handle.get());
       std::cout << "size " << result << "\n";
 
-      timer t;
+      // timer t;
       http_request_parser parser;
 
-      t.start();
+      // t.start();
       for (int i = 0; i < n; ++i) {
         parser.reset();
         parser.parse(buffer.data(), result);
       }
-      t.stop();
-      t.print("parse");
+      // t.stop();
+      // t.print("parse");
     }
   }
 }
