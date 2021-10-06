@@ -4,14 +4,13 @@
 
 #include <brigid/stdio.hpp>
 #include "http_request_parser.hpp"
-// #include "test_common.hpp"
-
-#include <exception>
-#include <iostream>
-#include <vector>
 
 #include <errno.h>
 #include <stddef.h>
+#include <chrono>
+#include <exception>
+#include <iostream>
+#include <vector>
 
 namespace brigid {
   namespace {
@@ -77,11 +76,14 @@ namespace brigid {
       // timer t;
       http_request_parser parser;
 
-      // t.start();
+      std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
       for (int i = 0; i < n; ++i) {
         parser.reset();
         parser.parse(buffer.data(), result);
       }
+      std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+      std::cout << "parse " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count() << " ms\n";
+
       // t.stop();
       // t.print("parse");
     }

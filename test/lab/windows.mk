@@ -6,8 +6,8 @@ CPPFLAGS = /I..\..\include /I..\..\src\lib /D_CRT_SECURE_NO_WARNINGS
 CXXFLAGS = /nologo /MD /O2 /W3 /EHsc
 
 OBJS = \
-	test_parser.obj \
-	http_request_parser.obj
+	http_request_parser.obj \
+	test_parser.obj
 
 TARGET = test_parser.exe
 
