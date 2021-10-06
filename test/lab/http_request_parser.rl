@@ -82,8 +82,10 @@ namespace brigid {
       header_fields_.clear();
     }
 
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
 
     std::pair<parser_state, const char*> parse(const char* data, size_t size) {
       const char* p = data;
@@ -110,7 +112,9 @@ namespace brigid {
       return std::make_pair(parser_state::running, p);
     }
 
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
 
     size_t position() const {
       return position_;
