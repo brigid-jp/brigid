@@ -35,16 +35,16 @@ namespace brigid {
         const auto p = parser.parse(buffer.data(), result);
         if (p.first == parser_state::accept) {
           std::cout
-            << "accept position " << parser.position() << "\n"
-            << "method " << parser.method() << "\n"
-            << "request_target " << parser.request_target() << "\n"
-            << "http_version " << parser.http_version() << "\n";
+            << "accept position [" << parser.position() << "]\n"
+            << "method [" << parser.method() << "]\n"
+            << "request_target [" << parser.request_target() << "]\n"
+            << "http_version [" << parser.http_version() << "]\n";
           for (size_t i = 0; ; ++i) {
             const auto& header_field = parser.header_field(i);
             if (!header_field.first) {
               break;
             }
-            std::cout << header_field.first << ": " << header_field.second << "\n";
+            std::cout << "[" << header_field.first << "]=[" << header_field.second << "]\n";
           }
           std::cout << "[" << p.second << "]\n";
           break;
@@ -53,7 +53,7 @@ namespace brigid {
           std::cout << "[" << p.second << "]\n";
           break;
         } else {
-          std::cout << "running\n";
+          // std::cout << "running\n";
         }
       }
     }

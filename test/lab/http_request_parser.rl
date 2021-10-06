@@ -47,10 +47,12 @@ namespace brigid {
               @{ *q++ = ' '; }
           )*
             >{ field_value_ = q - qs; }
-            %{ *q++ = '\0'; }
           OWS
           CRLF
-            %{ header_fields_.emplace_back(field_name_, field_value_); }
+            %{
+              *q++ = '\0';
+              header_fields_.emplace_back(field_name_, field_value_);
+            }
         )*
 
         CRLF @{ fbreak; };
