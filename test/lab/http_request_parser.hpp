@@ -7,12 +7,9 @@
 
 #include <brigid/noncopyable.hpp>
 
-#include <map>
-#include <memory>
-#include <string>
-#include <utility>
-
 #include <stddef.h>
+#include <memory>
+#include <utility>
 
 namespace brigid {
   enum class parser_state { running, accept, error };
@@ -21,16 +18,13 @@ namespace brigid {
   public:
     http_request_parser();
     ~http_request_parser();
-    void clear();
-    std::pair<parser_state, const char*> parse(const char* data, size_t size);
+    void reset();
+    std::pair<parser_state, const char*> parse(const char*, size_t);
     size_t position() const;
-    size_t line() const;
-    size_t column() const;
-    std::string method() const;
-    std::string request_target() const;
-    std::string http_version() const;
-    std::map<std::string, std::string> header_fields() const;
-
+    const char* method() const;
+    const char* request_target() const;
+    const char* http_version() const;
+    std::pair<const char*, const char*> header_field(size_t) const;
   private:
     class impl;
     std::unique_ptr<impl> impl_;

@@ -39,7 +39,11 @@ namespace brigid {
             << "method " << parser.method() << "\n"
             << "request_target " << parser.request_target() << "\n"
             << "http_version " << parser.http_version() << "\n";
-          for (const auto& header_field : parser.header_fields()) {
+          for (size_t i = 0; ; ++i) {
+            const auto& header_field = parser.header_field(i);
+            if (!header_field.first) {
+              break;
+            }
             std::cout << header_field.first << ": " << header_field.second << "\n";
           }
           std::cout << "[" << p.second << "]\n";
@@ -75,7 +79,7 @@ namespace brigid {
 
       t.start();
       for (int i = 0; i < n; ++i) {
-        parser.clear();
+        parser.reset();
         parser.parse(buffer.data(), result);
       }
       t.stop();
