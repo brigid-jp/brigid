@@ -71,10 +71,11 @@ namespace brigid {
       std::cout << "size " << result << "\n";
 
       timer t;
+      http_request_parser parser;
 
       t.start();
       for (int i = 0; i < n; ++i) {
-        http_request_parser parser;
+        parser.clear();
         parser.parse(buffer.data(), result);
       }
       t.stop();

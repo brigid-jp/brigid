@@ -6,6 +6,10 @@
 
 #include "http_request_parser.hpp"
 
+#include <vector>
+
+#include <string.h>
+
 namespace brigid {
   namespace {
     %%{
@@ -15,36 +19,52 @@ namespace brigid {
 
       main :=
         method
-          ${ method += fc; }
+          >{ ps = p; method = q; }
+          # ${ *q++ = fc; }
+          # %{ *q++ = '\0'; }
+          %{ n = p - ps; memcpy(q, ps, n); q += n; *q++ = '\0'; }
         SP
-        request_target
-          ${ request_target += fc; }
+        # request_target
+        [^ ]+
+          >{ ps = p; request_target = q; }
+          # ${ *q++ = fc; }
+          # %{ *q++ = '\0'; }
+          %{ n = p - ps; memcpy(q, ps, n); q += n; *q++ = '\0'; }
         SP
         HTTP_version
-          ${ http_version += fc; }
+          >{ ps = p; http_version = q; }
+          # ${ *q++ = fc; }
+          # %{ *q++ = '\0'; }
+          %{ n = p - ps; memcpy(q, ps, n); q += n; *q++ = '\0'; }
         CRLF
 
         (
           field_name
-            ${ field_name += fc; }
+            >{ ps = p; field_name = q; }
+            # ${ *q++ = fc; }
+            # %{ *q++ = '\0'; }
+            %{ n = p - ps; memcpy(q, ps, n); q += n; *q++ = '\0'; }
           ":"
           OWS
           (
             field_content
-              ${ field_value += fc; }
+              # ${ *q++ = fc; }
             |
             obs_fold
-              @{ field_value += ' '; }
+              # ${ *q++ = ' '; }
           )*
+            >{ ps = p; field_value = q; }
+            # %{ *q++ = '\0'; }
+            %{ n = p - ps; memcpy(q, ps, n); q += n; *q++ = '\0'; }
           OWS
           CRLF
             %{
-              const auto result = header_fields.emplace(field_name, field_value);
-              if (!result.second) {
-                result.first->second.append(", ").append(field_value);
-              }
-              field_name.clear();
-              field_value.clear();
+              // const auto result = header_fields.emplace(field_name, field_value);
+              // if (!result.second) {
+              //   result.first->second.append(", ").append(field_value);
+              // }
+              // field_name.clear();
+              // field_value.clear();
             }
         )*
 
@@ -56,7 +76,13 @@ namespace brigid {
 
   class http_request_parser::impl {
   public:
-    impl() : position() {
+    impl() : position(), buffer(4096) {
+      q = buffer.data();
+      %%write init;
+    }
+
+    void clear() {
+      q = buffer.data();
       %%write init;
     }
 
@@ -76,20 +102,45 @@ namespace brigid {
       return std::make_pair(parser_state::running, p);
     }
 
+    std::pair<parser_state, const char*> parse_(const char* data, size_t size) {
+      // memcpy(buffer.data(), data, size);
+
+      for (size_t i = 0; i < size; ++i) {
+        buffer[i] = data[i];
+      }
+
+      return std::make_pair(parser_state::accept, data + size);
+    }
+
     int cs;
     size_t position;
-    std::string method;
-    std::string request_target;
-    std::string http_version;
-    std::string field_name;
-    std::string field_value;
-    std::map<std::string, std::string> header_fields;
+    std::vector<char> buffer;
+    const char* ps;
+    char* q;
+    size_t n;
+
+    char* method;
+    char* request_target;
+    char* http_version;
+    char* field_name;
+    char* field_value;
+
+    // std::string method;
+    // std::string request_target;
+    // std::string http_version;
+    // std::string field_name;
+    // std::string field_value;
+    // std::map<std::string, std::string> header_fields;
   };
 
   http_request_parser::http_request_parser()
     : impl_(new impl()) {}
 
   http_request_parser::~http_request_parser() {}
+
+  void http_request_parser::clear() {
+    impl_->clear();
+  }
 
   std::pair<parser_state, const char*> http_request_parser::parse(const char* data, size_t size) {
     return impl_->parse(data, size);
@@ -99,19 +150,20 @@ namespace brigid {
     return impl_->position;
   }
 
-  const std::string& http_request_parser::method() const {
+  std::string http_request_parser::method() const {
     return impl_->method;
   }
 
-  const std::string& http_request_parser::request_target() const {
+  std::string http_request_parser::request_target() const {
     return impl_->request_target;
   }
 
-  const std::string& http_request_parser::http_version() const {
+  std::string http_request_parser::http_version() const {
     return impl_->http_version;
   }
 
-  const std::map<std::string, std::string>& http_request_parser::header_fields() const {
-    return impl_->header_fields;
+  std::map<std::string, std::string> http_request_parser::header_fields() const {
+    std::map<std::string, std::string> header_fields;
+    return header_fields;
   }
 }
