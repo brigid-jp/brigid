@@ -6,8 +6,6 @@
 
 #include "http_request_parser.hpp"
 
-#include <iostream>
-
 namespace brigid {
   namespace {
     %%{

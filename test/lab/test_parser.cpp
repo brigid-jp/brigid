@@ -4,6 +4,7 @@
 
 #include <brigid/stdio.hpp>
 #include "http_request_parser.hpp"
+#include "test_common.hpp"
 
 #include <exception>
 #include <iostream>
@@ -14,7 +15,12 @@
 
 namespace brigid {
   namespace {
-    void run(const char* path) {
+    void test(int ac, char* av[]) {
+      if (ac < 3) {
+        throw std::runtime_error("invalid arguments");
+      }
+
+      const char* path = av[2];
       http_request_parser parser;
 
       std::vector<char> buffer(4096);
@@ -47,16 +53,48 @@ namespace brigid {
         }
       }
     }
+
+    void bench(int ac, char* av[]) {
+      int n = 1000;
+
+      if (ac < 3) {
+        throw std::runtime_error("invalid arguments");
+      }
+      const char* path = av[2];
+      if (ac >= 4) {
+        n = atoi(av[3]);
+      }
+
+      std::vector<char> buffer(4096);
+      file_handle_t handle = open_file_handle(path, "rb");
+      size_t result = fread(buffer.data(), 1, buffer.size(), handle.get());
+      std::cout << "size " << result << "\n";
+
+      timer t;
+
+      t.start();
+      for (int i = 0; i < n; ++i) {
+        http_request_parser parser;
+        parser.parse(buffer.data(), result);
+      }
+      t.stop();
+      t.print("parse");
+    }
   }
 }
 
 int main(int ac, char* av[]) {
   try {
     if (ac < 2) {
-      std::cout << "usage: " << av[0] << " file\n";
+      std::cout << "usage: " << av[0] << " command ...\n";
       return 1;
     }
-    brigid::run(av[1]);
+    std::string command = av[1];
+    if (command == "test") {
+      brigid::test(ac, av);
+    } else if (command == "bench") {
+      brigid::bench(ac, av);
+    }
     return 0;
   } catch (const std::exception& e) {
     std::cerr << e.what() << "\n";
