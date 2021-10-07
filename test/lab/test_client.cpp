@@ -14,6 +14,7 @@
 #include <netinet/tcp.h>
 #include <sys/socket.h>
 #include <errno.h>
+#include <time.h>
 #include <unistd.h>
 
 namespace brigid {
@@ -89,7 +90,7 @@ namespace brigid {
 
         t.start();
         {
-          std::vector<char> buffer(2048);
+          std::vector<char> buffer(1);
           while (true) {
             ssize_t size = read(fd, buffer.data(), buffer.size());
             if (size > 0) {
@@ -101,6 +102,10 @@ namespace brigid {
               int code = errno;
               throw BRIGID_RUNTIME_ERROR(std::generic_category().message(code), make_error_code("error number", code));
             }
+
+            struct timespec timeout = {};
+            timeout.tv_nsec = 100 * 1000 * 1000;
+            nanosleep(&timeout, nullptr);
           }
         }
         t.stop();

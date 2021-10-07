@@ -88,16 +88,27 @@ namespace brigid {
 
             t.start();
             {
-              int v = 0;
-              socklen_t size = sizeof(v);
-              if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &v, &size) == -1) {
-                throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
-              }
-              std::cout << "SOL_SOCKET SO_SNDBUF " << v << "\n";
+              // std::string buffer = "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n";
+              // if (write(fd, buffer.data(), buffer.size()) == -1) {
+              //   throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
+              // }
 
-              std::string buffer = "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n";
-              if (write(fd, buffer.data(), buffer.size()) == -1) {
-                throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
+              // send 64MiB
+              std::vector<char> buffer(4096, 'x');
+              for (int i = 0; i < 16 * 1024 ; ++i) {
+                int v = 0;
+                socklen_t size = sizeof(v);
+                if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &v, &size) == -1) {
+                  throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
+                }
+                std::cout << "SOL_SOCKET SO_SNDBUF " << v << "\n";
+
+                // blocking write
+                ssize_t result = write(fd, buffer.data(), buffer.size());
+                std::cout << "result " << result << "\n";
+                if (result == -1) {
+                  throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
+                }
               }
             }
             t.stop();
