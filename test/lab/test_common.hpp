@@ -31,12 +31,12 @@ namespace brigid {
       t1_ = clock_type::now();
     }
 
-    int64_t elapsed() const {
+    int64_t elapsed_nsec() const {
       return std::chrono::duration_cast<std::chrono::nanoseconds>(t1_ - t0_).count();
     }
 
     void print(const char* message) const {
-      int64_t t = elapsed();
+      int64_t t = elapsed_nsec();
       int64_t s = t / 1000000000;
       int64_t m = (t % 1000000000) / 1000000;
       int64_t u = (t % 1000000) / 1000;
