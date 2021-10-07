@@ -8,40 +8,31 @@
 #include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
 
-#include <iomanip>
-#include <iostream>
-
 #include <sys/socket.h>
 #include <netdb.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <time.h>
+
+#include <chrono>
+#include <iomanip>
+#include <iostream>
 
 namespace brigid {
   class timer : private noncopyable {
   public:
+    using clock_type = std::chrono::high_resolution_clock;
+
     void start() {
-      if (clock_gettime(CLOCK_MONOTONIC, &t0_) == -1) {
-        throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
-      }
+      t0_ = clock_type::now();
     }
 
     void stop() {
-      if (clock_gettime(CLOCK_MONOTONIC, &t1_) == -1) {
-        throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
-      }
+      t1_ = clock_type::now();
     }
 
     int64_t elapsed() const {
-      // t1 - t0
-      struct timespec t1 = t1_;
-      if (t1.tv_nsec < t0_.tv_nsec) {
-        t1.tv_nsec += 1000000000;
-        --t1.tv_sec;
-      }
-      int64_t elapsed = t1.tv_sec - t0_.tv_sec;
-      elapsed *= 1000000000;
-      elapsed += t1.tv_nsec - t0_.tv_nsec;
-      return elapsed;
+      return std::chrono::duration_cast<std::chrono::nanoseconds>(t1_ - t0_).count();
     }
 
     void print(const char* message) const {
@@ -50,6 +41,7 @@ namespace brigid {
       int64_t m = (t % 1000000000) / 1000000;
       int64_t u = (t % 1000000) / 1000;
       int64_t n = t % 1000;
+
       std::cout
         << message << ": "
         << s << "."
@@ -59,8 +51,8 @@ namespace brigid {
     }
 
   private:
-    struct timespec t0_;
-    struct timespec t1_;
+    clock_type::time_point t0_;
+    clock_type::time_point t1_;
   };
 
   struct freeaddrinfo_t {
