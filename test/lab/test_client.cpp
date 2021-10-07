@@ -92,6 +92,15 @@ namespace brigid {
         {
           std::vector<char> buffer(1);
           while (true) {
+            {
+              int v = 0;
+              socklen_t size = sizeof(v);
+              if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &v, &size) == -1) {
+                throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
+              }
+              std::cout << "SOL_SOCKET SO_RCVBUF " << v << "\n";
+            }
+
             ssize_t size = read(fd, buffer.data(), buffer.size());
             if (size > 0) {
               std::cout << "read " << size << "\n";

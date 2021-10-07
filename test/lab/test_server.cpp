@@ -14,6 +14,7 @@
 #include <netinet/tcp.h>
 #include <sys/socket.h>
 #include <errno.h>
+#include <signal.h>
 #include <unistd.h>
 
 namespace brigid {
@@ -23,6 +24,12 @@ namespace brigid {
       try {
         std::cout << std::setfill('0');
         timer t;
+
+        struct sigaction sa = {};
+        sa.sa_handler = SIG_IGN;
+        if (sigaction(SIGPIPE, &sa, 0) == -1) {
+          throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
+        }
 
         t.start();
         addrinfo_t ai = getaddrinfo(node, serv, AI_ADDRCONFIG | AI_PASSIVE, AF_INET, SOCK_STREAM);
@@ -95,6 +102,8 @@ namespace brigid {
 
               // send 64MiB
               std::vector<char> buffer(4096, 'x');
+              size_t n = 0;
+
               for (int i = 0; i < 16 * 1024 ; ++i) {
                 int v = 0;
                 socklen_t size = sizeof(v);
@@ -105,7 +114,8 @@ namespace brigid {
 
                 // blocking write
                 ssize_t result = write(fd, buffer.data(), buffer.size());
-                std::cout << "result " << result << "\n";
+                n += buffer.size();
+                std::cout << "result " << result << " " << n << "\n";
                 if (result == -1) {
                   throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
                 }
