@@ -14,6 +14,7 @@
 #include <netinet/tcp.h>
 #include <sys/socket.h>
 #include <errno.h>
+#include <time.h>
 #include <unistd.h>
 
 namespace brigid {
@@ -53,6 +54,13 @@ namespace brigid {
 
         t.start();
         {
+          int v = 0;
+          socklen_t size = sizeof(v);
+          if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &v, &size) == -1) {
+            throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
+          }
+          std::cout << "SOL_SOCKET SO_SNDBUF " << v << "\n";
+
           std::string buffer = "GET / HTTP/1.0\r\n\r\n";
           if (send(fd, buffer.data(), buffer.size(), 0) == -1) {
             throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
@@ -82,7 +90,7 @@ namespace brigid {
 
         t.start();
         {
-          std::vector<char> buffer(2048);
+          std::vector<char> buffer(1);
           while (true) {
             ssize_t size = read(fd, buffer.data(), buffer.size());
             if (size > 0) {
@@ -94,6 +102,10 @@ namespace brigid {
               int code = errno;
               throw BRIGID_RUNTIME_ERROR(std::generic_category().message(code), make_error_code("error number", code));
             }
+
+            struct timespec timeout = {};
+            timeout.tv_nsec = 100 * 1000 * 1000;
+            nanosleep(&timeout, nullptr);
           }
         }
         t.stop();
