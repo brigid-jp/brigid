@@ -53,6 +53,13 @@ namespace brigid {
 
         t.start();
         {
+          int v = 0;
+          socklen_t size = sizeof(v);
+          if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &v, &size) == -1) {
+            throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
+          }
+          std::cout << "SOL_SOCKET SO_SNDBUF " << v << "\n";
+
           std::string buffer = "GET / HTTP/1.0\r\n\r\n";
           if (send(fd, buffer.data(), buffer.size(), 0) == -1) {
             throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
