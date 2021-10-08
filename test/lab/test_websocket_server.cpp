@@ -2,6 +2,7 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include <brigid/crypto.hpp>
 #include <brigid/error.hpp>
 #include "http_request_parser.hpp"
 
@@ -28,19 +29,12 @@ namespace brigid {
 
     using addrinfo_t = std::unique_ptr<struct addrinfo, freeaddrinfo_t>;
 
-    enum class connection_state {
-      opening,
-      opened,
-      closed,
-      error,
-    };
-
     const char* base64_encoder =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
       "abcdefghijklmnopqrstuvwxyz"
       "0123456789+/";
 
-    inline std::string base64_encode(const std::string& source) {
+    inline std::string base64_encode(const std::vector<char>& source) {
       std::string result;
 
       size_t n = source.size();
@@ -88,6 +82,11 @@ namespace brigid {
       return result;
     }
 
+    enum class connection_state {
+      opening,
+      opened,
+    };
+
     class connection {
     public:
       explicit connection(int fd) : fd_(fd), state_(connection_state::opening) {}
@@ -101,30 +100,59 @@ namespace brigid {
                 case parser_state::running:
                   break;
                 case parser_state::accept:
-                  for (size_t i = 0; ; ++i) {
-                    const auto& header_field = parser_.header_field(i);
-                    if (!header_field.first) {
-                      break;
+                  {
+                    for (size_t i = 0; ; ++i) {
+                      const auto& header_field = parser_.header_field(i);
+                      if (!header_field.first) {
+                        break;
+                      }
+                      header_fields_.emplace(header_field.first, header_field.second);
                     }
-                    header_fields_.emplace(header_field.first, header_field.second);
+
+                    auto hasher = make_hasher(crypto_hash::sha1);
+                    std::string x = header_fields_["Sec-WebSocket-Key"];
+                    hasher->update(x.data(), x.size());
+                    std::string y = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+                    hasher->update(y.data(), y.size());
+                    std::string websocket_accept = base64_encode(hasher->digest());
+
+                    std::string message
+                      = std::string("HTTP/1.1 101 Switching Protocols\r\n")
+                      + "Upgrade: websocket\r\n"
+                      + "Connection: upgrade\r\n"
+                      + "Sec-WebSocket-Accept: " + websocket_accept + "\r\n"
+                      + "\r\n";
+
+                    ssize_t size = write(fd_, message.data(), message.size());
+                    if (size == -1) {
+                      throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
+                    }
+
+                    state_ = connection_state::opened;
+                    return read(connections, result.second, size - (result.second - data));
                   }
-
-
-
-
-
-                  state_ = connection_state::opened;
-                  return read(connections, result.second, size - (result.second - data));
                 case parser_state::error:
                   // send error response
-                  state_ = connection_state::error;
-                  break;
+                  std::string message
+                    = std::string("HTTP/1.1 400 Bad Request\r\n")
+                    + "\r\n";
+
+                  ssize_t size = write(fd_, message.data(), message.size());
+                  if (size == -1) {
+                    throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
+                  }
+
+                  close(fd_);
+                  connections.erase(fd_);
+                  return;
               }
             }
             break;
           case connection_state::opened:
-            break;
-          case connection_state::error:
+            {
+              close(fd_);
+              connections.erase(fd_);
+            }
             break;
         }
       }
@@ -231,7 +259,16 @@ namespace brigid {
             if (FD_ISSET(item.first, &rfds)) {
               while (true) {
                 ssize_t size = read(item.first, buffer.data(), buffer.size());
-                item.second.read(connections, buffer.data(), size);
+                if (size == -1) {
+                  if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                    break;
+                  }
+                  throw BRIGID_RUNTIME_ERROR(std::generic_category().message(errno), make_error_code("error number", errno));
+                } else if (size == 0) {
+                  // closed?
+                } else {
+                  item.second.read(connections, buffer.data(), size);
+                }
               }
             }
           }
@@ -249,12 +286,11 @@ namespace brigid {
 
 int main(int ac, char* av[]) {
   try {
-    std::cout << brigid::base64_encode(av[1]) << "\n";
-
+    brigid::open_hasher();
     if (ac < 3) {
       std::cout << "usage: " << av[0] << " node serv\n";
     }
-    // brigid::run(av[1], av[2]);
+    brigid::run(av[1], av[2]);
     return 0;
   } catch (const std::exception& e) {
     std::cerr << e.what() << "\n";
