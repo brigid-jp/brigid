@@ -5,8 +5,6 @@
 #ifndef BRIGID_HTTP_REQUEST_PARSER_HPP
 #define BRIGID_HTTP_REQUEST_PARSER_HPP
 
-#include <brigid/noncopyable.hpp>
-
 #include <stddef.h>
 #include <memory>
 #include <utility>
@@ -14,9 +12,10 @@
 namespace brigid {
   enum class parser_state { running, accept, error };
 
-  class http_request_parser : private noncopyable {
+  class http_request_parser {
   public:
     http_request_parser();
+    http_request_parser(http_request_parser&&);
     ~http_request_parser();
     void reset();
     std::pair<parser_state, const char*> parse(const char*, size_t);

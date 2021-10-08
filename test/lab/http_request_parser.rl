@@ -157,6 +157,9 @@ namespace brigid {
   http_request_parser::http_request_parser()
     : impl_(new impl()) {}
 
+  http_request_parser::http_request_parser(http_request_parser&& that)
+    : impl_(std::move(that.impl_)) {}
+
   http_request_parser::~http_request_parser() {}
 
   void http_request_parser::reset() {
