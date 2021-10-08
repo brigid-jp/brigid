@@ -32,7 +32,8 @@ test_parser_exe_LDADD = $(top_srcdir)/src/lib/libbrigid.la
 test_parser_exe_SOURCES = \
 	test_parser.cpp \
 	abnf.cxx \
-	http_request_parser.cxx
+	http_request_parser.cxx \
+	websocket_frame_parser.cxx
 
 test_websocket_server_exe_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/lib
 test_websocket_server_exe_LDFLAGS =
