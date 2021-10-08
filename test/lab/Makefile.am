@@ -11,7 +11,8 @@ abnf.rl: abnf.lua errata.txt
 noinst_PROGRAMS = \
 	test_client.exe \
 	test_server.exe \
-	test_parser.exe
+	test_parser.exe \
+	test_websocket_server.exe
 
 test_client_exe_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/lib
 test_client_exe_LDFLAGS =
@@ -30,6 +31,14 @@ test_parser_exe_LDFLAGS =
 test_parser_exe_LDADD = $(top_srcdir)/src/lib/libbrigid.la
 test_parser_exe_SOURCES = \
 	test_parser.cpp \
+	abnf.cxx \
+	http_request_parser.cxx
+
+test_websocket_server_exe_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/lib
+test_websocket_server_exe_LDFLAGS =
+test_websocket_server_exe_LDADD = $(top_srcdir)/src/lib/libbrigid.la
+test_websocket_server_exe_SOURCES = \
+	test_websocket_server.cpp \
 	abnf.cxx \
 	http_request_parser.cxx
 
