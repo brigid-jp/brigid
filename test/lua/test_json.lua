@@ -38,6 +38,25 @@ function suite:test_json_decode5()
   print(r, type(r), math.type(r))
 end
 
+local cjson_example2 = [[
+{"menu": {
+  "id": "file",
+  "value": "File",
+  "popup": {
+    "menuitem": [
+      {"value": "New", "onclick": "CreateNewDoc()"},
+      {"value": "Open", "onclick": "OpenDoc()"},
+      {"value": "Close", "onclick": "CloseDoc()"}
+    ]
+  }
+}}
+]]
+
+function suite:test_json_decode_cjson_example2()
+  local r = brigid.json.decode(cjson_example2)
+  print(r, type(r), math.type(r))
+end
+
 local cjson_example3 = [[
 {"widget": {
     "debug": "on",
