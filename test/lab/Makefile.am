@@ -43,6 +43,11 @@ test_websocket_server_exe_SOURCES = \
 	abnf.cxx \
 	http_request_parser.cxx
 
+if CRYPTO_OPENSSL
+test_websocket_server_exe_LDFLAGS += $(OPENSSL_LDFLAGS)
+test_websocket_server_exe_LDADD += $(OPENSSL_LIBS)
+endif
+
 EXTRA_DIST = \
 	*.rl \
 	*.txt \
