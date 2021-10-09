@@ -1,6 +1,9 @@
-# Copyright (c) 2019,2020 <dev@brigid.jp>
+# Copyright (c) 2019-2021 <dev@brigid.jp>
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
+
+.rl.cxx:
+	ragel -G2 $< -o $@
 
 luaexec_LTLIBRARIES = brigid.la
 
@@ -21,6 +24,7 @@ brigid_la_SOURCES = \
 	file_writer.cpp \
 	hasher.cpp \
 	http.cpp \
+	json.cxx \
 	module.cpp \
 	version.cpp \
 	view.cpp
