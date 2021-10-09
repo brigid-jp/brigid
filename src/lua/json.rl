@@ -39,6 +39,8 @@ namespace brigid {
             }
             %{
               if (is_integer) {
+                // TODO 整数の範囲内か確かめる: Lua 5.3以降のコードを確認
+                // TODO LuaJITは？
                 lua_pushinteger(L, is_minus ? -v : v);
               } else {
                 // 入力文字列が\0もしくは他の区切り文字で終端していることは保証されない
@@ -48,6 +50,7 @@ namespace brigid {
                 buffer[size] = '\0';
                 char* end = nullptr;
                 double u = strtod(buffer.data(), &end);
+                // TODO locale check
                 // TODO error check
                 lua_pushnumber(L, u);
               }
@@ -131,6 +134,8 @@ namespace brigid {
       bool is_minus;
       bool is_integer;
       size_t size;
+      uint32_t u1;
+      uint32_t u2;
 
       %%write exec;
 
