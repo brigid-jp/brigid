@@ -96,20 +96,27 @@ namespace brigid {
             ("." digit+ @{ is_integer_ = false; })?
             ([eE] [+\-]? digit+ @{ is_integer_ = false; })?
           ) >{
+              std::cout << "number>\n";
               buffer_.clear();
               is_minus_ = false;
               is_integer_ = true;
               v_ = 0;
             }
-            ${ buffer_.push_back(fc); }
+            ${
+              buffer_.push_back(fc);
+              std::cout << "number$\n";
+            }
             %{
+              std::cout << "number%\n";
               if (is_integer_) {
+                std::cout << "[DEBUG] push_integer[" << (is_minus_ ? -v_ : v_) << "]\n";
                 lua_pushinteger(L, is_minus_ ? -v_ : v_);
               } else {
                 buffer_.push_back('\0');
                 char* end = nullptr;
                 double v = strtod(buffer_.data(), &end);
                 // TODO error check
+                std::cout << "[DEBUG] push_number[" << v << "]\n";
                 lua_pushnumber(L, v);
               }
             };
@@ -137,7 +144,10 @@ namespace brigid {
           # TODO \u
           | unescaped ${ buffer_.push_back(fc); }
           )*
-          "\"" @{ lua_pushlstring(L, buffer_.data(), buffer_.size()); };
+          "\"" @{
+            std::cout << "[DEBUG][" << std::string(buffer_.data(), buffer_.size()) << "]\n";
+            lua_pushlstring(L, buffer_.data(), buffer_.size());
+          };
 
       value
         = "false" @{ lua_pushboolean(L, false); }
@@ -148,7 +158,10 @@ namespace brigid {
         | number
         | string;
 
-      member = ws string ws ":" ws value @{ lua_settable(L, -3); };
+      member = ws string ws ":" ws value %{
+        std::cout << "settable\n";
+        lua_settable(L, -3);
+      };
       object := (member (ws "," member)*)? ws "}" @{ fret; };
 
       element = ws value @{ lua_seti(L, -2, ++n_); };
@@ -261,21 +274,21 @@ namespace brigid {
       self->parse(data.data(), data.size());
       self->xcopy(L);
     }
+
+    void impl_decode(lua_State* L) {
+      data_t data = check_data(L, 1);
+
+      json_parser_t parser((thread(L)));
+      parser.parse(data.data(), data.size());
+      parser.xcopy(L);
+    }
   }
 
   void initialize_json(lua_State* L) {
     lua_newtable(L);
     {
-      luaL_newmetatable(L, "brigid.json_parser");
-      lua_pushvalue(L, -2);
-      set_field(L, -2, "__index");
-      set_field(L, -1, "__gc", impl_gc);
-      set_field(L, -1, "__close", impl_close);
-      lua_pop(L, 1);
-
-      set_metafield(L, -1, "__call", impl_call);
-      set_field(L, -1, "parse", impl_parse);
+      set_field(L, -1, "decode", impl_decode);
     }
-    set_field(L, -2, "json_parser");
+    set_field(L, -2, "json");
   }
 }
