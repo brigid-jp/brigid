@@ -166,6 +166,11 @@ namespace brigid {
         %%write init;
       }
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
+
       const char* parse(const char* data, size_t size) {
         if (lua_State* L = thread_.state()) {
           const char* p = data;
@@ -176,20 +181,20 @@ namespace brigid {
 
           %%write exec;
 
-          std::cout << "position " << (p - data) << "\n";
-
           if (cs == %%{ write error; }%%) {
-            std::cout << "error\n";
             state_ = json_parser_state::error;
           }
           if (cs >= %%{ write first_final; }%%) {
-            std::cout << "first_final\n";
             state_ = json_parser_state::accept;
           }
         }
 
         return nullptr;
       }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
       void close() {
         thread_ = thread();
