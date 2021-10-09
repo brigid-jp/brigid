@@ -42,7 +42,7 @@ namespace brigid {
                 lua_pushinteger(L, is_minus ? -v : v);
               } else {
                 // 入力文字列が\0もしくは他の区切り文字で終端していることは保証されない
-                size = ps - p;
+                size = p - ps;
                 buffer.resize(size + 1);
                 memcpy(buffer.data(), ps, size);
                 buffer[size] = '\0';
@@ -52,10 +52,6 @@ namespace brigid {
                 lua_pushnumber(L, u);
               }
             };
-
-
-
-
 
       utf8_tail = 0x80..0xBF;
       utf8_char
@@ -106,13 +102,9 @@ namespace brigid {
         | number
         | string;
 
-      member = ws string ws ":" ws value %{
-        std::cout << "settable\n";
-        lua_settable(L, -3);
-      };
+      member = ws string ws ":" ws value %{ lua_settable(L, -3); };
       object := (member (ws "," member)*)? ws "}" @{ fret; };
-
-      element = ws value @{ lua_seti(L, -2, ++n); };
+      element = ws value %{ lua_seti(L, -2, ++n); };
       array := (element (ws "," element)*)? ws "]" @{ fret; };
       main := ws value ws;
 
