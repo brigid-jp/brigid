@@ -134,6 +134,7 @@ namespace brigid {
           | "\\n" @{ buffer_.push_back('\n'); }
           | "\\r" @{ buffer_.push_back('\r'); }
           | "\\t" @{ buffer_.push_back('\t'); }
+          # TODO \u
           | unescaped ${ buffer_.push_back(fc); }
           )*
           "\"" @{ lua_pushlstring(L, buffer_.data(), buffer_.size()); };
