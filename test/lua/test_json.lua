@@ -35,7 +35,7 @@ end
 
 function suite:test_json_decode5()
   local r = brigid.json.decode " 3.14"
-  print(r, type(r), math.type(r))
+  print(r, type(r))
 end
 
 local cjson_example2 = [[
@@ -54,7 +54,7 @@ local cjson_example2 = [[
 
 function suite:test_json_decode_cjson_example2()
   local r = brigid.json.decode(cjson_example2)
-  print(r, type(r), math.type(r))
+  print(r, type(r))
 end
 
 local cjson_example3 = [[
@@ -88,7 +88,7 @@ local cjson_example3 = [[
 
 function suite:test_json_decode_cjson_example3()
   local r = brigid.json.decode(cjson_example3)
-  print(r, type(r), math.type(r))
+  print(r, type(r))
 end
 
 return suite

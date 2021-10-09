@@ -104,7 +104,7 @@ namespace brigid {
 
       member = ws string ws ":" ws value %{ lua_settable(L, -3); };
       object := (member (ws "," member)*)? ws "}" @{ fret; };
-      element = ws value %{ lua_seti(L, -2, ++n); };
+      element = ws value >{ lua_pushinteger(L, ++n); } %{ lua_settable(L, -3); };
       array := (element (ws "," element)*)? ws "]" @{ fret; };
       main := ws value ws;
 
