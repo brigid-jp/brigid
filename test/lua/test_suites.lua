@@ -5,15 +5,26 @@
 local class = {}
 local metatable = { __index = class }
 
+local test_suite_names = {
+  "test_common";
+  "test_version";
+  "test_crypto";
+  "test_writer";
+  "test_to_be_closed";
+  "test_http";
+  "test_json";
+}
+
 local function new()
-  return {
-    (require "test_common");
-    (require "test_version");
-    (require "test_crypto");
-    (require "test_writer");
-    (require "test_to_be_closed");
-    (require "test_http");
-  }
+  local pattern = os.getenv "BRIGID_TEST_SUITE_NAME_PATTERN"
+  local self = {}
+  for i = 1, #test_suite_names do
+    local name = test_suite_names[i]
+    if not pattern or name:find(pattern) then
+      self[#self + 1] = require(name)
+    end
+  end
+  return self
 end
 
 function metatable:__call()
