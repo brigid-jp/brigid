@@ -41,19 +41,21 @@ namespace brigid {
               if (is_integer) {
                 lua_pushinteger(L, is_minus ? -v : v);
               } else {
-                // 入力文字列が\0終端していれば、そのまま渡しても安全である
-                // なぜなら、numberの後に出現する可能性があるのは、
-                // whitespace
-                // ], },
-                // \0
-                // くらいだから
-                // TODO 厳密に保証すること
+                // 入力文字列が\0もしくは他の区切り文字で終端していることは保証されない
+                size = ps - p;
+                buffer.resize(size + 1);
+                memcpy(buffer.data(), ps, size);
+                buffer[size] = '\0';
                 char* end = nullptr;
-                double u = strtod(ps, &end);
+                double u = strtod(buffer.data(), &end);
                 // TODO error check
                 lua_pushnumber(L, u);
               }
             };
+
+
+
+
 
       utf8_tail = 0x80..0xBF;
       utf8_char
@@ -65,22 +67,35 @@ namespace brigid {
         | 0xF4 0x80..0x8F utf8_tail{2};
       unescaped = utf8_char - [\\\"];
 
+      escaped
+        = "\\\"" @{ buffer.push_back('"'); }
+        | "\\\\" @{ buffer.push_back('\\'); }
+        | "\\/" @{ buffer.push_back('/'); }
+        | "\\b" @{ buffer.push_back('\b'); }
+        | "\\f" @{ buffer.push_back('\f'); }
+        | "\\n" @{ buffer.push_back('\n'); }
+        | "\\r" @{ buffer.push_back('\r'); }
+        | "\\t" @{ buffer.push_back('\t'); }
+        # TODO \u
+        ;
+
       string
-        = "\"" @{ buffer.clear(); }
-          ( "\\\"" @{ buffer.push_back('"'); }
-          | "\\\\" @{ buffer.push_back('\\'); }
-          | "\\/" @{ buffer.push_back('/'); }
-          | "\\b" @{ buffer.push_back('\b'); }
-          | "\\f" @{ buffer.push_back('\f'); }
-          | "\\n" @{ buffer.push_back('\n'); }
-          | "\\r" @{ buffer.push_back('\r'); }
-          | "\\t" @{ buffer.push_back('\t'); }
-          # TODO \u
-          | unescaped ${ buffer.push_back(fc); }
-          )*
-          "\"" @{
-            lua_pushlstring(L, buffer.data(), buffer.size());
-          };
+        = "\"" %{ ps = p; }
+          ( "\"" @{ lua_pushlstring(L, ps, 0); }
+          | unescaped+
+            ( "\"" @{ lua_pushlstring(L, ps, p - ps); }
+            | escaped >{ size = p - ps; buffer.resize(size); memcpy(buffer.data(), ps, size); }
+              ( escaped
+              | unescaped ${ buffer.push_back(fc); }
+              )*
+              "\"" @{ lua_pushlstring(L, buffer.data(), buffer.size()); }
+            )
+          | escaped >{ buffer.clear(); }
+            ( escaped
+            | unescaped ${ buffer.push_back(fc); }
+            )*
+            "\"" @{ lua_pushlstring(L, buffer.data(), buffer.size()); }
+          );
 
       value
         = "false" @{ lua_pushboolean(L, false); }
@@ -123,6 +138,7 @@ namespace brigid {
       std::vector<char> buffer; // TODO reserve
       bool is_minus;
       bool is_integer;
+      size_t size;
 
       %%write exec;
 
