@@ -2,108 +2,37 @@
 # vim: syntax=ragel:
 machine test;
 
-include abnf "abnf.rl";
-
-# field_content
-# main := (alpha (" " alpha)?)*;
+# include abnf "abnf.rl";
 
 action A {}
-action B {}
-action C {}
+action B1 {}
+action B2 {}
+action B3 {}
+action B4 {}
+action C1 {}
+action C2 {}
 action D {}
 action E {}
 action F {}
 action G {}
 action H {}
+action X {}
+action Y {}
 
-counter =
-  (
-    ([^\r\n]+)
-      $A
-    CRLF
-      %B
-  )*
-  CRLF;
+unescaped = [^\\\"];
 
+escaped
+  = "\\\\" @X
+  | "\\\"" @Y
+  ;
 
-main := counter;
-
-# main :=
-#   "\r\n"
-#   (
-#     ([^\r\n]*)
-#       >A $B @C %D
-#     "\r\n"
-#   )*
-#   "\r\n";
-
-# main :=
-#   ("\r\n" ([^\r\n]+) >A $B @C %D)*
-#   "\r\n\r\n";
-
-# main :=
-#  CRLF
-#  (
-#    (
-#      # field_name
-#      [a-z]+
-#      ":"
-#      OWS
-#      (
-#        # field_content
-#        [a-z]+
-#          >C $D @E %F
-#        |
-#        # fold
-#        CRLF " "
-#          @H
-#      )*
-#      OWS
-#    )*
-#
-#    CRLF @B
-#  )*
-#
-#  CRLF @A
-
-#         "GET"
-# 
-#         CRLF
-# 
-#         (
-#           (
-#             field_name
-#               $A # { field_name_ += fc; }
-#               # %{ std::cout << "field_name [" << field_name_ << "]\n"; }
-# 
-#             ":"
-#             OWS
-#             (
-#               field_content
-#                 $B # { field_value_ += fc; }
-#               |
-#               obs_fold
-#                 @C
-#                 # {
-#                 #   std::cout << "obs_fold\n";
-#                 #   field_value_ += ' ';
-#                 # }
-#             )*
-#             OWS
-#           )
-# 
-#           CRLF
-#             %D
-#             # {
-#             #   // std::cout << "field_value [" << field_value_ << "]\n";
-#             #   std::cout << "CRLF\n";
-#             #   header_fields_.insert(std::make_pair(field_name_, field_value_));
-#             #   field_name_.clear();
-#             #   field_value_.clear();
-#             # }
-#         )*
-# 
-#         CRLF @E # { fbreak; }
-#   ;
+main := "\"" %A
+    "\"" @B1
+  | unescaped+
+    ( "\"" @B2
+    | escaped >C1 (escaped | unescaped @D)* "\"" @B3
+    )
+  | escaped >C2 (escaped | unescaped @D)* "\"" @B4
+;
 
 }%%
