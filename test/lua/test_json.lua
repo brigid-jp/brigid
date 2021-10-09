@@ -34,7 +34,7 @@ function suite:test_json_decode4()
 end
 
 function suite:test_json_decode5()
-  local r = brigid.json.decode " 314e0 "
+  local r = brigid.json.decode " 3.14"
   print(r, type(r), math.type(r))
 end
 

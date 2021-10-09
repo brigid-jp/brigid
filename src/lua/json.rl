@@ -18,70 +18,6 @@
 
 namespace brigid {
   namespace {
-    class thread : private noncopyable {
-    public:
-      thread()
-        : state_(),
-          state_ref_(LUA_NOREF) {}
-
-      explicit thread(lua_State* L)
-        : state_(),
-          state_ref_(LUA_NOREF) {
-        state_ = lua_newthread(L);
-        state_ref_ = luaL_ref(L, LUA_REGISTRYINDEX);
-      }
-
-      thread(thread&& that)
-        : state_(that.state_),
-          state_ref_(that.state_ref_) {
-        that.reset();
-      }
-
-      ~thread() {
-        unref();
-      }
-
-      thread& operator=(thread&& that) {
-        if (this != &that) {
-          unref();
-          state_ = that.state_;
-          state_ref_ = that.state_ref_;
-          that.reset();
-        }
-        return *this;
-      }
-
-      void close() {
-        if (lua_State* L = state_) {
-          luaL_unref(L, LUA_REGISTRYINDEX, state_ref_);
-          state_ = nullptr;
-          state_ref_ = LUA_NOREF;
-        }
-      }
-
-      lua_State* state() const {
-        return state_;
-      }
-
-    private:
-      lua_State* state_;
-      int state_ref_;
-
-      void unref() {
-        if (lua_State* L = state_) {
-          luaL_unref(L, LUA_REGISTRYINDEX, state_ref_);
-          reset();
-        }
-      }
-
-      void reset() {
-        state_ = nullptr;
-        state_ref_ = LUA_NOREF;
-      }
-    };
-
-    enum class json_parser_state { start, running, accept, error };
-
     %%{
       machine json_parser;
 
@@ -91,33 +27,31 @@ namespace brigid {
       ws = [ \t\n\r]*;
 
       number
-        = ( ("-" @{ is_minus_ = true; })?
-            (0 | [1-9] digit*) ${ v_ *= 10; v_ += fc - '0'; }
-            ("." digit+ @{ is_integer_ = false; })?
-            ([eE] [+\-]? digit+ @{ is_integer_ = false; })?
+        = ( ("-" @{ is_minus = true; })?
+            (0 | [1-9] digit*) ${ v *= 10; v += fc - '0'; }
+            ("." digit+ @{ is_integer = false; })?
+            ([eE] [+\-]? digit+ @{ is_integer = false; })?
           ) >{
-              std::cout << "number>\n";
-              buffer_.clear();
-              is_minus_ = false;
-              is_integer_ = true;
-              v_ = 0;
-            }
-            ${
-              buffer_.push_back(fc);
-              std::cout << "number$\n";
+              ps = p;
+              is_minus = false;
+              is_integer = true;
+              v = 0;
             }
             %{
-              std::cout << "number%\n";
-              if (is_integer_) {
-                std::cout << "[DEBUG] push_integer[" << (is_minus_ ? -v_ : v_) << "]\n";
-                lua_pushinteger(L, is_minus_ ? -v_ : v_);
+              if (is_integer) {
+                lua_pushinteger(L, is_minus ? -v : v);
               } else {
-                buffer_.push_back('\0');
+                // 入力文字列が\0終端していれば、そのまま渡しても安全である
+                // なぜなら、numberの後に出現する可能性があるのは、
+                // whitespace
+                // ], },
+                // \0
+                // くらいだから
+                // TODO 厳密に保証すること
                 char* end = nullptr;
-                double v = strtod(buffer_.data(), &end);
+                double u = strtod(ps, &end);
                 // TODO error check
-                std::cout << "[DEBUG] push_number[" << v << "]\n";
-                lua_pushnumber(L, v);
+                lua_pushnumber(L, u);
               }
             };
 
@@ -132,21 +66,20 @@ namespace brigid {
       unescaped = utf8_char - [\\\"];
 
       string
-        = "\"" @{ buffer_.clear(); }
-          ( "\\\"" @{ buffer_.push_back('"'); }
-          | "\\\\" @{ buffer_.push_back('\\'); }
-          | "\\/" @{ buffer_.push_back('/'); }
-          | "\\b" @{ buffer_.push_back('\b'); }
-          | "\\f" @{ buffer_.push_back('\f'); }
-          | "\\n" @{ buffer_.push_back('\n'); }
-          | "\\r" @{ buffer_.push_back('\r'); }
-          | "\\t" @{ buffer_.push_back('\t'); }
+        = "\"" @{ buffer.clear(); }
+          ( "\\\"" @{ buffer.push_back('"'); }
+          | "\\\\" @{ buffer.push_back('\\'); }
+          | "\\/" @{ buffer.push_back('/'); }
+          | "\\b" @{ buffer.push_back('\b'); }
+          | "\\f" @{ buffer.push_back('\f'); }
+          | "\\n" @{ buffer.push_back('\n'); }
+          | "\\r" @{ buffer.push_back('\r'); }
+          | "\\t" @{ buffer.push_back('\t'); }
           # TODO \u
-          | unescaped ${ buffer_.push_back(fc); }
+          | unescaped ${ buffer.push_back(fc); }
           )*
           "\"" @{
-            std::cout << "[DEBUG][" << std::string(buffer_.data(), buffer_.size()) << "]\n";
-            lua_pushlstring(L, buffer_.data(), buffer_.size());
+            lua_pushlstring(L, buffer.data(), buffer.size());
           };
 
       value
@@ -154,7 +87,7 @@ namespace brigid {
         | "null" @{ lua_pushnil(L); }
         | "true" @{ lua_pushboolean(L, true); }
         | "{" @{ lua_newtable(L); fcall object; }
-        | "[" @{ lua_newtable(L); n_ = 0; fcall array; }
+        | "[" @{ lua_newtable(L); n = 0; fcall array; }
         | number
         | string;
 
@@ -164,123 +97,40 @@ namespace brigid {
       };
       object := (member (ws "," member)*)? ws "}" @{ fret; };
 
-      element = ws value @{ lua_seti(L, -2, ++n_); };
+      element = ws value @{ lua_seti(L, -2, ++n); };
       array := (element (ws "," element)*)? ws "]" @{ fret; };
       main := ws value ws;
 
       write data noerror nofinal noentry;
     }%%
 
-    class json_parser_t : private noncopyable {
-    public:
-      explicit json_parser_t(thread&& thread)
-        : thread_(std::move(thread)),
-          state_(json_parser_state::start) {
-        %%write init;
-      }
-
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
-#endif
-
-      const char* parse(const char* data, size_t size) {
-        if (lua_State* L = thread_.state()) {
-          const char* p = data;
-          const char* pe = data + size;
-          const char* eof = nullptr; // TODO 必要になる条件は？
-
-          state_ = json_parser_state::running;
-
-          %%write exec;
-
-          if (cs == %%{ write error; }%%) {
-            state_ = json_parser_state::error;
-          }
-          if (cs >= %%{ write first_final; }%%) {
-            state_ = json_parser_state::accept;
-          }
-        }
-
-        return nullptr;
-      }
-
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
-
-      void close() {
-        thread_ = thread();
-      }
-
-      bool closed() const {
-        return !thread_.state();
-      }
-
-      json_parser_state state() const {
-        return state_;
-      }
-
-      void xcopy(lua_State* L) {
-        if (lua_State* from = thread_.state()) {
-          lua_pushvalue(from, -1);
-          lua_xmove(from, L, 1);
-        }
-      }
-
-    private:
-      thread thread_;
-      json_parser_state state_;
-
-      int cs;
-      std::vector<int> stack;
-      int top;
-
-      lua_Integer n_;
-      std::vector<char> buffer_;
-      bool is_minus_;
-      bool is_integer_;
-      lua_Integer v_;
-    };
-
-    json_parser_t* check_json_parser(lua_State* L, int arg, int validate = check_validate_all) {
-      json_parser_t* self = check_udata<json_parser_t>(L, arg, "brigid.json_parser");
-      if (validate & check_validate_not_closed) {
-        if (self->closed()) {
-          luaL_error(L, "attempt to use a closed brigid.json_parser");
-        }
-      }
-      return self;
-    }
-
-    void impl_gc(lua_State* L) {
-      check_json_parser(L, 1, check_validate_none)->~json_parser_t();
-    }
-
-    void impl_close(lua_State* L) {
-      json_parser_t* self = check_json_parser(L, 1, check_validate_none);
-      if (!self->closed()) {
-        self->close();
-      }
-    }
-
-    void impl_call(lua_State* L) {
-      new_userdata<json_parser_t>(L, "brigid.json_parser", thread(L));
-    }
-
-    void impl_parse(lua_State* L) {
-      json_parser_t* self = check_json_parser(L, 1);
-      data_t data = check_data(L, 2);
-      self->parse(data.data(), data.size());
-      self->xcopy(L);
-    }
 
     void impl_decode(lua_State* L) {
       data_t data = check_data(L, 1);
 
-      json_parser_t parser((thread(L)));
-      parser.parse(data.data(), data.size());
-      parser.xcopy(L);
+      int cs;
+      int top;
+      %%write init;
+
+      const char* p = data.data();
+      const char* pe = p + data.size();
+      const char* eof = pe;
+      std::vector<int> stack; // TODO reserve
+
+      const char* ps;
+      lua_Integer n;
+      lua_Integer v;
+      std::vector<char> buffer; // TODO reserve
+      bool is_minus;
+      bool is_integer;
+
+      %%write exec;
+
+      if (cs >= %%{ write first_final; }%%) {
+        // check stack size == 1
+      } else {
+        // throw error
+      }
     }
   }
 
