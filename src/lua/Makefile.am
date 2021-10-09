@@ -2,6 +2,9 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
+.rl.cxx:
+	ragel -G2 $< -o $@
+
 luaexec_LTLIBRARIES = brigid.la
 
 noinst_HEADERS = \
@@ -21,6 +24,7 @@ brigid_la_SOURCES = \
 	file_writer.cpp \
 	hasher.cpp \
 	http.cpp \
+	json.cxx \
 	module.cpp \
 	version.cpp \
 	view.cpp

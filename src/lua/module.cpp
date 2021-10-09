@@ -11,6 +11,7 @@ namespace brigid {
   void initialize_file_writer(lua_State*);
   void initialize_hasher(lua_State*);
   void initialize_http(lua_State*);
+  void initialize_json(lua_State*);
   void initialize_version(lua_State*);
   void initialize_view(lua_State*);
 
@@ -21,6 +22,7 @@ namespace brigid {
     initialize_file_writer(L);
     initialize_hasher(L);
     initialize_http(L);
+    initialize_json(L);
     initialize_version(L);
     initialize_view(L);
   }
