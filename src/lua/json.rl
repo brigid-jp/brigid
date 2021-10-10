@@ -194,7 +194,8 @@ namespace brigid {
       const char* p = data.data();
       const char* pe = p + data.size();
       const char* eof = pe;
-      std::vector<int> stack; // TODO reserve
+      std::vector<int> stack;
+      stack.reserve(16);
 
       const char* ps; // 先頭ポインタの保存
       lua_Integer n; // arrayのインデックス
