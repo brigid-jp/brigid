@@ -165,23 +165,24 @@ namespace brigid {
         | unicode_escape_sequence
         );
 
-      string
-        = "\"" %{ ps = p; }
-          ( "\"" @{ lua_pushlstring(L, ps, 0); }
+      string_ :=
+          ( "\"" @{ lua_pushlstring(L, ps, 0); fret; }
           | unescaped+
-            ( "\"" @{ lua_pushlstring(L, ps, p - ps); }
+            ( "\"" @{ lua_pushlstring(L, ps, p - ps); fret; }
             | escape_sequence >{ size = p - ps; buffer.resize(size); memcpy(buffer.data(), ps, size); }
               ( escape_sequence
               | unescaped ${ buffer.push_back(fc); }
               )*
-              "\"" @{ lua_pushlstring(L, buffer.data(), buffer.size()); }
+              "\"" @{ lua_pushlstring(L, buffer.data(), buffer.size()); fret; }
             )
           | escape_sequence >{ buffer.clear(); }
             ( escape_sequence
             | unescaped ${ buffer.push_back(fc); }
             )*
-            "\"" @{ lua_pushlstring(L, buffer.data(), buffer.size()); }
+            "\"" @{ lua_pushlstring(L, buffer.data(), buffer.size()); fret; }
           );
+
+      string = "\"" @{ ps = p; fcall string_; };
 
       value
         = "false" @{ lua_pushboolean(L, false); }
