@@ -38,6 +38,31 @@ function suite:test_json_decode5()
   print(r, type(r))
 end
 
+function suite:test_json_string1()
+  local r = brigid.json.decode [["\u0001\u0000\u0002"]]
+  assert(r == "\1\0\2")
+end
+
+function suite:test_json_string2()
+  local r = brigid.json.decode [["\uD834\uDD1E"]]
+  assert(r == string.char(0xF0, 0x9D, 0x84, 0x9E))
+end
+
+function suite:test_json_string3()
+  local r = brigid.json.decode [["\u0041\u2262\u0391\u002E"]]
+  assert(r == string.char(0x41, 0xE2, 0x89, 0xA2, 0xCE, 0x91, 0x2E))
+end
+
+function suite:test_json_string4()
+  local r = brigid.json.decode [["\uD55C\uAD6D\uC5B4"]]
+  assert(r == string.char(0xED, 0x95, 0x9C, 0xEA, 0xB5, 0xAD, 0xEC, 0x96, 0xB4))
+end
+
+function suite:test_json_string5()
+  local r = brigid.json.decode [["\u65E5\u672C\u8A9E"]]
+  assert(r == string.char(0xE6, 0x97, 0xA5, 0xE6, 0x9C, 0xAC, 0xE8, 0xAA, 0x9E))
+end
+
 local cjson_example2 = [[
 {"menu": {
   "id": "file",
