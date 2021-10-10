@@ -200,7 +200,7 @@ namespace brigid {
       const char* ps; // 先頭ポインタの保存
       lua_Integer n; // arrayのインデックス
       lua_Integer v; // 整数の保持
-      std::vector<char> buffer; // TODO reserve
+      std::vector<char> buffer; // reserveしない
       bool is_minus; // 数の符号
       bool is_integer; // 数の種別
       size_t size; // バッファサイズ計算用
