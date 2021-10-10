@@ -75,7 +75,9 @@ utf16_utf8_1 = /00[0-7][0-9A-F]/i;
 
 utf16_utf8_2 = /00[89A-F][0-9A-F]/i | /0[1-7][0-9A-F][0-9A-F]/i;
 
-utf16_utf8_3 = (/0[89A-F][0-9A-F][0-9A-F]/i | /[1-9A-F][0-9A-F][0-9A-F][0-9A-F]/i) - surrogate;
+utf16_utf8_3 =
+  ( /0[89A-F][0-9A-F][0-9A-F]/i
+  | /[1-9A-F][0-9A-F][0-9A-F][0-9A-F]/i) - surrogate;
 
 main :=
   "\\u"
