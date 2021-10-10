@@ -18,6 +18,42 @@ local function breakdown(abcd)
   return abc, a, b, c, d
 end
 
+local function range_regex(range)
+  local x = range[1]
+  local y = range[2]
+
+  assert(x <= y)
+
+  if x == y then
+    return ("%X"):format(x)
+  elseif x + 1 == y then
+    return ("[%X%X]"):format(x, y)
+  elseif x >= 10 or y <= 9 then
+    return ("[%X-%X]"):format(x, y)
+  end
+
+  local a = 9
+  local b = 10
+
+  local buffer = {}
+  if x == a then
+    buffer[#buffer + 1] = ("%X"):format(x)
+  elseif x + 1 == a then
+    buffer[#buffer + 1] = ("%X%X"):format(x, a)
+  else
+    buffer[#buffer + 1] = ("%X-%X"):format(x, a)
+  end
+  if b == y then
+    buffer[#buffer + 1] = ("%X"):format(b)
+  elseif b + 1 == y then
+    buffer[#buffer + 1] = ("%X%X"):format(b, y)
+  else
+    buffer[#buffer + 1] = ("%X-%X"):format(b, y)
+  end
+
+  return "[" .. table.concat(buffer) .. "]"
+end
+
 local function update(root, x, y)
   local range
 
@@ -32,7 +68,8 @@ local function update(root, x, y)
     end
 
     if abc ~= next_abc or abcd == y then
-      local regex = ("[%X-%X]"):format(range[1], range[2])
+      -- local regex = ("[%X-%X]"):format(range[1], range[2])
+      local regex = range_regex(range)
 
       if not root[a] then
         root[a] = {}
@@ -87,7 +124,8 @@ local function merge(root)
               for i = 1, #regex_map do
                 local cv = regex_map[i]
                 local range = range_map[cv.regex]
-                regex[i] = ("[%X-%X]%s"):format(range[1], range[2], cv.regex)
+                -- regex[i] = ("[%X-%X]%s"):format(range[1], range[2], cv.regex)
+                regex[i] = range_regex(range) .. cv.regex
               end
               if #regex == 1 then
                 bv.regex = regex[1]
@@ -107,7 +145,8 @@ local function merge(root)
         for i = 1, #regex_map do
           local bv = regex_map[i]
           local range = range_map[bv.regex]
-          regex[i] = merge_regex(bv.regex, ("[%X-%X]"):format(range[1], range[2]))
+          -- regex[i] = merge_regex(bv.regex, ("[%X-%X]"):format(range[1], range[2]))
+          regex[i] = merge_regex(bv.regex, range_regex(range))
         end
         if #regex == 1 then
           av.regex = regex[1]
@@ -127,7 +166,8 @@ local function merge(root)
   for i = 1, #regex_map do
     local av = regex_map[i]
     local range = range_map[av.regex]
-    regex[i] = merge_regex(av.regex, ("[%X-%X]"):format(range[1], range[2]))
+    -- regex[i] = merge_regex(av.regex, ("[%X-%X]"):format(range[1], range[2]))
+    regex[i] = merge_regex(av.regex, range_regex(range))
   end
   if #regex == 1 then
     root.regex = regex[1]
