@@ -42,6 +42,22 @@ namespace brigid {
         buffer.push_back(u3 | 0x80);
       }
 
+      action utf8_1_3 {
+        if (u <= 0x007F) {
+          buffer.push_back(u);
+        } else if (u <= 0x07FF) {
+          uint8_t u2 = u & 0x3F; u >>= 6;
+          buffer.push_back(u  | 0xC0);
+          buffer.push_back(u2 | 0x80);
+        } else { // u <= 0xFFF
+          uint8_t u3 = u & 0x3F; u >>= 6;
+          uint8_t u2 = u & 0x3F; u >>= 6;
+          buffer.push_back(u  | 0xE0);
+          buffer.push_back(u2 | 0x80);
+          buffer.push_back(u3 | 0x80);
+        }
+      }
+
       action utf8_4 {
         u = ((u >> 16) - 0xD800) << 10 | ((u & 0xFFFF) - 0xDC00) | 0x010000;
         uint8_t u4 = u & 0x3F; u >>= 6;
@@ -129,9 +145,9 @@ namespace brigid {
 
       unicode_escape_sequence =
         "\\u" @{ u = 0; }
-        ( (hex_quad & hex1) %utf8_1
-        | (hex_quad & hex2) %utf8_2
-        | (hex_quad & hex3) %utf8_3
+        ( (hex_quad & hex1) %utf8_1_3
+        | (hex_quad & hex2) %utf8_1_3
+        | (hex_quad & hex3) %utf8_1_3
         | (hex_quad & hex4h) "\\u" (hex_quad & hex4l) %utf8_4
         );
 
