@@ -64,6 +64,7 @@ namespace brigid {
         | 0xED 0x80..0x9F utf8_tail | 0xEE..0xEF utf8_tail{2}
         | 0xF0 0x90..0xBF utf8_tail{2} | 0xF1..0xF3 utf8_tail{3}
         | 0xF4 0x80..0x8F utf8_tail{2};
+      # TODO 制御文字は除く
       unescaped = utf8_char - [\\\"];
 
       escaped
