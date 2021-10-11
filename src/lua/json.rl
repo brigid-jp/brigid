@@ -166,6 +166,11 @@ namespace brigid {
       write data noerror nofinal noentry;
     }%%
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
+
     void impl_decode(lua_State* L) {
       data_t data = check_data(L, 1);
 
@@ -198,6 +203,10 @@ namespace brigid {
       out << "parser error at position " << (p - data.data() + 1);
       throw BRIGID_RUNTIME_ERROR(out.str());
     }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
   }
 
   void initialize_json(lua_State* L) {

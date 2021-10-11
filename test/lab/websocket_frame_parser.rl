@@ -84,6 +84,11 @@ namespace brigid {
       masking_key_[3] = '\0';
     }
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
+
     std::pair<parser_state, const char*> parse(const char* data, size_t size) {
       const char* p = data;
       const char* pe = data + size;
@@ -101,6 +106,10 @@ namespace brigid {
       }
       return std::make_pair(parser_state::running, p);
     }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
     size_t position() const {
       return position_;
