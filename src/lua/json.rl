@@ -12,9 +12,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-
-#include <sstream>
 #include <limits>
+#include <sstream>
 #include <type_traits>
 #include <vector>
 
@@ -150,7 +149,7 @@ namespace brigid {
 
       value =
         ( "false" @{ lua_pushboolean(L, false); }
-        | "null" @{ if (null_index < 0) { lua_pushnil(L); } else { lua_pushvalue(L, null_index); } }
+        | "null" @{ if (null_index) { lua_pushvalue(L, null_index); } else { lua_pushnil(L); } }
         | "true" @{ lua_pushboolean(L, true); }
         | "{" @{ lua_newtable(L); fcall object; }
         | "[" @{ lua_newtable(L); n.push_back(0); fcall array; }
@@ -177,12 +176,12 @@ namespace brigid {
 
       const char* p = data.data();
       const char* pe = p + data.size();
-      const char* eof = pe;
+      const char* const eof = pe;
       std::vector<int> stack; stack.reserve(16);
 
       const char* ps = nullptr;
       std::vector<char> buffer;
-      int null_index = lua_gettop(L) >= 2 ? 2 : -1;
+      const int null_index = lua_gettop(L) >= 2 ? 2 : 0;
       std::vector<lua_Integer> n; // array index
       lua_unsigned_t v = 0;       // integer
       lua_unsigned_t is_neg = 0;  // number is negative
