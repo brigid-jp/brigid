@@ -154,7 +154,7 @@ function suite:test_json_decode_string2()
 end
 
 function suite:test_json_decode_string3()
-  assert(equal(brigid.json.decode [["foo\"\\\/\b\f\n\r\tbar"]], "foo\"\\\/\b\f\n\r\tbar"))
+  assert(equal(brigid.json.decode [["foo\"\\\/\b\f\n\r\tbar"]], "foo\"\\/\b\f\n\r\tbar"))
 end
 
 function suite:test_json_decode_string_rfc8259()
@@ -212,6 +212,47 @@ function suite:test_json_decode_number3()
   assert(equal(brigid.json.decode "-6900.0", -6900))
   assert(equal(brigid.json.decode "-69.0e2", -6900))
   assert(equal(brigid.json.decode "-69e2", -6900))
+end
+
+function suite:test_json_decode_integer1()
+  if not math.type then
+    return test_skip()
+  end
+
+  local v = brigid.json.decode "42"
+  assert(math.type(v) == "integer")
+  assert(42)
+
+  local s = ("%d"):format(math.maxinteger)
+  local v = brigid.json.decode(s)
+  assert(math.type(v) == "integer")
+  assert(v == math.maxinteger)
+end
+
+function suite:test_json_decode_integer2()
+  if not math.type or math.maxinteger ~= 0x7FFFFFFFFFFFFFFF then
+    return test_skip()
+  end
+
+  local v = brigid.json.decode "9223372036854775807"
+  assert(math.type(v) == "integer")
+  assert(v == 0x7FFFFFFFFFFFFFFF)
+
+  local v = brigid.json.decode "-9223372036854775808"
+  assert(math.type(v) == "integer")
+  assert(v == 0x8000000000000000)
+end
+
+function suite:test_json_decode_integer3()
+  if not math.type or math.maxinteger ~= 0x7FFFFFFFFFFFFFFF then
+    return test_skip()
+  end
+
+  local v = brigid.json.decode "9223372036854775808"
+  assert(math.type(v) == "float")
+
+  local v = brigid.json.decode "-9223372036854775809"
+  assert(math.type(v) == "float")
 end
 
 return suite
