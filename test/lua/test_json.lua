@@ -32,6 +32,9 @@ end
 
 function suite:test_json_decode_value2()
   assert(equal(brigid.json.decode "null", nil))
+  assert(equal(brigid.json.decode("null", nil), nil))
+  assert(equal(brigid.json.decode("null", false), false))
+  assert(equal(brigid.json.decode("null", "null"), "null"))
 end
 
 function suite:test_json_decode_value3()
@@ -142,6 +145,45 @@ function suite:test_json_decode_rfc8259_2()
   assert(equal(brigid.json.decode(source), expect))
 end
 
+local source = [[
+[ 11, 12, [ 21, 22, [ 31, 32, 33, 34 ], 23, 24 ], 33, 34 ]
+]]
+
+local expect = {
+  11, 12, { 21, 22, { 31, 32, 33, 34 }, 23, 24 }, 33, 34
+}
+
+function suite:test_json_decode_array1()
+  assert(equal(brigid.json.decode(source), expect))
+end
+
+local source = [[
+[ 1, null, 3, null, 5 ]
+]]
+
+local expect = {
+  [1] = 1;
+  [3] = 3;
+  [5] = 5;
+}
+
+function suite:test_json_decode_array2()
+  assert(equal(brigid.json.decode(source), expect))
+  assert(equal(brigid.json.decode(source, nil), expect))
+end
+
+function suite:test_json_decode_array3()
+  local result = brigid.json.decode(source, false)
+  assert(equal(result, { 1, false, 3, false, 5 }))
+  assert(#result == 5)
+end
+
+function suite:test_json_decode_array4()
+  local result = brigid.json.decode(source, "")
+  assert(equal(result, { 1, "", 3, "", 5 }))
+  assert(#result == 5)
+end
+
 function suite:test_json_decode_string1()
   assert(equal(brigid.json.decode [["\u0001\u0000\u0002"]], "\1\0\2"))
 end
@@ -154,7 +196,7 @@ function suite:test_json_decode_string2()
 end
 
 function suite:test_json_decode_string3()
-  assert(equal(brigid.json.decode [["foo\"\\\/\b\f\n\r\tbar"]], "foo\"\\\/\b\f\n\r\tbar"))
+  assert(equal(brigid.json.decode [["foo\"\\\/\b\f\n\r\tbar"]], "foo\"\\/\b\f\n\r\tbar"))
 end
 
 function suite:test_json_decode_string_rfc8259()
@@ -212,6 +254,65 @@ function suite:test_json_decode_number3()
   assert(equal(brigid.json.decode "-6900.0", -6900))
   assert(equal(brigid.json.decode "-69.0e2", -6900))
   assert(equal(brigid.json.decode "-69e2", -6900))
+end
+
+function suite:test_json_decode_integer1()
+  if not math.type then
+    return test_skip()
+  end
+
+  local v = brigid.json.decode "42"
+  assert(math.type(v) == "integer")
+  assert(42)
+
+  local s = ("%d"):format(math.maxinteger)
+  local v = brigid.json.decode(s)
+  assert(math.type(v) == "integer")
+  assert(v == math.maxinteger)
+end
+
+function suite:test_json_decode_integer2()
+  if not math.type or math.maxinteger ~= 0x7FFFFFFFFFFFFFFF then
+    return test_skip()
+  end
+
+  local v = brigid.json.decode "9223372036854775807"
+  assert(math.type(v) == "integer")
+  assert(v == 0x7FFFFFFFFFFFFFFF)
+
+  local v = brigid.json.decode "-9223372036854775808"
+  assert(math.type(v) == "integer")
+  assert(v == 0x8000000000000000)
+end
+
+function suite:test_json_decode_integer3()
+  if not math.type or math.maxinteger ~= 0x7FFFFFFFFFFFFFFF then
+    return test_skip()
+  end
+
+  local v = brigid.json.decode "9223372036854775808"
+  assert(math.type(v) == "float")
+
+  local v = brigid.json.decode "-9223372036854775809"
+  assert(math.type(v) == "float")
+end
+
+function suite:test_json_decode_error1()
+  local result, message = brigid.json.decode " { "
+  print(message)
+  assert(not result)
+end
+
+function suite:test_json_decode_error2()
+  local result, message = brigid.json.decode " { {} } "
+  print(message)
+  assert(not result)
+end
+
+function suite:test_json_decode_error3()
+  local result, message = brigid.json.decode " [ nan ] "
+  print(message)
+  assert(not result)
 end
 
 return suite
