@@ -32,6 +32,9 @@ end
 
 function suite:test_json_decode_value2()
   assert(equal(brigid.json.decode "null", nil))
+  assert(equal(brigid.json.decode("null", nil), nil))
+  assert(equal(brigid.json.decode("null", false), false))
+  assert(equal(brigid.json.decode("null", "null"), "null"))
 end
 
 function suite:test_json_decode_value3()
@@ -150,8 +153,35 @@ local expect = {
   11, 12, { 21, 22, { 31, 32, 33, 34 }, 23, 24 }, 33, 34
 }
 
-function suite:test_json_decode_array()
+function suite:test_json_decode_array1()
   assert(equal(brigid.json.decode(source), expect))
+end
+
+local source = [[
+[ 1, null, 3, null, 5 ]
+]]
+
+local expect = {
+  [1] = 1;
+  [3] = 3;
+  [5] = 5;
+}
+
+function suite:test_json_decode_array2()
+  assert(equal(brigid.json.decode(source), expect))
+  assert(equal(brigid.json.decode(source, nil), expect))
+end
+
+function suite:test_json_decode_array3()
+  local result = brigid.json.decode(source, false)
+  assert(equal(result, { 1, false, 3, false, 5 }))
+  assert(#result == 5)
+end
+
+function suite:test_json_decode_array4()
+  local result = brigid.json.decode(source, "")
+  assert(equal(result, { 1, "", 3, "", 5 }))
+  assert(#result == 5)
 end
 
 function suite:test_json_decode_string1()
