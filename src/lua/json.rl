@@ -42,6 +42,22 @@ namespace brigid {
         buffer.push_back(u3 | 0x80);
       }
 
+      action utf8_1_3 {
+        if (u <= 0x007F) {
+          buffer.push_back(u);
+        } else if (u <= 0x07FF) {
+          uint8_t u2 = u & 0x3F; u >>= 6;
+          buffer.push_back(u  | 0xC0);
+          buffer.push_back(u2 | 0x80);
+        } else { // u <= 0xFFF
+          uint8_t u3 = u & 0x3F; u >>= 6;
+          uint8_t u2 = u & 0x3F; u >>= 6;
+          buffer.push_back(u  | 0xE0);
+          buffer.push_back(u2 | 0x80);
+          buffer.push_back(u3 | 0x80);
+        }
+      }
+
       action utf8_4 {
         u = ((u >> 16) - 0xD800) << 10 | ((u & 0xFFFF) - 0xDC00) | 0x010000;
         uint8_t u4 = u & 0x3F; u >>= 6;
@@ -85,7 +101,7 @@ namespace brigid {
               }
             };
 
-      unescaped =
+      unescaped_ =
         # UTF8-1
         ( 0x20 | 0x21 | 0x23..0x5B | 0x5D..0x7F
         # UTF8-2
@@ -97,6 +113,8 @@ namespace brigid {
         | 0xF0 0x90..0xBF 0x80..0xBF{2} | 0xF1..0xF3 0x80..0xBF{3}
         | 0xF4 0x80..0x8F 0x80..0xBF{2}
         );
+
+      unescaped = (0x20 | 0x21 | 0x23..0x5B | 0x5D..0x7F | 0x80..0xFF);
 
       hex_quad =
         ( [0-9] @{ u <<= 4; u |= fc - '0'; }
@@ -129,9 +147,9 @@ namespace brigid {
 
       unicode_escape_sequence =
         "\\u" @{ u = 0; }
-        ( (hex_quad & hex1) %utf8_1
-        | (hex_quad & hex2) %utf8_2
-        | (hex_quad & hex3) %utf8_3
+        ( (hex_quad & hex1) %utf8_1_3
+        | (hex_quad & hex2) %utf8_1_3
+        | (hex_quad & hex3) %utf8_1_3
         | (hex_quad & hex4h) "\\u" (hex_quad & hex4l) %utf8_4
         );
 
@@ -147,23 +165,24 @@ namespace brigid {
         | unicode_escape_sequence
         );
 
-      string
-        = "\"" %{ ps = p; }
-          ( "\"" @{ lua_pushlstring(L, ps, 0); }
+      string_ :=
+          ( "\"" @{ lua_pushlstring(L, ps, 0); fret; }
           | unescaped+
-            ( "\"" @{ lua_pushlstring(L, ps, p - ps); }
+            ( "\"" @{ lua_pushlstring(L, ps, p - ps); fret; }
             | escape_sequence >{ size = p - ps; buffer.resize(size); memcpy(buffer.data(), ps, size); }
               ( escape_sequence
               | unescaped ${ buffer.push_back(fc); }
               )*
-              "\"" @{ lua_pushlstring(L, buffer.data(), buffer.size()); }
+              "\"" @{ lua_pushlstring(L, buffer.data(), buffer.size()); fret; }
             )
           | escape_sequence >{ buffer.clear(); }
             ( escape_sequence
             | unescaped ${ buffer.push_back(fc); }
             )*
-            "\"" @{ lua_pushlstring(L, buffer.data(), buffer.size()); }
+            "\"" @{ lua_pushlstring(L, buffer.data(), buffer.size()); fret; }
           );
+
+      string = "\"" @{ ps = p; fcall string_; };
 
       value
         = "false" @{ lua_pushboolean(L, false); }
@@ -194,12 +213,13 @@ namespace brigid {
       const char* p = data.data();
       const char* pe = p + data.size();
       const char* eof = pe;
-      std::vector<int> stack; // TODO reserve
+      std::vector<int> stack;
+      stack.reserve(16);
 
       const char* ps; // 先頭ポインタの保存
       lua_Integer n; // arrayのインデックス
       lua_Integer v; // 整数の保持
-      std::vector<char> buffer; // TODO reserve
+      std::vector<char> buffer; // reserveしない
       bool is_minus; // 数の符号
       bool is_integer; // 数の種別
       size_t size; // バッファサイズ計算用
