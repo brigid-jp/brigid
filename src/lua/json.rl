@@ -5,24 +5,24 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/error.hpp>
-#include <brigid/noncopyable.hpp>
 #include "common.hpp"
 #include "data.hpp"
 
 #include <lua.hpp>
 
 #include <stdlib.h>
-#include <iostream>
+#include <string.h>
+
+#include <sstream>
 #include <limits>
 #include <type_traits>
-#include <utility>
 #include <vector>
 
 namespace brigid {
   namespace {
     using lua_unsigned_t = std::make_unsigned<lua_Integer>::type;
-    static const lua_unsigned_t max_integer_div10 = std::numeric_limits<lua_Integer>::max() / 10;
-    static const lua_unsigned_t max_integer_mod10 = std::numeric_limits<lua_Integer>::max() % 10;
+    static const lua_unsigned_t integer_max_div10 = std::numeric_limits<lua_Integer>::max() / 10;
+    static const lua_unsigned_t integer_max_mod10 = std::numeric_limits<lua_Integer>::max() % 10;
 
     %%{
       machine json_parser;
@@ -39,7 +39,7 @@ namespace brigid {
             digit*
               ${
                 lua_unsigned_t u = fc - '0';
-                if (v > max_integer_div10 || (v == max_integer_div10 && u > max_integer_mod10 + is_neg)) {
+                if (v > integer_max_div10 || (v == integer_max_div10 && u > integer_max_mod10 + is_neg)) {
                   is_int = false;
                 } else {
                   v *= 10;
@@ -153,15 +153,15 @@ namespace brigid {
         | "null" @{ lua_pushnil(L); }
         | "true" @{ lua_pushboolean(L, true); }
         | "{" @{ lua_newtable(L); fcall object; }
-        | "[" @{ lua_newtable(L); n = 0; fcall array; }
+        | "[" @{ lua_newtable(L); n.push_back(0); fcall array; }
         | number
         | string
         );
 
       member = ws string ws ":" ws value %{ lua_settable(L, -3); };
       object := (member (ws "," member)*)? ws "}" @{ fret; };
-      element = ws value >{ lua_pushinteger(L, ++n); } %{ lua_settable(L, -3); };
-      array := (element (ws "," element)*)? ws "]" @{ fret; };
+      element = ws value >{ lua_pushinteger(L, ++n.back()); } %{ lua_settable(L, -3); };
+      array := (element (ws "," element)*)? ws "]" @{ n.pop_back(); fret; };
       main := ws value ws;
 
       write data noerror nofinal noentry;
@@ -182,11 +182,11 @@ namespace brigid {
 
       const char* ps = nullptr;
       std::vector<char> buffer;
-      lua_Integer n = 0;         // array index
-      lua_unsigned_t v = 0;      // integer
-      lua_unsigned_t is_neg = 0; // number is negative
-      bool is_int = false;       // number is integer
-      uint32_t u = 0;            // unicode escape sequence
+      std::vector<lua_Integer> n; // array index
+      lua_unsigned_t v = 0;       // integer
+      lua_unsigned_t is_neg = 0;  // number is negative
+      bool is_int = false;        // number is integer
+      uint32_t u = 0;             // unicode escape sequence
 
       %%write exec;
 
@@ -199,13 +199,6 @@ namespace brigid {
   }
 
   void initialize_json(lua_State* L) {
-    try {
-
-    } catch (const std::exception& e) {
-      luaL_error(L, "%s", e.what());
-      return;
-    }
-
     lua_newtable(L);
     {
       set_field(L, -1, "decode", impl_decode);

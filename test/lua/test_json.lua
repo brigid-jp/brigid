@@ -142,6 +142,18 @@ function suite:test_json_decode_rfc8259_2()
   assert(equal(brigid.json.decode(source), expect))
 end
 
+local source = [[
+[ 11, 12, [ 21, 22, [ 31, 32, 33, 34 ], 23, 24 ], 33, 34 ]
+]]
+
+local expect = {
+  11, 12, { 21, 22, { 31, 32, 33, 34 }, 23, 24 }, 33, 34
+}
+
+function suite:test_json_decode_array()
+  assert(equal(brigid.json.decode(source), expect))
+end
+
 function suite:test_json_decode_string1()
   assert(equal(brigid.json.decode [["\u0001\u0000\u0002"]], "\1\0\2"))
 end
