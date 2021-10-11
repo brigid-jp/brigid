@@ -38,6 +38,16 @@ function suite:test_json_decode5()
   print(r, type(r))
 end
 
+function suite:test_json_number1()
+  local r = brigid.json.decode [[0]]
+  assert(r == 0)
+end
+
+function suite:test_json_number2()
+  local r = brigid.json.decode [[-42]]
+  assert(r == -42)
+end
+
 function suite:test_json_string1()
   local r = brigid.json.decode [["\u0001\u0000\u0002"]]
   assert(r == "\1\0\2")
