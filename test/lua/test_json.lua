@@ -297,4 +297,22 @@ function suite:test_json_decode_integer3()
   assert(math.type(v) == "float")
 end
 
+function suite:test_json_decode_error1()
+  local result, message = brigid.json.decode " { "
+  print(message)
+  assert(not result)
+end
+
+function suite:test_json_decode_error2()
+  local result, message = brigid.json.decode " { {} } "
+  print(message)
+  assert(not result)
+end
+
+function suite:test_json_decode_error3()
+  local result, message = brigid.json.decode " [ nan ] "
+  print(message)
+  assert(not result)
+end
+
 return suite

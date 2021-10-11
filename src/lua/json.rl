@@ -191,11 +191,13 @@ namespace brigid {
 
       %%write exec;
 
-      if (cs < %%{ write first_final; }%% || !stack.empty()) {
-        std::ostringstream out;
-        out << "parser error at position " << (p - data.data());
-        throw BRIGID_RUNTIME_ERROR(out.str());
+      if (cs >= %%{ write first_final; }%% && stack.empty()) {
+        return;
       }
+
+      std::ostringstream out;
+      out << "parser error at position " << (p - data.data() + 1);
+      throw BRIGID_RUNTIME_ERROR(out.str());
     }
   }
 
