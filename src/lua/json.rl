@@ -101,19 +101,6 @@ namespace brigid {
               }
             };
 
-      unescaped_ =
-        # UTF8-1
-        ( 0x20 | 0x21 | 0x23..0x5B | 0x5D..0x7F
-        # UTF8-2
-        | 0xC2..0xDF 0x80..0xBF
-        # UTF8-3
-        | 0xE0 0xA0..0xBF 0x80..0xBF | 0xE1..0xEC 0x80..0xBF{2}
-        | 0xED 0x80..0x9F 0x80..0xBF | 0xEE..0xEF 0x80..0xBF{2}
-        # UTF8-4
-        | 0xF0 0x90..0xBF 0x80..0xBF{2} | 0xF1..0xF3 0x80..0xBF{3}
-        | 0xF4 0x80..0x8F 0x80..0xBF{2}
-        );
-
       unescaped = (0x20 | 0x21 | 0x23..0x5B | 0x5D..0x7F | 0x80..0xFF);
 
       hex_quad =
@@ -122,35 +109,36 @@ namespace brigid {
         | [a-f] @{ u <<= 4; u |= fc - 'a' + 10; }
         ){4};
 
-      # U+0000..U+007F
-      hex1 = /00[0-7][0-9A-F]/i;
-
-      # U+0080..U+07FF
-      hex2 =
-        ( /00[89A-F][0-9A-F]/i
-        | /0[1-7][0-9A-F][0-9A-F]/i
-        );
-
-      # U+0800..U+D7FF, U+E000..U+FFFF
-      hex3 =
-        ( /0[89A-F][0-9A-F][0-9A-F]/i
-        | /[1-9A-C][0-9A-F][0-9A-F][0-9A-F]/i
-        | /D[0-7][0-9A-F][0-9A-F]/i
-        | /[EF][0-9A-F][0-9A-F][0-9A-F]/i
-        );
-
-      # U+D800..U+DBFF
-      hex4h = /D[89AB][0-9A-F][0-9A-F]/i;
-
-      # U+DC00..U+DFFF
-      hex4l = /D[C-F][0-9A-F][0-9A-F]/i;
-
       unicode_escape_sequence =
         "\\u" @{ u = 0; }
-        ( (hex_quad & hex1) %utf8_1_3
-        | (hex_quad & hex2) %utf8_1_3
-        | (hex_quad & hex3) %utf8_1_3
-        | (hex_quad & hex4h) "\\u" (hex_quad & hex4l) %utf8_4
+        ( (hex_quad & (xdigit{4} - (/D[89A-F]/i xdigit{2})))
+            %{
+              if (u <= 0x007F) {
+                buffer.push_back(u);
+              } else if (u <= 0x07FF) {
+                uint8_t u2 = u & 0x3F; u >>= 6;
+                buffer.push_back(u  | 0xC0);
+                buffer.push_back(u2 | 0x80);
+              } else {
+                uint8_t u3 = u & 0x3F; u >>= 6;
+                uint8_t u2 = u & 0x3F; u >>= 6;
+                buffer.push_back(u  | 0xE0);
+                buffer.push_back(u2 | 0x80);
+                buffer.push_back(u3 | 0x80);
+              }
+            }
+          |
+          ((hex_quad & (/D[89A-D]/i xdigit{2})) "\\u" (hex_quad & /D[C-F]/i xdigit{2}))
+            %{
+              u = ((u >> 16) - 0xD800) << 10 | ((u & 0xFFFF) - 0xDC00) | 0x010000;
+              uint8_t u4 = u & 0x3F; u >>= 6;
+              uint8_t u3 = u & 0x3F; u >>= 6;
+              uint8_t u2 = u & 0x3F; u >>= 6;
+              buffer.push_back(u  | 0xF0);
+              buffer.push_back(u2 | 0x80);
+              buffer.push_back(u3 | 0x80);
+              buffer.push_back(u4 | 0x80);
+            }
         );
 
       escape_sequence =
@@ -165,7 +153,7 @@ namespace brigid {
         | unicode_escape_sequence
         );
 
-      string_ :=
+      string_impl :=
           ( "\"" @{ lua_pushlstring(L, ps, 0); fret; }
           | unescaped+
             ( "\"" @{ lua_pushlstring(L, ps, p - ps); fret; }
@@ -182,7 +170,7 @@ namespace brigid {
             "\"" @{ lua_pushlstring(L, buffer.data(), buffer.size()); fret; }
           );
 
-      string = "\"" @{ ps = p; fcall string_; };
+      string = "\"" @{ ps = p; fcall string_impl; };
 
       value
         = "false" @{ lua_pushboolean(L, false); }
