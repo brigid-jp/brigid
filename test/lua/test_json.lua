@@ -142,8 +142,19 @@ function suite:test_json_decode_rfc8259_2()
   assert(equal(brigid.json.decode(source), expect))
 end
 
-function suite:test_json_decode_string()
+function suite:test_json_decode_string1()
   assert(equal(brigid.json.decode [["\u0001\u0000\u0002"]], "\1\0\2"))
+end
+
+function suite:test_json_decode_string2()
+  assert(equal(brigid.json.decode [["あいうえお"]], "あいうえお"))
+  assert(equal(brigid.json.decode [["あいうえお" ]], "あいうえお"))
+  assert(equal(brigid.json.decode [[ "あいうえお"]], "あいうえお"))
+  assert(equal(brigid.json.decode [[ "あいうえお" ]], "あいうえお"))
+end
+
+function suite:test_json_decode_string3()
+  assert(equal(brigid.json.decode [["foo\"\\\/\b\f\n\r\tbar"]], "foo\"\\\/\b\f\n\r\tbar"))
 end
 
 function suite:test_json_decode_string_rfc8259()
@@ -168,6 +179,39 @@ function suite:test_json_decode_string_rfc3629_3()
   local expect = string.char(0xE6, 0x97, 0xA5, 0xE6, 0x9C, 0xAC, 0xE8, 0xAA, 0x9E)
   assert(equal(brigid.json.decode [["\u65E5\u672C\u8A9E"]], expect))
   assert(equal(brigid.json.decode [["\u65e5\u672c\u8a9e"]], expect))
+end
+
+function suite:test_json_decode_number1()
+  assert(equal(brigid.json.decode "0", 0))
+  assert(equal(brigid.json.decode "0.0", 0))
+  assert(equal(brigid.json.decode "0.0e0", 0))
+  assert(equal(brigid.json.decode "0e0", 0))
+  assert(equal(brigid.json.decode "-0", 0))
+  assert(equal(brigid.json.decode "-0.0", 0))
+  assert(equal(brigid.json.decode "-0.0e0", 0))
+  assert(equal(brigid.json.decode "-0e0", 0))
+end
+
+function suite:test_json_decode_number2()
+  assert(equal(brigid.json.decode "42", 42))
+  assert(equal(brigid.json.decode "42.0", 42))
+  assert(equal(brigid.json.decode "42.0e0", 42))
+  assert(equal(brigid.json.decode "42e0", 42))
+  assert(equal(brigid.json.decode "-42", -42))
+  assert(equal(brigid.json.decode "-42.0", -42))
+  assert(equal(brigid.json.decode "-42.0e0", -42))
+  assert(equal(brigid.json.decode "-42e0", -42))
+end
+
+function suite:test_json_decode_number3()
+  assert(equal(brigid.json.decode "6900", 6900))
+  assert(equal(brigid.json.decode "6900.0", 6900))
+  assert(equal(brigid.json.decode "69.0e2", 6900))
+  assert(equal(brigid.json.decode "69e2", 6900))
+  assert(equal(brigid.json.decode "-6900", -6900))
+  assert(equal(brigid.json.decode "-6900.0", -6900))
+  assert(equal(brigid.json.decode "-69.0e2", -6900))
+  assert(equal(brigid.json.decode "-69e2", -6900))
 end
 
 return suite

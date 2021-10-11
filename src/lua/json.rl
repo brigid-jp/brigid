@@ -209,7 +209,6 @@ namespace brigid {
     lua_newtable(L);
     {
       set_field(L, -1, "decode", impl_decode);
-      // set_field(L, -1, "update_locale", impl_update_locale);
     }
     set_field(L, -2, "json");
   }
