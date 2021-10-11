@@ -34,7 +34,7 @@ namespace brigid {
 
       number =
         ( "-"? @{ is_neg = 1; }
-          ( "0"   @{ v = 0; }
+          ( "0" @{ v = 0; }
           | [1-9] @{ v = fc - '0'; }
             digit*
               ${
@@ -50,7 +50,7 @@ namespace brigid {
           ("." digit+)? @{ is_int = false; }
           ([eE] [+\-]? digit+)? @{ is_int = false; }
         ) >{
-            ps = p;
+            ps = fpc;
             is_neg = 0;
             is_int = true;
           }
@@ -62,19 +62,22 @@ namespace brigid {
                 lua_pushinteger(L, v);
               }
             } else {
-              size_t size = p - ps;
+              size_t size = fpc - ps;
               buffer.resize(size + 1);
-              memcpy(buffer.data(), ps, size);
-              buffer[size] = '\0';
+              char* ptr = buffer.data();
               char* end = nullptr;
-              double u = strtod(buffer.data(), &end);
-              // TODO locale check
-              // TODO error check
+              memcpy(ptr, ps, size);
+              ptr[size] = '\0';
+              double u = strtod(ptr, &end);
+              if (end != ptr + size) {
+                // You may try to translate '.' to ',' if locale is de_DE
+                throw BRIGID_RUNTIME_ERROR("cannot strtod");
+              }
               lua_pushnumber(L, u);
             }
           };
 
-      unescaped = (0x20 | 0x21 | 0x23..0x5B | 0x5D..0x7F | 0x80..0xFF);
+      unescaped = 0x20 | 0x21 | 0x23..0x5B | 0x5D..0x7F | 0x80..0xFF;
 
       hex_quad =
         ( [0-9] @{ u <<= 4; u |= fc - '0'; }
@@ -129,8 +132,8 @@ namespace brigid {
       string_impl :=
         ( "\"" @{ lua_pushlstring(L, ps, 0); fret; }
         | unescaped+
-          ( "\"" @{ lua_pushlstring(L, ps, p - ps); fret; }
-          | escape_sequence >{ size_t size = p - ps; buffer.resize(size); memcpy(buffer.data(), ps, size); }
+          ( "\"" @{ lua_pushlstring(L, ps, fpc - ps); fret; }
+          | escape_sequence >{ size_t size = fpc - ps; buffer.resize(size); memcpy(buffer.data(), ps, size); }
             ( escape_sequence
             | unescaped ${ buffer.push_back(fc); }
             )*
@@ -143,7 +146,7 @@ namespace brigid {
           "\"" @{ lua_pushlstring(L, buffer.data(), buffer.size()); fret; }
         );
 
-      string = "\"" @{ ps = p; fcall string_impl; };
+      string = "\"" @{ ps = fpc + 1; fcall string_impl; };
 
       value =
         ( "false" @{ lua_pushboolean(L, false); }
@@ -164,12 +167,12 @@ namespace brigid {
       write data noerror nofinal noentry;
     }%%
 
-
     void impl_decode(lua_State* L) {
       data_t data = check_data(L, 1);
 
       int cs = 0;
       int top = 0;
+
       %%write init;
 
       const char* p = data.data();
@@ -180,22 +183,29 @@ namespace brigid {
       const char* ps = nullptr;
       std::vector<char> buffer;
       lua_Integer n = 0;         // array index
-      lua_unsigned_t v = 0;      // integer value
+      lua_unsigned_t v = 0;      // integer
       lua_unsigned_t is_neg = 0; // number is negative
       bool is_int = false;       // number is integer
-      uint32_t u = 0;            // unicode character sequence
+      uint32_t u = 0;            // unicode escape sequence
 
       %%write exec;
 
-      if (cs >= %%{ write first_final; }%%) {
-        // check stack size == 1
-      } else {
-        // throw error
+      if (cs < %%{ write first_final; }%% || !stack.empty()) {
+        std::ostringstream out;
+        out << "parser error at position " << (p - data.data());
+        throw BRIGID_RUNTIME_ERROR(out.str());
       }
     }
   }
 
   void initialize_json(lua_State* L) {
+    try {
+
+    } catch (const std::exception& e) {
+      luaL_error(L, "%s", e.what());
+      return;
+    }
+
     lua_newtable(L);
     {
       set_field(L, -1, "decode", impl_decode);
