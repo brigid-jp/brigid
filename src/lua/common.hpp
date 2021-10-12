@@ -32,7 +32,6 @@ namespace brigid {
   int get_table(lua_State*, int);
   void new_metatable(lua_State*, const char*);
   void set_metatable(lua_State*, const char*);
-  void* test_udata_impl(lua_State*, int, const char*);
   bool is_false(lua_State*, int);
 
   void push(lua_State*, lua_Integer);
@@ -82,11 +81,6 @@ namespace brigid {
   template <class T>
   inline T* check_udata(lua_State* L, int arg, const char* name) {
     return static_cast<T*>(luaL_checkudata(L, arg, name));
-  }
-
-  template <class T>
-  inline T* test_udata(lua_State* L, int index, const char* name) {
-    return static_cast<T*>(test_udata_impl(L, index, name));
   }
 
   template <class T>

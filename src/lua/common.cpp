@@ -98,23 +98,6 @@ namespace brigid {
 #endif
   }
 
-  void* test_udata_impl(lua_State* L, int index, const char* name) {
-#if LUA_VERSION_NUM >= 502
-    return luaL_testudata(L, index, name);
-#else
-    stack_guard guard(L);
-    if (void* data = lua_touserdata(L, index)) {
-      if (lua_getmetatable(L, index)) {
-        luaL_getmetatable(L, name);
-        if (lua_rawequal(L, -1, -2)) {
-          return data;
-        }
-      }
-    }
-    return nullptr;
-#endif
-  }
-
   bool is_false(lua_State* L, int index) {
     return lua_isboolean(L, index) && !lua_toboolean(L, index);
   }
