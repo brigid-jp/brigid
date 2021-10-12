@@ -11,6 +11,14 @@
 #include <string>
 
 namespace brigid {
+  class abstract_data_t {
+  public:
+    virtual ~abstract_data_t() = 0;
+    virtual bool closed() const = 0;
+    virtual const char* data() const = 0;
+    virtual size_t size() const = 0;
+  };
+
   class data_t {
   public:
     data_t();

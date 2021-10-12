@@ -6,19 +6,20 @@
 #define BRIGID_VIEW_HPP
 
 #include <brigid/noncopyable.hpp>
+#include "data.hpp"
 
 #include <lua.hpp>
 
 #include <stddef.h>
 
 namespace brigid {
-  class view_t : private noncopyable {
+  class view_t : public abstract_data_t, private noncopyable {
   public:
     view_t(const char*, size_t);
+    virtual bool closed() const;
+    virtual const char* data() const;
+    virtual size_t size() const;
     void close();
-    bool closed() const;
-    const char* data() const;
-    size_t size() const;
   private:
     const char* data_;
     size_t size_;
