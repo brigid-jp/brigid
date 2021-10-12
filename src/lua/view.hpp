@@ -26,8 +26,6 @@ namespace brigid {
   };
 
   view_t* new_view(lua_State*, const char*, size_t);
-  view_t* check_view(lua_State*, int);
-  view_t* test_view(lua_State*, int);
 }
 
 #endif

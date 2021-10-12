@@ -33,15 +33,15 @@ namespace brigid {
         return buffer_.size();
       }
 
+      void close() {
+        buffer_.clear();
+        closed_ = true;
+      }
+
       void write(const char* data, size_t size) {
         size_t position = buffer_.size();
         buffer_.resize(position + size);
         memcpy(buffer_.data() + position, data, size);
-      }
-
-      void close() {
-        buffer_.clear();
-        closed_ = true;
       }
 
     private:
@@ -73,17 +73,6 @@ namespace brigid {
       new_userdata<data_writer_t>(L, "brigid.data_writer");
     }
 
-    void impl_write(lua_State* L) {
-      data_writer_t* self = check_data_writer(L, 1);
-      data_t data = check_data(L, 2);
-      self->write(data.data(), data.size());
-    }
-
-    void impl_get_string(lua_State* L) {
-      data_writer_t* self = check_data_writer(L, 1);
-      push(L, self->data(), self->size());
-    }
-
     void impl_get_pointer(lua_State* L) {
       data_writer_t* self = check_data_writer(L, 1);
       get_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
@@ -96,6 +85,17 @@ namespace brigid {
     void impl_get_size(lua_State* L) {
       data_writer_t* self = check_data_writer(L, 1);
       push(L, self->size());
+    }
+
+    void impl_get_string(lua_State* L) {
+      data_writer_t* self = check_data_writer(L, 1);
+      push(L, self->data(), self->size());
+    }
+
+    void impl_write(lua_State* L) {
+      data_writer_t* self = check_data_writer(L, 1);
+      data_t data = check_data(L, 2);
+      self->write(data.data(), data.size());
     }
   }
 
@@ -110,11 +110,11 @@ namespace brigid {
       lua_pop(L, 1);
 
       set_metafield(L, -1, "__call", impl_call);
-      set_field(L, -1, "write", impl_write);
-      set_field(L, -1, "get_string", impl_get_string);
       set_field(L, -1, "get_pointer", impl_get_pointer);
       set_field(L, -1, "get_size", impl_get_size);
       set_field(L, -1, "close", impl_close);
+      set_field(L, -1, "get_string", impl_get_string);
+      set_field(L, -1, "write", impl_write);
     }
     set_field(L, -2, "data_writer");
   }
