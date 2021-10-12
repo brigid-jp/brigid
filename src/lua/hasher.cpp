@@ -107,7 +107,7 @@ namespace brigid {
 
     lua_newtable(L);
     {
-      luaL_newmetatable(L, "brigid.hasher");
+      new_metatable(L, "brigid.hasher");
       lua_pushvalue(L, -2);
       set_field(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);

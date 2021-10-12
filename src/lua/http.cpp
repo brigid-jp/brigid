@@ -270,7 +270,7 @@ namespace brigid {
 
     lua_newtable(L);
     {
-      luaL_newmetatable(L, "brigid.http_session");
+      new_metatable(L, "brigid.http_session");
       lua_pushvalue(L, -2);
       set_field(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);

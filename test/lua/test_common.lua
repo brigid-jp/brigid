@@ -56,6 +56,24 @@ function suite:test_love()
   assert(data == ffi_data)
 end
 
+function suite:test_metatable1()
+  local data_writer = brigid.data_writer()
+  local metatable = getmetatable(data_writer)
+  for k, v in pairs(metatable) do
+    print(k, v)
+  end
+  assert(metatable.__name == "brigid.data_writer")
+end
+
+function suite:test_metatable2()
+  for k, v in pairs(registry) do
+    if type(k) == "string" and k:find "^brigid%." and type(v) == "table" then
+      print(k, v, v.__name)
+      assert(k == v.__name)
+    end
+  end
+end
+
 function suite:test_ffi()
   local ffi
   pcall(function ()

@@ -1,4 +1,4 @@
-// Copyright (c) 2019,2020 <dev@brigid.jp>
+// Copyright (c) 2019-2021 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -6,27 +6,26 @@
 #define BRIGID_VIEW_HPP
 
 #include <brigid/noncopyable.hpp>
+#include "data.hpp"
 
 #include <lua.hpp>
 
 #include <stddef.h>
 
 namespace brigid {
-  class view_t : private noncopyable {
+  class view_t : public abstract_data_t, private noncopyable {
   public:
     view_t(const char*, size_t);
+    virtual bool closed() const;
+    virtual const char* data() const;
+    virtual size_t size() const;
     void close();
-    bool closed() const;
-    const char* data() const;
-    size_t size() const;
   private:
     const char* data_;
     size_t size_;
   };
 
   view_t* new_view(lua_State*, const char*, size_t);
-  view_t* check_view(lua_State*, int);
-  view_t* test_view(lua_State*, int);
 }
 
 #endif

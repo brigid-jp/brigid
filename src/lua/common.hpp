@@ -1,4 +1,4 @@
-// Copyright (c) 2019,2020 <dev@brigid.jp>
+// Copyright (c) 2019-2021 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -30,8 +30,8 @@ namespace brigid {
 
   int abs_index(lua_State*, int);
   int get_table(lua_State*, int);
+  void new_metatable(lua_State*, const char*);
   void set_metatable(lua_State*, const char*);
-  void* test_udata_impl(lua_State*, int, const char*);
   bool is_false(lua_State*, int);
 
   void push(lua_State*, lua_Integer);
@@ -44,7 +44,7 @@ namespace brigid {
   inline std::string encode_pointer(T source, enable_if_t<std::is_pointer<T>::value>* = nullptr) {
     static const size_t size = sizeof(source);
     char buffer[size] = {};
-    memmove(buffer, &source, size);
+    memcpy(buffer, &source, size);
     return std::string(buffer, size);
   }
 
@@ -52,7 +52,7 @@ namespace brigid {
   inline T decode_pointer(const char* data, size_t size, enable_if_t<std::is_pointer<T>::value>* = nullptr) {
     T result = nullptr;
     if (data && size == sizeof(T)) {
-      memmove(&result, data, size);
+      memcpy(&result, data, size);
     }
     return result;
   }
@@ -81,11 +81,6 @@ namespace brigid {
   template <class T>
   inline T* check_udata(lua_State* L, int arg, const char* name) {
     return static_cast<T*>(luaL_checkudata(L, arg, name));
-  }
-
-  template <class T>
-  inline T* test_udata(lua_State* L, int index, const char* name) {
-    return static_cast<T*>(test_udata_impl(L, index, name));
   }
 
   template <class T>

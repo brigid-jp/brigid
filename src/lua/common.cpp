@@ -1,4 +1,4 @@
-// Copyright (c) 2019,2020 <dev@brigid.jp>
+// Copyright (c) 2019-2021 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -82,29 +82,19 @@ namespace brigid {
 #endif
   }
 
+  void new_metatable(lua_State* L, const char* name) {
+    luaL_newmetatable(L, name);
+#if LUA_VERSION_NUM <= 502
+    set_field(L, -1, "__name", name);
+#endif
+  }
+
   void set_metatable(lua_State* L, const char* name) {
 #if LUA_VERSION_NUM >= 502
     luaL_setmetatable(L, name);
 #else
     luaL_getmetatable(L, name);
     lua_setmetatable(L, -2);
-#endif
-  }
-
-  void* test_udata_impl(lua_State* L, int index, const char* name) {
-#if LUA_VERSION_NUM >= 502
-    return luaL_testudata(L, index, name);
-#else
-    stack_guard guard(L);
-    if (void* data = lua_touserdata(L, index)) {
-      if (lua_getmetatable(L, index)) {
-        luaL_getmetatable(L, name);
-        if (lua_rawequal(L, -1, -2)) {
-          return data;
-        }
-      }
-    }
-    return nullptr;
 #endif
   }
 
