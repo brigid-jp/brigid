@@ -1,11 +1,10 @@
-// Copyright (c) 2019 <dev@brigid.jp>
+// Copyright (c) 2019,2021 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/error.hpp>
 #include "common.hpp"
 #include "data.hpp"
-#include "view.hpp"
 
 #include <lua.hpp>
 
@@ -79,7 +78,7 @@ namespace brigid {
 
   data_t to_data(lua_State* L, int index) {
     if (const void* userdata = lua_touserdata(L, index)) {
-      std::string name = get_typename(L, index);
+      const std::string name = get_typename(L, index);
       if (is_data(name)) {
         const abstract_data_t* self = static_cast<const abstract_data_t*>(userdata);
         if (!self->closed()) {
@@ -103,7 +102,7 @@ namespace brigid {
 
   data_t check_data(lua_State* L, int arg) {
     if (const void* userdata = lua_touserdata(L, arg)) {
-      std::string name = get_typename(L, arg);
+      const std::string name = get_typename(L, arg);
       if (is_data(name)) {
         const abstract_data_t* self = static_cast<const abstract_data_t*>(userdata);
         if (self->closed()) {
