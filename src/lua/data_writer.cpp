@@ -15,11 +15,23 @@
 
 namespace brigid {
   namespace {
-    class data_writer_t : private noncopyable {
+    class data_writer_t : public abstract_data_t, private noncopyable {
     public:
       data_writer_t()
         : buffer_(),
           closed_() {}
+
+      virtual bool closed() const {
+        return closed_;
+      }
+
+      virtual const char* data() const {
+        return buffer_.data();
+      }
+
+      virtual size_t size() const {
+        return buffer_.size();
+      }
 
       void write(const char* data, size_t size) {
         size_t position = buffer_.size();
@@ -27,21 +39,9 @@ namespace brigid {
         memcpy(buffer_.data() + position, data, size);
       }
 
-      const char* data() const {
-        return buffer_.data();
-      }
-
-      size_t size() const {
-        return buffer_.size();
-      }
-
       void close() {
         buffer_.clear();
         closed_ = true;
-      }
-
-      bool closed() const {
-        return closed_;
       }
 
     private:

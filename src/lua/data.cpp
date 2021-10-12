@@ -76,7 +76,7 @@ namespace brigid {
   data_t to_data(lua_State* L, int index) {
     if (const void* userdata = lua_touserdata(L, index)) {
       std::string name = get_typename(L, index);
-      if (name == "brigid.view") {
+      if (name == "brigid.data_writer" || name == "brigid.view") {
         const abstract_data_t* self = static_cast<const abstract_data_t*>(userdata);
         if (!self->closed()) {
           return data_t(self->data(), self->size());
@@ -99,7 +99,7 @@ namespace brigid {
   data_t check_data(lua_State* L, int arg) {
     if (const void* userdata = lua_touserdata(L, arg)) {
       std::string name = get_typename(L, arg);
-      if (name == "brigid.view") {
+      if (name == "brigid.data_writer" || name == "brigid.view") {
         const abstract_data_t* self = static_cast<const abstract_data_t*>(userdata);
         if (self->closed()) {
           luaL_error(L, "attempt to use a closed %s", name.c_str());

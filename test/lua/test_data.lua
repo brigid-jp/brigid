@@ -30,4 +30,13 @@ function suite:test_data3()
   assert(not result)
 end
 
+function suite:test_data4()
+  local data_writer = brigid:data_writer()
+  data_writer:write "foo"
+  data_writer:write(data_writer)
+  data_writer:write(data_writer)
+  data_writer:write(data_writer)
+  assert(data_writer:get_string() == ("foo"):rep(8))
+end
+
 return suite
