@@ -45,6 +45,10 @@ namespace brigid {
         return luaL_typename(L, index);
       }
     }
+
+    bool is_data(const std::string& name) {
+      return name == "brigid.data_writer" || name == "brigid.view";
+    }
   }
 
   abstract_data_t::~abstract_data_t() {}
@@ -76,7 +80,7 @@ namespace brigid {
   data_t to_data(lua_State* L, int index) {
     if (const void* userdata = lua_touserdata(L, index)) {
       std::string name = get_typename(L, index);
-      if (name == "brigid.data_writer" || name == "brigid.view") {
+      if (is_data(name)) {
         const abstract_data_t* self = static_cast<const abstract_data_t*>(userdata);
         if (!self->closed()) {
           return data_t(self->data(), self->size());
@@ -87,19 +91,20 @@ namespace brigid {
           return result;
         }
       }
+      return data_t();
     } else {
       size_t size = 0;
       if (const char* data = lua_tolstring(L, index, &size)) {
         return data_t(data, size);
       }
+      return data_t();
     }
-    return data_t();
   }
 
   data_t check_data(lua_State* L, int arg) {
     if (const void* userdata = lua_touserdata(L, arg)) {
       std::string name = get_typename(L, arg);
-      if (name == "brigid.data_writer" || name == "brigid.view") {
+      if (is_data(name)) {
         const abstract_data_t* self = static_cast<const abstract_data_t*>(userdata);
         if (self->closed()) {
           luaL_error(L, "attempt to use a closed %s", name.c_str());
@@ -112,11 +117,11 @@ namespace brigid {
         }
       }
       luaL_error(L, "brigid.data expected, got %s", name.c_str());
+      throw BRIGID_LOGIC_ERROR("unreachable");
     } else {
       size_t size = 0;
       const char* data = luaL_checklstring(L, arg, &size);
       return data_t(data, size);
     }
-    return data_t();
   }
 }
