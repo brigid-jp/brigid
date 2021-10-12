@@ -44,7 +44,7 @@ namespace brigid {
   inline std::string encode_pointer(T source, enable_if_t<std::is_pointer<T>::value>* = nullptr) {
     static const size_t size = sizeof(source);
     char buffer[size] = {};
-    memmove(buffer, &source, size);
+    memcpy(buffer, &source, size);
     return std::string(buffer, size);
   }
 
@@ -52,7 +52,7 @@ namespace brigid {
   inline T decode_pointer(const char* data, size_t size, enable_if_t<std::is_pointer<T>::value>* = nullptr) {
     T result = nullptr;
     if (data && size == sizeof(T)) {
-      memmove(&result, data, size);
+      memcpy(&result, data, size);
     }
     return result;
   }

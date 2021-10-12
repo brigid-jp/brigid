@@ -24,7 +24,7 @@ namespace brigid {
       void write(const char* data, size_t size) {
         size_t position = buffer_.size();
         buffer_.resize(position + size);
-        memmove(buffer_.data() + position, data, size);
+        memcpy(buffer_.data() + position, data, size);
       }
 
       const char* data() const {
