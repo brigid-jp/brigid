@@ -63,7 +63,6 @@ namespace brigid {
       check_data_writer(L, 1, check_validate_none)->~data_writer_t();
     }
 
-
     void impl_close(lua_State* L) {
       data_writer_t* self = check_data_writer(L, 1, check_validate_none);
       if (!self->closed()) {
