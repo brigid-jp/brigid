@@ -72,7 +72,7 @@ namespace brigid {
   void initialize_file_writer(lua_State* L) {
     lua_newtable(L);
     {
-      luaL_newmetatable(L, "brigid.file_writer");
+      new_metatable(L, "brigid.file_writer");
       lua_pushvalue(L, -2);
       set_field(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);

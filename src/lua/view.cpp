@@ -75,7 +75,7 @@ namespace brigid {
   void initialize_view(lua_State* L) {
     lua_newtable(L);
     {
-      luaL_newmetatable(L, "brigid.view");
+      new_metatable(L, "brigid.view");
       lua_pushvalue(L, -2);
       set_field(L, -2, "__index");
       lua_pop(L, 1);

@@ -169,7 +169,7 @@ namespace brigid {
 
     lua_newtable(L);
     {
-      luaL_newmetatable(L, "brigid.cryptor");
+      new_metatable(L, "brigid.cryptor");
       lua_pushvalue(L, -2);
       set_field(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);

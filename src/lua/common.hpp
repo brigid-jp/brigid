@@ -30,6 +30,7 @@ namespace brigid {
 
   int abs_index(lua_State*, int);
   int get_table(lua_State*, int);
+  void new_metatable(lua_State*, const char*);
   void set_metatable(lua_State*, const char*);
   void* test_udata_impl(lua_State*, int, const char*);
   bool is_false(lua_State*, int);

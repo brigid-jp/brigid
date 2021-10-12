@@ -82,6 +82,13 @@ namespace brigid {
 #endif
   }
 
+  void new_metatable(lua_State* L, const char* name) {
+    luaL_newmetatable(L, name);
+#if LUA_VERSION_NUM <= 502
+    set_field(L, -1, "__name", name);
+#endif
+  }
+
   void set_metatable(lua_State* L, const char* name) {
 #if LUA_VERSION_NUM >= 502
     luaL_setmetatable(L, name);
