@@ -5,7 +5,7 @@
 local brigid = require "brigid"
 local test_suite = require "test_suite"
 
-local suite = test_suite "test_json"
+local suite = test_suite "test_data"
 
 function suite:test_data1()
   local data_writer = brigid:data_writer()
