@@ -61,18 +61,28 @@ namespace brigid {
                 lua_pushinteger(L, v);
               }
             } else {
-              size_t size = fpc - ps;
-              buffer.resize(size + 1);
-              char* ptr = buffer.data();
-              char* end = nullptr;
-              memcpy(ptr, ps, size);
-              ptr[size] = '\0';
-              double u = strtod(ptr, &end);
-              if (end != ptr + size) {
-                // You may try to translate '.' to ',' if the locale is de_DE
-                throw BRIGID_RUNTIME_ERROR("cannot strtod");
+              if (p == eof) {
+                size_t size = fpc - ps;
+                buffer.resize(size + 1);
+                char* ptr = buffer.data();
+                memcpy(ptr, ps, size);
+                ptr[size] = '\0';
+                char* end = nullptr;
+                double u = strtod(ptr, &end);
+                if (end != ptr + size) {
+                  // You may try to translate '.' to ',' if the locale is de_DE
+                  throw BRIGID_RUNTIME_ERROR("cannot strtod");
+                }
+                lua_pushnumber(L, u);
+              } else {
+                char* end = nullptr;
+                double u = strtod(ps, &end);
+                if (end != fpc) {
+                  // You may try to translate '.' to ',' if the locale is de_DE
+                  throw BRIGID_RUNTIME_ERROR("cannot strtod");
+                }
+                lua_pushnumber(L, u);
               }
-              lua_pushnumber(L, u);
             }
           };
 
@@ -157,9 +167,9 @@ namespace brigid {
         | string
         );
 
-      member = ws string ws ":" ws value %{ lua_settable(L, -3); };
+      member = ws string ws ":" ws value %{ lua_rawset(L, -3); };
       object := (member (ws "," member)*)? ws "}" @{ fret; };
-      element = ws value >{ lua_pushinteger(L, ++n.back()); } %{ lua_settable(L, -3); };
+      element = ws value %{ lua_rawseti(L, -2, ++n.back()); };
       array := (element (ws "," element)*)? ws "]" @{ n.pop_back(); fret; };
       main := ws value ws;
 
