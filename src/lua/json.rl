@@ -128,7 +128,6 @@ namespace brigid {
         | unicode_escape_sequence
         );
 
-      # TODO fgoto based machine
       string_impl :=
         ( "\"" @{ lua_pushlstring(L, ps, 0); fret; }
         | unescaped+
