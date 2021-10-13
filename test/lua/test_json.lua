@@ -256,6 +256,12 @@ function suite:test_json_parse_number3()
   assert(equal(brigid.json.parse "-69e2", -6900))
 end
 
+function suite:test_json_parse_number4()
+  local result = brigid.json.parse "[9223372036854775808,0e-19,1]"
+  assert(result[1] > 1)
+  assert(result[2] == 0)
+end
+
 function suite:test_json_parse_integer1()
   if not math.type then
     return test_skip()
