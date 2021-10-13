@@ -171,7 +171,7 @@ namespace brigid {
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #endif
 
-    void impl_decode(lua_State* L) {
+    void impl_parse(lua_State* L) {
       data_t data = check_data(L, 1);
 
       int cs = 0;
@@ -212,7 +212,7 @@ namespace brigid {
   void initialize_json(lua_State* L) {
     lua_newtable(L);
     {
-      set_field(L, -1, "decode", impl_decode);
+      set_field(L, -1, "parse", impl_parse);
     }
     set_field(L, -2, "json");
   }
