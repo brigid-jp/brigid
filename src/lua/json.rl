@@ -69,7 +69,7 @@ namespace brigid {
               ptr[size] = '\0';
               double u = strtod(ptr, &end);
               if (end != ptr + size) {
-                // You may try to translate '.' to ',' if locale is de_DE
+                // You may try to translate '.' to ',' if the locale is de_DE
                 throw BRIGID_RUNTIME_ERROR("cannot strtod");
               }
               lua_pushnumber(L, u);
@@ -128,6 +128,7 @@ namespace brigid {
         | unicode_escape_sequence
         );
 
+      # TODO fgoto based machine
       string_impl :=
         ( "\"" @{ lua_pushlstring(L, ps, 0); fret; }
         | unescaped+
