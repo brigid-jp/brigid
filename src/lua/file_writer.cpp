@@ -20,16 +20,16 @@ namespace brigid {
       explicit file_writer_t(const std::string& path)
         : handle_(open_file_handle(path, "wb")) {}
 
-      void write(const char* data, size_t size) {
-        fwrite(data, 1, size, handle_.get());
-      }
-
       void close() {
         handle_.reset();
       }
 
       bool closed() const {
         return !handle_;
+      }
+
+      void write(const char* data, size_t size) {
+        fwrite(data, 1, size, handle_.get());
       }
 
     private:

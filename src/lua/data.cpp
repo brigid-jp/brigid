@@ -13,23 +13,6 @@
 
 namespace brigid {
   namespace {
-    bool is_love2d_data(lua_State* L, int index, data_t& result) {
-      stack_guard guard(L);
-      index = abs_index(L, index);
-      get_field(L, LUA_REGISTRYINDEX, "brigid.common.is_love2d_data");
-      lua_pushvalue(L, index);
-      if (lua_pcall(L, 1, 2, 0) != 0) {
-        throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
-      }
-      if (!lua_isnil(L, -2)) {
-        size_t size = 0;
-        const char* data = lua_tolstring(L, -2, &size);
-        result = data_t(decode_pointer<const char*>(data, size), lua_tointeger(L, -1));
-        return true;
-      }
-      return false;
-    }
-
     std::string get_typename(lua_State* L, int index) {
       stack_guard guard(L);
       if (luaL_getmetafield(L, index, "__name")) {
@@ -47,6 +30,23 @@ namespace brigid {
 
     bool is_data(const std::string& name) {
       return name == "brigid.data_writer" || name == "brigid.view";
+    }
+
+    bool is_love2d_data(lua_State* L, int index, data_t& result) {
+      stack_guard guard(L);
+      index = abs_index(L, index);
+      get_field(L, LUA_REGISTRYINDEX, "brigid.common.is_love2d_data");
+      lua_pushvalue(L, index);
+      if (lua_pcall(L, 1, 2, 0) != 0) {
+        throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
+      }
+      if (!lua_isnil(L, -2)) {
+        size_t size = 0;
+        const char* data = lua_tolstring(L, -2, &size);
+        result = data_t(decode_pointer<const char*>(data, size), lua_tointeger(L, -1));
+        return true;
+      }
+      return false;
     }
   }
 
