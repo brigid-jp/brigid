@@ -61,7 +61,9 @@ namespace brigid {
                 lua_pushinteger(L, v);
               }
             } else {
-              if (p == eof) {
+              // The decimal point may be ',' when if the locale is de_DE.
+              // In such case, strtod() may read too little or too much.
+              if (fpc == eof) {
                 size_t size = fpc - ps;
                 buffer.resize(size + 1);
                 char* ptr = buffer.data();
@@ -70,16 +72,14 @@ namespace brigid {
                 char* end = nullptr;
                 double u = strtod(ptr, &end);
                 if (end != ptr + size) {
-                  // You may try to translate '.' to ',' if the locale is de_DE
-                  throw BRIGID_RUNTIME_ERROR("cannot strtod");
+                  throw BRIGID_RUNTIME_ERROR("cannot strtod (locale problem?)");
                 }
                 lua_pushnumber(L, u);
               } else {
                 char* end = nullptr;
                 double u = strtod(ps, &end);
                 if (end != fpc) {
-                  // You may try to translate '.' to ',' if the locale is de_DE
-                  throw BRIGID_RUNTIME_ERROR("cannot strtod");
+                  throw BRIGID_RUNTIME_ERROR("cannot strtod (locale problem?)");
                 }
                 lua_pushnumber(L, u);
               }
