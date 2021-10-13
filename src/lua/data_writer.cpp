@@ -34,8 +34,14 @@ namespace brigid {
       }
 
       void close() {
-        buffer_.clear();
         closed_ = true;
+      }
+
+      void write_self() {
+        size_t size = buffer_.size();
+        buffer_.resize(size * 2);
+        char* data = buffer_.data();
+        memcpy(data + size, data, size);
       }
 
       void write(const char* data, size_t size) {
@@ -94,8 +100,12 @@ namespace brigid {
 
     void impl_write(lua_State* L) {
       data_writer_t* self = check_data_writer(L, 1);
-      data_t data = check_data(L, 2);
-      self->write(data.data(), data.size());
+      if (self == lua_touserdata(L, 2)) {
+        self->write_self();
+      } else {
+        data_t data = check_data(L, 2);
+        self->write(data.data(), data.size());
+      }
     }
   }
 
