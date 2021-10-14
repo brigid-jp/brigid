@@ -10,15 +10,17 @@
 
 #include <lua.hpp>
 
+#include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string>
+#include <system_error>
 
 namespace brigid {
   namespace {
     class file_writer_t : private noncopyable {
     public:
-      explicit file_writer_t(const std::string& path)
+      explicit file_writer_t(const char* path)
         : handle_(open_file_handle(path, "wb")) {}
 
       bool closed() const {
@@ -31,8 +33,9 @@ namespace brigid {
 
       void write(const char* data, size_t size) {
         size_t result = fwrite(data, 1, size, handle_.get());
-        if (result != size || ferror(handle_.get())) {
-          // throw error
+        if (result != size) {
+          int code = errno;
+          throw BRIGID_RUNTIME_ERROR(std::generic_category().message(code), make_error_code("error number", code));
         }
       }
 
@@ -62,8 +65,8 @@ namespace brigid {
     }
 
     void impl_call(lua_State* L) {
-      data_t path = check_data(L, 2);
-      new_userdata<file_writer_t>(L, "brigid.file_writer", path.str());
+      const char* path = luaL_checkstring(L, 2);
+      new_userdata<file_writer_t>(L, "brigid.file_writer", path);
     }
 
     void impl_write(lua_State* L) {
