@@ -42,3 +42,5 @@ brigid_la_LDFLAGS += $(CURL_LDFLAGS)
 brigid_la_LIBADD += $(CURL_LIBS)
 endif
 endif
+
+EXTRA_DIST = *.rl

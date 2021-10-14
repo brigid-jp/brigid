@@ -8,7 +8,9 @@ abnf.rl: abnf.lua errata.txt
 .rl.cxx:
 	ragel -G2 $< -o $@
 
-noinst_PROGRAMS = \
+TESTS = $(check_program)
+
+check_PROGRAMS = \
 	test_client.exe \
 	test_server.exe \
 	test_parser.exe \
@@ -49,9 +51,10 @@ test_websocket_server_exe_LDADD += $(OPENSSL_LIBS)
 endif
 
 EXTRA_DIST = \
+	*.lua \
 	*.rl \
 	*.txt \
-	abnf.lua \
 	test_common.hpp \
 	http_request_parser.hpp \
-	http_request_parser.rl
+	websocket_frame_parser.hpp \
+	windows.mk
