@@ -10,33 +10,30 @@
 
 namespace brigid {
   namespace {
-    view_t* check_view(lua_State* L, int arg) {
-      view_t* self = check_udata<view_t>(L, arg, "brigid.view");
+    const view_t* check_view(lua_State* L, int arg) {
+      const view_t* const self = check_udata<view_t>(L, arg, "brigid.view");
       if (self->closed()) {
-        // TODO 例外送出の検討
-        // TODO check_validate_*使用の検討
-        luaL_error(L, "attempt to use a closed brigid.view");
+        throw BRIGID_LOGIC_ERROR("attempt to use a closed brigid.view");
       }
       return self;
     }
 
     void impl_get_pointer(lua_State* L) {
-      view_t* self = check_view(L, 1);
+      const view_t* const self = check_view(L, 1);
       get_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
-      // TODO pushとencode_pointerをまとめる検討（std::stringの構築を省略できる）
-      push(L, encode_pointer(self->data()));
+      push_encoded_pointer(L, self->data());
       if (lua_pcall(L, 1, 1, 0) != 0) {
         throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
       }
     }
 
     void impl_get_size(lua_State* L) {
-      view_t* self = check_view(L, 1);
+      const view_t* const self = check_view(L, 1);
       push(L, self->size());
     }
 
     void impl_get_string(lua_State* L) {
-      view_t* self = check_view(L, 1);
+      const view_t* const self = check_view(L, 1);
       push(L, self->data(), self->size());
     }
   }
@@ -72,6 +69,7 @@ namespace brigid {
       new_metatable(L, "brigid.view");
       lua_pushvalue(L, -2);
       set_field(L, -2, "__index");
+      set_field(L, -1, "__tostring", impl_get_string);
       lua_pop(L, 1);
 
       set_field(L, -1, "get_pointer", impl_get_pointer);
