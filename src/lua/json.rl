@@ -100,7 +100,9 @@ namespace brigid {
                   break;
                 }
 
-                throw BRIGID_RUNTIME_ERROR("cannot strtod");
+                std::ostringstream out;
+                out << "cannot strtod at position " << (ps - pb + 1);
+                throw BRIGID_RUNTIME_ERROR(out.str());
               } while (false);
             }
           };
@@ -208,7 +210,8 @@ namespace brigid {
 
       %%write init;
 
-      const char* p = data.data();
+      const char* const pb = data.data();
+      const char* p = pb;
       const char* pe = p + data.size();
       const char* const eof = pe;
       std::vector<int> stack; stack.reserve(16);
@@ -230,7 +233,7 @@ namespace brigid {
       }
 
       std::ostringstream out;
-      out << "parser error at position " << (p - data.data() + 1);
+      out << "cannot parse json at position " << (p - pb + 1);
       throw BRIGID_RUNTIME_ERROR(out.str());
     }
 
