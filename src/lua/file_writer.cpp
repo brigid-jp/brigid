@@ -13,7 +13,6 @@
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <string>
 #include <system_error>
 
 namespace brigid {
