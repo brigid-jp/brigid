@@ -14,6 +14,8 @@ local test_suite_names = {
   "test_http";
   "test_json";
   "test_data";
+
+  "test_data_writer";
   "test_view";
 }
 

@@ -38,14 +38,14 @@ namespace brigid {
       }
 
       void write_self() {
-        size_t size = buffer_.size();
+        const size_t size = buffer_.size();
         buffer_.resize(size * 2);
-        char* data = buffer_.data();
+        char* const data = buffer_.data();
         memcpy(data + size, data, size);
       }
 
       void write(const char* data, size_t size) {
-        size_t position = buffer_.size();
+        const size_t position = buffer_.size();
         buffer_.resize(position + size);
         memcpy(buffer_.data() + position, data, size);
       }
@@ -59,7 +59,7 @@ namespace brigid {
       data_writer_t* self = check_udata<data_writer_t>(L, arg, "brigid.data_writer");
       if (validate & check_validate_not_closed) {
         if (self->closed()) {
-          luaL_error(L, "attempt to use a closed brigid.data_writer");
+          throw BRIGID_LOGIC_ERROR("attempt to use a closed brigid.data_writer");
         }
       }
       return self;
@@ -80,21 +80,21 @@ namespace brigid {
     }
 
     void impl_get_pointer(lua_State* L) {
-      data_writer_t* self = check_data_writer(L, 1);
+      const data_writer_t* self = check_data_writer(L, 1);
       get_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
-      push(L, encode_pointer(self->data()));
+      push_encoded_pointer(L, self->data());
       if (lua_pcall(L, 1, 1, 0) != 0) {
         throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
       }
     }
 
     void impl_get_size(lua_State* L) {
-      data_writer_t* self = check_data_writer(L, 1);
+      const data_writer_t* self = check_data_writer(L, 1);
       push(L, self->size());
     }
 
     void impl_get_string(lua_State* L) {
-      data_writer_t* self = check_data_writer(L, 1);
+      const data_writer_t* self = check_data_writer(L, 1);
       push(L, self->data(), self->size());
     }
 
@@ -103,7 +103,7 @@ namespace brigid {
       if (self == lua_touserdata(L, 2)) {
         self->write_self();
       } else {
-        data_t data = check_data(L, 2);
+        const data_t data = check_data(L, 2);
         self->write(data.data(), data.size());
       }
     }
@@ -117,13 +117,14 @@ namespace brigid {
       set_field(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);
       set_field(L, -1, "__close", impl_close);
+      set_field(L, -1, "__tostring", impl_get_string);
       lua_pop(L, 1);
 
       set_metafield(L, -1, "__call", impl_call);
       set_field(L, -1, "get_pointer", impl_get_pointer);
       set_field(L, -1, "get_size", impl_get_size);
-      set_field(L, -1, "close", impl_close);
       set_field(L, -1, "get_string", impl_get_string);
+      set_field(L, -1, "close", impl_close);
       set_field(L, -1, "write", impl_write);
     }
     set_field(L, -2, "data_writer");

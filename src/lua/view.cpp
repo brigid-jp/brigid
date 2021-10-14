@@ -10,8 +10,8 @@
 
 namespace brigid {
   namespace {
-    view_t* check_view(lua_State* L, int arg) {
-      view_t* self = check_udata<view_t>(L, arg, "brigid.view");
+    const view_t* check_view(lua_State* L, int arg) {
+      const view_t* const self = check_udata<view_t>(L, arg, "brigid.view");
       if (self->closed()) {
         throw BRIGID_LOGIC_ERROR("attempt to use a closed brigid.view");
       }
@@ -19,7 +19,7 @@ namespace brigid {
     }
 
     void impl_get_pointer(lua_State* L) {
-      view_t* self = check_view(L, 1);
+      const view_t* const self = check_view(L, 1);
       get_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
       push_encoded_pointer(L, self->data());
       if (lua_pcall(L, 1, 1, 0) != 0) {
@@ -28,12 +28,12 @@ namespace brigid {
     }
 
     void impl_get_size(lua_State* L) {
-      view_t* self = check_view(L, 1);
+      const view_t* const self = check_view(L, 1);
       push(L, self->size());
     }
 
     void impl_get_string(lua_State* L) {
-      view_t* self = check_view(L, 1);
+      const view_t* const self = check_view(L, 1);
       push(L, self->data(), self->size());
     }
   }
