@@ -54,8 +54,6 @@ function suite:test_data_writer1()
   local result, message = pcall(function () tostring(data_writer) end)
   if debug then print(message) end
   assert(not result)
-
-
 end
 
 function suite:test_data_writer2()
