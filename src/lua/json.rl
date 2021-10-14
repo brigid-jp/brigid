@@ -212,7 +212,7 @@ namespace brigid {
 
       const char* const pb = data.data();
       const char* p = pb;
-      const char* pe = p + data.size();
+      const char* const pe = p + data.size();
       const char* const eof = pe;
       std::vector<int> stack; stack.reserve(16);
 
