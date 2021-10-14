@@ -32,8 +32,14 @@ namespace brigid {
       }
 
       void write(const char* data, size_t size) {
-        size_t result = fwrite(data, 1, size, handle_.get());
-        if (result != size) {
+        if (fwrite(data, 1, size, handle_.get()) != size) {
+          int code = errno;
+          throw BRIGID_RUNTIME_ERROR(std::generic_category().message(code), make_error_code("error number", code));
+        }
+      }
+
+      void flush() {
+        if (fflush(handle_.get()) != 0) {
           int code = errno;
           throw BRIGID_RUNTIME_ERROR(std::generic_category().message(code), make_error_code("error number", code));
         }
@@ -74,6 +80,11 @@ namespace brigid {
       data_t data = check_data(L, 2);
       self->write(data.data(), data.size());
     }
+
+    void impl_flush(lua_State* L) {
+      file_writer_t* self = check_file_writer(L, 1);
+      self->flush();
+    }
   }
 
   void initialize_file_writer(lua_State* L) {
@@ -89,6 +100,7 @@ namespace brigid {
       set_metafield(L, -1, "__call", impl_call);
       set_field(L, -1, "close", impl_close);
       set_field(L, -1, "write", impl_write);
+      set_field(L, -1, "flush", impl_flush);
     }
     set_field(L, -2, "file_writer");
   }
