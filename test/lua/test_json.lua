@@ -256,10 +256,23 @@ function suite:test_json_parse_number3()
   assert(equal(brigid.json.parse "-69e2", -6900))
 end
 
-function suite:test_json_parse_number4()
-  local result = brigid.json.parse "[9223372036854775808,0e-19,1]"
+function suite:test_json_parse_locale1()
+  os.setlocale "de_DE.UTF-8"
+  local result, message = brigid.json.parse "[9223372036854775808,0e-19,1]"
+  os.setlocale ""
+  assert(result, message)
   assert(result[1] > 1)
   assert(result[2] == 0)
+  assert(result[3] == 1)
+end
+
+function suite:test_json_parse_locale2()
+  os.setlocale "de_DE.UTF-8"
+  local result, message = brigid.json.parse "[0.5,1]"
+  os.setlocale ""
+  assert(result, message)
+  assert(result[1] == 0.5)
+  assert(result[2] == 1)
 end
 
 function suite:test_json_parse_integer1()

@@ -10,6 +10,7 @@
 
 #include <lua.hpp>
 
+#include <locale.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits>
@@ -61,28 +62,46 @@ namespace brigid {
                 lua_pushinteger(L, v);
               }
             } else {
-              // The decimal point may be ',' when if the locale is de_DE.
-              // In such case, strtod() may read too little or too much.
-              if (fpc == eof) {
+              // At the end-of-file, strtod() may not be able to find an
+              // unrecognized character, because the null termination is not
+              // guaranteed.
+              // Also, The decimal point is denpended to the locale. For
+              // example, the decimal point is ',' in the de_DE locale. In such
+              // a case, strtod() may read too small or too much.
+              do {
+                if (fpc != eof && !decimal_point) {
+                  char* end = nullptr;
+                  double u = strtod(ps, &end);
+                  if (end == fpc) {
+                    lua_pushnumber(L, u);
+                    break;
+                  }
+                }
+
                 size_t size = fpc - ps;
                 buffer.resize(size + 1);
                 char* ptr = buffer.data();
                 memcpy(ptr, ps, size);
                 ptr[size] = '\0';
+
+                if (!decimal_point) {
+                  decimal_point = *localeconv()->decimal_point;
+                }
+                if (decimal_point != '.') {
+                  if (char* q = strchr(ptr, '.')) {
+                    *q = decimal_point;
+                  }
+                }
+
                 char* end = nullptr;
                 double u = strtod(ptr, &end);
-                if (end != ptr + size) {
-                  throw BRIGID_RUNTIME_ERROR("cannot strtod (locale problem?)");
+                if (end == ptr + size) {
+                  lua_pushnumber(L, u);
+                  break;
                 }
-                lua_pushnumber(L, u);
-              } else {
-                char* end = nullptr;
-                double u = strtod(ps, &end);
-                if (end != fpc) {
-                  throw BRIGID_RUNTIME_ERROR("cannot strtod (locale problem?)");
-                }
-                lua_pushnumber(L, u);
-              }
+
+                throw BRIGID_RUNTIME_ERROR("cannot strtod");
+              } while (false);
             }
           };
 
@@ -197,6 +216,7 @@ namespace brigid {
       const char* ps = nullptr;
       std::vector<char> buffer;
       const int null_index = lua_gettop(L) >= 2 ? 2 : 0;
+      char decimal_point = 0;     // *localeconv()->decimal_point
       std::vector<lua_Integer> n; // array index
       lua_unsigned_t v = 0;       // integer
       lua_unsigned_t is_neg = 0;  // number is negative
