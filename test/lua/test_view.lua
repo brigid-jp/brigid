@@ -6,6 +6,7 @@ local brigid = require "brigid"
 local test_suite = require "test_suite"
 
 local suite = test_suite "test_view"
+local debug = false
 
 function suite:test_view()
   local ffi
@@ -40,19 +41,19 @@ function suite:test_view()
   assert(cryptor:update(("d"):rep(257), true))
 
   local result, message = pcall(function () closed_view:get_pointer() end)
-  -- print(message)
+  if debug then print(message) end
   assert(not result)
 
   local result, message = pcall(function () closed_view:get_size() end)
-  -- print(message)
+  if debug then print(message) end
   assert(not result)
 
   local result, message = pcall(function () closed_view:get_string() end)
-  -- print(message)
+  if debug then print(message) end
   assert(not result)
 
   local result, message = pcall(function () tostring(closed_view) end)
-  -- print(message)
+  if debug then print(message) end
   assert(not result)
 end
 
