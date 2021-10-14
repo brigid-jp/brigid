@@ -159,8 +159,6 @@ namespace brigid {
         | unicode_escape_sequence
         );
 
-      # TODO エスケープシーケンスを含む長い文字列の最適化 (fgoto?)
-      # TODO boostのベンチマークの導入
       string_impl :=
         ( "\"" @{ lua_pushlstring(L, ps, 0); fret; }
         | unescaped+
