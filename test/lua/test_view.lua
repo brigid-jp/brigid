@@ -16,6 +16,7 @@ function suite:test_view()
   local cryptor = assert(brigid.encryptor("aes-256-cbc", ("a"):rep(32), ("b"):rep(16), function (view)
     local p = assert(view:get_pointer())
     local n = assert(view:get_size())
+    local m = assert(#view)
     local s = assert(view:get_string())
     local t = assert(tostring(view))
 
@@ -25,6 +26,7 @@ function suite:test_view()
       assert(type(p) == "userdata")
     end
 
+    assert(n == m)
     assert(n == #s)
     assert(s == t)
 

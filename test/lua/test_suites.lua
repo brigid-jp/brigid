@@ -9,14 +9,14 @@ local test_suite_names = {
   "test_common";
   "test_version";
   "test_crypto";
-  "test_writer";
   "test_to_be_closed";
   "test_http";
   "test_json";
   "test_data";
 
-  "test_data_writer";
   "test_view";
+  "test_data_writer";
+  "test_file_writer";
 }
 
 local function new()

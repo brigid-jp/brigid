@@ -117,6 +117,7 @@ namespace brigid {
       set_field(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);
       set_field(L, -1, "__close", impl_close);
+      set_field(L, -1, "__len", impl_get_size);
       set_field(L, -1, "__tostring", impl_get_string);
       lua_pop(L, 1);
 

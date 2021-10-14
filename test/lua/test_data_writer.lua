@@ -17,6 +17,7 @@ function suite:test_data_writer1()
 
   local p = assert(data_writer:get_pointer())
   local n = assert(data_writer:get_size())
+  local m = assert(#data_writer)
   local s = assert(data_writer:get_string())
   local t = assert(tostring(data_writer))
 
@@ -26,6 +27,7 @@ function suite:test_data_writer1()
     assert(type(p) == "userdata")
   end
 
+  assert(n == m)
   assert(n == #s)
   assert(s == t)
   assert(s == "foobarbazqux")
@@ -36,7 +38,6 @@ function suite:test_data_writer1()
 
   assert(data_writer:close())
   assert(data_writer:close())
-
 
   local result, message = pcall(function () data_writer:get_pointer() end)
   if debug then print(message) end
@@ -65,13 +66,14 @@ function suite:test_data_writer2()
   end
 
   local n = assert(data_writer:get_size())
+  local m = assert(#data_writer)
   local s = assert(data_writer:get_string())
   local t = assert(tostring(data_writer))
 
+  assert(n == m)
   assert(n == #s)
   assert(s == t)
   assert(s == ("foobar"):rep(256))
 end
-
 
 return suite
