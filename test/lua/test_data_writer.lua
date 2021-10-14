@@ -6,6 +6,7 @@ local brigid = require "brigid"
 local test_suite = require "test_suite"
 
 local suite = test_suite "test_data_writer"
+local debug = false
 
 function suite:test_data_writer1()
   local ffi
@@ -16,6 +17,7 @@ function suite:test_data_writer1()
 
   local p = assert(data_writer:get_pointer())
   local n = assert(data_writer:get_size())
+  local m = assert(#data_writer)
   local s = assert(data_writer:get_string())
   local t = assert(tostring(data_writer))
 
@@ -25,6 +27,7 @@ function suite:test_data_writer1()
     assert(type(p) == "userdata")
   end
 
+  assert(n == m)
   assert(n == #s)
   assert(s == t)
   assert(s == "foobarbazqux")
@@ -35,6 +38,22 @@ function suite:test_data_writer1()
 
   assert(data_writer:close())
   assert(data_writer:close())
+
+  local result, message = pcall(function () data_writer:get_pointer() end)
+  if debug then print(message) end
+  assert(not result)
+
+  local result, message = pcall(function () data_writer:get_size() end)
+  if debug then print(message) end
+  assert(not result)
+
+  local result, message = pcall(function () data_writer:get_string() end)
+  if debug then print(message) end
+  assert(not result)
+
+  local result, message = pcall(function () tostring(data_writer) end)
+  if debug then print(message) end
+  assert(not result)
 end
 
 function suite:test_data_writer2()
@@ -45,13 +64,14 @@ function suite:test_data_writer2()
   end
 
   local n = assert(data_writer:get_size())
+  local m = assert(#data_writer)
   local s = assert(data_writer:get_string())
   local t = assert(tostring(data_writer))
 
+  assert(n == m)
   assert(n == #s)
   assert(s == t)
   assert(s == ("foobar"):rep(256))
 end
-
 
 return suite

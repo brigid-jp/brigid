@@ -1,4 +1,4 @@
-// Copyright (c) 2019 <dev@brigid.jp>
+// Copyright (c) 2019,2021 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -7,7 +7,6 @@
 
 #include <errno.h>
 #include <stdio.h>
-#include <string>
 #include <system_error>
 
 namespace brigid {
@@ -15,8 +14,8 @@ namespace brigid {
     return file_handle_t(handle, &fclose);
   }
 
-  file_handle_t open_file_handle(const std::string& path, const char* mode) {
-    if (file_handle_t result = make_file_handle(fopen(path.c_str(), mode))) {
+  file_handle_t open_file_handle(const char* path, const char* mode) {
+    if (file_handle_t result = make_file_handle(fopen(path, mode))) {
       return result;
     } else {
       int code = errno;
