@@ -34,11 +34,19 @@ namespace brigid {
   void set_metatable(lua_State*, const char*);
   bool is_false(lua_State*, int);
 
-  void push(lua_State*, lua_Integer);
+  void push(lua_State*, lua_Integer); // TODO よく考える
   void push(lua_State*, const char*);
   void push(lua_State*, const char*, size_t);
   void push(lua_State*, const std::string&);
   void push(lua_State*, cxx_function_t);
+
+  template <class T>
+  void push_encoded_pointer(lua_State* L, T source, enable_if_t<std::is_pointer<T>::value>* = nullptr) {
+    static const size_t size = sizeof(source);
+    char buffer[size] = {};
+    memcpy(buffer, &source, size);
+    lua_pushlstring(L, buffer, size);
+  }
 
   template <class T>
   inline std::string encode_pointer(T source, enable_if_t<std::is_pointer<T>::value>* = nullptr) {
