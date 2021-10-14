@@ -13,9 +13,7 @@ namespace brigid {
     view_t* check_view(lua_State* L, int arg) {
       view_t* self = check_udata<view_t>(L, arg, "brigid.view");
       if (self->closed()) {
-        // TODO 例外送出の検討
-        // TODO check_validate_*使用の検討
-        luaL_error(L, "attempt to use a closed brigid.view");
+        throw BRIGID_LOGIC_ERROR("attempt to use a closed brigid.view");
       }
       return self;
     }
@@ -72,6 +70,7 @@ namespace brigid {
       new_metatable(L, "brigid.view");
       lua_pushvalue(L, -2);
       set_field(L, -2, "__index");
+      set_field(L, -1, "__tostring", impl_get_string);
       lua_pop(L, 1);
 
       set_field(L, -1, "get_pointer", impl_get_pointer);
