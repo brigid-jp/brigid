@@ -13,6 +13,8 @@ namespace brigid {
     view_t* check_view(lua_State* L, int arg) {
       view_t* self = check_udata<view_t>(L, arg, "brigid.view");
       if (self->closed()) {
+        // TODO 例外送出の検討
+        // TODO check_validate_*使用の検討
         luaL_error(L, "attempt to use a closed brigid.view");
       }
       return self;
@@ -21,6 +23,7 @@ namespace brigid {
     void impl_get_pointer(lua_State* L) {
       view_t* self = check_view(L, 1);
       get_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
+      // TODO pushとencode_pointerをまとめる検討（std::stringの構築を省略できる）
       push(L, encode_pointer(self->data()));
       if (lua_pcall(L, 1, 1, 0) != 0) {
         throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
