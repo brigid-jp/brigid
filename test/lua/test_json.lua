@@ -275,7 +275,6 @@ function suite:test_json_parse_locale2()
   assert(result[2] == 1)
 end
 
-
 function suite:test_json_parse_integer1()
   if not math.type then
     return test_skip()
