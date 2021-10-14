@@ -8,8 +8,6 @@ abnf.rl: abnf.lua errata.txt
 .rl.cxx:
 	ragel -G2 $< -o $@
 
-TESTS = $(check_program)
-
 check_PROGRAMS = \
 	test_client.exe \
 	test_server.exe \
