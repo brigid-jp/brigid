@@ -49,7 +49,7 @@ namespace brigid {
     }
 
     void impl_encode_pointer(lua_State* L) {
-      push(L, encode_pointer(lua_touserdata(L, 1)));
+      push_pointer(L, lua_touserdata(L, 1));
     }
 
     void impl_decode_pointer(lua_State* L) {
@@ -119,7 +119,7 @@ namespace brigid {
   }
 
   void push(lua_State* L, cxx_function_t value) {
-    push(L, encode_pointer(value));
+    push_pointer(L, value);
     lua_pushcclosure(L, impl_closure, 1);
   }
 
