@@ -7,6 +7,7 @@
 #include <string.h>
 #include <chrono>
 #include <iostream>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -14,6 +15,8 @@
 
 namespace brigid {
   namespace {
+    std::mutex mutex;
+
     int string_to_lightuserdata(lua_State* L) {
       size_t size = 0;
       if (const char* data = luaL_checklstring(L, 1, &size)) {
@@ -170,6 +173,8 @@ namespace brigid {
 }
 
 extern "C" int luaopen_test_address_space(lua_State* L) {
+  std::lock_guard<std::mutex> lock(brigid::mutex);
+
   std::cout << "open start " << std::this_thread::get_id() << std::endl;
   lua_newtable(L);
   brigid::initialize(L);
