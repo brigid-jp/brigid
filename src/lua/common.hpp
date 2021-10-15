@@ -41,7 +41,7 @@ namespace brigid {
   void push(lua_State*, cxx_function_t);
 
   template <class T>
-  void push_encoded_pointer(lua_State* L, T source, enable_if_t<std::is_pointer<T>::value>* = nullptr) {
+  inline void push_pointer(lua_State* L, T source, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(void*))>* = nullptr) {
     static const size_t size = sizeof(source);
     char buffer[size] = {};
     memcpy(buffer, &source, size);
@@ -49,15 +49,7 @@ namespace brigid {
   }
 
   template <class T>
-  inline std::string encode_pointer(T source, enable_if_t<std::is_pointer<T>::value>* = nullptr) {
-    static const size_t size = sizeof(source);
-    char buffer[size] = {};
-    memcpy(buffer, &source, size);
-    return std::string(buffer, size);
-  }
-
-  template <class T>
-  inline T decode_pointer(const char* data, size_t size, enable_if_t<std::is_pointer<T>::value>* = nullptr) {
+  inline T decode_pointer(const char* data, size_t size, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(void*))>* = nullptr) {
     T result = nullptr;
     if (data && size == sizeof(T)) {
       memcpy(&result, data, size);

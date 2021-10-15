@@ -8,11 +8,18 @@ abnf.rl: abnf.lua errata.txt
 .rl.cxx:
 	ragel -G2 $< -o $@
 
+check_LTLIBRARIES = test_address_space.la
+
 check_PROGRAMS = \
 	test_client.exe \
 	test_server.exe \
 	test_parser.exe \
 	test_websocket_server.exe
+
+# https://www.mail-archive.com/bug-automake@gnu.org/msg03153.html
+test_address_space_la_CPPFLAGS = -I$(top_srcdir)/include
+test_address_space_la_LDFLAGS = -module -avoid-version -shared -rpath /dev/null
+test_address_space_la_SOURCES = test_address_space.cpp
 
 test_client_exe_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/lib
 test_client_exe_LDFLAGS =
