@@ -5,7 +5,6 @@
 #include <lua.hpp>
 
 #include <string.h>
-#include <iostream>
 
 namespace brigid {
   namespace {
