@@ -11,13 +11,12 @@ for i = 0, 32 do
   local c = u % 256 u = (u - c) / 256
   local d = u
   local s = string.char(0xFF, 0xFF, 0xFF, 0xFF, a, b, c, d)
-  print(("string_to_lightuserdata(%dbit)"):format(i + 32), module.string_to_lightuserdata(s))
+  print(("string_to_lightuserdata(%2dbit)"):format(i + 32), module.string_to_lightuserdata(s))
   v = v * 2
 end
 
 -- local str47 = "\255\255\255\255\255\127\000\000"
 -- local str48 = "\255\255\255\255\255\255\000\000"
--- 
+--
 -- print("string_to_lightuserdata(str47)", module.string_to_lightuserdata(str47))
 -- print("string_to_lightuserdata(str48)", module.string_to_lightuserdata(str48))
-
