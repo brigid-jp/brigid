@@ -170,9 +170,9 @@ namespace brigid {
 }
 
 extern "C" int luaopen_test_address_space(lua_State* L) {
-  // std::cout << "open start " << std::this_thread::get_id() << std::endl;
+  std::cout << "open start " << std::this_thread::get_id() << std::endl;
   lua_newtable(L);
   brigid::initialize(L);
-  // std::cout << "open ended " << std::this_thread::get_id() << std::endl;
+  std::cout << "open ended " << std::this_thread::get_id() << std::endl;
   return 1;
 }

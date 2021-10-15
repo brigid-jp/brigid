@@ -7,7 +7,7 @@ local module = require "test_address_space"
 
 module.create_native_threads(10, [[
 local thread_id = ...
--- print(thread_id)
+print(thread_id)
 
 package.cpath = ".libs/?.so;;"
 
