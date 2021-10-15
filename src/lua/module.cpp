@@ -4,7 +4,13 @@
 
 #include <lua.hpp>
 
+#include <mutex>
+
 namespace brigid {
+  namespace {
+    std::mutex mutex;
+  }
+
   void initialize_common(lua_State*);
   void initialize_cryptor(lua_State*);
   void initialize_data_writer(lua_State*);
@@ -16,6 +22,9 @@ namespace brigid {
   void initialize_view(lua_State*);
 
   void initialize(lua_State* L) {
+    // TODO integrate src/lib and src/lua
+    // TODO link test pthread when glibc
+    // TODO init once
     initialize_common(L);
     initialize_cryptor(L);
     initialize_data_writer(L);
@@ -29,6 +38,7 @@ namespace brigid {
 }
 
 extern "C" int luaopen_brigid(lua_State* L) {
+  std::lock_guard<std::mutex> lock(brigid::mutex);
   lua_newtable(L);
   brigid::initialize(L);
   return 1;
