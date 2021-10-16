@@ -139,47 +139,50 @@ namespace brigid {
     lua_pushcclosure(L, impl_closure, 1);
   }
 
-  void push_handle_impl(lua_State* L, const void* value) {
+  void push_handle_impl(lua_State* L, const void* source) {
     if (no_full_range_lightuserdata) {
-      static constexpr size_t size = sizeof(value);
+      static constexpr size_t size = sizeof(source);
       char buffer[size] = {};
-      memcpy(buffer, &value, size);
+      memcpy(buffer, &source, size);
       lua_pushlstring(L, buffer, size);
     } else {
-      lua_pushlightuserdata(L, const_cast<void*>(value));
+      lua_pushlightuserdata(L, const_cast<void*>(source));
     }
   }
 
-  void push_pointer(lua_State* L, const void* value) {
+  void push_pointer_impl(lua_State* L, const void* source) {
     if (no_full_range_lightuserdata) {
-      static constexpr size_t size = sizeof(value);
+      static constexpr size_t size = sizeof(source);
       char buffer[size] = {};
-      memcpy(buffer, &value, size);
-
+      memcpy(buffer, &source, size);
       get_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
       lua_pushlstring(L, buffer, size);
       if (lua_pcall(L, 1, 1, 0) != 0) {
         throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
       }
     } else {
-      lua_pushlightuserdata(L, const_cast<void*>(value));
+      lua_pushlightuserdata(L, const_cast<void*>(source));
     }
   }
 
   void* to_handle_impl(lua_State* L, int index) {
-    if (no_full_range_lightuserdata) {
-      void* result = nullptr;
-      size_t size = 0;
-      if (const char* data = lua_tolstring(L, index, &size)) {
-        if (size == sizeof(result)) {
-          memcpy(&result, data, size);
+    switch (lua_type(L, index)) {
+      case LUA_TSTRING:
+        {
+          size_t size = 0;
+          if (const char* data = lua_tolstring(L, index, &size)) {
+            if (size == sizeof(void*)) {
+              void* result = nullptr;
+              memcpy(&result, data, size);
+              return result;
+            }
+          }
         }
-      }
-      return result;
-    } else {
-      // TODO check lightuserdata?
-      // TODO support encoded string?
-      return lua_touserdata(L, index);
+        return nullptr;
+      case LUA_TLIGHTUSERDATA:
+        return lua_touserdata(L, index);
+      default:
+        return nullptr;
     }
   }
 

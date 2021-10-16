@@ -41,22 +41,18 @@ namespace brigid {
   void push(lua_State*, cxx_function_t);
 
   void push_handle_impl(lua_State*, const void*);
-  void push_pointer(lua_State*, const void*);
 
   template <class T>
-  inline void push_handle(lua_State* L, T source, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(void*))>* = nullptr) {
+  inline void push_handle(lua_State* L, T source, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(const void*))>* = nullptr) {
     push_handle_impl(L, reinterpret_cast<const void*>(source));
   }
 
-  /*
+  void push_pointer_impl(lua_State*, const void*);
+
   template <class T>
-  inline void push_pointer(lua_State* L, T source, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(void*))>* = nullptr) {
-    static const size_t size = sizeof(source);
-    char buffer[size] = {};
-    memcpy(buffer, &source, size);
-    lua_pushlstring(L, buffer, size);
+  inline void push_pointer(lua_State* L, T source, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(const void*))>* = nullptr) {
+    push_pointer_impl(L, reinterpret_cast<const void*>(source));
   }
-  */
 
   void* to_handle_impl(lua_State*, int);
 
@@ -64,17 +60,6 @@ namespace brigid {
   inline T to_handle(lua_State* L, int index, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(void*))>* = nullptr) {
     return reinterpret_cast<T>(to_handle_impl(L, index));
   }
-
-  /*
-  template <class T>
-  inline T decode_pointer(const char* data, size_t size, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(void*))>* = nullptr) {
-    T result = nullptr;
-    if (data && size == sizeof(T)) {
-      memcpy(&result, data, size);
-    }
-    return result;
-  }
-  */
 
   template <class T>
   inline T check_integer(lua_State* L, int arg, T min, T max, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value)>* = nullptr) {
