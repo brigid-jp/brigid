@@ -10,12 +10,37 @@
 #include <stddef.h>
 #include <string.h>
 #include <exception>
+#include <mutex>
 #include <functional>
 #include <stdexcept>
 #include <string>
 
+#include <iostream>
+
 namespace brigid {
   namespace {
+    std::once_flag once;
+
+    bool no_full_range_lightuserdata;
+
+    int check_full_range_lightuserdata(lua_State* L) {
+      void* ptr = nullptr;
+      memset(&ptr, 0xFF, sizeof(ptr));
+      lua_pushlightuserdata(L, ptr);
+      return 1;
+    }
+
+    void bootstrap_once(lua_State* L) {
+      int top = lua_gettop(L);
+      lua_pushcfunction(L, check_full_range_lightuserdata);
+      no_full_range_lightuserdata = lua_pcall(L, 0, 0, 0) != 0;
+      lua_settop(L, top);
+    }
+
+    void bootstrap(lua_State* L) {
+      std::call_once(once, bootstrap_once, L);
+    }
+
     int impl_closure(lua_State* L) {
       int top = lua_gettop(L);
       try {
@@ -200,6 +225,8 @@ namespace brigid {
   }
 
   void initialize_common(lua_State* L) {
+    bootstrap(L);
+
     lua_newtable(L);
     {
       set_field(L, -1, "encode_pointer", impl_encode_pointer);
