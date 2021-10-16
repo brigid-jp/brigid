@@ -149,7 +149,7 @@ namespace brigid {
       static constexpr size_t size = sizeof(source);
       char buffer[size] = {};
       memcpy(buffer, &source, size);
-      get_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
+      lua_getfield(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
       lua_pushlstring(L, buffer, size);
       if (lua_pcall(L, 1, 1, 0) != 0) {
         throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
@@ -178,6 +178,15 @@ namespace brigid {
       default:
         return nullptr;
     }
+  }
+
+  int get_field(lua_State* L, int index, const char* key) {
+#if LUA_VERSION_NUM >= 503
+    return lua_getfield(L, index, key);
+#else
+    lua_getfield(L, index, key);
+    return lua_type(L, -1);
+#endif
   }
 
   stack_guard::stack_guard(lua_State* L)
@@ -229,8 +238,10 @@ namespace brigid {
     return state_;
   }
 
-  int reference::get_field(lua_State* L) const {
-    return brigid::get_field(L, LUA_REGISTRYINDEX, ref_);
+  void reference::get_field(lua_State* L) const {
+    // TODO rawgeti?
+    push_integer(L, ref_);
+    lua_gettable(L, LUA_REGISTRYINDEX);
   }
 
   void reference::unref() {
@@ -280,11 +291,11 @@ namespace brigid {
     }
     {
       if (no_full_range_lightuserdata) {
-        get_field(L, -1, "decode_pointer");
+        lua_getfield(L, -1, "decode_pointer");
         lua_setfield(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
       }
 
-      get_field(L, -1, "is_love2d_data");
+      lua_getfield(L, -1, "is_love2d_data");
       lua_setfield(L, LUA_REGISTRYINDEX, "brigid.common.is_love2d_data");
     }
     lua_pop(L, 1);

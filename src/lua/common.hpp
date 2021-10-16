@@ -137,12 +137,7 @@ namespace brigid {
     }
   }
 
-  template <class T>
-  inline int get_field(lua_State* L, int index, T key) {
-    index = abs_index(L, index);
-    push(L, std::forward<T>(key));
-    return get_table(L, index);
-  }
+  int get_field(lua_State*, int, const char*);
 
   class stack_guard : private noncopyable {
   public:
@@ -161,7 +156,7 @@ namespace brigid {
     ~reference();
     reference& operator=(reference&&);
     lua_State* state() const;
-    int get_field(lua_State*) const;
+    void get_field(lua_State*) const;
   private:
     lua_State* state_;
     int state_ref_;
