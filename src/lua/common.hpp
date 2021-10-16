@@ -22,7 +22,6 @@
 
 namespace brigid {
   using cxx_function_t = void (*)(lua_State*);
-  using lua_unsigned_t = std::make_unsigned<lua_Integer>::type;
 
   static constexpr int check_validate_none = 0;
   static constexpr int check_validate_not_closed = 1;
@@ -36,7 +35,7 @@ namespace brigid {
 
   template <class T>
   inline void push_integer(lua_State* L, T source, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) <= sizeof(lua_Integer))>* = nullptr) {
-    lua_pushinteger(L, source);
+    lua_pushinteger(L, static_cast<lua_Integer>(source));
   }
 
   template <class T>
@@ -44,24 +43,24 @@ namespace brigid {
     static constexpr T max = std::numeric_limits<lua_Integer>::max();
     static constexpr T min = std::numeric_limits<lua_Integer>::min();
     if (min <= source && source <= max) {
-      lua_pushinteger(L, source);
+      lua_pushinteger(L, static_cast<lua_Integer>(source));
     } else {
-      lua_pushnumber(L, source);
+      lua_pushnumber(L, static_cast<lua_Number>(source));
     }
   }
 
   template <class T>
   inline void push_integer(lua_State* L, T source, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) < sizeof(lua_Integer))>* = nullptr) {
-    lua_pushinteger(L, source);
+    lua_pushinteger(L, static_cast<lua_Integer>(source));
   }
 
   template <class T>
   inline void push_integer(lua_State* L, T source, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) >= sizeof(lua_Integer))>* = nullptr) {
     static constexpr T max = std::numeric_limits<lua_Integer>::max();
     if (source <= max) {
-      lua_pushinteger(L, source);
+      lua_pushinteger(L, static_cast<lua_Integer>(source));
     } else {
-      lua_pushnumber(L, source);
+      lua_pushnumber(L, static_cast<lua_Number>(source));
     }
   }
 
