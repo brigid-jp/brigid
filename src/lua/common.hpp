@@ -22,41 +22,62 @@
 
 namespace brigid {
   using cxx_function_t = void (*)(lua_State*);
+  using lua_unsigned_t = std::make_unsigned<lua_Integer>::type;
 
-  static const int check_validate_none = 0;
-  static const int check_validate_not_closed = 1;
-  static const int check_validate_not_running = 2;
-  static const int check_validate_all = 3;
+  static constexpr int check_validate_none = 0;
+  static constexpr int check_validate_not_closed = 1;
+  static constexpr int check_validate_not_running = 2;
+  static constexpr int check_validate_all = 3;
 
   int abs_index(lua_State*, int);
-  int get_table(lua_State*, int);
   void new_metatable(lua_State*, const char*);
   void set_metatable(lua_State*, const char*);
   bool is_false(lua_State*, int);
 
-  void push(lua_State*, lua_Integer); // TODO よく考える
-  void push(lua_State*, const char*);
-  void push(lua_State*, const char*, size_t);
-  void push(lua_State*, const std::string&);
-  void push(lua_State*, cxx_function_t);
-
-  void push_handle_impl(lua_State*, const void*);
-  void push_pointer(lua_State*, const void*);
+  template <class T>
+  inline void push_integer(lua_State* L, T source, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) <= sizeof(lua_Integer))>* = nullptr) {
+    lua_pushinteger(L, source);
+  }
 
   template <class T>
-  inline void push_handle(lua_State* L, T source, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(void*))>* = nullptr) {
+  inline void push_integer(lua_State* L, T source, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) > sizeof(lua_Integer))>* = nullptr) {
+    static constexpr T max = std::numeric_limits<lua_Integer>::max();
+    static constexpr T min = std::numeric_limits<lua_Integer>::min();
+    if (min <= source && source <= max) {
+      lua_pushinteger(L, source);
+    } else {
+      lua_pushnumber(L, source);
+    }
+  }
+
+  template <class T>
+  inline void push_integer(lua_State* L, T source, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) < sizeof(lua_Integer))>* = nullptr) {
+    lua_pushinteger(L, source);
+  }
+
+  template <class T>
+  inline void push_integer(lua_State* L, T source, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) >= sizeof(lua_Integer))>* = nullptr) {
+    static constexpr T max = std::numeric_limits<lua_Integer>::max();
+    if (source <= max) {
+      lua_pushinteger(L, source);
+    } else {
+      lua_pushnumber(L, source);
+    }
+  }
+
+  void push_handle_impl(lua_State*, const void*);
+
+  template <class T>
+  inline void push_handle(lua_State* L, T source, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(const void*))>* = nullptr) {
     push_handle_impl(L, reinterpret_cast<const void*>(source));
   }
 
-  /*
+  void push_pointer_impl(lua_State*, const void*);
+
   template <class T>
-  inline void push_pointer(lua_State* L, T source, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(void*))>* = nullptr) {
-    static const size_t size = sizeof(source);
-    char buffer[size] = {};
-    memcpy(buffer, &source, size);
-    lua_pushlstring(L, buffer, size);
+  inline void push_pointer(lua_State* L, T source, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(const void*))>* = nullptr) {
+    push_pointer_impl(L, reinterpret_cast<const void*>(source));
   }
-  */
 
   void* to_handle_impl(lua_State*, int);
 
@@ -64,17 +85,6 @@ namespace brigid {
   inline T to_handle(lua_State* L, int index, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(void*))>* = nullptr) {
     return reinterpret_cast<T>(to_handle_impl(L, index));
   }
-
-  /*
-  template <class T>
-  inline T decode_pointer(const char* data, size_t size, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(void*))>* = nullptr) {
-    T result = nullptr;
-    if (data && size == sizeof(T)) {
-      memcpy(&result, data, size);
-    }
-    return result;
-  }
-  */
 
   template <class T>
   inline T check_integer(lua_State* L, int arg, T min, T max, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value)>* = nullptr) {
@@ -102,42 +112,9 @@ namespace brigid {
     return static_cast<T*>(luaL_checkudata(L, arg, name));
   }
 
-  template <class T>
-  inline void set_field(lua_State* L, int index, T key) {
-    index = abs_index(L, index);
-    push(L, std::forward<T>(key));
-    lua_pushvalue(L, -2);
-    lua_settable(L, index);
-    lua_pop(L, 1);
-  }
-
-  template <class T, class... T_args>
-  inline void set_field(lua_State* L, int index, T key, T_args... args) {
-    index = abs_index(L, index);
-    push(L, std::forward<T>(key));
-    push(L, std::forward<T_args>(args)...);
-    lua_settable(L, index);
-  }
-
-  template <class... T>
-  inline void set_metafield(lua_State* L, int index, T... args) {
-    index = abs_index(L, index);
-    if (lua_getmetatable(L, index)) {
-      set_field(L, -1, std::forward<T>(args)...);
-      lua_pop(L, 1);
-    } else {
-      lua_newtable(L);
-      set_field(L, -1, std::forward<T>(args)...);
-      lua_setmetatable(L, index);
-    }
-  }
-
-  template <class T>
-  inline int get_field(lua_State* L, int index, T key) {
-    index = abs_index(L, index);
-    push(L, std::forward<T>(key));
-    return get_table(L, index);
-  }
+  void set_field(lua_State*, int, const char*, cxx_function_t);
+  void set_metafield(lua_State*, int, const char*, cxx_function_t);
+  int get_field(lua_State*, int, const char*);
 
   class stack_guard : private noncopyable {
   public:
@@ -156,7 +133,7 @@ namespace brigid {
     ~reference();
     reference& operator=(reference&&);
     lua_State* state() const;
-    int get_field(lua_State*) const;
+    void get_field(lua_State*) const;
   private:
     lua_State* state_;
     int state_ref_;

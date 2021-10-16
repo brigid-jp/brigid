@@ -171,7 +171,7 @@ namespace brigid {
     {
       new_metatable(L, "brigid.cryptor");
       lua_pushvalue(L, -2);
-      set_field(L, -2, "__index");
+      lua_setfield(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);
       set_field(L, -1, "__close", impl_close);
       lua_pop(L, 1);
@@ -179,7 +179,7 @@ namespace brigid {
       set_field(L, -1, "update", impl_update);
       set_field(L, -1, "close", impl_close);
     }
-    set_field(L, -2, "cryptor");
+    lua_setfield(L, -2, "cryptor");
 
     set_field(L, -1, "encryptor", impl_encryptor);
     set_field(L, -1, "decryptor", impl_decryptor);

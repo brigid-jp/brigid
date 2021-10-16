@@ -1,4 +1,4 @@
-// Copyright (c) 2019 <dev@brigid.jp>
+// Copyright (c) 2019,2021 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -10,7 +10,7 @@
 namespace brigid {
   namespace {
     void impl_get_version(lua_State* L) {
-      push(L, get_version());
+      lua_pushstring(L, get_version());
     }
   }
 

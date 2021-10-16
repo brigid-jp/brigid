@@ -78,8 +78,8 @@ namespace brigid {
         if (lua_State* L = progress_cb_.state()) {
           stack_guard guard(L);
           progress_cb_.get_field(L);
-          push(L, now);
-          push(L, total);
+          push_integer(L, now);
+          push_integer(L, total);
           running_ = true;
           scope_exit scope_guard([&]() {
             running_ = false;
@@ -98,10 +98,13 @@ namespace brigid {
         if (lua_State* L = header_cb_.state()) {
           stack_guard guard(L);
           header_cb_.get_field(L);
-          push(L, code);
+          push_integer(L, code);
           lua_newtable(L);
           for (const auto& field : header) {
-            set_field(L, -1, field.first, field.second);
+            // TODO rawset?
+            lua_pushlstring(L, field.first.data(), field.first.size());
+            lua_pushlstring(L, field.second.data(), field.second.size());
+            lua_settable(L, -3);
           }
           running_ = true;
           scope_exit scope_guard([&]() {
@@ -255,7 +258,7 @@ namespace brigid {
 
       if (!result) {
         lua_pushnil(L);
-        push(L, "canceled");
+        lua_pushstring(L, "canceled");
       }
     }
   }
@@ -272,7 +275,7 @@ namespace brigid {
     {
       new_metatable(L, "brigid.http_session");
       lua_pushvalue(L, -2);
-      set_field(L, -2, "__index");
+      lua_setfield(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);
       set_field(L, -1, "__close", impl_close);
       lua_pop(L, 1);
@@ -281,6 +284,6 @@ namespace brigid {
       set_field(L, -1, "request", impl_request);
       set_field(L, -1, "close", impl_close);
     }
-    set_field(L, -2, "http_session");
+    lua_setfield(L, -2, "http_session");
   }
 }

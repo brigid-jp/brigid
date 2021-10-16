@@ -30,23 +30,16 @@ namespace brigid {
       return 1;
     }
 
-    void bootstrap_once(lua_State* L) {
+    void bootstrap(lua_State* L) {
       int top = lua_gettop(L);
       lua_pushcfunction(L, check_full_range_lightuserdata);
       no_full_range_lightuserdata = lua_pcall(L, 0, 0, 0) != 0;
       lua_settop(L, top);
     }
 
-    void bootstrap(lua_State* L) {
-      std::call_once(once, bootstrap_once, L);
-    }
-
     int impl_closure(lua_State* L) {
       int top = lua_gettop(L);
       try {
-        // size_t size = 0;
-        // const char* data = lua_tolstring(L, lua_upvalueindex(1), &size);
-        // if (cxx_function_t function = decode_pointer<cxx_function_t>(data, size)) {
         if (cxx_function_t function = to_handle<cxx_function_t>(L, lua_upvalueindex(1))) {
           function(L);
           int result = lua_gettop(L) - top;
@@ -63,8 +56,8 @@ namespace brigid {
         }
       } catch (const std::runtime_error& e) {
         lua_settop(L, top);
-        lua_pushnil(L),
-        push(L, e.what());
+        lua_pushnil(L);
+        lua_pushstring(L, e.what());
         return 2;
       } catch (const std::exception& e) {
         lua_settop(L, top);
@@ -89,19 +82,11 @@ namespace brigid {
 #endif
   }
 
-  int get_table(lua_State* L, int index) {
-#if LUA_VERSION_NUM >= 503
-    return lua_gettable(L, index);
-#else
-    lua_gettable(L, index);
-    return lua_type(L, -1);
-#endif
-  }
-
   void new_metatable(lua_State* L, const char* name) {
     luaL_newmetatable(L, name);
 #if LUA_VERSION_NUM <= 502
-    set_field(L, -1, "__name", name);
+    lua_pushstring(L, name);
+    lua_setfield(L, -2, "__name");
 #endif
   }
 
@@ -118,69 +103,79 @@ namespace brigid {
     return lua_isboolean(L, index) && !lua_toboolean(L, index);
   }
 
-  void push(lua_State* L, lua_Integer value) {
-    lua_pushinteger(L, value);
-  }
-
-  void push(lua_State* L, const char* value) {
-    lua_pushstring(L, value);
-  }
-
-  void push(lua_State* L, const char* data, size_t size) {
-    lua_pushlstring(L, data, size);
-  }
-
-  void push(lua_State* L, const std::string& value) {
-    lua_pushlstring(L, value.data(), value.size());
-  }
-
-  void push(lua_State* L, cxx_function_t value) {
-    push_handle(L, value);
-    lua_pushcclosure(L, impl_closure, 1);
-  }
-
-  void push_handle_impl(lua_State* L, const void* value) {
+  void push_handle_impl(lua_State* L, const void* source) {
     if (no_full_range_lightuserdata) {
-      static constexpr size_t size = sizeof(value);
+      static constexpr size_t size = sizeof(source);
       char buffer[size] = {};
-      memcpy(buffer, &value, size);
+      memcpy(buffer, &source, size);
       lua_pushlstring(L, buffer, size);
     } else {
-      lua_pushlightuserdata(L, const_cast<void*>(value));
+      lua_pushlightuserdata(L, const_cast<void*>(source));
     }
   }
 
-  void push_pointer(lua_State* L, const void* value) {
+  void push_pointer_impl(lua_State* L, const void* source) {
     if (no_full_range_lightuserdata) {
-      static constexpr size_t size = sizeof(value);
+      static constexpr size_t size = sizeof(source);
       char buffer[size] = {};
-      memcpy(buffer, &value, size);
-
-      get_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
+      memcpy(buffer, &source, size);
+      lua_getfield(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
       lua_pushlstring(L, buffer, size);
       if (lua_pcall(L, 1, 1, 0) != 0) {
         throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
       }
     } else {
-      lua_pushlightuserdata(L, const_cast<void*>(value));
+      lua_pushlightuserdata(L, const_cast<void*>(source));
     }
   }
 
   void* to_handle_impl(lua_State* L, int index) {
-    if (no_full_range_lightuserdata) {
-      void* result = nullptr;
-      size_t size = 0;
-      if (const char* data = lua_tolstring(L, index, &size)) {
-        if (size == sizeof(result)) {
-          memcpy(&result, data, size);
+    switch (lua_type(L, index)) {
+      case LUA_TSTRING:
+        {
+          size_t size = 0;
+          if (const char* data = lua_tolstring(L, index, &size)) {
+            if (size == sizeof(void*)) {
+              void* result = nullptr;
+              memcpy(&result, data, size);
+              return result;
+            }
+          }
         }
-      }
-      return result;
-    } else {
-      // TODO check lightuserdata?
-      // TODO support encoded string?
-      return lua_touserdata(L, index);
+        return nullptr;
+      case LUA_TLIGHTUSERDATA:
+        return lua_touserdata(L, index);
+      default:
+        return nullptr;
     }
+  }
+
+  void set_field(lua_State* L, int index, const char* key, cxx_function_t value) {
+    index = abs_index(L, index);
+    push_handle(L, value);
+    lua_pushcclosure(L, impl_closure, 1);
+    lua_setfield(L, index, key);
+  }
+
+  void set_metafield(lua_State* L, int index, const char* key, cxx_function_t value) {
+    index = abs_index(L, index);
+    if (lua_getmetatable(L, index)) {
+      set_field(L, -1, key, value);
+      lua_pop(L, 1);
+    } else {
+      lua_newtable(L);
+      set_field(L, -1, key, value);
+      lua_setmetatable(L, index);
+    }
+  }
+
+  int get_field(lua_State* L, int index, const char* key) {
+#if LUA_VERSION_NUM >= 503
+    return lua_getfield(L, index, key);
+#else
+    lua_getfield(L, index, key);
+    return lua_type(L, -1);
+#endif
   }
 
   stack_guard::stack_guard(lua_State* L)
@@ -232,8 +227,10 @@ namespace brigid {
     return state_;
   }
 
-  int reference::get_field(lua_State* L) const {
-    return brigid::get_field(L, LUA_REGISTRYINDEX, ref_);
+  void reference::get_field(lua_State* L) const {
+    // TODO rawgeti?
+    push_integer(L, ref_);
+    lua_gettable(L, LUA_REGISTRYINDEX);
   }
 
   void reference::unref() {
@@ -260,7 +257,11 @@ namespace brigid {
   }
 
   void initialize_common(lua_State* L) {
-    bootstrap(L);
+    try {
+      std::call_once(once, bootstrap, L);
+    } catch (const std::exception& e) {
+      luaL_error(L, "%s", e.what());
+    }
 
     lua_newtable(L);
     {
@@ -279,12 +280,12 @@ namespace brigid {
     }
     {
       if (no_full_range_lightuserdata) {
-        get_field(L, -1, "decode_pointer");
-        set_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
+        lua_getfield(L, -1, "decode_pointer");
+        lua_setfield(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
       }
 
-      get_field(L, -1, "is_love2d_data");
-      set_field(L, LUA_REGISTRYINDEX, "brigid.common.is_love2d_data");
+      lua_getfield(L, -1, "is_love2d_data");
+      lua_setfield(L, LUA_REGISTRYINDEX, "brigid.common.is_love2d_data");
     }
     lua_pop(L, 1);
   }
