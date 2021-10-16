@@ -100,12 +100,12 @@ namespace brigid {
     struct nifty_counter {
       nifty_counter() {
         ++nifty_count;
-        std::cout << "nifty_count cstr " << nifty_count << " " << std::this_thread::get_id() << "\n";
+        // std::cout << "nifty_count cstr " << nifty_count << " " << std::this_thread::get_id() << "\n";
       }
 
       ~nifty_counter() {
         --nifty_count;
-        std::cout << "nifty_count dstr " << nifty_count << " " << std::this_thread::get_id() << "\n";
+        // std::cout << "nifty_count dstr " << nifty_count << " " << std::this_thread::get_id() << "\n";
       }
     };
 
@@ -149,6 +149,40 @@ namespace brigid {
       return 0;
     }
 
+    std::vector<char> buffer(256);
+
+    int get_handle_lightuserdata(lua_State* L) {
+      lua_pushlightuserdata(L, buffer.data());
+      return 1;
+    }
+
+    int get_handle_string(lua_State* L) {
+      const void* data = buffer.data();
+      static constexpr size_t size = sizeof(data);
+      char buffer[size] = {};
+      memcpy(buffer, &data, size);
+      lua_pushlstring(L, buffer, size);
+      return 1;
+    }
+
+    int dump_handle(lua_State* L) {
+      if (const void* userdata = lua_touserdata(L, 1)) {
+        std::cout << "userdata: " << userdata << "\n";
+        return 0;
+      }
+      size_t size = 0;
+      if (const char* data = lua_tolstring(L, 1, &size)) {
+        if (sizeof(void*) == size) {
+          void* ptr = nullptr;
+          memcpy(&ptr, data, size);
+          std::cout << "string: " << ptr << "\n";
+          return 0;
+        }
+      }
+      std::cout << "unknown\n";
+      return 0;
+    }
+
     void initialize(lua_State* L) {
       lua_pushinteger(L, sizeof(void*));
       lua_setfield(L, -2, "sizeof_void_pointer");
@@ -168,6 +202,13 @@ namespace brigid {
 
       lua_pushcfunction(L, create_native_threads);
       lua_setfield(L, -2, "create_native_threads");
+
+      lua_pushcfunction(L, get_handle_lightuserdata);
+      lua_setfield(L, -2, "get_handle_lightuserdata");
+      lua_pushcfunction(L, get_handle_string);
+      lua_setfield(L, -2, "get_handle_string");
+      lua_pushcfunction(L, dump_handle);
+      lua_setfield(L, -2, "dump_handle");
     }
   }
 }
@@ -175,9 +216,9 @@ namespace brigid {
 extern "C" int luaopen_test_address_space(lua_State* L) {
   std::lock_guard<std::mutex> lock(brigid::mutex);
 
-  std::cout << "open start " << std::this_thread::get_id() << std::endl;
+  // std::cout << "open start " << std::this_thread::get_id() << std::endl;
   lua_newtable(L);
   brigid::initialize(L);
-  std::cout << "open ended " << std::this_thread::get_id() << std::endl;
+  // std::cout << "open ended " << std::this_thread::get_id() << std::endl;
   return 1;
 }
