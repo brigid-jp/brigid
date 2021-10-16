@@ -30,15 +30,11 @@ namespace brigid {
       return 1;
     }
 
-    void bootstrap_once(lua_State* L) {
+    void bootstrap(lua_State* L) {
       int top = lua_gettop(L);
       lua_pushcfunction(L, check_full_range_lightuserdata);
       no_full_range_lightuserdata = lua_pcall(L, 0, 0, 0) != 0;
       lua_settop(L, top);
-    }
-
-    void bootstrap(lua_State* L) {
-      std::call_once(once, bootstrap_once, L);
     }
 
     int impl_closure(lua_State* L) {
@@ -260,7 +256,11 @@ namespace brigid {
   }
 
   void initialize_common(lua_State* L) {
-    bootstrap(L);
+    try {
+      std::call_once(once, bootstrap, L);
+    } catch (const std::exception& e) {
+      luaL_error(L, "%s", e.what());
+    }
 
     lua_newtable(L);
     {
