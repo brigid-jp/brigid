@@ -34,8 +34,6 @@ namespace brigid {
   void set_metatable(lua_State*, const char*);
   bool is_false(lua_State*, int);
 
-  void push(lua_State*, cxx_function_t);
-
   template <class T>
   inline void push_integer(lua_State* L, T source, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) <= sizeof(lua_Integer))>* = nullptr) {
     lua_pushinteger(L, source);
@@ -114,24 +112,8 @@ namespace brigid {
     return static_cast<T*>(luaL_checkudata(L, arg, name));
   }
 
-  inline void set_field(lua_State* L, int index, const char* key, cxx_function_t value) {
-    index = abs_index(L, index);
-    push(L, value);
-    lua_setfield(L, index, key);
-  }
-
-  inline void set_metafield(lua_State* L, int index, const char* key, cxx_function_t value) {
-    index = abs_index(L, index);
-    if (lua_getmetatable(L, index)) {
-      set_field(L, -1, key, value);
-      lua_pop(L, 1);
-    } else {
-      lua_newtable(L);
-      set_field(L, -1, key, value);
-      lua_setmetatable(L, index);
-    }
-  }
-
+  void set_field(lua_State*, int, const char*, cxx_function_t);
+  void set_metafield(lua_State*, int, const char*, cxx_function_t);
   int get_field(lua_State*, int, const char*);
 
   class stack_guard : private noncopyable {

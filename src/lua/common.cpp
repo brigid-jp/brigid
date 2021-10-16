@@ -103,11 +103,6 @@ namespace brigid {
     return lua_isboolean(L, index) && !lua_toboolean(L, index);
   }
 
-  void push(lua_State* L, cxx_function_t value) {
-    push_handle(L, value);
-    lua_pushcclosure(L, impl_closure, 1);
-  }
-
   void push_handle_impl(lua_State* L, const void* source) {
     if (no_full_range_lightuserdata) {
       static constexpr size_t size = sizeof(source);
@@ -152,6 +147,25 @@ namespace brigid {
         return lua_touserdata(L, index);
       default:
         return nullptr;
+    }
+  }
+
+  void set_field(lua_State* L, int index, const char* key, cxx_function_t value) {
+    index = abs_index(L, index);
+    push_handle(L, value);
+    lua_pushcclosure(L, impl_closure, 1);
+    lua_setfield(L, index, key);
+  }
+
+  void set_metafield(lua_State* L, int index, const char* key, cxx_function_t value) {
+    index = abs_index(L, index);
+    if (lua_getmetatable(L, index)) {
+      set_field(L, -1, key, value);
+      lua_pop(L, 1);
+    } else {
+      lua_newtable(L);
+      set_field(L, -1, key, value);
+      lua_setmetatable(L, index);
     }
   }
 
