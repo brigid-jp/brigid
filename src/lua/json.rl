@@ -246,6 +246,6 @@ namespace brigid {
     {
       set_field(L, -1, "parse", impl_parse);
     }
-    set_field(L, -2, "json");
+    lua_setfield(L, -2, "json");
   }
 }

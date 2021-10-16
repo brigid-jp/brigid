@@ -109,7 +109,7 @@ namespace brigid {
     {
       new_metatable(L, "brigid.data_writer");
       lua_pushvalue(L, -2);
-      set_field(L, -2, "__index");
+      lua_setfield(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);
       set_field(L, -1, "__close", impl_close);
       set_field(L, -1, "__len", impl_get_size);
@@ -123,6 +123,6 @@ namespace brigid {
       set_field(L, -1, "close", impl_close);
       set_field(L, -1, "write", impl_write);
     }
-    set_field(L, -2, "data_writer");
+    lua_setfield(L, -2, "data_writer");
   }
 }

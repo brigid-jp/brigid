@@ -119,15 +119,6 @@ namespace brigid {
     return static_cast<T*>(luaL_checkudata(L, arg, name));
   }
 
-  template <class T>
-  inline void set_field(lua_State* L, int index, T key) {
-    index = abs_index(L, index);
-    push(L, std::forward<T>(key));
-    lua_pushvalue(L, -2);
-    lua_settable(L, index);
-    lua_pop(L, 1);
-  }
-
   inline void set_field(lua_State* L, int index, const char* key, cxx_function_t value) {
     index = abs_index(L, index);
     push(L, value);

@@ -281,11 +281,11 @@ namespace brigid {
     {
       if (no_full_range_lightuserdata) {
         get_field(L, -1, "decode_pointer");
-        set_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
+        lua_setfield(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
       }
 
       get_field(L, -1, "is_love2d_data");
-      set_field(L, LUA_REGISTRYINDEX, "brigid.common.is_love2d_data");
+      lua_setfield(L, LUA_REGISTRYINDEX, "brigid.common.is_love2d_data");
     }
     lua_pop(L, 1);
   }

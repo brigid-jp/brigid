@@ -109,7 +109,7 @@ namespace brigid {
     {
       new_metatable(L, "brigid.hasher");
       lua_pushvalue(L, -2);
-      set_field(L, -2, "__index");
+      lua_setfield(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);
       set_field(L, -1, "__close", impl_close);
       lua_pop(L, 1);
@@ -119,6 +119,6 @@ namespace brigid {
       set_field(L, -1, "digest", impl_digest);
       set_field(L, -1, "close", impl_close);
     }
-    set_field(L, -2, "hasher");
+    lua_setfield(L, -2, "hasher");
   }
 }

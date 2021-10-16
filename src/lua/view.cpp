@@ -64,7 +64,7 @@ namespace brigid {
     {
       new_metatable(L, "brigid.view");
       lua_pushvalue(L, -2);
-      set_field(L, -2, "__index");
+      lua_setfield(L, -2, "__index");
       set_field(L, -1, "__len", impl_get_size);
       set_field(L, -1, "__tostring", impl_get_string);
       lua_pop(L, 1);
@@ -73,6 +73,6 @@ namespace brigid {
       set_field(L, -1, "get_size", impl_get_size);
       set_field(L, -1, "get_string", impl_get_string);
     }
-    set_field(L, -2, "view");
+    lua_setfield(L, -2, "view");
   }
 }
