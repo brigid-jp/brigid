@@ -37,6 +37,11 @@ namespace brigid {
       return 1;
     }
 
+    int push_48bit_lightuserdata(lua_State* L) {
+      lua_pushlightuserdata(L, reinterpret_cast<void*>(0x800000000000));
+      return 1;
+    }
+
     int bench_get_registry01(lua_State* L) {
       using clock_type = std::chrono::high_resolution_clock;
 
@@ -192,6 +197,9 @@ namespace brigid {
 
       lua_pushcfunction(L, check_full_range_lightuserdata);
       lua_setfield(L, -2, "check_full_range_lightuserdata");
+
+      lua_pushcfunction(L, push_48bit_lightuserdata);
+      lua_setfield(L, -2, "push_48bit_lightuserdata");
 
       lua_pushcfunction(L, bench_get_registry01);
       lua_setfield(L, -2, "bench_get_registry01");

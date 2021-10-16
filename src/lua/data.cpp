@@ -41,9 +41,7 @@ namespace brigid {
         throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
       }
       if (!lua_isnil(L, -2)) {
-        size_t size = 0;
-        const char* data = lua_tolstring(L, -2, &size);
-        result = data_t(decode_pointer<const char*>(data, size), lua_tointeger(L, -1));
+        result = data_t(to_handle<const char*>(L, -2), lua_tointeger(L, -1));
         return true;
       }
       return false;

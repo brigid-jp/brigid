@@ -51,10 +51,4 @@ if ffi then
   module.dump_handle(h_lud);
   module.dump_handle(h_cdt);
   module.dump_handle(h_str);
-
-
 end
-
-
-
-
