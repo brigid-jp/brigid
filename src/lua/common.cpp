@@ -44,9 +44,6 @@ namespace brigid {
     int impl_closure(lua_State* L) {
       int top = lua_gettop(L);
       try {
-        // size_t size = 0;
-        // const char* data = lua_tolstring(L, lua_upvalueindex(1), &size);
-        // if (cxx_function_t function = decode_pointer<cxx_function_t>(data, size)) {
         if (cxx_function_t function = to_handle<cxx_function_t>(L, lua_upvalueindex(1))) {
           function(L);
           int result = lua_gettop(L) - top;
@@ -63,8 +60,8 @@ namespace brigid {
         }
       } catch (const std::runtime_error& e) {
         lua_settop(L, top);
-        lua_pushnil(L),
-        push(L, e.what());
+        lua_pushnil(L);
+        lua_pushstring(L, e.what());
         return 2;
       } catch (const std::exception& e) {
         lua_settop(L, top);
