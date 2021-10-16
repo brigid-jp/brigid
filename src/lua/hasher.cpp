@@ -93,7 +93,7 @@ namespace brigid {
     void impl_digest(lua_State* L) {
       hasher_t* self = check_hasher(L, 1);
       std::vector<char> result = self->digest();
-      push(L, result.data(), result.size());
+      lua_pushlstring(L, result.data(), result.size());
     }
   }
 

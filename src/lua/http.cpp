@@ -78,8 +78,8 @@ namespace brigid {
         if (lua_State* L = progress_cb_.state()) {
           stack_guard guard(L);
           progress_cb_.get_field(L);
-          push(L, now);
-          push(L, total);
+          push_integer(L, now);
+          push_integer(L, total);
           running_ = true;
           scope_exit scope_guard([&]() {
             running_ = false;
@@ -98,7 +98,7 @@ namespace brigid {
         if (lua_State* L = header_cb_.state()) {
           stack_guard guard(L);
           header_cb_.get_field(L);
-          push(L, code);
+          push_integer(L, code);
           lua_newtable(L);
           for (const auto& field : header) {
             set_field(L, -1, field.first, field.second);
@@ -255,7 +255,7 @@ namespace brigid {
 
       if (!result) {
         lua_pushnil(L);
-        push(L, "canceled");
+        lua_pushstring(L, "canceled");
       }
     }
   }

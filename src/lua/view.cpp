@@ -25,12 +25,12 @@ namespace brigid {
 
     void impl_get_size(lua_State* L) {
       view_t* self = check_view(L, 1);
-      push(L, self->size());
+      push_integer(L, self->size());
     }
 
     void impl_get_string(lua_State* L) {
       view_t* self = check_view(L, 1);
-      push(L, self->data(), self->size());
+      lua_pushlstring(L, self->data(), self->size());
     }
   }
 

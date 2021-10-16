@@ -22,11 +22,12 @@
 
 namespace brigid {
   using cxx_function_t = void (*)(lua_State*);
+  using lua_unsigned_t = std::make_unsigned<lua_Integer>::type;
 
-  static const int check_validate_none = 0;
-  static const int check_validate_not_closed = 1;
-  static const int check_validate_not_running = 2;
-  static const int check_validate_all = 3;
+  static constexpr int check_validate_none = 0;
+  static constexpr int check_validate_not_closed = 1;
+  static constexpr int check_validate_not_running = 2;
+  static constexpr int check_validate_all = 3;
 
   int abs_index(lua_State*, int);
   int get_table(lua_State*, int);
@@ -39,6 +40,37 @@ namespace brigid {
   void push(lua_State*, const char*, size_t);
   void push(lua_State*, const std::string&);
   void push(lua_State*, cxx_function_t);
+
+  template <class T>
+  inline void push_integer(lua_State* L, T source, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) <= sizeof(lua_Integer))>* = nullptr) {
+    lua_pushinteger(L, source);
+  }
+
+  template <class T>
+  inline void push_integer(lua_State* L, T source, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) > sizeof(lua_Integer))>* = nullptr) {
+    static constexpr T max = std::numeric_limits<lua_Integer>::max();
+    static constexpr T min = std::numeric_limits<lua_Integer>::min();
+    if (min <= source && source <= max) {
+      lua_pushinteger(L, source);
+    } else {
+      lua_pushnumber(L, source);
+    }
+  }
+
+  template <class T>
+  inline void push_integer(lua_State* L, T source, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) < sizeof(lua_Integer))>* = nullptr) {
+    lua_pushinteger(L, source);
+  }
+
+  template <class T>
+  inline void push_integer(lua_State* L, T source, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) >= sizeof(lua_Integer))>* = nullptr) {
+    static constexpr T max = std::numeric_limits<lua_Integer>::max();
+    if (source <= max) {
+      lua_pushinteger(L, source);
+    } else {
+      lua_pushnumber(L, source);
+    }
+  }
 
   void push_handle_impl(lua_State*, const void*);
 

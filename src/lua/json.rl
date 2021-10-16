@@ -19,11 +19,10 @@
 #include <vector>
 
 namespace brigid {
-  namespace {
-    using lua_unsigned_t = std::make_unsigned<lua_Integer>::type;
-    static const lua_unsigned_t integer_max_div10 = std::numeric_limits<lua_Integer>::max() / 10;
-    static const lua_unsigned_t integer_max_mod10 = std::numeric_limits<lua_Integer>::max() % 10;
+  static constexpr lua_unsigned_t integer_max_div10 = std::numeric_limits<lua_Integer>::max() / 10;
+  static constexpr lua_unsigned_t integer_max_mod10 = std::numeric_limits<lua_Integer>::max() % 10;
 
+  namespace {
     %%{
       machine json_parser;
 

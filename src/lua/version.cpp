@@ -10,7 +10,7 @@
 namespace brigid {
   namespace {
     void impl_get_version(lua_State* L) {
-      push(L, get_version());
+      lua_pushstring(L, get_version());
     }
   }
 
