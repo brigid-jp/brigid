@@ -188,6 +188,116 @@ namespace brigid {
       return 0;
     }
 
+    int bench_callback01(lua_State* L) {
+      using clock_type = std::chrono::high_resolution_clock;
+
+      lua_State* state = lua_newthread(L);
+      int ref_thread = luaL_ref(L, LUA_REGISTRYINDEX);
+
+      lua_pushvalue(L, 1);
+      int ref_cb1 = luaL_ref(L, LUA_REGISTRYINDEX);
+
+      lua_pushvalue(L, 2);
+      int ref_cb2 = luaL_ref(L, LUA_REGISTRYINDEX);
+
+      lua_pushvalue(L, 3);
+      int ref_cb3 = luaL_ref(L, LUA_REGISTRYINDEX);
+
+      lua_pushvalue(L, 4);
+      int ref_cb4 = luaL_ref(L, LUA_REGISTRYINDEX);
+
+      clock_type::time_point t0 = clock_type::now();
+      for (size_t i = 0; i < 1000000; ++i) {
+        if (lua_State* L = state) {
+          lua_rawgeti(L, LUA_REGISTRYINDEX, ref_cb1);
+          lua_pushinteger(L, i);
+          if (lua_pcall(L, 1, 0, 0) != 0) {
+            luaL_error(L, "%s", lua_tostring(L, -1));
+          }
+        }
+        if (lua_State* L = state) {
+          lua_rawgeti(L, LUA_REGISTRYINDEX, ref_cb2);
+          lua_pushinteger(L, i);
+          if (lua_pcall(L, 1, 0, 0) != 0) {
+            luaL_error(L, "%s", lua_tostring(L, -1));
+          }
+        }
+        if (lua_State* L = state) {
+          lua_rawgeti(L, LUA_REGISTRYINDEX, ref_cb3);
+          lua_pushinteger(L, i);
+          if (lua_pcall(L, 1, 0, 0) != 0) {
+            luaL_error(L, "%s", lua_tostring(L, -1));
+          }
+        }
+        if (lua_State* L = state) {
+          lua_rawgeti(L, LUA_REGISTRYINDEX, ref_cb4);
+          lua_pushinteger(L, i);
+          if (lua_pcall(L, 1, 0, 0) != 0) {
+            luaL_error(L, "%s", lua_tostring(L, -1));
+          }
+        }
+      }
+      clock_type::time_point t1 = clock_type::now();
+      std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() << "\n";
+
+      luaL_unref(L, LUA_REGISTRYINDEX, ref_cb4);
+      luaL_unref(L, LUA_REGISTRYINDEX, ref_cb3);
+      luaL_unref(L, LUA_REGISTRYINDEX, ref_cb2);
+      luaL_unref(L, LUA_REGISTRYINDEX, ref_cb1);
+      luaL_unref(L, LUA_REGISTRYINDEX, ref_thread);
+      return 0;
+    }
+
+    int bench_callback02(lua_State* L) {
+      using clock_type = std::chrono::high_resolution_clock;
+
+      lua_State* state = lua_newthread(L);
+      int ref_thread = luaL_ref(L, LUA_REGISTRYINDEX);
+
+      lua_pushvalue(L, 1);
+      lua_pushvalue(L, 2);
+      lua_pushvalue(L, 3);
+      lua_pushvalue(L, 4);
+      lua_xmove(L, state, 4);
+
+      clock_type::time_point t0 = clock_type::now();
+      for (size_t i = 0; i < 1000000; ++i) {
+        if (lua_State* L = state) {
+          lua_pushvalue(L, 1);
+          lua_pushinteger(L, i);
+          if (lua_pcall(L, 1, 0, 0) != 0) {
+            luaL_error(L, "%s", lua_tostring(L, -1));
+          }
+        }
+        if (lua_State* L = state) {
+          lua_pushvalue(L, 2);
+          lua_pushinteger(L, i);
+          if (lua_pcall(L, 1, 0, 0) != 0) {
+            luaL_error(L, "%s", lua_tostring(L, -1));
+          }
+        }
+        if (lua_State* L = state) {
+          lua_pushvalue(L, 3);
+          lua_pushinteger(L, i);
+          if (lua_pcall(L, 1, 0, 0) != 0) {
+            luaL_error(L, "%s", lua_tostring(L, -1));
+          }
+        }
+        if (lua_State* L = state) {
+          lua_pushvalue(L, 4);
+          lua_pushinteger(L, i);
+          if (lua_pcall(L, 1, 0, 0) != 0) {
+            luaL_error(L, "%s", lua_tostring(L, -1));
+          }
+        }
+      }
+      clock_type::time_point t1 = clock_type::now();
+      std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() << "\n";
+
+      luaL_unref(L, LUA_REGISTRYINDEX, ref_thread);
+      return 0;
+    }
+
     void initialize(lua_State* L) {
       lua_pushinteger(L, sizeof(void*));
       lua_setfield(L, -2, "sizeof_void_pointer");
@@ -217,6 +327,11 @@ namespace brigid {
       lua_setfield(L, -2, "get_handle_string");
       lua_pushcfunction(L, dump_handle);
       lua_setfield(L, -2, "dump_handle");
+
+      lua_pushcfunction(L, bench_callback01);
+      lua_setfield(L, -2, "bench_callback01");
+      lua_pushcfunction(L, bench_callback02);
+      lua_setfield(L, -2, "bench_callback02");
     }
   }
 }
