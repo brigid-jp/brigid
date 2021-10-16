@@ -7,6 +7,8 @@ local module = require "test_address_space"
 
 print("sizeof_void_pointer", module.sizeof_void_pointer)
 
+module.push_48bit_lightuserdata()
+
 local v = 1
 for i = 0, 32 do
   local u = v - 1

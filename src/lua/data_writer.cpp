@@ -80,11 +80,7 @@ namespace brigid {
 
     void impl_get_pointer(lua_State* L) {
       data_writer_t* self = check_data_writer(L, 1);
-      get_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
       push_pointer(L, self->data());
-      if (lua_pcall(L, 1, 1, 0) != 0) {
-        throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
-      }
     }
 
     void impl_get_size(lua_State* L) {
