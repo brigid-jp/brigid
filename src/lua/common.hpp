@@ -30,15 +30,10 @@ namespace brigid {
   static constexpr int check_validate_all = 3;
 
   int abs_index(lua_State*, int);
-  int get_table(lua_State*, int);
   void new_metatable(lua_State*, const char*);
   void set_metatable(lua_State*, const char*);
   bool is_false(lua_State*, int);
 
-  void push(lua_State*, lua_Integer); // TODO よく考える
-  void push(lua_State*, const char*);
-  void push(lua_State*, const char*, size_t);
-  void push(lua_State*, const std::string&);
   void push(lua_State*, cxx_function_t);
 
   template <class T>
