@@ -11,7 +11,6 @@
 #include <string.h>
 #include <exception>
 #include <mutex>
-#include <functional>
 #include <stdexcept>
 #include <string>
 
@@ -245,15 +244,6 @@ namespace brigid {
     state_ = nullptr;
     state_ref_ = LUA_NOREF;
     ref_ = LUA_NOREF;
-  }
-
-  scope_exit::scope_exit(std::function<void ()> function)
-    : function_(function) {}
-
-  scope_exit::~scope_exit() {
-    try {
-      function_();
-    } catch (...) {}
   }
 
   void initialize_common(lua_State* L) {
