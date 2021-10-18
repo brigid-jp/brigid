@@ -9,6 +9,7 @@
 #include "data.hpp"
 #include "scope_exit.hpp"
 #include "stack_guard.hpp"
+#include "thread_reference.hpp"
 #include "view.hpp"
 
 #include <lua.hpp>

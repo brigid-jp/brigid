@@ -113,21 +113,6 @@ namespace brigid {
   void set_field(lua_State*, int, const char*, cxx_function_t);
   void set_metafield(lua_State*, int, const char*, cxx_function_t);
   int get_field(lua_State*, int, const char*);
-
-  class thread_reference : private noncopyable {
-  public:
-    thread_reference();
-    explicit thread_reference(lua_State*);
-    thread_reference(thread_reference&&);
-    ~thread_reference();
-    thread_reference& operator=(thread_reference&&);
-    lua_State* state() const;
-  private:
-    lua_State* state_;
-    int state_ref_;
-    void unref();
-    void reset();
-  };
 }
 
 #endif

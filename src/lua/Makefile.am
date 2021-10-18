@@ -13,6 +13,7 @@ noinst_HEADERS = \
 	data.hpp \
 	scope_exit.hpp \
 	stack_guard.hpp \
+	thread_reference.hpp \
 	view.hpp
 
 brigid_la_CPPFLAGS = -I$(top_srcdir)/include
@@ -30,6 +31,7 @@ brigid_la_SOURCES = \
 	module.cpp \
 	scope_exit.cpp \
 	stack_guard.cpp \
+	thread_reference.cpp \
 	version.cpp \
 	view.cpp
 
