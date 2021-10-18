@@ -8,6 +8,7 @@
 
 #include <lua.hpp>
 
+#include <stdint.h>
 #include <stddef.h>
 #include <string.h>
 #include <exception>
@@ -21,20 +22,28 @@ namespace brigid {
   namespace {
     std::once_flag once;
 
-    bool no_full_range_lightuserdata;
+    int lightuserdata_bits = std::numeric_limits<uintptr_t>::digits;
+    uintptr_t lightuserdata_mask;
 
-    int check_full_range_lightuserdata(lua_State* L) {
-      void* ptr = nullptr;
-      memset(&ptr, 0xFF, sizeof(ptr));
-      lua_pushlightuserdata(L, ptr);
-      return 1;
+    int check_lightuserdata(lua_State* L) {
+      static constexpr int digits = std::numeric_limits<uintptr_t>::digits;
+      int u = luaL_checkinteger(L, 1);
+      uintptr_t v = static_cast<uintptr_t>(-1) >> (digits - u);
+      lua_pushlightuserdata(L, reinterpret_cast<void*>(v));
+      return 0;
     }
 
     void bootstrap(lua_State* L) {
-      int top = lua_gettop(L);
-      lua_pushcfunction(L, check_full_range_lightuserdata);
-      no_full_range_lightuserdata = lua_pcall(L, 0, 0, 0) != 0;
-      lua_settop(L, top);
+      for (int i = 1; i <= std::numeric_limits<uintptr_t>::digits; ++i) {
+        stack_guard guard(L);
+        lua_pushcfunction(L, check_lightuserdata);
+        lua_pushinteger(L, i);
+        if (lua_pcall(L, 1, 0, 0) != 0) {
+          lightuserdata_bits = i - 1;
+          lightuserdata_mask = static_cast<uintptr_t>(-1) >> lightuserdata_bits << lightuserdata_bits;
+          break;
+        }
+      }
     }
 
     int impl_closure(lua_State* L) {
@@ -65,6 +74,64 @@ namespace brigid {
       }
       lua_settop(L, top);
       return luaL_error(L, "attempt to call an invalid upvalue");
+    }
+  }
+
+  namespace detail {
+    void push_handle(lua_State* L, const void* source) {
+      if (lightuserdata_mask & reinterpret_cast<uintptr_t>(source)) {
+        static constexpr size_t size = sizeof(source);
+        char buffer[size] = {};
+        memcpy(buffer, &source, size);
+        lua_pushlstring(L, buffer, size);
+      } else {
+        lua_pushlightuserdata(L, const_cast<void*>(source));
+      }
+    }
+
+    void push_pointer(lua_State* L, const void* source) {
+      if (lightuserdata_mask & reinterpret_cast<uintptr_t>(source)) {
+        static constexpr size_t size = sizeof(source);
+        char buffer[size] = {};
+        memcpy(buffer, &source, size);
+        lua_getfield(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
+        lua_pushlstring(L, buffer, size);
+        if (lua_pcall(L, 1, 1, 0) != 0) {
+          throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
+        }
+      } else {
+        lua_pushlightuserdata(L, const_cast<void*>(source));
+      }
+    }
+
+    void* to_handle(lua_State* L, int index) {
+      switch (lua_type(L, index)) {
+        case LUA_TSTRING:
+          {
+            size_t size = 0;
+            if (const char* data = lua_tolstring(L, index, &size)) {
+              if (size == sizeof(void*)) {
+                void* result = nullptr;
+                memcpy(&result, data, size);
+                return result;
+              }
+            }
+          }
+          return nullptr;
+        case LUA_TLIGHTUSERDATA:
+          return lua_touserdata(L, index);
+        default:
+          return nullptr;
+      }
+    }
+
+    void set_metatable(lua_State* L, const char* name) {
+#if LUA_VERSION_NUM >= 502
+      luaL_setmetatable(L, name);
+#else
+      luaL_getmetatable(L, name);
+      lua_setmetatable(L, -2);
+#endif
     }
   }
 
@@ -103,64 +170,8 @@ namespace brigid {
 #endif
   }
 
-  void set_metatable(lua_State* L, const char* name) {
-#if LUA_VERSION_NUM >= 502
-    luaL_setmetatable(L, name);
-#else
-    luaL_getmetatable(L, name);
-    lua_setmetatable(L, -2);
-#endif
-  }
-
   bool is_false(lua_State* L, int index) {
     return lua_isboolean(L, index) && !lua_toboolean(L, index);
-  }
-
-  void push_handle_impl(lua_State* L, const void* source) {
-    if (no_full_range_lightuserdata) {
-      static constexpr size_t size = sizeof(source);
-      char buffer[size] = {};
-      memcpy(buffer, &source, size);
-      lua_pushlstring(L, buffer, size);
-    } else {
-      lua_pushlightuserdata(L, const_cast<void*>(source));
-    }
-  }
-
-  void push_pointer_impl(lua_State* L, const void* source) {
-    if (no_full_range_lightuserdata) {
-      static constexpr size_t size = sizeof(source);
-      char buffer[size] = {};
-      memcpy(buffer, &source, size);
-      lua_getfield(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
-      lua_pushlstring(L, buffer, size);
-      if (lua_pcall(L, 1, 1, 0) != 0) {
-        throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
-      }
-    } else {
-      lua_pushlightuserdata(L, const_cast<void*>(source));
-    }
-  }
-
-  void* to_handle_impl(lua_State* L, int index) {
-    switch (lua_type(L, index)) {
-      case LUA_TSTRING:
-        {
-          size_t size = 0;
-          if (const char* data = lua_tolstring(L, index, &size)) {
-            if (size == sizeof(void*)) {
-              void* result = nullptr;
-              memcpy(&result, data, size);
-              return result;
-            }
-          }
-        }
-        return nullptr;
-      case LUA_TLIGHTUSERDATA:
-        return lua_touserdata(L, index);
-      default:
-        return nullptr;
-    }
   }
 
   void set_field(lua_State* L, int index, const char* key, cxx_function_t value) {
@@ -199,13 +210,13 @@ namespace brigid {
         throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
       }
       lua_pushvalue(L, -2);
-      lua_pushboolean(L, no_full_range_lightuserdata);
+      lua_pushboolean(L, lightuserdata_mask);
       if (lua_pcall(L, 2, 0, 0) != 0) {
         throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
       }
     }
     {
-      if (no_full_range_lightuserdata) {
+      if (lightuserdata_mask) {
         lua_getfield(L, -1, "decode_pointer");
         lua_setfield(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
       }
