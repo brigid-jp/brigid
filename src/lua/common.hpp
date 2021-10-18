@@ -114,15 +114,6 @@ namespace brigid {
   void set_metafield(lua_State*, int, const char*, cxx_function_t);
   int get_field(lua_State*, int, const char*);
 
-  class stack_guard : private noncopyable {
-  public:
-    explicit stack_guard(lua_State*);
-    ~stack_guard();
-  private:
-    lua_State* state_;
-    int top_;
-  };
-
   class reference : private noncopyable {
   public:
     reference();

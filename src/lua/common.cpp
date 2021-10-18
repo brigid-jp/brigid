@@ -4,6 +4,7 @@
 
 #include <brigid/error.hpp>
 #include "common.hpp"
+#include "stack_guard.hpp"
 
 #include <lua.hpp>
 
@@ -175,14 +176,6 @@ namespace brigid {
     lua_getfield(L, index, key);
     return lua_type(L, -1);
 #endif
-  }
-
-  stack_guard::stack_guard(lua_State* L)
-    : state_(L),
-      top_(lua_gettop(L)) {}
-
-  stack_guard::~stack_guard() {
-    lua_settop(state_, top_);
   }
 
   reference::reference()

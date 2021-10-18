@@ -12,6 +12,7 @@ noinst_HEADERS = \
 	common.lua \
 	data.hpp \
 	scope_exit.hpp \
+	stack_guard.hpp \
 	view.hpp
 
 brigid_la_CPPFLAGS = -I$(top_srcdir)/include
@@ -28,6 +29,7 @@ brigid_la_SOURCES = \
 	json.cxx \
 	module.cpp \
 	scope_exit.cpp \
+	stack_guard.cpp \
 	version.cpp \
 	view.cpp
 

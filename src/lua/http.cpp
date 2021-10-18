@@ -8,6 +8,7 @@
 #include "common.hpp"
 #include "data.hpp"
 #include "scope_exit.hpp"
+#include "stack_guard.hpp"
 #include "view.hpp"
 
 #include <lua.hpp>

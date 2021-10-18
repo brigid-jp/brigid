@@ -5,6 +5,7 @@
 #include <brigid/error.hpp>
 #include "common.hpp"
 #include "data.hpp"
+#include "stack_guard.hpp"
 
 #include <lua.hpp>
 
