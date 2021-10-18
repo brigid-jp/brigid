@@ -36,7 +36,7 @@ namespace brigid {
     bool is_love2d_data(lua_State* L, int index, data_t& result) {
       stack_guard guard(L);
       index = abs_index(L, index);
-      lua_getfield(L, LUA_REGISTRYINDEX, "brigid.common.is_love2d_data");
+      lua_getfield(L, LUA_REGISTRYINDEX, "brigid.is_love2d_data");
       lua_pushvalue(L, index);
       if (lua_pcall(L, 1, 2, 0) != 0) {
         throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));

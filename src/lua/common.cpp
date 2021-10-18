@@ -21,26 +21,24 @@
 namespace brigid {
   namespace {
     std::once_flag once;
-
     int lightuserdata_bits = std::numeric_limits<uintptr_t>::digits;
-    uintptr_t lightuserdata_mask;
+    uintptr_t lightuserdata_mask = 0;
 
     int check_lightuserdata(lua_State* L) {
-      static constexpr int digits = std::numeric_limits<uintptr_t>::digits;
-      int u = luaL_checkinteger(L, 1);
-      uintptr_t v = static_cast<uintptr_t>(-1) >> (digits - u);
+      int bits = std::numeric_limits<uintptr_t>::digits - luaL_checkinteger(L, 1);
+      uintptr_t v = static_cast<uintptr_t>(-1) >> bits;
       lua_pushlightuserdata(L, reinterpret_cast<void*>(v));
-      return 0;
+      return 1;
     }
 
     void bootstrap(lua_State* L) {
-      for (int i = 1; i <= std::numeric_limits<uintptr_t>::digits; ++i) {
+      for (int i = 1; i <= lightuserdata_bits; ++i) {
         stack_guard guard(L);
         lua_pushcfunction(L, check_lightuserdata);
         lua_pushinteger(L, i);
         if (lua_pcall(L, 1, 0, 0) != 0) {
           lightuserdata_bits = i - 1;
-          lightuserdata_mask = static_cast<uintptr_t>(-1) >> lightuserdata_bits << lightuserdata_bits;
+          lightuserdata_mask = static_cast<uintptr_t>(-1) << lightuserdata_bits;
           break;
         }
       }
@@ -79,7 +77,7 @@ namespace brigid {
 
   namespace detail {
     void push_handle(lua_State* L, const void* source) {
-      if (lightuserdata_mask & reinterpret_cast<uintptr_t>(source)) {
+      if (reinterpret_cast<uintptr_t>(source) & lightuserdata_mask) {
         static constexpr size_t size = sizeof(source);
         char buffer[size] = {};
         memcpy(buffer, &source, size);
@@ -90,11 +88,11 @@ namespace brigid {
     }
 
     void push_pointer(lua_State* L, const void* source) {
-      if (lightuserdata_mask & reinterpret_cast<uintptr_t>(source)) {
+      if (reinterpret_cast<uintptr_t>(source) & lightuserdata_mask) {
         static constexpr size_t size = sizeof(source);
         char buffer[size] = {};
         memcpy(buffer, &source, size);
-        lua_getfield(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
+        lua_getfield(L, LUA_REGISTRYINDEX, "brigid.string_to_ffi_pointer");
         lua_pushlstring(L, buffer, size);
         if (lua_pcall(L, 1, 1, 0) != 0) {
           throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
@@ -210,19 +208,19 @@ namespace brigid {
         throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
       }
       lua_pushvalue(L, -2);
-      lua_pushboolean(L, lightuserdata_mask);
+      lua_pushboolean(L, lightuserdata_mask != 0);
       if (lua_pcall(L, 2, 0, 0) != 0) {
         throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
       }
     }
     {
       if (lightuserdata_mask) {
-        lua_getfield(L, -1, "decode_pointer");
-        lua_setfield(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
+        lua_getfield(L, -1, "string_to_ffi_pointer");
+        lua_setfield(L, LUA_REGISTRYINDEX, "brigid.string_to_ffi_pointer");
       }
 
       lua_getfield(L, -1, "is_love2d_data");
-      lua_setfield(L, LUA_REGISTRYINDEX, "brigid.common.is_love2d_data");
+      lua_setfield(L, LUA_REGISTRYINDEX, "brigid.is_love2d_data");
     }
     lua_pop(L, 1);
   }
