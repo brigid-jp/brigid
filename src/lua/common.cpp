@@ -180,31 +180,18 @@ namespace brigid {
 
   reference::reference()
     : state_(),
-      state_ref_(LUA_NOREF),
-      ref_(LUA_NOREF) {}
+      state_ref_(LUA_NOREF) {}
 
   reference::reference(lua_State* L)
     : state_(),
-      state_ref_(LUA_NOREF),
-      ref_(LUA_NOREF) {
+      state_ref_(LUA_NOREF) {
     state_ = lua_newthread(L);
     state_ref_ = luaL_ref(L, LUA_REGISTRYINDEX);
-  }
-
-  reference::reference(lua_State* L, int index)
-    : state_(),
-      state_ref_(LUA_NOREF),
-      ref_(LUA_NOREF) {
-    state_ = lua_newthread(L);
-    state_ref_ = luaL_ref(L, LUA_REGISTRYINDEX);
-    lua_pushvalue(L, index);
-    ref_ = luaL_ref(L, LUA_REGISTRYINDEX);
   }
 
   reference::reference(reference&& that)
     : state_(that.state_),
-      state_ref_(that.state_ref_),
-      ref_(that.ref_) {
+      state_ref_(that.state_ref_) {
     that.reset();
   }
 
@@ -217,7 +204,6 @@ namespace brigid {
       unref();
       state_ = that.state_;
       state_ref_ = that.state_ref_;
-      ref_ = that.ref_;
       that.reset();
     }
     return *this;
@@ -227,16 +213,9 @@ namespace brigid {
     return state_;
   }
 
-  void reference::get_field(lua_State* L) const {
-    // TODO rawgeti?
-    push_integer(L, ref_);
-    lua_gettable(L, LUA_REGISTRYINDEX);
-  }
-
   void reference::unref() {
     if (lua_State* L = state_) {
       luaL_unref(L, LUA_REGISTRYINDEX, state_ref_);
-      luaL_unref(L, LUA_REGISTRYINDEX, ref_);
       reset();
     }
   }
@@ -244,7 +223,6 @@ namespace brigid {
   void reference::reset() {
     state_ = nullptr;
     state_ref_ = LUA_NOREF;
-    ref_ = LUA_NOREF;
   }
 
   void initialize_common(lua_State* L) {

@@ -118,16 +118,13 @@ namespace brigid {
   public:
     reference();
     explicit reference(lua_State*);
-    reference(lua_State*, int);
     reference(reference&&);
     ~reference();
     reference& operator=(reference&&);
     lua_State* state() const;
-    void get_field(lua_State*) const;
   private:
     lua_State* state_;
     int state_ref_;
-    int ref_;
     void unref();
     void reset();
   };
