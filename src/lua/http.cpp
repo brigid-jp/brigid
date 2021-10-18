@@ -80,7 +80,7 @@ namespace brigid {
 
       bool progress_cb(size_t now, size_t total) {
         if (progress_cb_) {
-          if (lua_State* L = ref_.state()) {
+          if (lua_State* L = ref_.get()) {
             stack_guard guard(L);
             lua_pushvalue(L, progress_cb_);
             push_integer(L, now);
@@ -102,7 +102,7 @@ namespace brigid {
 
       bool header_cb(int code, const std::map<std::string, std::string>& header) {
         if (header_cb_) {
-          if (lua_State* L = ref_.state()) {
+          if (lua_State* L = ref_.get()) {
             stack_guard guard(L);
             lua_pushvalue(L, header_cb_);
             push_integer(L, code);
@@ -130,7 +130,7 @@ namespace brigid {
 
       bool write_cb(const char* data, size_t size) {
         if (write_cb_) {
-          if (lua_State* L = ref_.state()) {
+          if (lua_State* L = ref_.get()) {
             stack_guard guard(L);
             lua_pushvalue(L, write_cb_);
             view_t* view = new_view(L, data, size);
@@ -190,32 +190,32 @@ namespace brigid {
       std::string password;
 
       if (get_field(L, 2, "progress") != LUA_TNIL) {
-        if (++ref_index == 1) {
+        if (!ref) {
           ref = thread_reference(L);
         }
         lua_pushvalue(L, -1);
-        lua_xmove(L, ref.state(), 1);
-        progress_cb = ref_index;
+        lua_xmove(L, ref.get(), 1);
+        progress_cb = ++ref_index;
       }
       lua_pop(L, 1);
 
       if (get_field(L, 2, "header") != LUA_TNIL) {
-        if (++ref_index == 1) {
+        if (!ref) {
           ref = thread_reference(L);
         }
         lua_pushvalue(L, -1);
-        lua_xmove(L, ref.state(), 1);
-        header_cb = ref_index;
+        lua_xmove(L, ref.get(), 1);
+        header_cb = ++ref_index;
       }
       lua_pop(L, 1);
 
       if (get_field(L, 2, "write") != LUA_TNIL) {
-        if (++ref_index == 1) {
+        if (!ref) {
           ref = thread_reference(L);
         }
         lua_pushvalue(L, -1);
-        lua_xmove(L, ref.state(), 1);
-        write_cb = ref_index;
+        lua_xmove(L, ref.get(), 1);
+        write_cb = ++ref_index;
       }
       lua_pop(L, 1);
 

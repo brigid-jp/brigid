@@ -52,7 +52,7 @@ namespace brigid {
         size_t result = cryptor_->update(in_data, in_size, buffer_.data(), buffer_.size(), padding);
         out_size_ += result;
         if (result > 0) {
-          if (lua_State* L = ref_.state()) {
+          if (lua_State* L = ref_.get()) {
             stack_guard guard(L);
             lua_pushvalue(L, 1);
             view_t* view = new_view(L, buffer_.data(), result);
@@ -140,7 +140,7 @@ namespace brigid {
       if (!lua_isnoneornil(L, 4)) {
         ref = thread_reference(L);
         lua_pushvalue(L, 4);
-        lua_xmove(L, ref.state(), 1);
+        lua_xmove(L, ref.get(), 1);
       }
 
       new_userdata<cryptor_t>(L, "brigid.cryptor",
@@ -157,7 +157,7 @@ namespace brigid {
       if (!lua_isnoneornil(L, 4)) {
         ref = thread_reference(L);
         lua_pushvalue(L, 4);
-        lua_xmove(L, ref.state(), 1);
+        lua_xmove(L, ref.get(), 1);
       }
 
       new_userdata<cryptor_t>(L, "brigid.cryptor",

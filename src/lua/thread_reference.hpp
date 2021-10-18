@@ -17,10 +17,11 @@ namespace brigid {
     thread_reference(thread_reference&&);
     ~thread_reference();
     thread_reference& operator=(thread_reference&&);
-    lua_State* state() const;
+    lua_State* get() const;
+    explicit operator bool() const;
   private:
-    lua_State* state_;
-    int state_ref_;
+    lua_State* thread_;
+    int ref_;
     void unref();
     void reset();
   };

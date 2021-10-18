@@ -8,19 +8,19 @@
 
 namespace brigid {
   thread_reference::thread_reference()
-    : state_(),
-      state_ref_(LUA_NOREF) {}
+    : thread_(),
+      ref_(LUA_NOREF) {}
 
   thread_reference::thread_reference(lua_State* L)
-    : state_(),
-      state_ref_(LUA_NOREF) {
-    state_ = lua_newthread(L);
-    state_ref_ = luaL_ref(L, LUA_REGISTRYINDEX);
+    : thread_(),
+      ref_(LUA_NOREF) {
+    thread_ = lua_newthread(L);
+    ref_ = luaL_ref(L, LUA_REGISTRYINDEX);
   }
 
   thread_reference::thread_reference(thread_reference&& that)
-    : state_(that.state_),
-      state_ref_(that.state_ref_) {
+    : thread_(that.thread_),
+      ref_(that.ref_) {
     that.reset();
   }
 
@@ -31,26 +31,30 @@ namespace brigid {
   thread_reference& thread_reference::operator=(thread_reference&& that) {
     if (this != &that) {
       unref();
-      state_ = that.state_;
-      state_ref_ = that.state_ref_;
+      thread_ = that.thread_;
+      ref_ = that.ref_;
       that.reset();
     }
     return *this;
   }
 
-  lua_State* thread_reference::state() const {
-    return state_;
+  lua_State* thread_reference::get() const {
+    return thread_;
+  }
+
+  thread_reference::operator bool() const {
+    return thread_;
   }
 
   void thread_reference::unref() {
-    if (lua_State* L = state_) {
-      luaL_unref(L, LUA_REGISTRYINDEX, state_ref_);
+    if (lua_State* L = thread_) {
+      luaL_unref(L, LUA_REGISTRYINDEX, ref_);
       reset();
     }
   }
 
   void thread_reference::reset() {
-    state_ = nullptr;
-    state_ref_ = LUA_NOREF;
+    thread_ = nullptr;
+    ref_ = LUA_NOREF;
   }
 }
