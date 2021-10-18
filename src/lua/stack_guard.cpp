@@ -4,6 +4,8 @@
 
 #include "stack_guard.hpp"
 
+#include <lua.hpp>
+
 namespace brigid {
   stack_guard::stack_guard(lua_State* L)
     : state_(L),
