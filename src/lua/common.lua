@@ -8,12 +8,6 @@ local class, lightuserdata_mask_is_not_zero = ...
 if lightuserdata_mask_is_not_zero then
   local ffi = require "ffi"
 
-  function class.string_to_ffi_pointer(source)
-    local buffer = ffi.new "void*[2]"
-    ffi.copy(buffer, source)
-    return buffer[0]
-  end
-
   function class.is_love2d_data(source)
     if source.getPointer and source.getSize then
       if source.getFFIPointer then
@@ -26,6 +20,12 @@ if lightuserdata_mask_is_not_zero then
       end
       return source:getPointer(), source:getSize()
     end
+  end
+
+  function class.string_to_ffi_pointer(source)
+    local buffer = ffi.new "void*[2]"
+    ffi.copy(buffer, source)
+    return buffer[0]
   end
 else
   function class.is_love2d_data(source)

@@ -3,6 +3,7 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/error.hpp>
+#include <brigid/version.hpp>
 #include "common.hpp"
 #include "stack_guard.hpp"
 
@@ -12,11 +13,9 @@
 #include <stddef.h>
 #include <string.h>
 #include <exception>
+#include <limits>
 #include <mutex>
 #include <stdexcept>
-#include <string>
-
-#include <iostream>
 
 namespace brigid {
   namespace {
@@ -72,6 +71,10 @@ namespace brigid {
       }
       lua_settop(L, top);
       return luaL_error(L, "attempt to call an invalid upvalue");
+    }
+
+    void impl_get_version(lua_State* L) {
+      lua_pushstring(L, get_version());
     }
   }
 
@@ -192,11 +195,7 @@ namespace brigid {
   }
 
   void initialize_common(lua_State* L) {
-    try {
-      std::call_once(once, bootstrap, L);
-    } catch (const std::exception& e) {
-      luaL_error(L, "%s", e.what());
-    }
+    std::call_once(once, bootstrap, L);
 
     lua_newtable(L);
     {
@@ -214,14 +213,16 @@ namespace brigid {
       }
     }
     {
+      lua_getfield(L, -1, "is_love2d_data");
+      lua_setfield(L, LUA_REGISTRYINDEX, "brigid.is_love2d_data");
+
       if (lightuserdata_mask) {
         lua_getfield(L, -1, "string_to_ffi_pointer");
         lua_setfield(L, LUA_REGISTRYINDEX, "brigid.string_to_ffi_pointer");
       }
-
-      lua_getfield(L, -1, "is_love2d_data");
-      lua_setfield(L, LUA_REGISTRYINDEX, "brigid.is_love2d_data");
     }
     lua_pop(L, 1);
+
+    set_field(L, -1, "get_version", impl_get_version);
   }
 }

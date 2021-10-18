@@ -32,7 +32,6 @@ brigid_la_SOURCES = \
 	scope_exit.cpp \
 	stack_guard.cpp \
 	thread_reference.cpp \
-	version.cpp \
 	view.cpp
 
 if CRYPTO_OPENSSL
