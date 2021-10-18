@@ -38,7 +38,7 @@ namespace brigid {
 
     class cryptor_t : private noncopyable {
     public:
-      cryptor_t(std::unique_ptr<cryptor>&& cryptor, reference&& ref)
+      cryptor_t(std::unique_ptr<cryptor>&& cryptor, thread_reference&& ref)
         : cryptor_(std::move(cryptor)),
           in_size_(),
           out_size_(),
@@ -71,7 +71,7 @@ namespace brigid {
         cryptor_ = nullptr;
         in_size_ = 0;
         out_size_ = 0;
-        ref_ = reference();
+        ref_ = thread_reference();
       }
 
       bool closed() const {
@@ -87,7 +87,7 @@ namespace brigid {
       size_t in_size_;
       size_t out_size_;
       std::vector<char> buffer_;
-      reference ref_;
+      thread_reference ref_;
       bool running_;
 
       void ensure_buffer_size(size_t size) {
@@ -135,9 +135,9 @@ namespace brigid {
       data_t key = check_data(L, 2);
       data_t iv = check_data(L, 3);
 
-      reference ref;
+      thread_reference ref;
       if (!lua_isnoneornil(L, 4)) {
-        ref = reference(L);
+        ref = thread_reference(L);
         lua_pushvalue(L, 4);
         lua_xmove(L, ref.state(), 1);
       }
@@ -152,9 +152,9 @@ namespace brigid {
       data_t key = check_data(L, 2);
       data_t iv = check_data(L, 3);
 
-      reference ref;
+      thread_reference ref;
       if (!lua_isnoneornil(L, 4)) {
-        ref = reference(L);
+        ref = thread_reference(L);
         lua_pushvalue(L, 4);
         lua_xmove(L, ref.state(), 1);
       }

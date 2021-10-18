@@ -27,7 +27,7 @@ namespace brigid {
     class http_session_t : private noncopyable {
     public:
       http_session_t(
-          reference&& ref,
+          thread_reference&& ref,
           int progress_cb,
           int header_cb,
           int write_cb,
@@ -58,7 +58,7 @@ namespace brigid {
 
       void close() {
         session_ = nullptr;
-        ref_ = reference();
+        ref_ = thread_reference();
       }
 
       bool closed() const {
@@ -71,7 +71,7 @@ namespace brigid {
 
     private:
       std::unique_ptr<http_session> session_;
-      reference ref_;
+      thread_reference ref_;
       int progress_cb_;
       int header_cb_;
       int write_cb_;
@@ -179,7 +179,7 @@ namespace brigid {
     void impl_call(lua_State* L) {
       luaL_checktype(L, 2, LUA_TTABLE);
 
-      reference ref;
+      thread_reference ref;
       int ref_index = 0;
       int progress_cb = 0;
       int header_cb = 0;
@@ -190,7 +190,7 @@ namespace brigid {
 
       if (get_field(L, 2, "progress") != LUA_TNIL) {
         if (++ref_index == 1) {
-          ref = reference(L);
+          ref = thread_reference(L);
         }
         lua_pushvalue(L, -1);
         lua_xmove(L, ref.state(), 1);
@@ -200,7 +200,7 @@ namespace brigid {
 
       if (get_field(L, 2, "header") != LUA_TNIL) {
         if (++ref_index == 1) {
-          ref = reference(L);
+          ref = thread_reference(L);
         }
         lua_pushvalue(L, -1);
         lua_xmove(L, ref.state(), 1);
@@ -210,7 +210,7 @@ namespace brigid {
 
       if (get_field(L, 2, "write") != LUA_TNIL) {
         if (++ref_index == 1) {
-          ref = reference(L);
+          ref = thread_reference(L);
         }
         lua_pushvalue(L, -1);
         lua_xmove(L, ref.state(), 1);

@@ -178,28 +178,28 @@ namespace brigid {
 #endif
   }
 
-  reference::reference()
+  thread_reference::thread_reference()
     : state_(),
       state_ref_(LUA_NOREF) {}
 
-  reference::reference(lua_State* L)
+  thread_reference::thread_reference(lua_State* L)
     : state_(),
       state_ref_(LUA_NOREF) {
     state_ = lua_newthread(L);
     state_ref_ = luaL_ref(L, LUA_REGISTRYINDEX);
   }
 
-  reference::reference(reference&& that)
+  thread_reference::thread_reference(thread_reference&& that)
     : state_(that.state_),
       state_ref_(that.state_ref_) {
     that.reset();
   }
 
-  reference::~reference() {
+  thread_reference::~thread_reference() {
     unref();
   }
 
-  reference& reference::operator=(reference&& that) {
+  thread_reference& thread_reference::operator=(thread_reference&& that) {
     if (this != &that) {
       unref();
       state_ = that.state_;
@@ -209,18 +209,18 @@ namespace brigid {
     return *this;
   }
 
-  lua_State* reference::state() const {
+  lua_State* thread_reference::state() const {
     return state_;
   }
 
-  void reference::unref() {
+  void thread_reference::unref() {
     if (lua_State* L = state_) {
       luaL_unref(L, LUA_REGISTRYINDEX, state_ref_);
       reset();
     }
   }
 
-  void reference::reset() {
+  void thread_reference::reset() {
     state_ = nullptr;
     state_ref_ = LUA_NOREF;
   }
