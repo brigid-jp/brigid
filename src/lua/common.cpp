@@ -183,6 +183,14 @@ namespace brigid {
       state_ref_(LUA_NOREF),
       ref_(LUA_NOREF) {}
 
+  reference::reference(lua_State* L)
+    : state_(),
+      state_ref_(LUA_NOREF),
+      ref_(LUA_NOREF) {
+    state_ = lua_newthread(L);
+    state_ref_ = luaL_ref(L, LUA_REGISTRYINDEX);
+  }
+
   reference::reference(lua_State* L, int index)
     : state_(),
       state_ref_(LUA_NOREF),

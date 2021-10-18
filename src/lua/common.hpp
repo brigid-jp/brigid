@@ -117,6 +117,7 @@ namespace brigid {
   class reference : private noncopyable {
   public:
     reference();
+    explicit reference(lua_State*);
     reference(lua_State*, int);
     reference(reference&&);
     ~reference();
