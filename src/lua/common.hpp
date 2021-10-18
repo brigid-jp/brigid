@@ -28,7 +28,8 @@ namespace brigid {
   static constexpr int check_validate_all = 3;
 
   int abs_index(lua_State*, int);
-  void new_metatable(lua_State*, const char*);
+  int get_field(lua_State*, int, const char*);
+  int new_metatable(lua_State*, const char*);
   void set_metatable(lua_State*, const char*);
   bool is_false(lua_State*, int);
 
@@ -84,19 +85,6 @@ namespace brigid {
     return reinterpret_cast<T>(to_handle_impl(L, index));
   }
 
-  template <class T>
-  inline T check_integer(lua_State* L, int arg, T min, T max, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value)>* = nullptr) {
-    intmax_t v = luaL_checkinteger(L, arg);
-    if (v < 0) {
-      return luaL_argerror(L, arg, "out of bounds");
-    }
-    uintmax_t u = v;
-    if (u < min || u > max) {
-      return luaL_argerror(L, arg, "out of bounds");
-    }
-    return static_cast<T>(u);
-  }
-
   template <class T, class... T_args>
   inline T* new_userdata(lua_State* L, const char* name, T_args... args) {
     T* data = static_cast<T*>(lua_newuserdata(L, sizeof(T)));
@@ -112,7 +100,6 @@ namespace brigid {
 
   void set_field(lua_State*, int, const char*, cxx_function_t);
   void set_metafield(lua_State*, int, const char*, cxx_function_t);
-  int get_field(lua_State*, int, const char*);
 }
 
 #endif

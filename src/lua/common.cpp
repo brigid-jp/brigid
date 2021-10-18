@@ -72,21 +72,34 @@ namespace brigid {
 #if LUA_VERSION_NUM >= 502
     return lua_absindex(L, index);
 #else
-    if (index < 0) {
-      int top = lua_gettop(L);
-      if (top >= -index) {
-        return top + index + 1;
-      }
+    if (index > 0 || index <= LUA_REGISTRYINDEX) {
+      return index;
+    } else {
+      return lua_gettop(L) + index + 1;
     }
-    return index;
 #endif
   }
 
-  void new_metatable(lua_State* L, const char* name) {
-    luaL_newmetatable(L, name);
-#if LUA_VERSION_NUM <= 502
-    lua_pushstring(L, name);
-    lua_setfield(L, -2, "__name");
+  int get_field(lua_State* L, int index, const char* key) {
+#if LUA_VERSION_NUM >= 503
+    return lua_getfield(L, index, key);
+#else
+    lua_getfield(L, index, key);
+    return lua_type(L, -1);
+#endif
+  }
+
+  int new_metatable(lua_State* L, const char* name) {
+#if LUA_VERSION_NUM >= 503
+    return luaL_newmetatable(L, name);
+#else
+    if (luaL_newmetatable(L, name)) {
+      lua_pushstring(L, name);
+      lua_setfield(L, -2, "__name");
+      return 1;
+    } else {
+      return 0;
+    }
 #endif
   }
 
@@ -167,15 +180,6 @@ namespace brigid {
       set_field(L, -1, key, value);
       lua_setmetatable(L, index);
     }
-  }
-
-  int get_field(lua_State* L, int index, const char* key) {
-#if LUA_VERSION_NUM >= 503
-    return lua_getfield(L, index, key);
-#else
-    lua_getfield(L, index, key);
-    return lua_type(L, -1);
-#endif
   }
 
   void initialize_common(lua_State* L) {
