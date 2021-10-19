@@ -7,7 +7,6 @@ local metatable = { __index = class }
 
 local test_suite_names = {
   "test_common";
-  "test_version";
   "test_crypto";
   "test_to_be_closed";
   "test_http";

@@ -73,6 +73,10 @@ namespace brigid {
       return luaL_error(L, "attempt to call an invalid upvalue");
     }
 
+    void impl_get_lightuserdata_bits(lua_State* L) {
+      push_integer(L, lightuserdata_bits);
+    }
+
     void impl_get_version(lua_State* L) {
       lua_pushstring(L, get_version());
     }
@@ -223,6 +227,10 @@ namespace brigid {
     }
     lua_pop(L, 1);
 
+    lua_pushlightuserdata(L, nullptr);
+    lua_setfield(L, -2, "null");
+
+    set_field(L, -1, "get_lightuserdata_bits", impl_get_lightuserdata_bits);
     set_field(L, -1, "get_version", impl_get_version);
   }
 }

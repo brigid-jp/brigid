@@ -15,7 +15,7 @@ if lightuserdata_mask_is_not_zero then
         if result ~= nil then
           -- ffi pointer to string
           local buffer = ffi.new("void*[1]", result)
-          return ffi.string(buffer, ffi.sizeof(buffer))
+          return ffi.string(buffer, ffi.sizeof(buffer)), source:getSize()
         end
       end
       return source:getPointer(), source:getSize()
