@@ -2,7 +2,6 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
 #include "common.hpp"
 #include "data.hpp"
@@ -58,7 +57,7 @@ namespace brigid {
       data_writer_t* self = check_udata<data_writer_t>(L, arg, "brigid.data_writer");
       if (validate & check_validate_not_closed) {
         if (self->closed()) {
-          luaL_error(L, "attempt to use a closed brigid.data_writer");
+          luaL_argerror(L, arg, "attempt to use a closed brigid.data_writer");
         }
       }
       return self;

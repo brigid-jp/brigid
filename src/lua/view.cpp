@@ -2,7 +2,6 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <brigid/error.hpp>
 #include "common.hpp"
 #include "view.hpp"
 
@@ -13,7 +12,7 @@ namespace brigid {
     view_t* check_view(lua_State* L, int arg) {
       view_t* self = check_udata<view_t>(L, arg, "brigid.view");
       if (self->closed()) {
-        luaL_error(L, "attempt to use a closed brigid.view");
+        luaL_argerror(L, arg, "attempt to use a closed brigid.view");
       }
       return self;
     }

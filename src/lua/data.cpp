@@ -14,23 +14,16 @@
 
 namespace brigid {
   namespace {
-    std::string get_typename(lua_State* L, int index) {
+    bool is_data(lua_State* L, int index) {
       stack_guard guard(L);
       if (luaL_getmetafield(L, index, "__name")) {
         size_t size = 0;
         if (const char* data = lua_tolstring(L, -1, &size)) {
-          return std::string(data, size);
+          std::string name(data, size);
+          return name == "brigid.data_writer" || name == "brigid.view";
         }
       }
-      if (lua_type(L, index) == LUA_TLIGHTUSERDATA) {
-        return "light userdata";
-      } else {
-        return luaL_typename(L, index);
-      }
-    }
-
-    bool is_data(const std::string& name) {
-      return name == "brigid.data_writer" || name == "brigid.view";
+      return false;
     }
 
     bool is_love2d_data(lua_State* L, int index, data_t& result) {
@@ -69,8 +62,7 @@ namespace brigid {
 
   data_t to_data(lua_State* L, int index) {
     if (const void* userdata = lua_touserdata(L, index)) {
-      std::string name = get_typename(L, index);
-      if (is_data(name)) {
+      if (is_data(L, index)) {
         const abstract_data_t* self = static_cast<const abstract_data_t*>(userdata);
         if (!self->closed()) {
           return data_t(self->data(), self->size());
@@ -93,20 +85,19 @@ namespace brigid {
 
   data_t check_data(lua_State* L, int arg) {
     if (const void* userdata = lua_touserdata(L, arg)) {
-      std::string name = get_typename(L, arg); // destructor error
-      if (is_data(name)) {
+      if (is_data(L, arg)) {
         const abstract_data_t* self = static_cast<const abstract_data_t*>(userdata);
-        if (self->closed()) {
-          luaL_error(L, "attempt to use a closed %s", name.c_str());
+        if (!self->closed()) {
+          return data_t(self->data(), self->size());
         }
-        return data_t(self->data(), self->size());
+        luaL_argerror(L, arg, "attempt to use a closed brigid.data");
       } else {
         data_t result;
         if (is_love2d_data(L, arg, result)) {
           return result;
         }
       }
-      luaL_error(L, "brigid.data expected, got %s", name.c_str());
+      luaL_argerror(L, arg, "brigid.data expected");
       throw BRIGID_LOGIC_ERROR("unreachable");
     } else {
       size_t size = 0;
