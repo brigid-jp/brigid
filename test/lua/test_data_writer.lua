@@ -21,13 +21,6 @@ function suite:test_data_writer1()
   local s = assert(data_writer:get_string())
   local t = assert(tostring(data_writer))
 
-  -- TODO fixme
-  -- if ffi then
-  --   assert(type(p) == "cdata")
-  -- else
-  --   assert(type(p) == "userdata")
-  -- end
-
   assert(n == m)
   assert(n == #s)
   assert(s == t)
@@ -43,18 +36,27 @@ function suite:test_data_writer1()
   local result, message = pcall(function () data_writer:get_pointer() end)
   if debug then print(message) end
   assert(not result)
+  assert(message:find "bad self" or message:find "bad argument")
 
   local result, message = pcall(function () data_writer:get_size() end)
   if debug then print(message) end
   assert(not result)
+  assert(message:find "bad self" or message:find "bad argument")
 
   local result, message = pcall(function () data_writer:get_string() end)
   if debug then print(message) end
   assert(not result)
+  assert(message:find "bad self" or message:find "bad argument")
 
   local result, message = pcall(function () tostring(data_writer) end)
   if debug then print(message) end
   assert(not result)
+  assert(message:find "bad self" or message:find "bad argument")
+
+  local result, message = pcall(function () data_writer:write "foobarbazqux" end)
+  if debug then print(message) end
+  assert(not result)
+  assert(message:find "bad self" or message:find "bad argument")
 end
 
 function suite:test_data_writer2()

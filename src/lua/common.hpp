@@ -10,6 +10,7 @@
 #include <lua.hpp>
 
 #include <limits>
+#include <memory>
 #include <type_traits>
 #include <utility>
 

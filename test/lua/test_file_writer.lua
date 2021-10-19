@@ -17,6 +17,11 @@ function suite:test_file_writer1()
   assert(file_writer:close())
   assert(file_writer:close())
 
+  local result, message = pcall(function () file_writer:write "foobarbazqux" end)
+  if debug then print(message) end
+  assert(not result)
+  assert(message:find "bad self" or message:find "bad argument")
+
   local handle = assert(io.open(test_cwd .. "/test.dat"))
   assert(handle:read "*a" == "foo\nbar\nbaz\nqux\n")
   handle:close()

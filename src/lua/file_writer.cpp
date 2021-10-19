@@ -52,7 +52,7 @@ namespace brigid {
       file_writer_t* self = check_udata<file_writer_t>(L, arg, "brigid.file_writer");
       if (validate & check_validate_not_closed) {
         if (self->closed()) {
-          throw BRIGID_LOGIC_ERROR("attempt to use a closed brigid.file_writer");
+          luaL_argerror(L, arg, "attempt to use a closed brigid.file_writer");
         }
       }
       return self;

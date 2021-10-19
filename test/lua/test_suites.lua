@@ -6,13 +6,13 @@ local class = {}
 local metatable = { __index = class }
 
 local test_suite_names = {
-  "test_common";
-  "test_crypto";
-  "test_to_be_closed";
-  "test_http";
   "test_json";
-  "test_data";
+  "test_crypto";
+  "test_http";
 
+  "test_common";
+  "test_to_be_closed";
+  "test_data";
   "test_view";
   "test_data_writer";
   "test_file_writer";

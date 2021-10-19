@@ -182,8 +182,8 @@ namespace brigid {
         ( "false" @{ lua_pushboolean(L, false); }
         | "null" @{ if (null_index) { lua_pushvalue(L, null_index); } else { lua_pushnil(L); } }
         | "true" @{ lua_pushboolean(L, true); }
-        | "{" @{ lua_newtable(L); fcall object; }
-        | "[" @{ lua_newtable(L); n.push_back(0); fcall array; }
+        | "{" @{ lua_checkstack(L, 3); lua_newtable(L); fcall object; }
+        | "[" @{ lua_checkstack(L, 2); lua_newtable(L); n.push_back(0); fcall array; }
         | number
         | string
         );

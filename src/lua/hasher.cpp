@@ -19,8 +19,9 @@
 namespace brigid {
   namespace {
     crypto_hash check_hash(lua_State* L, int arg) {
-      {
-        std::string hash = check_data(L, arg).str();
+      size_t size = 0;
+      if (const char* data = lua_tolstring(L, arg, &size)) {
+        std::string hash(data, size);
         if (hash == "sha1") {
           return crypto_hash::sha1;
         } else if (hash == "sha256") {
