@@ -32,6 +32,7 @@ namespace brigid {
       }
 
       void close() {
+        buffer_.clear();
         closed_ = true;
       }
 

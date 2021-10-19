@@ -11,6 +11,7 @@ local test_suite_names = {
   "test_to_be_closed";
   "test_http";
   "test_json";
+
   "test_data";
 
   "test_view";

@@ -52,6 +52,11 @@ function suite:test_data_writer1()
   if debug then print(message) end
   assert(not result)
   assert(message:find "bad self" or message:find "bad argument")
+
+  local result, message = pcall(function () data_writer:write "foobarbazqux" end)
+  if debug then print(message) end
+  assert(not result)
+  assert(message:find "bad self" or message:find "bad argument")
 end
 
 function suite:test_data_writer2()
