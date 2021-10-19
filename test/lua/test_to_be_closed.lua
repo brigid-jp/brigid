@@ -17,19 +17,20 @@ function suite:test()
   assert(load [[
     local brigid = require "brigid"
 
-    local writer = brigid.data_writer()
+    local debug = false
 
+    local writer = brigid.data_writer()
     do
       local writer_to_be_closed <close> = writer
       assert(writer:write "foo\n")
       assert(writer:write "bar\n")
       assert(writer:write "baz\n")
     end -- writer is closed
-
     -- attempt to use a closed
     local result, message = pcall(function () writer:write "qux\n" end)
-    print(message)
+    if debug then print(message) end
     assert(not result)
+    assert(message:find "bad self" or message:find "bad argument")
   ]])()
 end
 
