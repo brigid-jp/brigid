@@ -67,17 +67,9 @@ namespace brigid {
     return size_;
   }
 
-  std::string data_t::str() const {
-    if (size_ == 0) {
-      return std::string();
-    } else {
-      return std::string(data_, size_);
-    }
-  }
-
   data_t to_data(lua_State* L, int index) {
     if (const void* userdata = lua_touserdata(L, index)) {
-      const std::string name = get_typename(L, index);
+      std::string name = get_typename(L, index);
       if (is_data(name)) {
         const abstract_data_t* self = static_cast<const abstract_data_t*>(userdata);
         if (!self->closed()) {
@@ -101,7 +93,7 @@ namespace brigid {
 
   data_t check_data(lua_State* L, int arg) {
     if (const void* userdata = lua_touserdata(L, arg)) {
-      const std::string name = get_typename(L, arg);
+      std::string name = get_typename(L, arg); // destructor error
       if (is_data(name)) {
         const abstract_data_t* self = static_cast<const abstract_data_t*>(userdata);
         if (self->closed()) {

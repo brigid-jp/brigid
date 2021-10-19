@@ -220,14 +220,20 @@ namespace brigid {
       lua_pop(L, 1);
 
       if (get_field(L, 2, "username") != LUA_TNIL) {
-        ++credential;
-        username = to_data(L, -1).str();
+        size_t size = 0;
+        if (const char* data = lua_tolstring(L, -1, &size)) {
+          ++credential;
+          username.assign(data, size);
+        }
       }
       lua_pop(L, 1);
 
       if (get_field(L, 2, "password") != LUA_TNIL) {
-        ++credential;
-        password = to_data(L, -1).str();
+        size_t size = 0;
+        if (const char* data = lua_tolstring(L, -1, &size)) {
+          ++credential;
+          password.assign(data, size);
+        }
       }
       lua_pop(L, 1);
 
@@ -252,12 +258,18 @@ namespace brigid {
       data_t data;
 
       if (get_field(L, 2, "method") != LUA_TNIL) {
-        method = to_data(L, -1).str();
+        size_t size = 0;
+        if (const char* data = lua_tolstring(L, -1, &size)) {
+          method.assign(data, size);
+        }
       }
       lua_pop(L, 1);
 
       if (get_field(L, 2, "url") != LUA_TNIL) {
-        url = to_data(L, -1).str();
+        size_t size = 0;
+        if (const char* data = lua_tolstring(L, -1, &size)) {
+          url.assign(data, size);
+        }
       }
       lua_pop(L, 1);
 
@@ -266,7 +278,13 @@ namespace brigid {
         lua_pushnil(L);
         while (lua_next(L, index)) {
           lua_pushvalue(L, -2);
-          header[to_data(L, -1).str()] = to_data(L, -2).str();
+          size_t name_size = 0;
+          if (const char* name_data = lua_tolstring(L, -1, &name_size)) {
+            size_t value_size = 0;
+            if (const char* value_data = lua_tolstring(L, -2, &value_size)) {
+              header.emplace(std::string(name_data, name_size), std::string(value_data, value_size));
+            }
+          }
           lua_pop(L, 2);
         }
       }

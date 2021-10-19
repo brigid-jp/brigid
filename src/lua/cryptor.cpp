@@ -23,8 +23,9 @@
 namespace brigid {
   namespace {
     crypto_cipher check_cipher(lua_State* L, int arg) {
-      {
-        std::string cipher = check_data(L, arg).str();
+      size_t size = 0;
+      if (const char* data = lua_tolstring(L, arg, &size)) {
+        std::string cipher(data, size);
         if (cipher == "aes-128-cbc") {
           return crypto_cipher::aes_128_cbc;
         } else if (cipher == "aes-192-cbc") {
