@@ -6,7 +6,6 @@ local class = {}
 local metatable = { __index = class }
 
 local test_suite_names = {
-  "test_json";
   "test_crypto";
   "test_http";
 
@@ -16,6 +15,7 @@ local test_suite_names = {
   "test_view";
   "test_data_writer";
   "test_file_writer";
+  "test_json";
 }
 
 local function new()
