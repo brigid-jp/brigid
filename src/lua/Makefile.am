@@ -12,6 +12,8 @@ noinst_HEADERS = \
 	common.lua \
 	data.hpp \
 	scope_exit.hpp \
+	stack_guard.hpp \
+	thread_reference.hpp \
 	view.hpp
 
 brigid_la_CPPFLAGS = -I$(top_srcdir)/include
@@ -28,7 +30,8 @@ brigid_la_SOURCES = \
 	json.cxx \
 	module.cpp \
 	scope_exit.cpp \
-	version.cpp \
+	stack_guard.cpp \
+	thread_reference.cpp \
 	view.cpp
 
 if CRYPTO_OPENSSL

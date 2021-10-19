@@ -4,6 +4,8 @@
 
 #include <lua.hpp>
 
+#include <exception>
+
 namespace brigid {
   void initialize_common(lua_State*);
   void initialize_cryptor(lua_State*);
@@ -12,7 +14,6 @@ namespace brigid {
   void initialize_hasher(lua_State*);
   void initialize_http(lua_State*);
   void initialize_json(lua_State*);
-  void initialize_version(lua_State*);
   void initialize_view(lua_State*);
 
   void initialize(lua_State* L) {
@@ -23,13 +24,21 @@ namespace brigid {
     initialize_hasher(L);
     initialize_http(L);
     initialize_json(L);
-    initialize_version(L);
     initialize_view(L);
   }
 }
 
 extern "C" int luaopen_brigid(lua_State* L) {
-  lua_newtable(L);
-  brigid::initialize(L);
-  return 1;
+  int top = lua_gettop(L);
+  try {
+    lua_newtable(L);
+    brigid::initialize(L);
+    return 1;
+  } catch (const std::exception& e) {
+    lua_settop(L, top);
+    return luaL_error(L, "%s", e.what());
+  } catch (...) {
+    lua_settop(L, top);
+    return luaL_error(L, "unknown exception");
+  }
 }
