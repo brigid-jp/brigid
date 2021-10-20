@@ -116,7 +116,7 @@ namespace brigid {
         ){4};
 
       unicode_escape_sequence =
-        "\\u" @{ u = 0; }
+        "u" @{ u = 0; }
         ( (hex_quad & (xdigit{4} - (/D[89A-F]/i xdigit{2})))
             %{
               if (u <= 0x007F) {
@@ -148,35 +148,37 @@ namespace brigid {
         );
 
       escape_sequence =
-        ( "\\\"" @{ buffer.push_back('"'); }
-        | "\\\\" @{ buffer.push_back('\\'); }
-        | "\\/"  @{ buffer.push_back('/'); }
-        | "\\b"  @{ buffer.push_back('\b'); }
-        | "\\f"  @{ buffer.push_back('\f'); }
-        | "\\n"  @{ buffer.push_back('\n'); }
-        | "\\r"  @{ buffer.push_back('\r'); }
-        | "\\t"  @{ buffer.push_back('\t'); }
+        ( "\"" @{ buffer.push_back('"'); }
+        | "\\" @{ buffer.push_back('\\'); }
+        | "/"  @{ buffer.push_back('/'); }
+        | "b"  @{ buffer.push_back('\b'); }
+        | "f"  @{ buffer.push_back('\f'); }
+        | "n"  @{ buffer.push_back('\n'); }
+        | "r"  @{ buffer.push_back('\r'); }
+        | "t"  @{ buffer.push_back('\t'); }
         | unicode_escape_sequence
         );
 
-      string_impl :=
+      string2 :=
+        escape_sequence %{ ps = fpc; }
+        ( "\"" @{ lua_pushlstring(L, buffer.data(), buffer.size()); fret; }
+        | unescaped+
+          ( "\"" @{ size_t m = buffer.size(); size_t n = fpc - ps; buffer.resize(m + n); memcpy(buffer.data() + m, ps, n); lua_pushlstring(L, buffer.data(), buffer.size()); fret; }
+          | "\\" @{ size_t m = buffer.size(); size_t n = fpc - ps; buffer.resize(m + n); memcpy(buffer.data() + m, ps, n); fgoto string2; }
+          )
+        | "\\" @{ fgoto string2; }
+        );
+
+      string1 :=
         ( "\"" @{ lua_pushlstring(L, ps, 0); fret; }
         | unescaped+
           ( "\"" @{ lua_pushlstring(L, ps, fpc - ps); fret; }
-          | escape_sequence >{ size_t size = fpc - ps; buffer.resize(size); memcpy(buffer.data(), ps, size); }
-            ( escape_sequence
-            | unescaped ${ buffer.push_back(fc); }
-            )*
-            "\"" @{ lua_pushlstring(L, buffer.data(), buffer.size()); fret; }
+          | "\\" @{ size_t size = fpc - ps; buffer.resize(size); memcpy(buffer.data(), ps, size); fgoto string2; }
           )
-        | escape_sequence >{ buffer.clear(); }
-          ( escape_sequence
-          | unescaped ${ buffer.push_back(fc); }
-          )*
-          "\"" @{ lua_pushlstring(L, buffer.data(), buffer.size()); fret; }
+        | "\\" @{ buffer.clear(); fgoto string2; }
         );
 
-      string = "\"" @{ ps = fpc + 1; fcall string_impl; };
+      string = "\"" @{ ps = fpc + 1; fcall string1; };
 
       value =
         ( "false" @{ lua_pushboolean(L, false); }
