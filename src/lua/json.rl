@@ -78,11 +78,11 @@ namespace brigid {
                   }
                 }
 
-                size_t size = fpc - ps;
-                buffer.resize(size + 1);
+                size_t n = fpc - ps;
+                buffer.resize(n + 1);
                 char* ptr = buffer.data();
-                memcpy(ptr, ps, size);
-                ptr[size] = '\0';
+                memcpy(ptr, ps, n);
+                ptr[n] = '\0';
 
                 if (!decimal_point) {
                   decimal_point = *localeconv()->decimal_point;
@@ -95,7 +95,7 @@ namespace brigid {
 
                 char* end = nullptr;
                 double u = strtod(ptr, &end);
-                if (end == ptr + size) {
+                if (end == ptr + n) {
                   lua_pushnumber(L, u);
                   break;
                 }
@@ -173,7 +173,7 @@ namespace brigid {
         ( "\"" @{ lua_pushlstring(L, ps, 0); fret; }
         | unescaped+
           ( "\"" @{ lua_pushlstring(L, ps, fpc - ps); fret; }
-          | "\\" @{ size_t size = fpc - ps; buffer.resize(size); memcpy(buffer.data(), ps, size); fgoto string2; }
+          | "\\" @{ size_t n = fpc - ps; buffer.resize(n); memcpy(buffer.data(), ps, n); fgoto string2; }
           )
         | "\\" @{ buffer.clear(); fgoto string2; }
         );
