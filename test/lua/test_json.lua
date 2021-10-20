@@ -143,6 +143,22 @@ function suite:test_json_parse_string4()
   assert(equal(brigid.json.parse [["foo\"\\\/\b\f\n\r\tbar"]], "foo\"\\/\b\f\n\r\tbar"))
 end
 
+function suite:test_json_parse_string5()
+  assert(equal(brigid.json.parse [["foo\n"]], "foo\n"))
+  assert(equal(brigid.json.parse [["foo\nbar"]], "foo\nbar"))
+  assert(equal(brigid.json.parse [["foo\nbar\n"]], "foo\nbar\n"))
+  assert(equal(brigid.json.parse [["foo\nbar\nbaz"]], "foo\nbar\nbaz"))
+  assert(equal(brigid.json.parse [["foo\nbar\nbaz\n"]], "foo\nbar\nbaz\n"))
+end
+
+function suite:test_json_parse_string6()
+  assert(equal(brigid.json.parse [["\nfoo\n"]], "\nfoo\n"))
+  assert(equal(brigid.json.parse [["\nfoo\nbar"]], "\nfoo\nbar"))
+  assert(equal(brigid.json.parse [["\nfoo\nbar\n"]], "\nfoo\nbar\n"))
+  assert(equal(brigid.json.parse [["\nfoo\nbar\nbaz"]], "\nfoo\nbar\nbaz"))
+  assert(equal(brigid.json.parse [["\nfoo\nbar\nbaz\n"]], "\nfoo\nbar\nbaz\n"))
+end
+
 local source = [[
 {
   "Image": {

@@ -12,6 +12,7 @@ check_LTLIBRARIES = test_address_space.la
 
 check_PROGRAMS = \
 	test_client.exe \
+	test_goto.exe \
 	test_server.exe \
 	test_parser.exe \
 	test_websocket_server.exe
@@ -26,6 +27,12 @@ test_client_exe_LDFLAGS =
 test_client_exe_LDADD = $(top_srcdir)/src/lib/libbrigid.la
 test_client_exe_SOURCES = \
 	test_client.cpp
+
+test_goto_exe_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/lib
+test_goto_exe_LDFLAGS =
+test_goto_exe_LDADD = $(top_srcdir)/src/lib/libbrigid.la
+test_goto_exe_SOURCES = \
+	test_goto.cxx
 
 test_server_exe_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/lib
 test_server_exe_LDFLAGS =
