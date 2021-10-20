@@ -1,1 +1,1 @@
-[["abc\ndef\nghi\tjkl"]]
+[["abc","abc\n","\n","\nabc","ABC\nDEF\nGHI","ABC\nDEF\nGHI\n"]]
