@@ -24,26 +24,25 @@ namespace brigid {
         | "\"" @{ ps = fpc + 1; fcall string; }
         );
 
-      string_impl1 :=
-        ( alpha @{ std::cout << "escape3(" << fc << ")\n"; }
-          ( alpha+ ${ std::cout << "_2(" << fc << ")\n"; }
-          | "\\" @{ fgoto string_impl1; }
-          )*
-          "\"" @{ fret; }
+      string_impl :=
+        ( alpha @{ std::cout << "escape1(" << fc << ")\n"; }
+        | digit+ ${ std::cout << "escape2(" << fc << ")\n"; }
+        ) %{ ps = fpc; }
+        ( "\"" @{ std::cout << "empty2\n"; fret; }
+        | alpha+
+          ( "\"" @{ std::cout << "simple3(" << std::string(ps, fpc) << ")\n"; fret; }
+          | "\\" @{ std::cout << "simple4(" << std::string(ps, fpc) << ")\n"; fgoto string_impl; }
+          )
+        | "\\" @{ fgoto string_impl; }
         );
 
       string :=
-        ( "\"" @{ fret; }
+        ( "\"" @{ std::cout << "empty1\n"; fret; }
         | alpha+
           ( "\"" @{ std::cout << "simple1(" << std::string(ps, fpc) << ")\n"; fret; }
-          | "\\" @{ std::cout << "simple2(" << std::string(ps, fpc) << ")\n"; }
-            alpha @{ std::cout << "escape1(" << fc << ")\n"; }
-            ( alpha+ ${ std::cout << "_1(" << fc << ")\n"; }
-            | "\\" alpha @{ std::cout << "escape2(" << fc << ")\n"; }
-            )*
-            "\"" @{ fret; }
+          | "\\" @{ std::cout << "simple2(" << std::string(ps, fpc) << ")\n"; fgoto string_impl; }
           )
-        | "\\" @{ fgoto string_impl1; }
+        | "\\" @{ fgoto string_impl; }
         );
 
       array :=
