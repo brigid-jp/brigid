@@ -24,6 +24,14 @@ namespace brigid {
         | "\"" @{ ps = fpc + 1; fcall string; }
         );
 
+      string_impl1 :=
+        ( alpha @{ std::cout << "escape3(" << fc << ")\n"; }
+          ( alpha+ ${ std::cout << "_2(" << fc << ")\n"; }
+          | "\\" @{ fgoto string_impl1; }
+          )*
+          "\"" @{ fret; }
+        );
+
       string :=
         ( "\"" @{ fret; }
         | alpha+
@@ -35,11 +43,7 @@ namespace brigid {
             )*
             "\"" @{ fret; }
           )
-        | "\\" alpha @{ std::cout << "escape3(" << fc << ")\n"; }
-          ( alpha+ ${ std::cout << "_2(" << fc << ")\n"; }
-          | "\\" alpha @{ std::cout << "escape4(" << fc << ")\n"; }
-          )*
-          "\"" @{ fret; }
+        | "\\" @{ fgoto string_impl1; }
         );
 
       array :=
