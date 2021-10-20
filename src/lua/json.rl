@@ -163,7 +163,7 @@ namespace brigid {
         escape_sequence %{ ps = fpc; }
         ( "\"" @{ lua_pushlstring(L, buffer.data(), buffer.size()); fret; }
         | unescaped+
-          ( "\"" @{ size_t m = buffer.size(); size_t n = fpc - ps; buffer.resize(m + n); memcpy(buffer.data() + m, ps, n); lua_pushlstring(L, buffer.data(), buffer.size()); fret; }
+          ( "\"" @{ size_t m = buffer.size(); size_t n = fpc - ps; buffer.resize(m + n); char* ptr = buffer.data(); memcpy(ptr + m, ps, n); lua_pushlstring(L, ptr, m + n); fret; }
           | "\\" @{ size_t m = buffer.size(); size_t n = fpc - ps; buffer.resize(m + n); memcpy(buffer.data() + m, ps, n); fgoto string2; }
           )
         | "\\" @{ fgoto string2; }
