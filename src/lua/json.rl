@@ -218,6 +218,15 @@ namespace brigid {
       write data noerror nofinal noentry;
     }%%
 
+    void impl_array(lua_State* L) {
+      if (lua_isnoneornil(L, 1)) {
+        lua_newtable(L);
+      } else {
+        lua_pushvalue(L, 1);
+      }
+      set_metatable(L, "brigid.json.array");
+    }
+
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
@@ -262,8 +271,16 @@ namespace brigid {
   }
 
   void initialize_json(lua_State* L) {
+    new_metatable(L, "brigid.json.array");
+    lua_getglobal(L, "table");
+    lua_setfield(L, -2, "__index");
+    lua_pushboolean(L, true);
+    lua_setfield(L, -2, "brigid.json.array");
+    lua_pop(L, 1);
+
     lua_newtable(L);
     {
+      set_field(L, -1, "array", impl_array);
       set_field(L, -1, "parse", impl_parse);
     }
     lua_setfield(L, -2, "json");

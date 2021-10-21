@@ -26,12 +26,12 @@ namespace brigid {
     void push_handle(lua_State*, const void*);
     void push_pointer(lua_State*, const void*);
     void* to_handle(lua_State*, int);
-    void set_metatable(lua_State*, const char*);
   }
 
   int abs_index(lua_State*, int);
   int get_field(lua_State*, int, const char*);
   int new_metatable(lua_State*, const char*);
+  void set_metatable(lua_State*, const char*);
   bool is_false(lua_State*, int);
 
   template <class T>
@@ -72,7 +72,7 @@ namespace brigid {
   inline T* new_userdata(lua_State* L, const char* name, T_args... args) {
     T* data = static_cast<T*>(lua_newuserdata(L, sizeof(T)));
     new(data) T(std::forward<T_args>(args)...);
-    detail::set_metatable(L, name);
+    set_metatable(L, name);
     return data;
   }
 
