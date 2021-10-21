@@ -204,15 +204,15 @@ namespace brigid {
         | "null" @{ if (null_index) { lua_pushvalue(L, null_index); } else { lua_pushnil(L); } }
         | "true" @{ lua_pushboolean(L, true); }
         | "{" @{ lua_checkstack(L, 3); lua_createtable(L, 0, 8); fcall object; }
-        | "[" @{ lua_checkstack(L, 2); lua_createtable(L, 8, 0); index_stack.push_back(0); fcall array; }
+        | "[" @{ lua_checkstack(L, 2); lua_createtable(L, 8, 0); array_index.push_back(0); fcall array; }
         | number
         | string
         );
 
       member = ws string ws ":" ws value %{ lua_rawset(L, -3); };
       object := (member (ws "," member)*)? ws "}" @{ fret; };
-      element = ws value %{ lua_rawseti(L, -2, ++index_stack.back()); };
-      array := (element (ws "," element)*)? ws "]" @{ index_stack.pop_back(); fret; };
+      element = ws value %{ lua_rawseti(L, -2, ++array_index.back()); };
+      array := (element (ws "," element)*)? ws "]" @{ array_index.pop_back(); fret; };
       main := ws value ws;
 
       write data noerror nofinal noentry;
@@ -240,9 +240,9 @@ namespace brigid {
       const char* ps = nullptr;
       std::vector<char> buffer;
       const int null_index = lua_gettop(L) >= 2 ? 2 : 0;
-      char decimal_point = 0;               // *localeconv()->decimal_point
-      std::vector<lua_Integer> index_stack; // array index stack
+      std::vector<lua_Integer> array_index; // array index stack
       bool is_int = false;                  // number is integer
+      char decimal_point = 0;               // *localeconv()->decimal_point
       uint32_t u = 0;                       // unicode escape sequence
 
       %%write exec;
