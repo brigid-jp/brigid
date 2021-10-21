@@ -124,6 +124,19 @@ function suite:test_json_parse_number4()
   assert(equal(brigid.json.parse "-69e2", -6900))
 end
 
+function suite:test_json_parse_number5()
+  assert(equal(brigid.json.parse "0.25", 0.25))
+  assert(equal(brigid.json.parse "0.250", 0.25))
+  assert(equal(brigid.json.parse "25e-2", 0.25))
+  assert(equal(brigid.json.parse "2.5e-1", 0.25))
+  assert(equal(brigid.json.parse "0.25e-0", 0.25))
+  assert(equal(brigid.json.parse "-0.25", -0.25))
+  assert(equal(brigid.json.parse "-0.250", -0.25))
+  assert(equal(brigid.json.parse "-25e-2", -0.25))
+  assert(equal(brigid.json.parse "-2.5e-1", -0.25))
+  assert(equal(brigid.json.parse "-0.25e-0", -0.25))
+end
+
 function suite:test_json_parse_string1()
   assert(equal(brigid.json.parse [["foo"]], "foo"))
 end
