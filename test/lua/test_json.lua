@@ -331,6 +331,34 @@ function suite:test_json_parse_integer3()
   assert(math.type(v) == "float")
 end
 
+function suite:test_json_parse_integer4()
+  if not math.type or math.maxinteger ~= 0x7FFFFFFFFFFFFFFF then
+    return test_skip()
+  end
+
+  -- numeric_limits<int64_t>::digits10 == 18
+  local v = brigid.json.parse "999999999999999999" -- 18 digits
+  assert(math.type(v) == "integer")
+  assert(v == 999999999999999999)
+
+  local v = brigid.json.parse "-999999999999999999"
+  assert(math.type(v) == "integer")
+  assert(v == -999999999999999999)
+end
+
+function suite:test_json_parse_integer5()
+  if not math.type or math.maxinteger ~= 0x7FFFFFFFFFFFFFFF then
+    return test_skip()
+  end
+
+  -- numeric_limits<int64_t>::digits10 == 18
+  local v = brigid.json.parse "9999999999999999999" -- 19 digits
+  assert(math.type(v) == "float")
+
+  local v = brigid.json.parse "-9999999999999999999"
+  assert(math.type(v) == "float")
+end
+
 function suite:test_json_parse_error1()
   local result, message = brigid.json.parse " { "
   if debug then print(message) end

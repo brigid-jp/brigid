@@ -20,6 +20,7 @@
 
 namespace brigid {
   using lua_unsigned_t = std::make_unsigned<lua_Integer>::type;
+  static constexpr size_t integer_digs = std::numeric_limits<lua_Integer>::digits10 + 1;
   static constexpr lua_unsigned_t integer_max_div10 = std::numeric_limits<lua_Integer>::max() / 10;
   static constexpr lua_unsigned_t integer_max_mod10 = std::numeric_limits<lua_Integer>::max() % 10;
 
@@ -33,55 +34,51 @@ namespace brigid {
       ws = [ \t\n\r]*;
 
       number =
-        ( "-"? # @{ is_neg = 1; }
-          ( "0" # @{ v = 0; }
-          | [1-9] # @{ v = fc - '0'; }
-            digit*
-              # ${
-              #   lua_unsigned_t u = fc - '0';
-              #   if (v > integer_max_div10 || (v == integer_max_div10 && u > integer_max_mod10 + is_neg)) {
-              #     is_int = false;
-              #   } else {
-              #     v *= 10;
-              #     v += u;
-              #   }
-              # }
+        ( "-"?  ("0" | [1-9] digit*)
+          ( "." @{ is_int = false; } digit+ ([eE]  [+\-]? digit+)?
+          | ([eE] @{ is_int = false; } [+\-]? digit+)?
           )
-          ("." digit+)? @{ is_int = false; }
-          ([eE] [+\-]? digit+)? @{ is_int = false; }
-        ) >{
-            ps = fpc;
-            // is_neg = 0;
-            is_int = true;
-          }
+        ) >{ ps = fpc; is_int = true; }
           %{
+            lua_unsigned_t v = 0;
+            lua_unsigned_t negative = 0;
+
             if (is_int) {
               const char* ptr = ps;
               if (*ptr == '-') {
-                is_neg = 1;
+                negative = 1;
                 ++ptr;
-              } else {
-                is_neg = 0;
               }
-              lua_unsigned_t v = 0;
-              for (; ptr != fpc; ++ptr) {
+              size_t n = fpc - ptr;
+              if (n < integer_digs) {
+                for (; ptr != fpc; ++ptr) {
+                  v *= 10;
+                  v += *ptr - '0';
+                }
+              } else if (n == integer_digs) {
+                for (; ptr != fpc - 1; ++ptr) {
+                  v *= 10;
+                  v += *ptr - '0';
+                }
                 lua_unsigned_t u = *ptr - '0';
-                if (v > integer_max_div10 || (v == integer_max_div10 && u > integer_max_mod10 + is_neg)) {
+                if (v > integer_max_div10 || (v == integer_max_div10 && u > integer_max_mod10 + negative)) {
                   is_int = false;
                 } else {
                   v *= 10;
                   v += u;
                 }
-              }
-              if (is_int) {
-                if (is_neg) {
-                  lua_pushinteger(L, -v);
-                } else {
-                  lua_pushinteger(L, v);
-                }
+              } else {
+                is_int = false;
               }
             }
-            if (!is_int) {
+
+            if (is_int) {
+              if (negative) {
+                lua_pushinteger(L, -v);
+              } else {
+                lua_pushinteger(L, v);
+              }
+            } else {
               // At the end-of-file, strtod() may not be able to find an
               // unrecognized character, because the null termination is not
               // guaranteed.
@@ -245,8 +242,6 @@ namespace brigid {
       const int null_index = lua_gettop(L) >= 2 ? 2 : 0;
       char decimal_point = 0;               // *localeconv()->decimal_point
       std::vector<lua_Integer> index_stack; // array index stack
-      lua_unsigned_t v = 0;                 // integer
-      lua_unsigned_t is_neg = 0;            // number is negative
       bool is_int = false;                  // number is integer
       uint32_t u = 0;                       // unicode escape sequence
 
