@@ -24,7 +24,7 @@ namespace brigid {
     uintptr_t lightuserdata_mask = 0;
 
     int check_lightuserdata(lua_State* L) {
-      int bits = std::numeric_limits<uintptr_t>::digits - luaL_checkinteger(L, 1);
+      int bits = std::numeric_limits<uintptr_t>::digits - check_integer<int>(L, 1);
       uintptr_t v = static_cast<uintptr_t>(-1) >> bits;
       lua_pushlightuserdata(L, reinterpret_cast<void*>(v));
       return 1;

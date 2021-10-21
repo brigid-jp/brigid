@@ -14,6 +14,8 @@
 #include <type_traits>
 #include <utility>
 
+static_assert(std::is_same<lua_Number, double>::value, "lua_Number is not double");
+
 namespace brigid {
   using cxx_function_t = void (*)(lua_State*);
 
@@ -46,7 +48,7 @@ namespace brigid {
     if (min <= source && source <= max) {
       lua_pushinteger(L, static_cast<lua_Integer>(source));
     } else {
-      lua_pushnumber(L, static_cast<lua_Number>(source));
+      lua_pushnumber(L, static_cast<double>(source));
     }
   }
 
@@ -61,8 +63,43 @@ namespace brigid {
     if (source <= max) {
       lua_pushinteger(L, static_cast<lua_Integer>(source));
     } else {
-      lua_pushnumber(L, static_cast<lua_Number>(source));
+      lua_pushnumber(L, static_cast<double>(source));
     }
+  }
+
+  template <class T>
+  inline T check_integer(lua_State* L, int arg, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) < sizeof(lua_Integer))>* = nullptr) {
+    static constexpr lua_Integer max = std::numeric_limits<T>::max();
+    static constexpr lua_Integer min = std::numeric_limits<T>::min();
+    lua_Integer result = luaL_checkinteger(L, arg);
+    if (min <= result && result <= max) {
+      return static_cast<T>(result);
+    }
+    return luaL_argerror(L, arg, "out of bounds");
+  }
+
+  template <class T>
+  inline T check_integer(lua_State* L, int arg, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) >= sizeof(lua_Integer))>* = nullptr) {
+    return static_cast<T>(luaL_checkinteger(L, arg));
+  }
+
+  template <class T>
+  inline T check_integer(lua_State* L, int arg, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) < sizeof(lua_Integer))>* = nullptr) {
+    static constexpr lua_Integer max = std::numeric_limits<T>::max();
+    lua_Integer result = luaL_checkinteger(L, arg);
+    if (0 <= result && result <= max) {
+      return static_cast<T>(result);
+    }
+    return luaL_argerror(L, arg, "out of bounds");
+  }
+
+  template <class T>
+  inline T check_integer(lua_State* L, int arg, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) >= sizeof(lua_Integer))>* = nullptr) {
+    lua_Integer result = luaL_checkinteger(L, arg);
+    if (0 <= result) {
+      return static_cast<T>(result);
+    }
+    return luaL_argerror(L, arg, "out of bounds");
   }
 
   void set_field(lua_State*, int, const char*, cxx_function_t);

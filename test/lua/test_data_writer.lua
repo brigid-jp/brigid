@@ -60,7 +60,7 @@ function suite:test_data_writer1()
 end
 
 function suite:test_data_writer2()
-  local data_writer = brigid:data_writer()
+  local data_writer = brigid.data_writer()
   data_writer:write "foobar"
   for i = 1, 8 do
     data_writer:write(data_writer)
@@ -75,6 +75,16 @@ function suite:test_data_writer2()
   assert(n == #s)
   assert(s == t)
   assert(s == ("foobar"):rep(256))
+end
+
+function suite:test_data_writer3()
+  local data_writer = brigid.data_writer():reserve(1024):write "foobarbaz"
+  assert(data_writer:get_string() == "foobarbaz")
+
+  local result, message = pcall(function () data_writer:reserve(-1) end)
+  if debug then print(message) end
+  assert(not result)
+  assert(message:find "bad self" or message:find "bad argument")
 end
 
 return suite

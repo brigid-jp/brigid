@@ -27,7 +27,8 @@ brigid_la_SOURCES = \
 	file_writer.cpp \
 	hasher.cpp \
 	http.cpp \
-	json.cxx \
+	json.cpp \
+	json_parse.cxx \
 	module.cpp \
 	scope_exit.cpp \
 	stack_guard.cpp \

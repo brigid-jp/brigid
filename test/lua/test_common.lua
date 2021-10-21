@@ -140,7 +140,7 @@ function suite:test_null2()
 end
 
 function suite:test_lightuserdata_bits()
-  local bits = brigid:get_lightuserdata_bits()
+  local bits = brigid.get_lightuserdata_bits()
   if debug then print(bits) end
   assert(bits == 32 or bits == 47 or bits == 64)
   if bits == 47 then
