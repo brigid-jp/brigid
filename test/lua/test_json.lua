@@ -433,4 +433,25 @@ function suite:test_json_parse_deep_object()
   assert(u == depth)
 end
 
+function suite:test_json_array1()
+  local a = brigid.json.array()
+  assert(getmetatable(a))
+  assert(getmetatable(a).__index)
+  assert(getmetatable(a)["brigid.json.array"])
+  assert(#a == 0)
+  a:insert(42)
+  a:insert(69)
+  assert(#a == 2)
+  assert(a:concat "," == "42,69")
+end
+
+function suite:test_json_array2()
+  local a = brigid.json.array { 42, 69 }
+  assert(getmetatable(a))
+  assert(getmetatable(a).__index)
+  assert(getmetatable(a)["brigid.json.array"])
+  assert(#a == 2)
+  assert(a:concat "," == "42,69")
+end
+
 return suite

@@ -129,15 +129,6 @@ namespace brigid {
           return nullptr;
       }
     }
-
-    void set_metatable(lua_State* L, const char* name) {
-#if LUA_VERSION_NUM >= 502
-      luaL_setmetatable(L, name);
-#else
-      luaL_getmetatable(L, name);
-      lua_setmetatable(L, -2);
-#endif
-    }
   }
 
   int abs_index(lua_State* L, int index) {
@@ -172,6 +163,15 @@ namespace brigid {
     } else {
       return 0;
     }
+#endif
+  }
+
+  void set_metatable(lua_State* L, const char* name) {
+#if LUA_VERSION_NUM >= 502
+    luaL_setmetatable(L, name);
+#else
+    luaL_getmetatable(L, name);
+    lua_setmetatable(L, -2);
 #endif
   }
 
