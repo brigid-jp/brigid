@@ -212,8 +212,7 @@ namespace brigid {
       member = ws string ws ":" ws value %{ lua_rawset(L, -3); };
       object := (member (ws "," member)*)? ws "}" @{ fret; };
       element = ws value %{ lua_rawseti(L, -2, ++array_stack.back()); };
-      array := (element (ws "," element)*)? ws "]"
-        @{ lua_pushvalue(L, array_index); lua_setmetatable(L, -2);  array_stack.pop_back(); fret; };
+      array := (element (ws "," element)*)? ws "]" @{ lua_pushvalue(L, array_index); lua_setmetatable(L, -2); array_stack.pop_back(); fret; };
       main := ws value ws;
 
       write data noerror nofinal noentry;
