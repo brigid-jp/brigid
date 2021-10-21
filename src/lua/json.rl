@@ -128,7 +128,9 @@ namespace brigid {
           };
 
       # Accept not valid UTF-8 characters for performance
-      unescaped = [^\"\\];
+      unescaped_loose1 = [^\"\\] - 0x00..0x1F;
+      unescaped_loose2 = [^\"\\];
+      unescaped = unescaped_loose2;
 
       hex_quad =
         ( [0-9] @{ u <<= 4; u |= fc - '0'; }
