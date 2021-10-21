@@ -14,6 +14,8 @@
 #include <type_traits>
 #include <utility>
 
+static_assert(std::is_same<lua_Number, double>::value, "lua_Number is not double");
+
 namespace brigid {
   using cxx_function_t = void (*)(lua_State*);
 
@@ -46,7 +48,7 @@ namespace brigid {
     if (min <= source && source <= max) {
       lua_pushinteger(L, static_cast<lua_Integer>(source));
     } else {
-      lua_pushnumber(L, static_cast<lua_Number>(source));
+      lua_pushnumber(L, static_cast<double>(source));
     }
   }
 
@@ -61,7 +63,7 @@ namespace brigid {
     if (source <= max) {
       lua_pushinteger(L, static_cast<lua_Integer>(source));
     } else {
-      lua_pushnumber(L, static_cast<lua_Number>(source));
+      lua_pushnumber(L, static_cast<double>(source));
     }
   }
 
