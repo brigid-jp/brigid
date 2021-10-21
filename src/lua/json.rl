@@ -33,12 +33,39 @@ namespace brigid {
       ws = [ \t\n\r]*;
 
       number =
-        ( "-"? @{ is_neg = 1; }
-          ( "0" @{ v = 0; }
-          | [1-9] @{ v = fc - '0'; }
+        ( "-"? # @{ is_neg = 1; }
+          ( "0" # @{ v = 0; }
+          | [1-9] # @{ v = fc - '0'; }
             digit*
-              ${
-                lua_unsigned_t u = fc - '0';
+              # ${
+              #   lua_unsigned_t u = fc - '0';
+              #   if (v > integer_max_div10 || (v == integer_max_div10 && u > integer_max_mod10 + is_neg)) {
+              #     is_int = false;
+              #   } else {
+              #     v *= 10;
+              #     v += u;
+              #   }
+              # }
+          )
+          ("." digit+)? @{ is_int = false; }
+          ([eE] [+\-]? digit+)? @{ is_int = false; }
+        ) >{
+            ps = fpc;
+            // is_neg = 0;
+            is_int = true;
+          }
+          %{
+            if (is_int) {
+              const char* ptr = ps;
+              if (*ptr == '-') {
+                is_neg = 1;
+                ++ptr;
+              } else {
+                is_neg = 0;
+              }
+              lua_unsigned_t v = 0;
+              for (; ptr != fpc; ++ptr) {
+                lua_unsigned_t u = *ptr - '0';
                 if (v > integer_max_div10 || (v == integer_max_div10 && u > integer_max_mod10 + is_neg)) {
                   is_int = false;
                 } else {
@@ -46,22 +73,15 @@ namespace brigid {
                   v += u;
                 }
               }
-          )
-          ("." digit+)? @{ is_int = false; }
-          ([eE] [+\-]? digit+)? @{ is_int = false; }
-        ) >{
-            ps = fpc;
-            is_neg = 0;
-            is_int = true;
-          }
-          %{
-            if (is_int) {
-              if (is_neg) {
-                lua_pushinteger(L, -v);
-              } else {
-                lua_pushinteger(L, v);
+              if (is_int) {
+                if (is_neg) {
+                  lua_pushinteger(L, -v);
+                } else {
+                  lua_pushinteger(L, v);
+                }
               }
-            } else {
+            }
+            if (!is_int) {
               // At the end-of-file, strtod() may not be able to find an
               // unrecognized character, because the null termination is not
               // guaranteed.
@@ -107,7 +127,10 @@ namespace brigid {
             }
           };
 
-      unescaped = 0x20 | 0x21 | 0x23..0x5B | 0x5D..0x7F | 0x80..0xFF;
+      # Accept not valid UTF-8 characters for performance
+      unescaped_loose1 = [^\"\\] - 0x00..0x1F;
+      unescaped_loose2 = [^\"\\];
+      unescaped = unescaped_loose2;
 
       hex_quad =
         ( [0-9] @{ u <<= 4; u |= fc - '0'; }
@@ -159,41 +182,40 @@ namespace brigid {
         | unicode_escape_sequence
         );
 
-      string2 :=
+      string_impl :=
         escape_sequence %{ ps = fpc; }
         ( "\"" @{ lua_pushlstring(L, buffer.data(), buffer.size()); fret; }
         | unescaped+
           ( "\"" @{ size_t m = buffer.size(); size_t n = fpc - ps; buffer.resize(m + n); char* ptr = buffer.data(); memcpy(ptr + m, ps, n); lua_pushlstring(L, ptr, m + n); fret; }
-          | "\\" @{ size_t m = buffer.size(); size_t n = fpc - ps; buffer.resize(m + n); memcpy(buffer.data() + m, ps, n); fgoto string2; }
+          | "\\" @{ size_t m = buffer.size(); size_t n = fpc - ps; buffer.resize(m + n); memcpy(buffer.data() + m, ps, n); fgoto string_impl; }
           )
-        | "\\" @{ fgoto string2; }
+        | "\\" @{ fgoto string_impl; }
         );
 
-      string1 :=
-        ( "\"" @{ lua_pushlstring(L, ps, 0); fret; }
+      string =
+        "\"" @{ ps = fpc + 1; }
+        ( "\"" @{ lua_pushlstring(L, ps, 0); }
         | unescaped+
-          ( "\"" @{ lua_pushlstring(L, ps, fpc - ps); fret; }
-          | "\\" @{ size_t n = fpc - ps; buffer.resize(n); memcpy(buffer.data(), ps, n); fgoto string2; }
+          ( "\"" @{ lua_pushlstring(L, ps, fpc - ps); }
+          | "\\" @{ size_t n = fpc - ps; buffer.resize(n); memcpy(buffer.data(), ps, n); fcall string_impl; }
           )
-        | "\\" @{ buffer.clear(); fgoto string2; }
+        | "\\" @{ buffer.clear(); fcall string_impl; }
         );
-
-      string = "\"" @{ ps = fpc + 1; fcall string1; };
 
       value =
         ( "false" @{ lua_pushboolean(L, false); }
         | "null" @{ if (null_index) { lua_pushvalue(L, null_index); } else { lua_pushnil(L); } }
         | "true" @{ lua_pushboolean(L, true); }
-        | "{" @{ lua_checkstack(L, 3); lua_newtable(L); fcall object; }
-        | "[" @{ lua_checkstack(L, 2); lua_newtable(L); index_stack.push_back(index); index = 0; fcall array; }
+        | "{" @{ lua_checkstack(L, 3); lua_createtable(L, 0, 8); fcall object; }
+        | "[" @{ lua_checkstack(L, 2); lua_createtable(L, 8, 0); index_stack.push_back(0); fcall array; }
         | number
         | string
         );
 
       member = ws string ws ":" ws value %{ lua_rawset(L, -3); };
       object := (member (ws "," member)*)? ws "}" @{ fret; };
-      element = ws value %{ lua_rawseti(L, -2, ++index); };
-      array := (element (ws "," element)*)? ws "]" @{ index = index_stack.back(); index_stack.pop_back(); fret; };
+      element = ws value %{ lua_rawseti(L, -2, ++index_stack.back()); };
+      array := (element (ws "," element)*)? ws "]" @{ index_stack.pop_back(); fret; };
       main := ws value ws;
 
       write data noerror nofinal noentry;
@@ -222,7 +244,6 @@ namespace brigid {
       std::vector<char> buffer;
       const int null_index = lua_gettop(L) >= 2 ? 2 : 0;
       char decimal_point = 0;               // *localeconv()->decimal_point
-      lua_Integer index = 0;                // array index
       std::vector<lua_Integer> index_stack; // array index stack
       lua_unsigned_t v = 0;                 // integer
       lua_unsigned_t is_neg = 0;            // number is negative
