@@ -49,6 +49,10 @@ namespace brigid {
         memcpy(buffer_.data() + position, data, size);
       }
 
+      void reserve(size_t size) {
+        buffer_.reserve(size);
+      }
+
     private:
       std::vector<char> buffer_;
       bool closed_;
@@ -102,6 +106,12 @@ namespace brigid {
         self->write(data.data(), data.size());
       }
     }
+
+    void impl_reserve(lua_State* L) {
+      data_writer_t* self = check_data_writer(L, 1);
+      size_t size = check_integer<size_t>(L, 2);
+      self->reserve(size);
+    }
   }
 
   void initialize_data_writer(lua_State* L) {
@@ -122,6 +132,7 @@ namespace brigid {
       set_field(L, -1, "get_string", impl_get_string);
       set_field(L, -1, "close", impl_close);
       set_field(L, -1, "write", impl_write);
+      set_field(L, -1, "reserve", impl_reserve);
     }
     lua_setfield(L, -2, "data_writer");
   }
