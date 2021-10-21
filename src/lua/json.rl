@@ -33,12 +33,39 @@ namespace brigid {
       ws = [ \t\n\r]*;
 
       number =
-        ( "-"? @{ is_neg = 1; }
-          ( "0" @{ v = 0; }
-          | [1-9] @{ v = fc - '0'; }
+        ( "-"? # @{ is_neg = 1; }
+          ( "0" # @{ v = 0; }
+          | [1-9] # @{ v = fc - '0'; }
             digit*
-              ${
-                lua_unsigned_t u = fc - '0';
+              # ${
+              #   lua_unsigned_t u = fc - '0';
+              #   if (v > integer_max_div10 || (v == integer_max_div10 && u > integer_max_mod10 + is_neg)) {
+              #     is_int = false;
+              #   } else {
+              #     v *= 10;
+              #     v += u;
+              #   }
+              # }
+          )
+          ("." digit+)? @{ is_int = false; }
+          ([eE] [+\-]? digit+)? @{ is_int = false; }
+        ) >{
+            ps = fpc;
+            // is_neg = 0;
+            is_int = true;
+          }
+          %{
+            if (is_int) {
+              const char* ptr = ps;
+              if (*ptr == '-') {
+                is_neg = 1;
+                ++ptr;
+              } else {
+                is_neg = 0;
+              }
+              lua_unsigned_t v = 0;
+              for (; ptr != fpc; ++ptr) {
+                lua_unsigned_t u = *ptr - '0';
                 if (v > integer_max_div10 || (v == integer_max_div10 && u > integer_max_mod10 + is_neg)) {
                   is_int = false;
                 } else {
@@ -46,22 +73,15 @@ namespace brigid {
                   v += u;
                 }
               }
-          )
-          ("." digit+)? @{ is_int = false; }
-          ([eE] [+\-]? digit+)? @{ is_int = false; }
-        ) >{
-            ps = fpc;
-            is_neg = 0;
-            is_int = true;
-          }
-          %{
-            if (is_int) {
-              if (is_neg) {
-                lua_pushinteger(L, -v);
-              } else {
-                lua_pushinteger(L, v);
+              if (is_int) {
+                if (is_neg) {
+                  lua_pushinteger(L, -v);
+                } else {
+                  lua_pushinteger(L, v);
+                }
               }
-            } else {
+            }
+            if (!is_int) {
               // At the end-of-file, strtod() may not be able to find an
               // unrecognized character, because the null termination is not
               // guaranteed.
@@ -107,7 +127,8 @@ namespace brigid {
             }
           };
 
-      unescaped = 0x20 | 0x21 | 0x23..0x5B | 0x5D..0x7F | 0x80..0xFF;
+      # Accept not valid UTF-8 characters for performance
+      unescaped = [^\"\\];
 
       hex_quad =
         ( [0-9] @{ u <<= 4; u |= fc - '0'; }
@@ -183,8 +204,8 @@ namespace brigid {
         ( "false" @{ lua_pushboolean(L, false); }
         | "null" @{ if (null_index) { lua_pushvalue(L, null_index); } else { lua_pushnil(L); } }
         | "true" @{ lua_pushboolean(L, true); }
-        | "{" @{ lua_checkstack(L, 3); lua_newtable(L); fcall object; }
-        | "[" @{ lua_checkstack(L, 2); lua_newtable(L); index_stack.push_back(0); fcall array; }
+        | "{" @{ lua_checkstack(L, 3); lua_createtable(L, 0, 8); fcall object; }
+        | "[" @{ lua_checkstack(L, 2); lua_createtable(L, 8, 0); index_stack.push_back(0); fcall array; }
         | number
         | string
         );
