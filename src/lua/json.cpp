@@ -9,11 +9,7 @@
 namespace brigid {
   namespace {
     void impl_array(lua_State* L) {
-      if (lua_isnoneornil(L, 1)) {
-        lua_newtable(L);
-      } else {
-        lua_pushvalue(L, 1);
-      }
+      lua_newtable(L);
       set_metatable(L, "brigid.json.array");
     }
   }
