@@ -86,6 +86,29 @@ function suite:test_json_parse_array5()
   assert(#result == 5)
 end
 
+function suite:test_json_parse_array6()
+  local a = brigid.json.parse "[]"
+  local metatable = getmetatable(a)
+  assert(metatable.__index == table)
+  assert(metatable.__name == "brigid.json.array")
+  assert(metatable["brigid.json.array"])
+  assert(#a == 0)
+  a:insert(42)
+  a:insert(69)
+  assert(#a == 2)
+  assert(a:concat "," == "42,69")
+end
+
+function suite:test_json_parse_array7()
+  local a = brigid.json.parse "[42,69]"
+  local metatable = getmetatable(a)
+  assert(metatable.__index == table)
+  assert(metatable.__name == "brigid.json.array")
+  assert(metatable["brigid.json.array"])
+  assert(#a== 2)
+  assert(a:concat "," == "42,69")
+end
+
 function suite:test_json_parse_number1()
   assert(equal(brigid.json.parse "42", 42))
   assert(equal(brigid.json.parse "0.5", 0.5))
@@ -431,27 +454,6 @@ function suite:test_json_parse_deep_object()
   end
   assert(type(u) == "number")
   assert(u == depth)
-end
-
-function suite:test_json_array1()
-  local a = brigid.json.array()
-  assert(getmetatable(a))
-  assert(getmetatable(a).__index)
-  assert(getmetatable(a)["brigid.json.array"])
-  assert(#a == 0)
-  a:insert(42)
-  a:insert(69)
-  assert(#a == 2)
-  assert(a:concat "," == "42,69")
-end
-
-function suite:test_json_array2()
-  local a = brigid.json.array { 42, 69 }
-  assert(getmetatable(a))
-  assert(getmetatable(a).__index)
-  assert(getmetatable(a)["brigid.json.array"])
-  assert(#a == 2)
-  assert(a:concat "," == "42,69")
 end
 
 return suite

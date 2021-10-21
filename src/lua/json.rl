@@ -88,9 +88,9 @@ namespace brigid {
               do {
                 if (fpc != eof && !decimal_point) {
                   char* end = nullptr;
-                  double u = strtod(ps, &end);
+                  double v = strtod(ps, &end);
                   if (end == fpc) {
-                    lua_pushnumber(L, u);
+                    lua_pushnumber(L, v);
                     break;
                   }
                 }
@@ -111,9 +111,9 @@ namespace brigid {
                 }
 
                 char* end = nullptr;
-                double u = strtod(ptr, &end);
+                double v = strtod(ptr, &end);
                 if (end == ptr + n) {
-                  lua_pushnumber(L, u);
+                  lua_pushnumber(L, v);
                   break;
                 }
 
@@ -124,7 +124,7 @@ namespace brigid {
             }
           };
 
-      # Accept not valid UTF-8 characters for performance
+      # Accept not valid UTF-8 characters
       unescaped_loose1 = [^\"\\] - 0x00..0x1F;
       unescaped_loose2 = [^\"\\];
       unescaped = unescaped_loose2;
@@ -204,16 +204,16 @@ namespace brigid {
         | "null" @{ if (null_index) { lua_pushvalue(L, null_index); } else { lua_pushnil(L); } }
         | "true" @{ lua_pushboolean(L, true); }
         | "{" @{ lua_checkstack(L, 3); lua_createtable(L, 0, 8); fcall object; }
-        | "[" @{ lua_checkstack(L, 2); lua_createtable(L, 8, 0); array_index.push_back(0); fcall array; }
+        | "[" @{ lua_checkstack(L, 2); lua_createtable(L, 8, 0); array_stack.push_back(0); fcall array; }
         | number
         | string
         );
 
       member = ws string ws ":" ws value %{ lua_rawset(L, -3); };
       object := (member (ws "," member)*)? ws "}" @{ fret; };
-      element = ws value %{ lua_rawseti(L, -2, ++array_index.back()); };
+      element = ws value %{ lua_rawseti(L, -2, ++array_stack.back()); };
       array := (element (ws "," element)*)? ws "]"
-        @{ lua_pushvalue(L, metatable_index); lua_setmetatable(L, -2);  array_index.pop_back(); fret; };
+        @{ lua_pushvalue(L, array_index); lua_setmetatable(L, -2);  array_stack.pop_back(); fret; };
       main := ws value ws;
 
       write data noerror nofinal noentry;
@@ -237,7 +237,11 @@ namespace brigid {
       data_t data = check_data(L, 1);
 
       int cs = 0;
-      int top = 0;
+      int top = lua_gettop(L);
+
+      int null_index = top >= 2 ? 2 : 0;
+      luaL_getmetatable(L, "brigid.json.array");
+      int array_index = top + 1;
 
       %%write init;
 
@@ -249,20 +253,15 @@ namespace brigid {
 
       const char* ps = nullptr;
       std::vector<char> buffer;
-      std::vector<lua_Integer> array_index; // array index stack
-      bool is_int = false;                  // number is integer
-      char decimal_point = 0;               // *localeconv()->decimal_point
-      uint32_t u = 0;                       // unicode escape sequence
-
-      int null_index = lua_gettop(L) >= 2 ? 2 : 0;
-      luaL_getmetatable(L, "brigid.json.array");
-      int metatable_index = lua_gettop(L);
+      std::vector<lua_Integer> array_stack;
+      bool is_int = false;    // number is integer
+      char decimal_point = 0; // *localeconv()->decimal_point
+      uint32_t u = 0;         // unicode escape sequence
 
       %%write exec;
 
-      lua_remove(L, metatable_index);
-
       if (cs >= %%{ write first_final; }%% && stack.empty()) {
+        lua_remove(L, array_index);
         return;
       }
 
