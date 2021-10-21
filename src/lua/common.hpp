@@ -19,10 +19,10 @@ static_assert(std::is_same<lua_Number, double>::value, "lua_Number is not double
 namespace brigid {
   using cxx_function_t = void (*)(lua_State*);
 
-  static constexpr int check_validate_none = 0;
-  static constexpr int check_validate_not_closed = 1;
-  static constexpr int check_validate_not_running = 2;
-  static constexpr int check_validate_all = 3;
+  static const int check_validate_none = 0;
+  static const int check_validate_not_closed = 1;
+  static const int check_validate_not_running = 2;
+  static const int check_validate_all = 3;
 
   namespace detail {
     void push_handle(lua_State*, const void*);
@@ -43,8 +43,8 @@ namespace brigid {
 
   template <class T>
   inline void push_integer(lua_State* L, T source, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) > sizeof(lua_Integer))>* = nullptr) {
-    static constexpr T max = std::numeric_limits<lua_Integer>::max();
-    static constexpr T min = std::numeric_limits<lua_Integer>::min();
+    static const T max = std::numeric_limits<lua_Integer>::max();
+    static const T min = std::numeric_limits<lua_Integer>::min();
     if (min <= source && source <= max) {
       lua_pushinteger(L, static_cast<lua_Integer>(source));
     } else {
@@ -59,7 +59,7 @@ namespace brigid {
 
   template <class T>
   inline void push_integer(lua_State* L, T source, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) >= sizeof(lua_Integer))>* = nullptr) {
-    static constexpr T max = std::numeric_limits<lua_Integer>::max();
+    static const T max = std::numeric_limits<lua_Integer>::max();
     if (source <= max) {
       lua_pushinteger(L, static_cast<lua_Integer>(source));
     } else {
@@ -69,8 +69,8 @@ namespace brigid {
 
   template <class T>
   inline T check_integer(lua_State* L, int arg, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) < sizeof(lua_Integer))>* = nullptr) {
-    static constexpr lua_Integer max = std::numeric_limits<T>::max();
-    static constexpr lua_Integer min = std::numeric_limits<T>::min();
+    static const lua_Integer max = std::numeric_limits<T>::max();
+    static const lua_Integer min = std::numeric_limits<T>::min();
     lua_Integer result = luaL_checkinteger(L, arg);
     if (min <= result && result <= max) {
       return static_cast<T>(result);
@@ -85,7 +85,7 @@ namespace brigid {
 
   template <class T>
   inline T check_integer(lua_State* L, int arg, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) < sizeof(lua_Integer))>* = nullptr) {
-    static constexpr lua_Integer max = std::numeric_limits<T>::max();
+    static const lua_Integer max = std::numeric_limits<T>::max();
     lua_Integer result = luaL_checkinteger(L, arg);
     if (0 <= result && result <= max) {
       return static_cast<T>(result);

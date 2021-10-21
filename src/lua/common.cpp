@@ -85,7 +85,7 @@ namespace brigid {
   namespace detail {
     void push_handle(lua_State* L, const void* source) {
       if (reinterpret_cast<uintptr_t>(source) & lightuserdata_mask) {
-        static constexpr size_t size = sizeof(source);
+        static const size_t size = sizeof(source);
         char buffer[size] = {};
         memcpy(buffer, &source, size);
         lua_pushlstring(L, buffer, size);
@@ -96,7 +96,7 @@ namespace brigid {
 
     void push_pointer(lua_State* L, const void* source) {
       if (reinterpret_cast<uintptr_t>(source) & lightuserdata_mask) {
-        static constexpr size_t size = sizeof(source);
+        static const size_t size = sizeof(source);
         char buffer[size] = {};
         memcpy(buffer, &source, size);
         lua_getfield(L, LUA_REGISTRYINDEX, "brigid.string_to_ffi_pointer");

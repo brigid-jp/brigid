@@ -20,9 +20,9 @@
 
 namespace brigid {
   using lua_unsigned_t = std::make_unsigned<lua_Integer>::type;
-  static constexpr size_t integer_digs = std::numeric_limits<lua_Integer>::digits10 + 1;
-  static constexpr lua_unsigned_t integer_max_div10 = std::numeric_limits<lua_Integer>::max() / 10;
-  static constexpr lua_unsigned_t integer_max_mod10 = std::numeric_limits<lua_Integer>::max() % 10;
+  static const size_t integer_digs = std::numeric_limits<lua_Integer>::digits10 + 1;
+  static const lua_unsigned_t integer_max_div10 = std::numeric_limits<lua_Integer>::max() / 10;
+  static const lua_unsigned_t integer_max_mod10 = std::numeric_limits<lua_Integer>::max() % 10;
 
   namespace {
     %%{
@@ -74,7 +74,7 @@ namespace brigid {
 
             if (is_int) {
               if (negative) {
-                lua_pushinteger(L, -v);
+                lua_pushinteger(L, 0 - v);
               } else {
                 lua_pushinteger(L, v);
               }
@@ -243,7 +243,7 @@ namespace brigid {
 
       const char* ps = nullptr;
       std::vector<char> buffer;
-      std::vector<lua_Integer> array_stack;
+      std::vector<int> array_stack;
       bool is_int = false;    // number is integer
       char decimal_point = 0; // *localeconv()->decimal_point
       uint32_t u = 0;         // unicode escape sequence
