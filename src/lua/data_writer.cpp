@@ -1,8 +1,7 @@
-// Copyright (c) 2019 <dev@brigid.jp>
+// Copyright (c) 2019,2021 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
 #include "common.hpp"
 #include "data.hpp"
@@ -15,23 +14,20 @@
 
 namespace brigid {
   namespace {
-    class data_writer_t : private noncopyable {
+    class data_writer_t : public abstract_data_t, private noncopyable {
     public:
       data_writer_t()
-        : buffer_(),
-          closed_() {}
+        : closed_() {}
 
-      void write(const char* data, size_t size) {
-        size_t position = buffer_.size();
-        buffer_.resize(position + size);
-        memmove(buffer_.data() + position, data, size);
+      virtual bool closed() const {
+        return closed_;
       }
 
-      const char* data() const {
+      virtual const char* data() const {
         return buffer_.data();
       }
 
-      size_t size() const {
+      virtual size_t size() const {
         return buffer_.size();
       }
 
@@ -40,8 +36,21 @@ namespace brigid {
         closed_ = true;
       }
 
-      bool closed() const {
-        return closed_;
+      void write_self() {
+        size_t size = buffer_.size();
+        buffer_.resize(size * 2);
+        char* data = buffer_.data();
+        memcpy(data + size, data, size);
+      }
+
+      void write(const char* data, size_t size) {
+        size_t position = buffer_.size();
+        buffer_.resize(position + size);
+        memcpy(buffer_.data() + position, data, size);
+      }
+
+      void reserve(size_t size) {
+        buffer_.reserve(size);
       }
 
     private:
@@ -53,7 +62,7 @@ namespace brigid {
       data_writer_t* self = check_udata<data_writer_t>(L, arg, "brigid.data_writer");
       if (validate & check_validate_not_closed) {
         if (self->closed()) {
-          luaL_error(L, "attempt to use a closed brigid.data_writer");
+          luaL_argerror(L, arg, "attempt to use a closed brigid.data_writer");
         }
       }
       return self;
@@ -62,7 +71,6 @@ namespace brigid {
     void impl_gc(lua_State* L) {
       check_data_writer(L, 1, check_validate_none)->~data_writer_t();
     }
-
 
     void impl_close(lua_State* L) {
       data_writer_t* self = check_data_writer(L, 1, check_validate_none);
@@ -74,49 +82,58 @@ namespace brigid {
       new_userdata<data_writer_t>(L, "brigid.data_writer");
     }
 
-    void impl_write(lua_State* L) {
-      data_writer_t* self = check_data_writer(L, 1);
-      data_t data = check_data(L, 2);
-      self->write(data.data(), data.size());
-    }
-
-    void impl_get_string(lua_State* L) {
-      data_writer_t* self = check_data_writer(L, 1);
-      push(L, self->data(), self->size());
-    }
-
     void impl_get_pointer(lua_State* L) {
       data_writer_t* self = check_data_writer(L, 1);
-      get_field(L, LUA_REGISTRYINDEX, "brigid.common.decode_pointer");
-      push(L, encode_pointer(self->data()));
-      if (lua_pcall(L, 1, 1, 0) != 0) {
-        throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
-      }
+      push_pointer(L, self->data());
     }
 
     void impl_get_size(lua_State* L) {
       data_writer_t* self = check_data_writer(L, 1);
-      push(L, self->size());
+      push_integer(L, self->size());
+    }
+
+    void impl_get_string(lua_State* L) {
+      data_writer_t* self = check_data_writer(L, 1);
+      lua_pushlstring(L, self->data(), self->size());
+    }
+
+    void impl_write(lua_State* L) {
+      data_writer_t* self = check_data_writer(L, 1);
+      if (self == lua_touserdata(L, 2)) {
+        self->write_self();
+      } else {
+        data_t data = check_data(L, 2);
+        self->write(data.data(), data.size());
+      }
+    }
+
+    void impl_reserve(lua_State* L) {
+      data_writer_t* self = check_data_writer(L, 1);
+      size_t size = check_integer<size_t>(L, 2);
+      self->reserve(size);
     }
   }
 
   void initialize_data_writer(lua_State* L) {
     lua_newtable(L);
     {
-      luaL_newmetatable(L, "brigid.data_writer");
+      new_metatable(L, "brigid.data_writer");
       lua_pushvalue(L, -2);
-      set_field(L, -2, "__index");
+      lua_setfield(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);
       set_field(L, -1, "__close", impl_close);
+      set_field(L, -1, "__len", impl_get_size);
+      set_field(L, -1, "__tostring", impl_get_string);
       lua_pop(L, 1);
 
       set_metafield(L, -1, "__call", impl_call);
-      set_field(L, -1, "write", impl_write);
-      set_field(L, -1, "get_string", impl_get_string);
       set_field(L, -1, "get_pointer", impl_get_pointer);
       set_field(L, -1, "get_size", impl_get_size);
+      set_field(L, -1, "get_string", impl_get_string);
       set_field(L, -1, "close", impl_close);
+      set_field(L, -1, "write", impl_write);
+      set_field(L, -1, "reserve", impl_reserve);
     }
-    set_field(L, -2, "data_writer");
+    lua_setfield(L, -2, "data_writer");
   }
 }

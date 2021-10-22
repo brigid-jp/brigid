@@ -7,6 +7,9 @@
 #include <brigid/noncopyable.hpp>
 #include "common.hpp"
 #include "data.hpp"
+#include "scope_exit.hpp"
+#include "stack_guard.hpp"
+#include "thread_reference.hpp"
 #include "view.hpp"
 
 #include <lua.hpp>
@@ -25,9 +28,10 @@ namespace brigid {
     class http_session_t : private noncopyable {
     public:
       http_session_t(
-          reference&& progress_cb,
-          reference&& header_cb,
-          reference&& write_cb,
+          thread_reference&& ref,
+          int progress_cb,
+          int header_cb,
+          int write_cb,
           bool credential,
           const std::string& username,
           const std::string& password)
@@ -38,9 +42,10 @@ namespace brigid {
             credential,
             username,
             password)),
-          progress_cb_(std::move(progress_cb)),
-          header_cb_(std::move(header_cb)),
-          write_cb_(std::move(write_cb)),
+          ref_(std::move(ref)),
+          progress_cb_(progress_cb),
+          header_cb_(header_cb),
+          write_cb_(write_cb),
           running_() {}
 
       bool request(
@@ -54,9 +59,7 @@ namespace brigid {
 
       void close() {
         session_ = nullptr;
-        progress_cb_ = reference();
-        header_cb_ = reference();
-        write_cb_ = reference();
+        ref_ = thread_reference();
       }
 
       bool closed() const {
@@ -69,69 +72,79 @@ namespace brigid {
 
     private:
       std::unique_ptr<http_session> session_;
-      reference progress_cb_;
-      reference header_cb_;
-      reference write_cb_;
+      thread_reference ref_;
+      int progress_cb_;
+      int header_cb_;
+      int write_cb_;
       bool running_;
 
       bool progress_cb(size_t now, size_t total) {
-        if (lua_State* L = progress_cb_.state()) {
-          stack_guard guard(L);
-          progress_cb_.get_field(L);
-          push(L, now);
-          push(L, total);
-          running_ = true;
-          scope_exit scope_guard([&]() {
-            running_ = false;
-          });
-          if (lua_pcall(L, 2, 1, 0) != 0) {
-            throw BRIGID_RUNTIME_ERROR(lua_tostring(L, -1));
-          }
-          if (is_false(L, -1)) {
-            return false;
+        if (progress_cb_) {
+          if (lua_State* L = ref_.get()) {
+            stack_guard guard(L);
+            lua_pushvalue(L, progress_cb_);
+            push_integer(L, now);
+            push_integer(L, total);
+            running_ = true;
+            scope_exit scope_guard([&]() {
+              running_ = false;
+            });
+            if (lua_pcall(L, 2, 1, 0) != 0) {
+              throw BRIGID_RUNTIME_ERROR(lua_tostring(L, -1));
+            }
+            if (is_false(L, -1)) {
+              return false;
+            }
           }
         }
         return true;
       }
 
       bool header_cb(int code, const std::map<std::string, std::string>& header) {
-        if (lua_State* L = header_cb_.state()) {
-          stack_guard guard(L);
-          header_cb_.get_field(L);
-          push(L, code);
-          lua_newtable(L);
-          for (const auto& field : header) {
-            set_field(L, -1, field.first, field.second);
-          }
-          running_ = true;
-          scope_exit scope_guard([&]() {
-            running_ = false;
-          });
-          if (lua_pcall(L, 2, 1, 0) != 0) {
-            throw BRIGID_RUNTIME_ERROR(lua_tostring(L, -1));
-          }
-          if (is_false(L, -1)) {
-            return false;
+        if (header_cb_) {
+          if (lua_State* L = ref_.get()) {
+            stack_guard guard(L);
+            lua_pushvalue(L, header_cb_);
+            push_integer(L, code);
+            lua_newtable(L);
+            for (const auto& field : header) {
+              // TODO rawset?
+              lua_pushlstring(L, field.first.data(), field.first.size());
+              lua_pushlstring(L, field.second.data(), field.second.size());
+              lua_settable(L, -3);
+            }
+            running_ = true;
+            scope_exit scope_guard([&]() {
+              running_ = false;
+            });
+            if (lua_pcall(L, 2, 1, 0) != 0) {
+              throw BRIGID_RUNTIME_ERROR(lua_tostring(L, -1));
+            }
+            if (is_false(L, -1)) {
+              return false;
+            }
           }
         }
         return true;
       }
 
       bool write_cb(const char* data, size_t size) {
-        if (lua_State* L = write_cb_.state()) {
-          stack_guard guard(L);
-          write_cb_.get_field(L);
-          view_t* view = new_view(L, data, size);
-          running_ = true;
-          scope_exit scope_guard([&]() {
-            running_ = false;
-            view->close();
-          });
-          if (lua_pcall(L, 1, 1, 0) != 0) {
-            throw BRIGID_RUNTIME_ERROR(lua_tostring(L, -1));
-          }
-          if (is_false(L, -1)) {
-            return false;
+        if (write_cb_) {
+          if (lua_State* L = ref_.get()) {
+            stack_guard guard(L);
+            lua_pushvalue(L, write_cb_);
+            view_t* view = new_view(L, data, size);
+            running_ = true;
+            scope_exit scope_guard([&]() {
+              running_ = false;
+              view->close();
+            });
+            if (lua_pcall(L, 1, 1, 0) != 0) {
+              throw BRIGID_RUNTIME_ERROR(lua_tostring(L, -1));
+            }
+            if (is_false(L, -1)) {
+              return false;
+            }
           }
         }
         return true;
@@ -167,44 +180,68 @@ namespace brigid {
     void impl_call(lua_State* L) {
       luaL_checktype(L, 2, LUA_TTABLE);
 
-      reference progress_cb;
-      reference header_cb;
-      reference write_cb;
+      thread_reference ref;
+      int ref_index = 0;
+      int progress_cb = 0;
+      int header_cb = 0;
+      int write_cb = 0;
       int credential = 0;
       std::string username;
       std::string password;
 
       if (get_field(L, 2, "progress") != LUA_TNIL) {
-        progress_cb = reference(L, -1);
+        if (!ref) {
+          ref = thread_reference(L);
+        }
+        lua_pushvalue(L, -1);
+        lua_xmove(L, ref.get(), 1);
+        progress_cb = ++ref_index;
       }
       lua_pop(L, 1);
 
       if (get_field(L, 2, "header") != LUA_TNIL) {
-        header_cb = reference(L, -1);
+        if (!ref) {
+          ref = thread_reference(L);
+        }
+        lua_pushvalue(L, -1);
+        lua_xmove(L, ref.get(), 1);
+        header_cb = ++ref_index;
       }
       lua_pop(L, 1);
 
       if (get_field(L, 2, "write") != LUA_TNIL) {
-        write_cb = reference(L, -1);
+        if (!ref) {
+          ref = thread_reference(L);
+        }
+        lua_pushvalue(L, -1);
+        lua_xmove(L, ref.get(), 1);
+        write_cb = ++ref_index;
       }
       lua_pop(L, 1);
 
       if (get_field(L, 2, "username") != LUA_TNIL) {
-        ++credential;
-        username = to_data(L, -1).str();
+        size_t size = 0;
+        if (const char* data = lua_tolstring(L, -1, &size)) {
+          ++credential;
+          username.assign(data, size);
+        }
       }
       lua_pop(L, 1);
 
       if (get_field(L, 2, "password") != LUA_TNIL) {
-        ++credential;
-        password = to_data(L, -1).str();
+        size_t size = 0;
+        if (const char* data = lua_tolstring(L, -1, &size)) {
+          ++credential;
+          password.assign(data, size);
+        }
       }
       lua_pop(L, 1);
 
       new_userdata<http_session_t>(L, "brigid.http_session",
-          std::move(progress_cb),
-          std::move(header_cb),
-          std::move(write_cb),
+          std::move(ref),
+          progress_cb,
+          header_cb,
+          write_cb,
           credential == 2,
           username,
           password);
@@ -221,12 +258,18 @@ namespace brigid {
       data_t data;
 
       if (get_field(L, 2, "method") != LUA_TNIL) {
-        method = to_data(L, -1).str();
+        size_t size = 0;
+        if (const char* data = lua_tolstring(L, -1, &size)) {
+          method.assign(data, size);
+        }
       }
       lua_pop(L, 1);
 
       if (get_field(L, 2, "url") != LUA_TNIL) {
-        url = to_data(L, -1).str();
+        size_t size = 0;
+        if (const char* data = lua_tolstring(L, -1, &size)) {
+          url.assign(data, size);
+        }
       }
       lua_pop(L, 1);
 
@@ -235,7 +278,13 @@ namespace brigid {
         lua_pushnil(L);
         while (lua_next(L, index)) {
           lua_pushvalue(L, -2);
-          header[to_data(L, -1).str()] = to_data(L, -2).str();
+          size_t name_size = 0;
+          if (const char* name_data = lua_tolstring(L, -1, &name_size)) {
+            size_t value_size = 0;
+            if (const char* value_data = lua_tolstring(L, -2, &value_size)) {
+              header.emplace(std::string(name_data, name_size), std::string(value_data, value_size));
+            }
+          }
           lua_pop(L, 2);
         }
       }
@@ -255,7 +304,7 @@ namespace brigid {
 
       if (!result) {
         lua_pushnil(L);
-        push(L, "canceled");
+        lua_pushstring(L, "canceled");
       }
     }
   }
@@ -270,9 +319,9 @@ namespace brigid {
 
     lua_newtable(L);
     {
-      luaL_newmetatable(L, "brigid.http_session");
+      new_metatable(L, "brigid.http_session");
       lua_pushvalue(L, -2);
-      set_field(L, -2, "__index");
+      lua_setfield(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);
       set_field(L, -1, "__close", impl_close);
       lua_pop(L, 1);
@@ -281,6 +330,6 @@ namespace brigid {
       set_field(L, -1, "request", impl_request);
       set_field(L, -1, "close", impl_close);
     }
-    set_field(L, -2, "http_session");
+    lua_setfield(L, -2, "http_session");
   }
 }

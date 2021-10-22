@@ -29,6 +29,7 @@ function metatable:__newindex(key, value)
   local case_keys = impl.case_keys
   local cases = impl.cases
 
+  assert(not cases[key])
   case_keys[#case_keys + 1] = key
   cases[key] = value
 end

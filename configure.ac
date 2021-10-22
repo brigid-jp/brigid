@@ -1,4 +1,4 @@
-# Copyright (c) 2019,2020 <dev@brigid.jp>
+# Copyright (c) 2019-2021 <dev@brigid.jp>
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
@@ -9,7 +9,7 @@ LT_INIT
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADER([config.h])
-AC_CONFIG_FILES([Makefile src/lib/Makefile src/lua/Makefile test/lib/Makefile test/lua/Makefile])
+AC_CONFIG_FILES([Makefile src/lib/Makefile src/lua/Makefile test/lib/Makefile test/lua/Makefile test/lab/Makefile])
 
 AC_PROG_CXX
 AX_CXX_COMPILE_STDCXX(11, noext)

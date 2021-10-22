@@ -37,6 +37,7 @@
 /missing
 /stamp-h1
 /test-driver
+/test/lab/abnf.rl
 /test/lib/JavaTest.h
 /test/lib/libjavatest.dylib
 /test/lua/brigid-test.love

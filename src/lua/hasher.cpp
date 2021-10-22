@@ -19,8 +19,9 @@
 namespace brigid {
   namespace {
     crypto_hash check_hash(lua_State* L, int arg) {
-      {
-        std::string hash = check_data(L, arg).str();
+      size_t size = 0;
+      if (const char* data = lua_tolstring(L, arg, &size)) {
+        std::string hash(data, size);
         if (hash == "sha1") {
           return crypto_hash::sha1;
         } else if (hash == "sha256") {
@@ -93,7 +94,7 @@ namespace brigid {
     void impl_digest(lua_State* L) {
       hasher_t* self = check_hasher(L, 1);
       std::vector<char> result = self->digest();
-      push(L, result.data(), result.size());
+      lua_pushlstring(L, result.data(), result.size());
     }
   }
 
@@ -107,9 +108,9 @@ namespace brigid {
 
     lua_newtable(L);
     {
-      luaL_newmetatable(L, "brigid.hasher");
+      new_metatable(L, "brigid.hasher");
       lua_pushvalue(L, -2);
-      set_field(L, -2, "__index");
+      lua_setfield(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);
       set_field(L, -1, "__close", impl_close);
       lua_pop(L, 1);
@@ -119,6 +120,6 @@ namespace brigid {
       set_field(L, -1, "digest", impl_digest);
       set_field(L, -1, "close", impl_close);
     }
-    set_field(L, -2, "hasher");
+    lua_setfield(L, -2, "hasher");
   }
 }

@@ -1,0 +1,3 @@
+GET あいうえお HTTP/1.0
+
+dummy

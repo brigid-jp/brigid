@@ -1,0 +1,1 @@
+[["abc","abc\n","abc\ndef\n","\n","\nabc","\nabc\ndef","ABC\nDEF\nGHI","ABC\nDEF\nGHI\n","","a\000b\123c","a\42"]]

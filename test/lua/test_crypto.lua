@@ -68,7 +68,7 @@ local cipher = "aes-256-cbc"
 local key = keys[cipher]
 local ciphertext = ciphertexts[cipher]
 
-function suite:test_cryptor1()
+function suite:test_cryptor()
   local cryptor = assert(brigid.encryptor(cipher, key, iv))
   assert(cryptor:update(plaintext, true))
   assert(cryptor:close())
@@ -76,42 +76,6 @@ function suite:test_cryptor1()
   local result, message = pcall(function () cryptor:update "0" end)
   print(message)
   assert(not result)
-end
-
-function suite:test_cryptor2()
-  local closed_view
-  local cryptor
-  cryptor = assert(brigid.encryptor(cipher, key, iv, function (view)
-    closed_view = view
-    local result, message = pcall(function () cryptor:update(plaintext, true) end)
-    print(message)
-    assert(not result)
-  end))
-  assert(cryptor:update(plaintext, true))
-  assert(closed_view)
-  local result, message = pcall(function () closed_view:get_string() end)
-  print(message)
-  assert(not result)
-end
-
-function suite:test_cryptor3()
-  local ffi
-  pcall(function ()
-    ffi = require "ffi"
-  end)
-
-  local cryptor = assert(brigid.decryptor(cipher, key, iv, function (view)
-    local ptr = view:get_pointer()
-    print(tostring(ptr))
-    if ffi then
-      assert(type(ptr) == "cdata")
-      assert(ffi.string(ptr, view:get_size()) == plaintext)
-    else
-      assert(type(ptr) == "userdata")
-    end
-    assert(view:get_size() == #plaintext)
-  end))
-  assert(cryptor:update(ciphertext, true))
 end
 
 for i = 1, #ciphers do

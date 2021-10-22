@@ -1,4 +1,4 @@
-// Copyright (c) 2019 <dev@brigid.jp>
+// Copyright (c) 2019,2021 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -10,26 +10,38 @@
 
 #include <lua.hpp>
 
+#include <errno.h>
 #include <stddef.h>
-#include <string>
+#include <stdio.h>
+#include <system_error>
 
 namespace brigid {
   namespace {
     class file_writer_t : private noncopyable {
     public:
-      explicit file_writer_t(const std::string& path)
+      explicit file_writer_t(const char* path)
         : handle_(open_file_handle(path, "wb")) {}
 
-      void write(const char* data, size_t size) {
-        fwrite(data, 1, size, handle_.get());
+      bool closed() const {
+        return !handle_;
       }
 
       void close() {
         handle_.reset();
       }
 
-      bool closed() const {
-        return !handle_;
+      void write(const char* data, size_t size) {
+        if (fwrite(data, 1, size, handle_.get()) != size) {
+          int code = errno;
+          throw BRIGID_RUNTIME_ERROR(std::generic_category().message(code), make_error_code("error number", code));
+        }
+      }
+
+      void flush() {
+        if (fflush(handle_.get()) != 0) {
+          int code = errno;
+          throw BRIGID_RUNTIME_ERROR(std::generic_category().message(code), make_error_code("error number", code));
+        }
       }
 
     private:
@@ -40,7 +52,7 @@ namespace brigid {
       file_writer_t* self = check_udata<file_writer_t>(L, arg, "brigid.file_writer");
       if (validate & check_validate_not_closed) {
         if (self->closed()) {
-          luaL_error(L, "attempt to use a closed brigid.file_writer");
+          luaL_argerror(L, arg, "attempt to use a closed brigid.file_writer");
         }
       }
       return self;
@@ -51,15 +63,15 @@ namespace brigid {
     }
 
     void impl_close(lua_State* L) {
-      file_writer_t* self = check_file_writer(L, 1);
+      file_writer_t* self = check_file_writer(L, 1, check_validate_none);
       if (!self->closed()) {
         self->close();
       }
     }
 
     void impl_call(lua_State* L) {
-      data_t path = check_data(L, 2);
-      new_userdata<file_writer_t>(L, "brigid.file_writer", path.str());
+      const char* path = luaL_checkstring(L, 2);
+      new_userdata<file_writer_t>(L, "brigid.file_writer", path);
     }
 
     void impl_write(lua_State* L) {
@@ -67,22 +79,28 @@ namespace brigid {
       data_t data = check_data(L, 2);
       self->write(data.data(), data.size());
     }
+
+    void impl_flush(lua_State* L) {
+      file_writer_t* self = check_file_writer(L, 1);
+      self->flush();
+    }
   }
 
   void initialize_file_writer(lua_State* L) {
     lua_newtable(L);
     {
-      luaL_newmetatable(L, "brigid.file_writer");
+      new_metatable(L, "brigid.file_writer");
       lua_pushvalue(L, -2);
-      set_field(L, -2, "__index");
+      lua_setfield(L, -2, "__index");
       set_field(L, -1, "__gc", impl_gc);
       set_field(L, -1, "__close", impl_close);
       lua_pop(L, 1);
 
       set_metafield(L, -1, "__call", impl_call);
-      set_field(L, -1, "write", impl_write);
       set_field(L, -1, "close", impl_close);
+      set_field(L, -1, "write", impl_write);
+      set_field(L, -1, "flush", impl_flush);
     }
-    set_field(L, -2, "file_writer");
+    lua_setfield(L, -2, "file_writer");
   }
 }

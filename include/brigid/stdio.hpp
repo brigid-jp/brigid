@@ -1,4 +1,4 @@
-// Copyright (c) 2019 <dev@brigid.jp>
+// Copyright (c) 2019,2021 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -13,7 +13,7 @@ namespace brigid {
   using file_handle_t = std::unique_ptr<FILE, decltype(&fclose)>;
 
   file_handle_t make_file_handle(FILE* = nullptr);
-  file_handle_t open_file_handle(const std::string&, const char*);
+  file_handle_t open_file_handle(const char*, const char*);
 }
 
 #endif

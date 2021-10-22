@@ -1,4 +1,4 @@
-# Copyright (c) 2019,2020 <dev@brigid.jp>
+# Copyright (c) 2019-2021 <dev@brigid.jp>
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
@@ -22,8 +22,12 @@ OBJS = \
 	src\lua\file_writer.obj \
 	src\lua\hasher.obj \
 	src\lua\http.obj \
+	src\lua\json.obj \
+	src\lua\json_parse.obj \
 	src\lua\module.obj \
-	src\lua\version.obj \
+	src\lua\scope_exit.obj \
+	src\lua\stack_guard.obj \
+	src\lua\thread_reference.obj \
 	src\lua\view.obj
 TARGET = brigid.dll
 
@@ -42,4 +46,7 @@ $(TARGET): $(OBJS)
 	link $(LIBFLAG) /DEF:brigid.def $** "$(LUA_LIBDIR)\$(LUALIB)" bcrypt.lib winhttp.lib /OUT:$@
 
 .cpp.obj:
+	$(CC) $(CPPFLAGS) $(CXXFLAGS) /c $< /Fo$@
+
+.cxx.obj:
 	$(CC) $(CPPFLAGS) $(CXXFLAGS) /c $< /Fo$@

@@ -1,6 +1,9 @@
-# Copyright (c) 2019,2020 <dev@brigid.jp>
+# Copyright (c) 2019-2021 <dev@brigid.jp>
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
+
+.rl.cxx:
+	ragel -G2 $< -o $@
 
 luaexec_LTLIBRARIES = brigid.la
 
@@ -8,6 +11,9 @@ noinst_HEADERS = \
 	common.hpp \
 	common.lua \
 	data.hpp \
+	scope_exit.hpp \
+	stack_guard.hpp \
+	thread_reference.hpp \
 	view.hpp
 
 brigid_la_CPPFLAGS = -I$(top_srcdir)/include
@@ -21,8 +27,12 @@ brigid_la_SOURCES = \
 	file_writer.cpp \
 	hasher.cpp \
 	http.cpp \
+	json.cpp \
+	json_parse.cxx \
 	module.cpp \
-	version.cpp \
+	scope_exit.cpp \
+	stack_guard.cpp \
+	thread_reference.cpp \
 	view.cpp
 
 if CRYPTO_OPENSSL
@@ -38,3 +48,5 @@ brigid_la_LDFLAGS += $(CURL_LDFLAGS)
 brigid_la_LIBADD += $(CURL_LIBS)
 endif
 endif
+
+EXTRA_DIST = *.rl

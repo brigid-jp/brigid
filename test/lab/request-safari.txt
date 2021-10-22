@@ -1,0 +1,16 @@
+GET /recorder/socket HTTP/1.1
+Host: localhost:8000
+Origin: http://brigid.jp
+Pragma: no-cache
+Cache-Control: no-cache
+Sec-WebSocket-Key: 7NZLDD4NHApIH9/RC9sf3w==
+Sec-WebSocket-Version: 13
+Sec-WebSocket-Extensions: x-webkit-deflate-frame
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Safari/605.1.15
+X-Forwarded-For: 220.100.118.212
+X-Forwarded-Host: brigid.jp
+X-Forwarded-Server: brigid.jp
+Upgrade: WebSocket
+Connection: Upgrade
+
+dummy
