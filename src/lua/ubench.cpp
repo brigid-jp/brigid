@@ -94,12 +94,22 @@ namespace brigid {
       out << std::setfill('0');
 
       check_clock(out, "CLOCK_REALTIME", CLOCK_REALTIME);
+#ifdef CLOCK_REALTIME_COARSE
+      check_clock(out, "CLOCK_REALTIME_COARSE", CLOCK_REALTIME_COARSE);
+#endif
+
       check_clock(out, "CLOCK_MONOTONIC", CLOCK_MONOTONIC);
+#ifdef CLOCK_MONOTONIC_COARSE
+      check_clock(out, "CLOCK_MONOTONIC_COARSE", CLOCK_MONOTONIC_COARSE);
+#endif
 #ifdef CLOCK_MONOTONIC_RAW
       check_clock(out, "CLOCK_MONOTONIC_RAW", CLOCK_MONOTONIC_RAW);
 #endif
 #ifdef CLOCK_MONOTONIC_RAW_APPROX
       check_clock(out, "CLOCK_MONOTONIC_RAW_APPROX", CLOCK_MONOTONIC_RAW_APPROX);
+#endif
+#ifdef CLOCK_BOOTTIME
+      check_clock(out, "CLOCK_BOOTTIME", CLOCK_BOOTTIME);
 #endif
 #ifdef CLOCK_UPTIME_RAW
       check_clock(out, "CLOCK_UPTIME_RAW", CLOCK_UPTIME_RAW);
