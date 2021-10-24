@@ -14,9 +14,9 @@ namespace brigid {
   namespace {
     static const clockid_t clock = CLOCK_MONOTONIC;
 
-    class timer : private noncopyable {
+    class stopwatch : private noncopyable {
     public:
-      timer()
+      stopwatch()
         : started_(),
           stopped_() {}
 
@@ -47,26 +47,26 @@ namespace brigid {
       struct timespec stopped_;
     };
 
-    timer* check_timer(lua_State* L, int arg) {
-      return check_udata<timer>(L, arg, "brigid.ubench.timer");
+    stopwatch* check_stopwatch(lua_State* L, int arg) {
+      return check_udata<stopwatch>(L, arg, "brigid.ubench.stopwatch");
     }
 
     void impl_call(lua_State* L) {
-      new_userdata<timer>(L, "brigid.ubench.timer");
+      new_userdata<stopwatch>(L, "brigid.ubench.stopwatch");
     }
 
     void impl_start(lua_State* L) {
-      timer* self = check_timer(L, 1);
+      stopwatch* self = check_stopwatch(L, 1);
       self->start();
     }
 
     void impl_stop(lua_State* L) {
-      timer* self = check_timer(L, 1);
+      stopwatch* self = check_stopwatch(L, 1);
       self->stop();
     }
 
     void impl_get_elapsed(lua_State* L) {
-      timer* self = check_timer(L, 1);
+      stopwatch* self = check_stopwatch(L, 1);
       push_integer(L, self->get_elapsed());
     }
   }
@@ -76,7 +76,7 @@ namespace brigid {
     {
       lua_newtable(L);
       {
-        new_metatable(L, "brigid.ubench.timer");
+        new_metatable(L, "brigid.ubench.stopwatch");
         lua_pushvalue(L, -2);
         lua_setfield(L, -2, "__index");
         lua_pop(L, 1);
@@ -86,7 +86,7 @@ namespace brigid {
         set_field(L, -1, "stop", impl_stop);
         set_field(L, -1, "get_elapsed", impl_get_elapsed);
       }
-      lua_setfield(L, -2, "timer");
+      lua_setfield(L, -2, "stopwatch");
     }
     lua_setfield(L, -2, "ubench");
   }
