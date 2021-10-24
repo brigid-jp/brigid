@@ -10,7 +10,6 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -19,7 +18,6 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <system_error>
 
 namespace brigid {
   namespace {
@@ -295,8 +293,7 @@ namespace brigid {
 
         struct stat status = {};
         if (stat(path.c_str(), &status) == -1) {
-          int code = errno;
-          throw BRIGID_RUNTIME_ERROR(std::generic_category().message(code), make_error_code("error number", code));
+          throw BRIGID_SYSTEM_ERROR();
         }
         set_total(status.st_size);
 
