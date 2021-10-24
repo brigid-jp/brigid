@@ -27,9 +27,14 @@ namespace brigid {
       return s * 1000000000 + n;
     }
 
-    void check_clock_gettime(std::ostream& out, const char* name, clockid_t clock) {
+    void check_clock(std::ostream& out, const char* name, clockid_t clock) {
+      struct timespec r = {};
       struct timespec t = {};
       struct timespec u = {};
+
+      if (clock_getres(clock, &r) == -1) {
+        throw BRIGID_SYSTEM_ERROR();
+      }
       if (clock_gettime(clock, &t) == -1) {
         throw BRIGID_SYSTEM_ERROR();
       }
@@ -39,6 +44,8 @@ namespace brigid {
       int64_t d = sub(u, t);
 
       out
+        << "clock_getres: " << name << "\n"
+        << r.tv_sec << "." << std::setw(9) << r.tv_nsec << "\n"
         << "clock_gettime: " << name << "\n"
         << t.tv_sec << "." << std::setw(9) << t.tv_nsec << "\n"
         << u.tv_sec << "." << std::setw(9) << u.tv_nsec << "\n"
@@ -86,19 +93,19 @@ namespace brigid {
       std::ostringstream out;
       out << std::setfill('0');
 
-      check_clock_gettime(out, "CLOCK_REALTIME", CLOCK_REALTIME);
-      check_clock_gettime(out, "CLOCK_MONOTONIC", CLOCK_MONOTONIC);
+      check_clock(out, "CLOCK_REALTIME", CLOCK_REALTIME);
+      check_clock(out, "CLOCK_MONOTONIC", CLOCK_MONOTONIC);
 #ifdef CLOCK_MONOTONIC_RAW
-      check_clock_gettime(out, "CLOCK_MONOTONIC_RAW", CLOCK_MONOTONIC_RAW);
+      check_clock(out, "CLOCK_MONOTONIC_RAW", CLOCK_MONOTONIC_RAW);
 #endif
 #ifdef CLOCK_MONOTONIC_RAW_APPROX
-      check_clock_gettime(out, "CLOCK_MONOTONIC_RAW_APPROX", CLOCK_MONOTONIC_RAW_APPROX);
+      check_clock(out, "CLOCK_MONOTONIC_RAW_APPROX", CLOCK_MONOTONIC_RAW_APPROX);
 #endif
 #ifdef CLOCK_UPTIME_RAW
-      check_clock_gettime(out, "CLOCK_UPTIME_RAW", CLOCK_UPTIME_RAW);
+      check_clock(out, "CLOCK_UPTIME_RAW", CLOCK_UPTIME_RAW);
 #endif
 #ifdef CLOCK_UPTIME_RAW_APPROX
-      check_clock_gettime(out, "CLOCK_UPTIME_RAW_APPROX", CLOCK_UPTIME_RAW_APPROX);
+      check_clock(out, "CLOCK_UPTIME_RAW_APPROX", CLOCK_UPTIME_RAW_APPROX);
 #endif
 
       std::string result = out.str();
