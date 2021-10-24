@@ -10,10 +10,8 @@
 
 #include <lua.hpp>
 
-#include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <system_error>
 
 namespace brigid {
   namespace {
@@ -32,15 +30,13 @@ namespace brigid {
 
       void write(const char* data, size_t size) {
         if (fwrite(data, 1, size, handle_.get()) != size) {
-          int code = errno;
-          throw BRIGID_RUNTIME_ERROR(std::generic_category().message(code), make_error_code("error number", code));
+          throw BRIGID_SYSTEM_ERROR();
         }
       }
 
       void flush() {
         if (fflush(handle_.get()) != 0) {
-          int code = errno;
-          throw BRIGID_RUNTIME_ERROR(std::generic_category().message(code), make_error_code("error number", code));
+          throw BRIGID_SYSTEM_ERROR();
         }
       }
 

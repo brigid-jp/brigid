@@ -9,7 +9,6 @@
 #include <lua.hpp>
 
 #include <time.h>
-#include <system_error>
 
 namespace brigid {
   namespace {
@@ -23,15 +22,13 @@ namespace brigid {
 
       void start() {
         if (clock_gettime(clock, &started_) == -1) {
-          int code = errno;
-          throw BRIGID_RUNTIME_ERROR(std::generic_category().message(code), make_error_code("error number", code));
+          throw BRIGID_SYSTEM_ERROR();
         }
       }
 
       void stop() {
         if (clock_gettime(clock, &stopped_) == -1) {
-          int code = errno;
-          throw BRIGID_RUNTIME_ERROR(std::generic_category().message(code), make_error_code("error number", code));
+          throw BRIGID_SYSTEM_ERROR();
         }
       }
 
