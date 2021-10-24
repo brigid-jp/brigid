@@ -8,7 +8,11 @@ local test_suite = require "test_suite"
 local suite = test_suite "test_ubench"
 local debug = true
 
-function suite:test_ubench_stopwatch1()
+function suite:test_ubench()
+  print(brigid.ubench.check_runtime())
+end
+
+function suite:test_ubench_stopwatch()
   local t = brigid.ubench.stopwatch()
   t:start()
   while true do
