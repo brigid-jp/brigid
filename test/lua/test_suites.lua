@@ -16,6 +16,7 @@ local test_suite_names = {
   "test_data_writer";
   "test_file_writer";
   "test_json";
+  "test_ubench";
 }
 
 local function new()

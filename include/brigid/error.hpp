@@ -1,4 +1,4 @@
-// Copyright (c) 2019 <dev@brigid.jp>
+// Copyright (c) 2019,2021 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -32,7 +32,10 @@ namespace brigid {
     return error_code<T>(name, code);
   }
 
+  struct errno_tag {};
+
   std::string make_error_impl(const char*, int, const char*);
+  std::string make_error_impl(const char*, int, const errno_tag&);
 
   template <class T>
   inline std::string make_error_impl(const char* file, int line, const error_code<T>& code) {
@@ -57,6 +60,9 @@ namespace brigid {
     error(const char* file, int line, const std::string& message)
       : T(make_error_impl(file, line, message.c_str())) {}
 
+    error(const char* file, int line, const errno_tag& tag)
+      : T(make_error_impl(file, line, tag)) {}
+
     template <class U>
     error(const char* file, int line, const error_code<U>& code)
       : T(make_error_impl(file, line, code)) {}
@@ -73,5 +79,6 @@ namespace brigid {
 
 #define BRIGID_LOGIC_ERROR(...) brigid::error<std::logic_error>(__FILE__, __LINE__, __VA_ARGS__)
 #define BRIGID_RUNTIME_ERROR(...) brigid::error<std::runtime_error>(__FILE__, __LINE__, __VA_ARGS__)
+#define BRIGID_SYSTEM_ERROR() brigid::error<std::runtime_error>(__FILE__, __LINE__, errno_tag())
 
 #endif
