@@ -177,6 +177,10 @@ namespace brigid {
       check_clock(out, "CLOCK_UPTIME_RAW_APPROX", CLOCK_UPTIME_RAW_APPROX);
 #endif
 
+      check_chrono<std::chrono::system_clock>(out, "std::chrono::system_clock");
+      check_chrono<std::chrono::steady_clock>(out, "std::chrono::steady_clock");
+      check_chrono<std::chrono::high_resolution_clock>(out, "std::chrono::high_resolution_clock");
+
       std::string result = out.str();
       lua_pushlstring(L, result.data(), result.size());
     }
