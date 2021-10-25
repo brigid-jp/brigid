@@ -68,19 +68,27 @@ namespace brigid {
       std::ostringstream out;
       out << std::setfill('0');
 
+      int64_t i = 0;
+      int64_t d = 0;
       LARGE_INTEGER f = {};
       LARGE_INTEGER t = {};
       LARGE_INTEGER u = {};
+
       if (!QueryPerformanceFrequency(&f)) {
         throw BRIGID_RUNTIME_ERROR("cannot QueryPerformanceFrequency");
       }
       if (!QueryPerformanceCounter(&t)) {
         throw BRIGID_RUNTIME_ERROR("cannot QueryPerformanceCounter");
       }
-      if (!QueryPerformanceCounter(&u)) {
-        throw BRIGID_RUNTIME_ERROR("cannot QueryPerformanceCounter");
+      for (i = 1; ; ++i) {
+        if (!QueryPerformanceCounter(&u)) {
+          throw BRIGID_RUNTIME_ERROR("cannot QueryPerformanceCounter");
+        }
+        d = u.QuadPart - t.QuadPart;
+        if (d > 0) {
+          break;
+        }
       }
-      int64_t d = u.QuadPart - t.QuadPart;
 
       if (f.QuadPart == 10000000) {
         out << "QueryPerformanceCounter: 10MHz\n";
@@ -90,9 +98,11 @@ namespace brigid {
 
       out
         << "QueryPerformanceCounter\n"
-        << t.QuadPart << "\n"
-        << u.QuadPart << "\n"
-        << d << "\n";
+        << "count: " << i << "\n"
+        << "d: " << d << "\n"
+        << "duration: " << (d * 1000000000 / f.QuadPart) << "\n"
+        << "t: " << t.QuadPart << "\n"
+        << "u: " << u.QuadPart << "\n";
 
       ubench::check_chrono<std::chrono::system_clock>(out, "std::chrono::system_clock");
       ubench::check_chrono<std::chrono::steady_clock>(out, "std::chrono::steady_clock");
