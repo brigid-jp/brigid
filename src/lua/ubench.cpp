@@ -21,13 +21,6 @@
 
 namespace brigid {
   namespace ubench {
-    struct checker {
-      int64_t count;
-      int64_t resolution;
-      int64_t overhead_count;
-      int64_t overhead_resolution;
-    };
-
     template <class T>
     void check_chrono(std::ostream& out, const char* name) {
       using duration = typename T::duration;
@@ -89,8 +82,13 @@ namespace brigid {
       }
       int64_t d = u.QuadPart - t.QuadPart;
 
+      if (f.QuadPart == 10000000) {
+        out << "QueryPerformanceCounter: 10MHz\n";
+      } else {
+        out << "QueryPerformanceCounter: " << f.QuadPart  << "Hz\n";
+      }
+
       out
-        << "QueryPerformanceFrequency: " << f.QuadPart << "\n"
         << "QueryPerformanceCounter\n"
         << t.QuadPart << "\n"
         << u.QuadPart << "\n"
