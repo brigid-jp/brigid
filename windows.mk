@@ -28,6 +28,7 @@ OBJS = \
 	src\lua\scope_exit.obj \
 	src\lua\stack_guard.obj \
 	src\lua\thread_reference.obj \
+	src\lua\ubench.obj \
 	src\lua\view.obj
 TARGET = brigid.dll
 

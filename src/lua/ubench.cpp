@@ -10,11 +10,74 @@
 
 #include <stdint.h>
 #include <time.h>
+#include <chrono>
 #include <iomanip>
 #include <sstream>
 
+#ifdef _MSC_VER
+#define NOMINMAX
+#include <windows.h>
+#endif
+
 namespace brigid {
   namespace {
+    template <class T>
+    void check_chrono(std::ostream& out, const char* name) {
+      using time_point = typename T::time_point;
+      time_point t = T::now();
+      time_point u = T::now();
+      out
+        << "chrono: " << name << "\n"
+        << std::chrono::duration_cast<std::chrono::nanoseconds>(u - time_point()).count() << "\n"
+        << std::chrono::duration_cast<std::chrono::nanoseconds>(t - time_point()).count() << "\n"
+        << std::chrono::duration_cast<std::chrono::nanoseconds>(u - t).count() << "\n";
+    }
+
+#ifdef _MSC_VER
+    class stopwatch : private noncopyable {
+    public:
+      void start() {}
+      void stop() {}
+      int64_t get_elapsed() const {
+        return 1;
+      }
+
+    private:
+    };
+
+    void impl_check_runtime(lua_State* L) {
+      std::ostringstream out;
+      out << std::setfill('0');
+
+      LARGE_INTEGER f = {};
+      LARGE_INTEGER t = {};
+      LARGE_INTEGER u = {};
+      if (!QueryPerformanceFrequency(&f)) {
+        throw BRIGID_RUNTIME_ERROR("cannot QueryPerformanceFrequency");
+      }
+      if (!QueryPerformanceCounter(&t)) {
+        throw BRIGID_RUNTIME_ERROR("cannot QueryPerformanceCounter");
+      }
+      if (!QueryPerformanceCounter(&u)) {
+        throw BRIGID_RUNTIME_ERROR("cannot QueryPerformanceCounter");
+      }
+      int64_t d = u.QuadPart - t.QuadPart;
+
+      out
+        << "QueryPerformanceFrequency: " << f.QuadPart << "\n"
+        << "QueryPerformanceCounter\n"
+        << t.QuadPart << "\n"
+        << u.QuadPart << "\n"
+        << d << "\n";
+
+      check_chrono<std::chrono::system_clock>(out, "std::chrono::system_clock");
+      check_chrono<std::chrono::steady_clock>(out, "std::chrono::steady_clock");
+      check_chrono<std::chrono::high_resolution_clock>(out, "std::chrono::high_resolution_clock");
+
+      std::string result = out.str();
+      lua_pushlstring(L, result.data(), result.size());
+    }
+#else
     static const clockid_t clock = CLOCK_MONOTONIC;
 
     int64_t sub(const struct timespec& t, const struct timespec& u) {
@@ -85,10 +148,6 @@ namespace brigid {
       struct timespec stopped_;
     };
 
-    stopwatch* check_stopwatch(lua_State* L, int arg) {
-      return check_udata<stopwatch>(L, arg, "brigid.ubench.stopwatch");
-    }
-
     void impl_check_runtime(lua_State* L) {
       std::ostringstream out;
       out << std::setfill('0');
@@ -120,6 +179,11 @@ namespace brigid {
 
       std::string result = out.str();
       lua_pushlstring(L, result.data(), result.size());
+    }
+#endif
+
+    stopwatch* check_stopwatch(lua_State* L, int arg) {
+      return check_udata<stopwatch>(L, arg, "brigid.ubench.stopwatch");
     }
 
     void impl_call(lua_State* L) {
