@@ -20,18 +20,44 @@
 #endif
 
 namespace brigid {
-  namespace {
+  namespace ubench {
+    struct checker {
+      int64_t count;
+      int64_t resolution;
+      int64_t overhead_count;
+      int64_t overhead_resolution;
+    };
+
     template <class T>
     void check_chrono(std::ostream& out, const char* name) {
+      using duration = typename T::duration;
       using time_point = typename T::time_point;
+      using std::chrono::duration_cast;
+      using std::chrono::nanoseconds;
+
+      int64_t i = 0;
+      duration d = {};
+      time_point u = {};
+
       time_point t = T::now();
-      time_point u = T::now();
+      for (i = 1; ; ++i) {
+        u = T::now();
+        d = u - t;
+        if (d > duration::zero()) {
+          break;
+        }
+      }
+
       out
-        << "chrono: " << name << "\n"
-        << std::chrono::duration_cast<std::chrono::nanoseconds>(u - time_point()).count() << "\n"
-        << std::chrono::duration_cast<std::chrono::nanoseconds>(t - time_point()).count() << "\n"
-        << std::chrono::duration_cast<std::chrono::nanoseconds>(u - t).count() << "\n";
+        << "check_chrono: " << name << "\n"
+        << "count: " << i << "\n"
+        << "duration: " << duration_cast<nanoseconds>(d).count() << "\n"
+        << "t: " << duration_cast<nanoseconds>(t.time_since_epoch()).count() << "\n"
+        << "u: " << duration_cast<nanoseconds>(u.time_since_epoch()).count() << "\n";
     }
+  }
+
+  namespace {
 
 #ifdef _MSC_VER
     class stopwatch : private noncopyable {
@@ -70,9 +96,9 @@ namespace brigid {
         << u.QuadPart << "\n"
         << d << "\n";
 
-      check_chrono<std::chrono::system_clock>(out, "std::chrono::system_clock");
-      check_chrono<std::chrono::steady_clock>(out, "std::chrono::steady_clock");
-      check_chrono<std::chrono::high_resolution_clock>(out, "std::chrono::high_resolution_clock");
+      ubench::check_chrono<std::chrono::system_clock>(out, "std::chrono::system_clock");
+      ubench::check_chrono<std::chrono::steady_clock>(out, "std::chrono::steady_clock");
+      ubench::check_chrono<std::chrono::high_resolution_clock>(out, "std::chrono::high_resolution_clock");
 
       std::string result = out.str();
       lua_pushlstring(L, result.data(), result.size());
@@ -80,17 +106,9 @@ namespace brigid {
 #else
     static const clockid_t clock = CLOCK_MONOTONIC;
 
-    int64_t sub(const struct timespec& t, const struct timespec& u) {
-      int64_t s = t.tv_sec - u.tv_sec;
-      int32_t n = t.tv_nsec - u.tv_nsec;
-      if (n < 0) {
-        --s;
-        n += 1000000000;
-      }
-      return s * 1000000000 + n;
-    }
-
     void check_clock(std::ostream& out, const char* name, clockid_t clock) {
+      int64_t i = 0;
+      int64_t d = 0;
       struct timespec r = {};
       struct timespec t = {};
       struct timespec u = {};
@@ -101,18 +119,29 @@ namespace brigid {
       if (clock_gettime(clock, &t) == -1) {
         throw BRIGID_SYSTEM_ERROR();
       }
-      if (clock_gettime(clock, &u) == -1) {
-        throw BRIGID_SYSTEM_ERROR();
+      for (i = 1; ; ++i) {
+        if (clock_gettime(clock, &u) == -1) {
+          throw BRIGID_SYSTEM_ERROR();
+        }
+        int64_t s = u.tv_sec - t.tv_sec;
+        int32_t n = u.tv_nsec - t.tv_nsec;
+        if (n < 0) {
+          --s;
+          n += 1000000000;
+        }
+        d = s * 1000000000 + n;
+        if (d > 0) {
+          break;
+        }
       }
-      int64_t d = sub(u, t);
 
       out
-        << "clock_getres: " << name << "\n"
-        << r.tv_sec << "." << std::setw(9) << r.tv_nsec << "\n"
-        << "clock_gettime: " << name << "\n"
-        << t.tv_sec << "." << std::setw(9) << t.tv_nsec << "\n"
-        << u.tv_sec << "." << std::setw(9) << u.tv_nsec << "\n"
-        << d << "\n";
+        << "check_clock: " << name << "\n"
+        << "resolution: " << (r.tv_sec * 1000000000 + r.tv_nsec ) << "\n"
+        << "count: " << i << "\n"
+        << "duration: " << d << "\n"
+        << "t: " << (t.tv_sec * 1000000000 + t.tv_nsec) << "\n"
+        << "u: " << (u.tv_sec * 1000000000 + u.tv_nsec) << "\n";
     }
 
     class stopwatch : private noncopyable {
@@ -177,9 +206,9 @@ namespace brigid {
       check_clock(out, "CLOCK_UPTIME_RAW_APPROX", CLOCK_UPTIME_RAW_APPROX);
 #endif
 
-      check_chrono<std::chrono::system_clock>(out, "std::chrono::system_clock");
-      check_chrono<std::chrono::steady_clock>(out, "std::chrono::steady_clock");
-      check_chrono<std::chrono::high_resolution_clock>(out, "std::chrono::high_resolution_clock");
+      ubench::check_chrono<std::chrono::system_clock>(out, "std::chrono::system_clock");
+      ubench::check_chrono<std::chrono::steady_clock>(out, "std::chrono::steady_clock");
+      ubench::check_chrono<std::chrono::high_resolution_clock>(out, "std::chrono::high_resolution_clock");
 
       std::string result = out.str();
       lua_pushlstring(L, result.data(), result.size());
