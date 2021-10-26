@@ -51,7 +51,6 @@ namespace brigid {
   }
 
   namespace {
-
 #ifdef _MSC_VER
     class stopwatch : private noncopyable {
     public:
