@@ -2,6 +2,8 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include "ubench.hpp"
+
 #include <brigid/error.hpp>
 
 #include <stdint.h>
@@ -17,10 +19,10 @@ namespace brigid {
           throw BRIGID_SYSTEM_ERROR();
         }
 
-        int64_t count = 0;
-        int64_t duration = 0;
-        struct timespec t = {};
-        struct timespec u = {};
+        int64_t count;
+        int64_t duration;
+        struct timespec t;
+        struct timespec u;
 
         if (clock_gettime(clock, &t) == -1) {
           throw BRIGID_SYSTEM_ERROR();
@@ -47,16 +49,20 @@ namespace brigid {
 
         out
           << "check_clock: " << name << "\n"
-          << "  resolution: " << (resolution.tv_sec * 1000000000 + resolution.tv_nsec ) << "\n"
+          << "  resolution: " << resolution.tv_sec * 1000000000 + resolution.tv_nsec << "\n"
           << "  count: " << count << "\n"
           << "  duration: " << duration << "\n"
-          << "  t: " << (t.tv_sec * 1000000000 + t.tv_nsec) << "\n"
-          << "  u: " << (u.tv_sec * 1000000000 + u.tv_nsec) << "\n";
+          << "  t: " << t.tv_sec * 1000000000 + t.tv_nsec << "\n"
+          << "  u: " << u.tv_sec * 1000000000 + u.tv_nsec << "\n";
       }
     }
 
     void check_platform(std::ostream& out) {
       check_clock(out, "CLOCK_REALTIME", CLOCK_REALTIME);
+#ifdef CLOCK_REALTIME_COARSE
+      check_clock(out, "CLOCK_REALTIME_COARSE", CLOCK_REALTIME_COARSE);
+#endif
+
       check_clock(out, "CLOCK_MONOTONIC", CLOCK_MONOTONIC);
 #ifdef CLOCK_MONOTONIC_COARSE
       check_clock(out, "CLOCK_MONOTONIC_COARSE", CLOCK_MONOTONIC_COARSE);
@@ -67,9 +73,11 @@ namespace brigid {
 #ifdef CLOCK_MONOTONIC_RAW_APPROX
       check_clock(out, "CLOCK_MONOTONIC_RAW_APPROX", CLOCK_MONOTONIC_RAW_APPROX);
 #endif
+
 #ifdef CLOCK_BOOTTIME
       check_clock(out, "CLOCK_BOOTTIME", CLOCK_BOOTTIME);
 #endif
+
 #ifdef CLOCK_UPTIME_RAW
       check_clock(out, "CLOCK_UPTIME_RAW", CLOCK_UPTIME_RAW);
 #endif

@@ -15,11 +15,6 @@
 #include <iomanip>
 #include <sstream>
 
-#ifdef _MSC_VER
-#define NOMINMAX
-#include <windows.h>
-#endif
-
 namespace brigid {
   namespace ubench {
     namespace {
@@ -28,7 +23,7 @@ namespace brigid {
         using std::chrono::duration_cast;
         using std::chrono::nanoseconds;
 
-        int64_t count = 0;
+        int64_t count;
         typename T::duration duration;
         typename T::time_point t;
         typename T::time_point u;
@@ -78,50 +73,6 @@ namespace brigid {
 
     private:
     };
-
-    void impl_check_runtime(lua_State* L) {
-      std::ostringstream out;
-      out << std::setfill('0');
-
-      int64_t i = 0;
-      int64_t d = 0;
-      LARGE_INTEGER f = {};
-      LARGE_INTEGER t = {};
-      LARGE_INTEGER u = {};
-
-      if (!QueryPerformanceFrequency(&f)) {
-        throw BRIGID_RUNTIME_ERROR("cannot QueryPerformanceFrequency");
-      }
-      if (!QueryPerformanceCounter(&t)) {
-        throw BRIGID_RUNTIME_ERROR("cannot QueryPerformanceCounter");
-      }
-      for (i = 1; ; ++i) {
-        if (!QueryPerformanceCounter(&u)) {
-          throw BRIGID_RUNTIME_ERROR("cannot QueryPerformanceCounter");
-        }
-        d = u.QuadPart - t.QuadPart;
-        if (d > 0) {
-          break;
-        }
-      }
-
-      if (f.QuadPart == 10000000) {
-        out << "QueryPerformanceCounter: 10MHz\n";
-      } else {
-        out << "QueryPerformanceCounter: " << f.QuadPart  << "Hz\n";
-      }
-
-      out
-        << "QueryPerformanceCounter\n"
-        << "count: " << i << "\n"
-        << "d: " << d << "\n"
-        << "duration: " << (d * 1000000000 / f.QuadPart) << "\n"
-        << "t: " << t.QuadPart << "\n"
-        << "u: " << u.QuadPart << "\n";
-
-      std::string result = out.str();
-      lua_pushlstring(L, result.data(), result.size());
-    }
 #else
     static const clockid_t clock = CLOCK_MONOTONIC;
 
@@ -157,6 +108,7 @@ namespace brigid {
       struct timespec started_;
       struct timespec stopped_;
     };
+#endif
 
     void impl_check_runtime(lua_State* L) {
       std::ostringstream out;
@@ -165,7 +117,6 @@ namespace brigid {
       std::string result = out.str();
       lua_pushlstring(L, result.data(), result.size());
     }
-#endif
 
     stopwatch* check_stopwatch(lua_State* L, int arg) {
       return check_udata<stopwatch>(L, arg, "brigid.ubench.stopwatch");
