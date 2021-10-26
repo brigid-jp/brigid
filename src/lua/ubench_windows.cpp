@@ -8,10 +8,17 @@
 #define NOMINMAX
 #include <windows.h>
 
+#include <stdint.h>
 #include <iostream>
 
 namespace brigid {
   namespace ubench {
+    namespace {
+      int64_t nsec(int64_t v, int64_t f) {
+        return v / f * 1000000000 + v % f * 1000000000 / f;
+      }
+    }
+
     void check_platform(std::ostream& out) {
       LARGE_INTEGER frequency;
       if (!QueryPerformanceFrequency(&frequency)) {
@@ -48,11 +55,11 @@ namespace brigid {
 
       out
         << "QueryPerformanceCounter\n"
-        << "  frequency: " << frequency.QuadPart << "\n";
+        << "  frequency: " << frequency.QuadPart << "\n"
         << "  count: " << count << "\n"
-        << "  duration: " << duration * 1000000000 / frequency.QuadPart << "\n"
-        << "  t: " << t * 1000000000 / frequency.QuadPart << "\n"
-        << "  u: " << u * 1000000000 / frequency.QuadPart << "\n";
+        << "  duration: " << nsec(duration, frequency.QuadPart) << "\n"
+        << "  t: " << nsec(t.QuadPart, frequency.QuadPart) << "\n"
+        << "  u: " << nsec(u.QuadPart, frequency.QuadPart) << "\n";
     }
   }
 }
