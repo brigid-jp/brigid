@@ -14,6 +14,7 @@ noinst_HEADERS = \
 	scope_exit.hpp \
 	stack_guard.hpp \
 	thread_reference.hpp \
+	ubench.hpp \
 	view.hpp
 
 brigid_la_CPPFLAGS = -I$(top_srcdir)/include
@@ -34,6 +35,7 @@ brigid_la_SOURCES = \
 	stack_guard.cpp \
 	thread_reference.cpp \
 	ubench.cpp \
+	ubench_unix.cpp \
 	view.cpp
 
 if CRYPTO_OPENSSL
