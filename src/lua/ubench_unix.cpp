@@ -2,9 +2,10 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include "ubench.hpp"
-
 #include <brigid/error.hpp>
+#include <brigid/noncopyable.hpp>
+#include "common.hpp"
+#include "ubench.hpp"
 
 #include <stdint.h>
 #include <time.h>
@@ -13,6 +14,47 @@
 namespace brigid {
   namespace ubench {
     namespace {
+      static const clockid_t default_clock =
+#ifdef CLOCK_MONOTONIC_RAW
+        CLOCK_MONOTONIC_RAW
+#else
+        CLOCK_MONOTONIC
+#endif
+      ;
+
+      class stopwatch_impl : public stopwatch, private noncopyable {
+      public:
+        explicit stopwatch_impl(clockid_t clock)
+          : clock_(clock),
+            started_(),
+            stopped_() {}
+
+        virtual void start() {
+          if (clock_gettime(clock_, &started_) == -1) {
+            throw BRIGID_SYSTEM_ERROR();
+          }
+        }
+
+        virtual void stop() {
+          if (clock_gettime(clock_, &stopped_) == -1) {
+            throw BRIGID_SYSTEM_ERROR();
+          }
+        }
+
+        virtual int64_t get_elapsed() const {
+          int64_t u = stopped_.tv_sec - started_.tv_sec;
+          int64_t v = stopped_.tv_nsec - started_.tv_nsec;
+          u *= 1000000000;
+          u += v;
+          return u;
+        }
+
+      private:
+        clockid_t clock_;
+        struct timespec started_;
+        struct timespec stopped_;
+      };
+
       void check_clock(std::ostream& out, const char* name, clockid_t clock) {
         struct timespec resolution = {};
         if (clock_getres(clock, &resolution) == -1) {
@@ -84,6 +126,13 @@ namespace brigid {
 #ifdef CLOCK_UPTIME_RAW_APPROX
       check_clock(out, "CLOCK_UPTIME_RAW_APPROX", CLOCK_UPTIME_RAW_APPROX);
 #endif
+    }
+
+    stopwatch* new_stopwatch_platform(lua_State* L, const char* name) {
+      if (!name) {
+        return new_userdata<stopwatch_impl>(L, "brigid.ubench.stopwatch", default_clock);
+      }
+      return nullptr;
     }
   }
 }

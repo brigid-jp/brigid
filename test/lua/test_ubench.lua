@@ -15,12 +15,7 @@ end
 function suite:test_ubench_stopwatch()
   local t = brigid.ubench.stopwatch()
   t:start()
-  while true do
-    t:stop()
-    if t:get_elapsed() > 0 then
-      break
-    end
-  end
+  t:stop()
   if debug then print(t:get_elapsed()) end
 end
 

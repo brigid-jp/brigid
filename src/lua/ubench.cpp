@@ -58,109 +58,74 @@ namespace brigid {
         check_chrono<std::chrono::steady_clock>(out, "std::chrono::steady_clock");
         check_chrono<std::chrono::high_resolution_clock>(out, "std::chrono::high_resolution_clock");
       }
-    }
-  }
 
-  namespace {
-#ifdef _MSC_VER
-    class stopwatch : private noncopyable {
-    public:
-      void start() {}
-      void stop() {}
-      int64_t get_elapsed() const {
-        return 1;
+      stopwatch* check_stopwatch(lua_State* L, int arg) {
+        return check_udata<stopwatch>(L, arg, "brigid.ubench.stopwatch");
       }
 
-    private:
-    };
-#else
-    static const clockid_t clock = CLOCK_MONOTONIC;
+      void impl_check_runtime(lua_State* L) {
+        std::ostringstream out;
+        check_platform(out);
+        check_chrono(out);
+        std::string result = out.str();
+        lua_pushlstring(L, result.data(), result.size());
+      }
 
-    class stopwatch : private noncopyable {
-    public:
-      stopwatch()
-        : started_(),
-          stopped_() {}
+      void impl_gc(lua_State* L) {
+        check_stopwatch(L, 1)->~stopwatch();
+      }
 
-      void start() {
-        if (clock_gettime(clock, &started_) == -1) {
-          throw BRIGID_SYSTEM_ERROR();
+      void impl_call(lua_State* L) {
+        if (stopwatch* self = new_stopwatch_platform(L, nullptr)) {
+          // noop
+        } else {
+          // die
         }
       }
 
-      void stop() {
-        if (clock_gettime(clock, &stopped_) == -1) {
-          throw BRIGID_SYSTEM_ERROR();
-        }
+      void impl_start(lua_State* L) {
+        stopwatch* self = check_stopwatch(L, 1);
+        self->start();
       }
 
-      int64_t get_elapsed() const {
-        int64_t sec = stopped_.tv_sec - started_.tv_sec;
-        int32_t nsec = stopped_.tv_nsec - started_.tv_nsec;
-        if (nsec < 0) {
-          --sec;
-          nsec += 1000000000;
-        }
-        return sec * 1000000000 + nsec;
+      void impl_stop(lua_State* L) {
+        stopwatch* self = check_stopwatch(L, 1);
+        self->stop();
       }
 
-    private:
-      struct timespec started_;
-      struct timespec stopped_;
-    };
-#endif
+      void impl_get_elapsed(lua_State* L) {
+        stopwatch* self = check_stopwatch(L, 1);
+        push_integer(L, self->get_elapsed());
+      }
 
-    void impl_check_runtime(lua_State* L) {
-      std::ostringstream out;
-      ubench::check_platform(out);
-      ubench::check_chrono(out);
-      std::string result = out.str();
-      lua_pushlstring(L, result.data(), result.size());
+      void initialize(lua_State* L) {
+        lua_newtable(L);
+        {
+          set_field(L, -1, "check_runtime", impl_check_runtime);
+
+          lua_newtable(L);
+          {
+            new_metatable(L, "brigid.ubench.stopwatch");
+            lua_pushvalue(L, -2);
+            lua_setfield(L, -2, "__index");
+            set_field(L, -1, "__gc", impl_gc);
+            lua_pop(L, 1);
+
+            set_metafield(L, -1, "__call", impl_call);
+            set_field(L, -1, "start", impl_start);
+            set_field(L, -1, "stop", impl_stop);
+            set_field(L, -1, "get_elapsed", impl_get_elapsed);
+          }
+          lua_setfield(L, -2, "stopwatch");
+        }
+        lua_setfield(L, -2, "ubench");
+      }
     }
 
-    stopwatch* check_stopwatch(lua_State* L, int arg) {
-      return check_udata<stopwatch>(L, arg, "brigid.ubench.stopwatch");
-    }
-
-    void impl_call(lua_State* L) {
-      new_userdata<stopwatch>(L, "brigid.ubench.stopwatch");
-    }
-
-    void impl_start(lua_State* L) {
-      stopwatch* self = check_stopwatch(L, 1);
-      self->start();
-    }
-
-    void impl_stop(lua_State* L) {
-      stopwatch* self = check_stopwatch(L, 1);
-      self->stop();
-    }
-
-    void impl_get_elapsed(lua_State* L) {
-      stopwatch* self = check_stopwatch(L, 1);
-      push_integer(L, self->get_elapsed());
-    }
+    stopwatch::~stopwatch() {}
   }
 
   void initialize_ubench(lua_State* L) {
-    lua_newtable(L);
-    {
-      set_field(L, -1, "check_runtime", impl_check_runtime);
-
-      lua_newtable(L);
-      {
-        new_metatable(L, "brigid.ubench.stopwatch");
-        lua_pushvalue(L, -2);
-        lua_setfield(L, -2, "__index");
-        lua_pop(L, 1);
-
-        set_metafield(L, -1, "__call", impl_call);
-        set_field(L, -1, "start", impl_start);
-        set_field(L, -1, "stop", impl_stop);
-        set_field(L, -1, "get_elapsed", impl_get_elapsed);
-      }
-      lua_setfield(L, -2, "stopwatch");
-    }
-    lua_setfield(L, -2, "ubench");
+    ubench::initialize(L);
   }
 }
