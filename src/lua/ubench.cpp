@@ -92,19 +92,20 @@ namespace brigid {
       const void* cache_mt = nullptr;
 
       void impl_stop(lua_State* L) {
-        if (stopwatch* self = static_cast<stopwatch*>(lua_touserdata(L, 1))) {
-          if (lua_getmetatable(L, 1)) {
-            const void* mt = lua_topointer(L, -1);
-            if (mt == cache_mt) {
-              self->stop();
-            } else {
-              luaL_getmetatable(L, "brigid.ubench.stopwatch");
-              if (lua_rawequal(L, -1, -2)) {
-                self->stop();
-              }
-            }
-          }
-        }
+        check_stopwatch(L, 1)->stop();
+//        if (stopwatch* self = static_cast<stopwatch*>(lua_touserdata(L, 1))) {
+//          if (lua_getmetatable(L, 1)) {
+//            const void* mt = lua_topointer(L, -1);
+//            if (mt == cache_mt) {
+//              self->stop();
+//            } else {
+//              luaL_getmetatable(L, "brigid.ubench.stopwatch");
+//              if (lua_rawequal(L, -1, -2)) {
+//                self->stop();
+//              }
+//            }
+//          }
+//        }
 
 //        if (stopwatch* self = static_cast<stopwatch*>(lua_touserdata(L, 1))) {
 //          if (self == cache) {
@@ -183,9 +184,9 @@ namespace brigid {
             set_metafield(L, -1, "__call", impl_call);
             set_field(L, -1, "start", impl_start);
 
-            // set_field(L, -1, "stop", impl_stop);
-            lua_pushcfunction(L, impl_stop_c);
-            lua_setfield(L, -2, "stop");
+            set_field(L, -1, "stop", impl_stop);
+            // lua_pushcfunction(L, impl_stop_c);
+            // lua_setfield(L, -2, "stop");
 
             set_field(L, -1, "get_elapsed", impl_get_elapsed);
           }
