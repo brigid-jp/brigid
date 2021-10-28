@@ -66,7 +66,7 @@ function suite:test_ubench_stopwatch_get_name1()
 end
 
 function suite:test_ubench_stopwatch_get_name2()
-  local t = brigid.ubench.stopwatch "CLOCK_UPTIME_RAW"
+  local t = brigid.ubench.stopwatch "CLOCK_REALTIME"
   if debug then print(t:get_name()) end
   t:start()
   t:stop()
