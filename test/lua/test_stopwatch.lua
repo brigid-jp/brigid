@@ -5,72 +5,72 @@
 local brigid = require "brigid"
 local test_suite = require "test_suite"
 
-local suite = test_suite "test_ubench"
+local suite = test_suite "test_stopwatch"
 local debug = true
 
-function suite:test_ubench_stopwatch1()
-  local t = brigid.ubench.stopwatch()
+function suite:test_stopwatch1()
+  local t = brigid.stopwatch()
   t:start()
   t:stop()
   if debug then print(t:get_elapsed()) end
 end
 
-function suite:test_ubench_stopwatch2()
-  local t = brigid.ubench.stopwatch()
+function suite:test_stopwatch2()
+  local t = brigid.stopwatch()
   t:start()
   t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop()
   if debug then print(t:get_elapsed()) end
 end
 
-function suite:test_ubench_stopwatch3()
-  local t = brigid.ubench.stopwatch()
+function suite:test_stopwatch3()
+  local t = brigid.stopwatch()
   t:start()
   t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop()
   t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop()
   if debug then print(t:get_elapsed()) end
 end
 
-local f_start = brigid.ubench.stopwatch.start
-local f_stop = brigid.ubench.stopwatch.stop
-local f_get_elapsed = brigid.ubench.stopwatch.get_elapsed
+local f_start = brigid.stopwatch.start
+local f_stop = brigid.stopwatch.stop
+local f_get_elapsed = brigid.stopwatch.get_elapsed
 
-function suite:test_ubench_stopwatch4()
-  local t = brigid.ubench.stopwatch()
+function suite:test_stopwatch4()
+  local t = brigid.stopwatch()
   f_start(t)
   f_stop(t)
   if debug then print(f_get_elapsed(t)) end
 end
 
-function suite:test_ubench_stopwatch5()
-  local t = brigid.ubench.stopwatch()
+function suite:test_stopwatch5()
+  local t = brigid.stopwatch()
   f_start(t)
   f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t)
   if debug then print(f_get_elapsed(t)) end
 end
 
-function suite:test_ubench_stopwatch6()
-  local t = brigid.ubench.stopwatch()
+function suite:test_stopwatch6()
+  local t = brigid.stopwatch()
   f_start(t)
   f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t)
   f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t)
   if debug then print(f_get_elapsed(t)) end
 end
 
-function suite:test_ubench_stopwatch_get_name1()
-  local t = brigid.ubench.stopwatch()
+function suite:test_stopwatch_get_name1()
+  local t = brigid.stopwatch()
   if debug then print(t:get_name()) end
 end
 
-function suite:test_ubench_stopwatch_get_name2()
-  local t = brigid.ubench.stopwatch "CLOCK_REALTIME"
+function suite:test_stopwatch_get_name2()
+  local t = brigid.stopwatch "CLOCK_REALTIME"
   if debug then print(t:get_name()) end
   t:start()
   t:stop()
   if debug then print(t:get_elapsed()) end
 end
 
-function suite:test_ubench_get_stopwatch_names()
-  local names = brigid.ubench.get_stopwatch_names()
+function suite:test_get_stopwatch_names()
+  local names = brigid.get_stopwatch_names()
   for i = 1, #names do
     if debug then print(names[i]) end
   end
