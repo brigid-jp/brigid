@@ -76,7 +76,7 @@ namespace brigid {
       }
 
       void impl_call(lua_State* L) {
-        if (stopwatch* self = new_stopwatch_platform(L, nullptr)) {
+        if (stopwatch* self = new_stopwatch(L, nullptr)) {
           // noop
         } else {
           // die
@@ -96,6 +96,11 @@ namespace brigid {
         push_integer(L, self->get_elapsed());
       }
 
+      void impl_get_impl_name(lua_State* L) {
+        stopwatch* self = check_stopwatch(L, 1);
+        lua_pushstring(L, self->get_impl_name());
+      }
+
       void initialize(lua_State* L) {
         lua_newtable(L);
         {
@@ -113,6 +118,7 @@ namespace brigid {
             set_field(L, -1, "start", impl_start);
             set_field(L, -1, "stop", impl_stop);
             set_field(L, -1, "get_elapsed", impl_get_elapsed);
+            set_field(L, -1, "get_impl_name", impl_get_impl_name);
           }
           lua_setfield(L, -2, "stopwatch");
         }

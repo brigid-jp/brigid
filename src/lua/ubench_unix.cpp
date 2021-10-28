@@ -22,12 +22,21 @@ namespace brigid {
 #endif
       ;
 
+      static const char* default_impl_name =
+#ifdef CLOCK_MONOTONIC_RAW
+        "CLOCK_MONOTONIC_RAW"
+#else
+        "CLOCK_MONOTONIC"
+#endif
+      ;
+
       class stopwatch_impl : public stopwatch, private noncopyable {
       public:
-        explicit stopwatch_impl(clockid_t clock)
+        explicit stopwatch_impl(clockid_t clock, const char* impl_name)
           : clock_(clock),
             started_(),
-            stopped_() {}
+            stopped_(),
+            impl_name_(impl_name) {}
 
         virtual void start() {
           if (clock_gettime(clock_, &started_) == -1) {
@@ -49,10 +58,15 @@ namespace brigid {
           return u;
         }
 
+        virtual const char* get_impl_name() const {
+          return impl_name_;
+        }
+
       private:
         clockid_t clock_;
         struct timespec started_;
         struct timespec stopped_;
+        const char* impl_name_;
       };
 
       void check_clock(std::ostream& out, const char* name, clockid_t clock) {
@@ -128,9 +142,9 @@ namespace brigid {
 #endif
     }
 
-    stopwatch* new_stopwatch_platform(lua_State* L, const char* name) {
+    stopwatch* new_stopwatch(lua_State* L, const char* name) {
       if (!name) {
-        return new_userdata<stopwatch_impl>(L, "brigid.ubench.stopwatch", default_clock);
+        return new_userdata<stopwatch_impl>(L, "brigid.ubench.stopwatch", default_clock, default_impl_name);
       }
       return nullptr;
     }

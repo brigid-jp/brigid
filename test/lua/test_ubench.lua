@@ -60,4 +60,9 @@ function suite:test_ubench_stopwatch6()
   if debug then print(f_get_elapsed(t)) end
 end
 
+function suite:test_ubench_stopwatch7()
+  local t = brigid.ubench.stopwatch()
+  if debug then print(t:get_impl_name()) end
+end
+
 return suite
