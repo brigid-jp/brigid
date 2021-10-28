@@ -22,9 +22,7 @@ namespace brigid {
       return frequency.QuadPart;
     }
 
-    static const int64_t nano = 1000000000;
     static const int64_t frequency = query_performance_frequency();
-    static const double resolution = nano / static_cast<double>(frequency);
 
     class stopwatch_windows_impl : public stopwatch {
     public:
@@ -68,34 +66,30 @@ namespace brigid {
     public:
       virtual int64_t get_elapsed() const {
         int64_t d = stopped.QuadPart - started.QuadPart;
-        return d / frequency * nano + d % frequency * nano / frequency;
+        return d / frequency * 1000000000 + d % frequency * 1000000000 / frequency;
       }
 
       virtual double get_resolution() const {
+        static const double resolution = 1000000000 / static_cast<double>(frequency);
         return resolution;
       }
     };
   }
 
   stopwatch* new_stopwatch(lua_State* L, const char* name) {
-    if (frequency) {
-      if (!name || strcmp(name, "QueryPerformanceCounter")) {
-        if (frequency == 10000000) {
-          // return new_userdata<stopwatch_windows_10mhz>(L, "brigid.stopwatch");
-          return new_userdata<stopwatch_windows>(L, "brigid.stopwatch");
-        } else {
-          return new_userdata<stopwatch_windows>(L, "brigid.stopwatch");
-        }
+    if (!name || strcmp(name, "QueryPerformanceCounter") == 0) {
+      if (frequency == 10000000) {
+        return new_userdata<stopwatch_windows_10mhz>(L, "brigid.stopwatch");
+      } else {
+        return new_userdata<stopwatch_windows>(L, "brigid.stopwatch");
       }
     }
     return nullptr;
   }
 
   int get_stopwatch_names(lua_State* L, int i) {
-    if (frequency) {
-      lua_pushstring(L, "QueryPerformanceCounter");
-      lua_rawseti(L, -2, ++i);
-    }
+    lua_pushstring(L, "QueryPerformanceCounter");
+    lua_rawseti(L, -2, ++i);
     return i;
   }
 }

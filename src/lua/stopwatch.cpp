@@ -96,7 +96,7 @@ namespace brigid {
       const char* name = lua_tostring(L, 2);
       if (!new_stopwatch(L, name)) {
         if (!new_stopwatch_chrono(L, name)) {
-          luaL_error(L, "invalid name");
+          luaL_argerror(L, 2, "unsupported stopwatch");
         }
       }
     }
