@@ -3,63 +3,124 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/error.hpp>
-#include "ubench.hpp"
+#include <brigid/noncopyable.hpp>
+#include "common.hpp"
+#include "stopwatch.hpp"
 
 #define NOMINMAX
 #include <windows.h>
 
 #include <stdint.h>
-#include <iostream>
+#include <string.h>
 
 namespace brigid {
-  namespace ubench {
-    namespace {
-      int64_t nsec(int64_t v, int64_t f) {
-        return v / f * 1000000000 + v % f * 1000000000 / f;
-      }
-    }
-
-    void check_platform(std::ostream& out) {
-      LARGE_INTEGER frequency;
+  namespace {
+    int64_t query_performance_frequency() {
+      LARGE_INTEGER frequency = {};
       if (!QueryPerformanceFrequency(&frequency)) {
         throw BRIGID_RUNTIME_ERROR("cannot QueryPerformanceFrequency");
       }
-
-      int64_t count;
-      int64_t duration;
-      LARGE_INTEGER t;
-      LARGE_INTEGER u;
-
-      if (!QueryPerformanceCounter(&t)) {
-        throw BRIGID_RUNTIME_ERROR("cannot QueryPerformanceCounter");
-      }
-      for (count = 1; ; ++count) {
-        if (!QueryPerformanceCounter(&u)) {
-          throw BRIGID_RUNTIME_ERROR("cannot QueryPerformanceCounter");
-        }
-        duration = u.QuadPart - t.QuadPart;
-        if (duration > 0) {
-          break;
-        }
-      }
-      t = u;
-      for (count = 1; ; ++count) {
-        if (!QueryPerformanceCounter(&u)) {
-          throw BRIGID_RUNTIME_ERROR("cannot QueryPerformanceCounter");
-        }
-        duration = u.QuadPart - t.QuadPart;
-        if (duration > 0) {
-          break;
-        }
-      }
-
-      out
-        << "QueryPerformanceCounter\n"
-        << "  frequency: " << frequency.QuadPart << "\n"
-        << "  count: " << count << "\n"
-        << "  duration: " << nsec(duration, frequency.QuadPart) << "\n"
-        << "  t: " << nsec(t.QuadPart, frequency.QuadPart) << "\n"
-        << "  u: " << nsec(u.QuadPart, frequency.QuadPart) << "\n";
+      return frequency.QuadPart;
     }
+
+    static const int64_t frequency = query_performance_frequency();
+
+    class stopwatch_windows_10mhz : public stopwatch, private noncopyable {
+    public:
+      stopwatch_windows_10mhz()
+        : started_(),
+          stopped_() {}
+
+      virtual void start() {
+        if (!QueryPerformanceCounter(&started_)) {
+          throw BRIGID_RUNTIME_ERROR("cannot QueryPerformanceCounter");
+        }
+      }
+
+      virtual void stop() {
+        if (!QueryPerformanceCounter(&stopped_)) {
+          throw BRIGID_RUNTIME_ERROR("cannot QueryPerformanceCounter");
+        }
+      }
+
+      virtual int64_t get_elapsed() const {
+        return (stopped_.QuadPart - started_.QuadPart) * 100;
+      }
+
+      virtual const char* get_name() const {
+        return "QueryPerformanceCounter";
+      }
+
+      virtual double get_resolution() const {
+        return 100;
+      }
+
+    private:
+      LARGE_INTEGER started_;
+      LARGE_INTEGER stopped_;
+    };
+
+    class stopwatch_windows : public stopwatch, private noncopyable {
+    public:
+      explicit stopwatch_windows()
+        : started_(),
+          stopped_() {}
+
+      virtual void start() {
+        if (!QueryPerformanceCounter(&started_)) {
+          throw BRIGID_RUNTIME_ERROR("cannot QueryPerformanceCounter");
+        }
+      }
+
+      virtual void stop() {
+        if (!QueryPerformanceCounter(&stopped_)) {
+          throw BRIGID_RUNTIME_ERROR("cannot QueryPerformanceCounter");
+        }
+      }
+
+      virtual int64_t get_elapsed() const {
+        int64_t u = stopped_.QuadPart - started_.QuadPart;
+        int64_t v = u % frequency;
+        u /= frequency;
+        u *= 1000000000;
+        v *= 1000000000;
+        v /= frequency;
+        u += v;
+        return u;
+      }
+
+      virtual const char* get_name() const {
+        return "QueryPerformanceCounter";
+      }
+
+      virtual double get_resolution() const {
+        double u = 1000000000;
+        u /= frequency;
+        return u;
+      }
+
+    private:
+      LARGE_INTEGER started_;
+      LARGE_INTEGER stopped_;
+    };
+  }
+
+  stopwatch* new_stopwatch(lua_State* L, const char* name) {
+    if (!name || strcasecmp(name, "QueryPerformanceCounter")) {
+      if (frequency == 10000000) {
+        return new_userdata<stopwatch_windows_10mhz(L, "brigid.stopwatch");
+      } else {
+        return new_userdata<stopwatch_windows(L, "brigid.stopwatch");
+      }
+    }
+
+    return nullptr;
+  }
+
+  int get_stopwatch_names(lua_State* L, int i) {
+    lua_pushstring(L, "QueryPerformanceCounter");
+    lua_rawseti(L, -2, ++i);
+
+    return i;
   }
 }
