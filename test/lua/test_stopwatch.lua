@@ -59,6 +59,7 @@ end
 function suite:test_stopwatch_get_name1()
   local t = brigid.stopwatch()
   if debug then print(t:get_name()) end
+  if debug then print(t:get_resolution()) end
 end
 
 function suite:test_stopwatch_get_name2()

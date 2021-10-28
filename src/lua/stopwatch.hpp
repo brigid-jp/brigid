@@ -8,7 +8,6 @@
 #include <lua.hpp>
 
 #include <stdint.h>
-#include <iosfwd>
 
 namespace brigid {
   class stopwatch {

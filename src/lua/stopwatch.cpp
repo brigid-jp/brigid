@@ -10,8 +10,8 @@
 #include <lua.hpp>
 
 #include <stdint.h>
-#include <string.h>
 #include <chrono>
+#include <string>
 
 namespace brigid {
   namespace {
@@ -59,13 +59,13 @@ namespace brigid {
         return new_stopwatch_chrono<std::chrono::steady_clock, 1>(L);
       }
 
-      if (strcasecmp(name, "std::chrono::system_clock") == 0) {
+      if (strcmp(name, "std::chrono::system_clock") == 0) {
         return new_stopwatch_chrono<std::chrono::system_clock, 0>(L);
       }
-      if (strcasecmp(name, "std::chrono::steady_clock") == 0) {
+      if (strcmp(name, "std::chrono::steady_clock") == 0) {
         return new_stopwatch_chrono<std::chrono::steady_clock, 1>(L);
       }
-      if (strcasecmp(name, "std::chrono::high_resolution_clock") == 0) {
+      if (strcmp(name, "std::chrono::high_resolution_clock") == 0) {
         return new_stopwatch_chrono<std::chrono::high_resolution_clock, 2>(L);
       }
 
