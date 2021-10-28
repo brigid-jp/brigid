@@ -18,13 +18,14 @@ namespace brigid {
       virtual void start() = 0;
       virtual void stop() = 0;
       virtual int64_t get_elapsed() const = 0;
-      virtual const char* get_impl_name() const = 0;
+      virtual const char* get_name() const = 0;
+      virtual double get_resolution() const = 0;
     };
 
     void check_platform(std::ostream&);
 
     stopwatch* new_stopwatch(lua_State*, const char*);
-    int get_stopwatch_impl_names(lua_State*, int);
+    int get_stopwatch_names(lua_State*, int);
   }
 }
 

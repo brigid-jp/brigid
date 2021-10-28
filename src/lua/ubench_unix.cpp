@@ -8,44 +8,40 @@
 #include "ubench.hpp"
 
 #include <stdint.h>
+#include <string.h>
 #include <time.h>
 #include <iostream>
 
 namespace brigid {
   namespace ubench {
     namespace {
-      static const clockid_t default_clock =
-#ifdef CLOCK_MONOTONIC_RAW
-        CLOCK_MONOTONIC_RAW
-#else
-        CLOCK_MONOTONIC
-#endif
-      ;
+      static const char* names[] = {
+        "CLOCK_REALTIME",             // [0]
+        "CLOCK_REALTIME_COARSE",      // [1] linux
+        "CLOCK_MONOTONIC",            // [2]
+        "CLOCK_MONOTONIC_COARSE",     // [3] linux
+        "CLOCK_MONOTONIC_RAW",        // [4] linux or apple
+        "CLOCK_MONOTONIC_RAW_APPROX", // [5] linux
+        "CLOCK_BOOTTIME",             // [6] linux
+        "CLOCK_UPTIME_RAW",           // [7] apple
+        "CLOCK_UPTIME_RAW_APPROX",    // [8] apple
+      };
 
-      static const char* default_impl_name =
-#ifdef CLOCK_MONOTONIC_RAW
-        "CLOCK_MONOTONIC_RAW"
-#else
-        "CLOCK_MONOTONIC"
-#endif
-      ;
-
-      class stopwatch_impl : public stopwatch, private noncopyable {
+      template <clockid_t T_clock, int T_name>
+      class stopwatch_unix : public stopwatch, private noncopyable {
       public:
-        explicit stopwatch_impl(clockid_t clock, const char* impl_name)
-          : clock_(clock),
-            started_(),
-            stopped_(),
-            impl_name_(impl_name) {}
+        stopwatch_unix()
+          : started_(),
+            stopped_() {}
 
         virtual void start() {
-          if (clock_gettime(clock_, &started_) == -1) {
+          if (clock_gettime(T_clock, &started_) == -1) {
             throw BRIGID_SYSTEM_ERROR();
           }
         }
 
         virtual void stop() {
-          if (clock_gettime(clock_, &stopped_) == -1) {
+          if (clock_gettime(T_clock, &stopped_) == -1) {
             throw BRIGID_SYSTEM_ERROR();
           }
         }
@@ -58,16 +54,31 @@ namespace brigid {
           return u;
         }
 
-        virtual const char* get_impl_name() const {
-          return impl_name_;
+        virtual const char* get_name() const {
+          return names[T_name];
+        }
+
+        virtual double get_resolution() const {
+          struct timespec resolution = {};
+          if (clock_getres(T_clock, &resolution) == -1) {
+            throw BRIGID_SYSTEM_ERROR();
+          }
+          int64_t u = resolution.tv_sec;
+          int64_t v = resolution.tv_nsec;
+          u *= 1000000000;
+          u += v;
+          return static_cast<double>(u);
         }
 
       private:
-        clockid_t clock_;
         struct timespec started_;
         struct timespec stopped_;
-        const char* impl_name_;
       };
+
+      template <clockid_t T_clock, int T_name>
+      stopwatch* new_stopwatch_unix(lua_State* L) {
+        return new_userdata<stopwatch_unix<T_clock, T_name> >(L, "brigid.ubench.stopwatch");
+      }
 
       void check_clock(std::ostream& out, const char* name, clockid_t clock) {
         struct timespec resolution = {};
@@ -144,12 +155,67 @@ namespace brigid {
 
     stopwatch* new_stopwatch(lua_State* L, const char* name) {
       if (!name) {
-        return new_userdata<stopwatch_impl>(L, "brigid.ubench.stopwatch", default_clock, default_impl_name);
+#ifdef CLOCK_MONOTONIC_RAW
+        return new_stopwatch_unix<CLOCK_MONOTONIC_RAW, 4>(L);
+#else
+        return new_stopwatch_unix<CLOCK_MONOTONIC, 2>(L);
+#endif
       }
+
+      if (strcasecmp(name, "CLOCK_REALTIME") == 0) {
+        return new_stopwatch_unix<CLOCK_REALTIME, 0>(L);
+      }
+
+#ifdef CLOCK_REALTIME_COARSE
+      if (strcasecmp(name, "CLOCK_REALTIME_COARSE") == 0) {
+        return new_stopwatch_unix<CLOCK_REALTIME_COARSE, 1>(L);
+      }
+#endif
+
+      if (strcasecmp(name, "CLOCK_MONOTONIC") == 0) {
+        return new_stopwatch_unix<CLOCK_MONOTONIC, 2>(L);
+      }
+
+#ifdef CLOCK_MONOTONIC_COARSE
+      if (strcasecmp(name, "CLOCK_MONOTONIC_COARSE") == 0) {
+        return new_stopwatch_unix<CLOCK_MONOTONIC_COARSE, 3>(L);
+      }
+#endif
+
+#ifdef CLOCK_MONOTONIC_RAW
+      if (strcasecmp(name, "CLOCK_MONOTONIC_RAW") == 0) {
+        return new_stopwatch_unix<CLOCK_MONOTONIC_RAW, 4>(L);
+      }
+#endif
+
+#ifdef CLOCK_MONOTONIC_RAW_APPROX
+      if (strcasecmp(name, "CLOCK_MONOTONIC_RAW_APPROX") == 0) {
+        return new_stopwatch_unix<CLOCK_MONOTONIC_RAW_APPROX, 5>(L);
+      }
+#endif
+
+#ifdef CLOCK_BOOTTIME
+      if (strcasecmp(name, "CLOCK_BOOTTIME") == 0) {
+        return new_stopwatch_unix<CLOCK_BOOTTIME, 6>(L);
+      }
+#endif
+
+#ifdef CLOCK_UPTIME_RAW
+      if (strcasecmp(name, "CLOCK_UPTIME_RAW") == 0) {
+        return new_stopwatch_unix<CLOCK_UPTIME_RAW, 7>(L);
+      }
+#endif
+
+#ifdef CLOCK_UPTIME_RAW_APPROX
+      if (strcasecmp(name, "CLOCK_UPTIME_RAW_APPROX") == 0) {
+        return new_stopwatch_unix<CLOCK_UPTIME_RAW_APPROX, 8>(L);
+      }
+#endif
+
       return nullptr;
     }
 
-    int get_stopwatch_impl_names(lua_State* L, int i) {
+    int get_stopwatch_names(lua_State* L, int i) {
       lua_pushstring(L, "CLOCK_REALTIME");
       lua_rawseti(L, -2, ++i);
 

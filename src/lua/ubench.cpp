@@ -10,14 +10,73 @@
 #include <lua.hpp>
 
 #include <stdint.h>
+#include <string.h>
 #include <time.h>
 #include <chrono>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 
 namespace brigid {
   namespace ubench {
     namespace {
+      static const char* names[] = {
+        "std::chrono::system_clock",
+        "std::chrono::steady_clock",
+        "std::chrono::high_resolution_clock",
+      };
+
+      template <class T, int T_name>
+      class stopwatch_chrono : public stopwatch, private noncopyable {
+      public:
+        virtual void start() {
+          started_ = T::now();
+        }
+
+        virtual void stop() {
+          stopped_ = T::now();
+        }
+
+        virtual int64_t get_elapsed() const {
+          return std::chrono::duration_cast<std::chrono::nanoseconds>(stopped_ - started_).count();
+        }
+
+        virtual const char* get_name() const {
+          return names[T_name];
+        }
+
+        virtual double get_resolution() const {
+          return 0;
+        }
+
+      private:
+        typename T::time_point started_;
+        typename T::time_point stopped_;
+      };
+
+      template <class T, int T_name>
+      stopwatch* new_stopwatch_chrono(lua_State* L) {
+        return new_userdata<stopwatch_chrono<T, T_name> >(L, "brigid.ubench.stopwatch");
+      }
+
+      stopwatch* new_stopwatch_chrono(lua_State* L, const char* name) {
+        if (!name) {
+          return new_stopwatch_chrono<std::chrono::steady_clock, 1>(L);
+        }
+
+        if (strcasecmp(name, "std::chrono::system_clock") == 0) {
+          return new_stopwatch_chrono<std::chrono::system_clock, 0>(L);
+        }
+        if (strcasecmp(name, "std::chrono::steady_clock") == 0) {
+          return new_stopwatch_chrono<std::chrono::steady_clock, 1>(L);
+        }
+        if (strcasecmp(name, "std::chrono::high_resolution_clock") == 0) {
+          return new_stopwatch_chrono<std::chrono::high_resolution_clock, 2>(L);
+        }
+
+        return nullptr;
+      }
+
       template <class T>
       void check_chrono(std::ostream& out, const char* name) {
         using std::chrono::duration_cast;
@@ -71,9 +130,9 @@ namespace brigid {
         lua_pushlstring(L, result.data(), result.size());
       }
 
-      void impl_get_stopwatch_impl_names(lua_State* L) {
+      void impl_get_stopwatch_names(lua_State* L) {
         lua_newtable(L);
-        int i = get_stopwatch_impl_names(L, 0);
+        int i = get_stopwatch_names(L, 0);
 
         lua_pushstring(L, "std::chrono::system_clock");
         lua_rawseti(L, -2, ++i);
@@ -88,10 +147,11 @@ namespace brigid {
       }
 
       void impl_call(lua_State* L) {
-        if (stopwatch* self = new_stopwatch(L, nullptr)) {
-          // noop
-        } else {
-          // die
+        const char* name = lua_tostring(L, 2);
+        if (!new_stopwatch(L, name)) {
+          if (!new_stopwatch_chrono(L, name)) {
+            luaL_error(L, "invalid name");
+          }
         }
       }
 
@@ -108,16 +168,16 @@ namespace brigid {
         push_integer(L, self->get_elapsed());
       }
 
-      void impl_get_impl_name(lua_State* L) {
+      void impl_get_name(lua_State* L) {
         stopwatch* self = check_stopwatch(L, 1);
-        lua_pushstring(L, self->get_impl_name());
+        lua_pushstring(L, self->get_name());
       }
 
       void initialize(lua_State* L) {
         lua_newtable(L);
         {
           set_field(L, -1, "check_runtime", impl_check_runtime);
-          set_field(L, -1, "get_stopwatch_impl_names", impl_get_stopwatch_impl_names);
+          set_field(L, -1, "get_stopwatch_names", impl_get_stopwatch_names);
 
           lua_newtable(L);
           {
@@ -131,7 +191,7 @@ namespace brigid {
             set_field(L, -1, "start", impl_start);
             set_field(L, -1, "stop", impl_stop);
             set_field(L, -1, "get_elapsed", impl_get_elapsed);
-            set_field(L, -1, "get_impl_name", impl_get_impl_name);
+            set_field(L, -1, "get_name", impl_get_name);
           }
           lua_setfield(L, -2, "stopwatch");
         }
