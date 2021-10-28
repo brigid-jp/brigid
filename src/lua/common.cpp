@@ -43,10 +43,25 @@ namespace brigid {
       }
     }
 
-    int impl_closure(lua_State* L) {
-      int top = lua_gettop(L);
+    int impl_int_closure(lua_State* L) {
       try {
-        if (cxx_function_t function = to_handle<cxx_function_t>(L, lua_upvalueindex(1))) {
+        if (lua_CFunction function = to_handle<lua_CFunction>(L, lua_upvalueindex(1))) {
+          return function(L);
+        }
+      } catch (const std::runtime_error& e) {
+        lua_pushnil(L);
+        lua_pushstring(L, e.what());
+        return 2;
+      } catch (const std::exception& e) {
+        return luaL_error(L, "%s", e.what());
+      }
+      return luaL_error(L, "attempt to call an invalid upvalue");
+    }
+
+    int impl_void_closure(lua_State* L) {
+      try {
+        if (void_function_t function = to_handle<void_function_t>(L, lua_upvalueindex(1))) {
+          int top = lua_gettop(L);
           function(L);
           int result = lua_gettop(L) - top;
           if (result > 0) {
@@ -61,15 +76,12 @@ namespace brigid {
           }
         }
       } catch (const std::runtime_error& e) {
-        lua_settop(L, top);
         lua_pushnil(L);
         lua_pushstring(L, e.what());
         return 2;
       } catch (const std::exception& e) {
-        lua_settop(L, top);
         return luaL_error(L, "%s", e.what());
       }
-      lua_settop(L, top);
       return luaL_error(L, "attempt to call an invalid upvalue");
     }
 
@@ -179,14 +191,21 @@ namespace brigid {
     return lua_isboolean(L, index) && !lua_toboolean(L, index);
   }
 
-  void set_field(lua_State* L, int index, const char* key, cxx_function_t value) {
+  void set_field(lua_State* L, int index, const char* key, lua_CFunction value) {
     index = abs_index(L, index);
     push_handle(L, value);
-    lua_pushcclosure(L, impl_closure, 1);
+    lua_pushcclosure(L, impl_int_closure, 1);
     lua_setfield(L, index, key);
   }
 
-  void set_metafield(lua_State* L, int index, const char* key, cxx_function_t value) {
+  void set_field(lua_State* L, int index, const char* key, void_function_t value) {
+    index = abs_index(L, index);
+    push_handle(L, value);
+    lua_pushcclosure(L, impl_void_closure, 1);
+    lua_setfield(L, index, key);
+  }
+
+  void set_metafield(lua_State* L, int index, const char* key, void_function_t value) {
     index = abs_index(L, index);
     if (lua_getmetatable(L, index)) {
       set_field(L, -1, key, value);

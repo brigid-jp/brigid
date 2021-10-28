@@ -40,7 +40,7 @@ static const int json_parser_start = 1;
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #endif
 
-    void impl_parse(lua_State* L) {
+    int impl_parse(lua_State* L) {
       data_t data = check_data(L, 1);
 
       int cs = 0;
@@ -2596,8 +2596,7 @@ case 87:
 #line 252 "json_parse.rl"
 
       if (cs >= 88 && stack.empty()) {
-        lua_remove(L, array_index);
-        return;
+        return 1;
       }
 
       std::ostringstream out;

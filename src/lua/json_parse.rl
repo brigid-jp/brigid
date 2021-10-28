@@ -223,7 +223,7 @@ namespace brigid {
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #endif
 
-    void impl_parse(lua_State* L) {
+    int impl_parse(lua_State* L) {
       data_t data = check_data(L, 1);
 
       int cs = 0;
@@ -251,8 +251,7 @@ namespace brigid {
       %%write exec;
 
       if (cs >= %%{ write first_final; }%% && stack.empty()) {
-        lua_remove(L, array_index);
-        return;
+        return 1;
       }
 
       std::ostringstream out;
