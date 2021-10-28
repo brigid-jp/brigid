@@ -77,57 +77,8 @@ namespace brigid {
         return nullptr;
       }
 
-      template <class T>
-      void check_chrono(std::ostream& out, const char* name) {
-        using std::chrono::duration_cast;
-        using std::chrono::nanoseconds;
-
-        int64_t count;
-        typename T::duration duration;
-        typename T::time_point t;
-        typename T::time_point u;
-
-        t = T::now();
-        for (count = 1; ; ++count) {
-          u = T::now();
-          duration = u - t;
-          if (duration > T::duration::zero()) {
-            break;
-          }
-        }
-        t = u;
-        for (count = 1; ; ++count) {
-          u = T::now();
-          duration = u - t;
-          if (duration > T::duration::zero()) {
-            break;
-          }
-        }
-
-        out
-          << "check_chrono: " << name << "\n"
-          << "  count: " << count << "\n"
-          << "  duration: " << duration_cast<nanoseconds>(duration).count() << "\n"
-          << "  t: " << duration_cast<nanoseconds>(t.time_since_epoch()).count() << "\n"
-          << "  u: " << duration_cast<nanoseconds>(u.time_since_epoch()).count() << "\n";
-      }
-
-      void check_chrono(std::ostream& out) {
-        check_chrono<std::chrono::system_clock>(out, "std::chrono::system_clock");
-        check_chrono<std::chrono::steady_clock>(out, "std::chrono::steady_clock");
-        check_chrono<std::chrono::high_resolution_clock>(out, "std::chrono::high_resolution_clock");
-      }
-
       stopwatch* check_stopwatch(lua_State* L, int arg) {
         return check_udata<stopwatch>(L, arg, "brigid.ubench.stopwatch");
-      }
-
-      void impl_check_runtime(lua_State* L) {
-        std::ostringstream out;
-        check_platform(out);
-        check_chrono(out);
-        std::string result = out.str();
-        lua_pushlstring(L, result.data(), result.size());
       }
 
       void impl_get_stopwatch_names(lua_State* L) {
@@ -156,11 +107,13 @@ namespace brigid {
       }
 
       void impl_start(lua_State* L) {
-        check_stopwatch(L, 1)->start();
+        stopwatch* self = check_stopwatch(L, 1);
+        self->start();
       }
 
       void impl_stop(lua_State* L) {
-        check_stopwatch(L, 1)->stop();
+        stopwatch* self = check_stopwatch(L, 1);
+        self->stop();
       }
 
       void impl_get_elapsed(lua_State* L) {
@@ -176,7 +129,6 @@ namespace brigid {
       void initialize(lua_State* L) {
         lua_newtable(L);
         {
-          set_field(L, -1, "check_runtime", impl_check_runtime);
           set_field(L, -1, "get_stopwatch_names", impl_get_stopwatch_names);
 
           lua_newtable(L);
