@@ -63,11 +63,17 @@ function suite:test_stopwatch_get_name1()
 end
 
 function suite:test_stopwatch_get_name2()
-  local t = brigid.stopwatch "CLOCK_REALTIME"
+  local t = brigid.stopwatch "std::chrono::steady_clock"
   if debug then print(t:get_name()) end
   t:start()
   t:stop()
   if debug then print(t:get_elapsed()) end
+end
+
+function suite:test_stopwatch_get_name3()
+  local result, message = pcall(function () brigid.stopwatch "no_such_name" end)
+  assert(not result)
+  if debug then print(message) end
 end
 
 function suite:test_get_stopwatch_names()
