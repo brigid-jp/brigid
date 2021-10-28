@@ -148,5 +148,50 @@ namespace brigid {
       }
       return nullptr;
     }
+
+    int get_stopwatch_impl_names(lua_State* L, int i) {
+      lua_pushstring(L, "CLOCK_REALTIME");
+      lua_rawseti(L, -2, ++i);
+
+#ifdef CLOCK_REALTIME_COARSE
+      lua_pushstring(L, "CLOCK_REALTIME_COARSE");
+      lua_rawseti(L, -2, ++i);
+#endif
+
+      lua_pushstring(L, "CLOCK_MONOTONIC");
+      lua_rawseti(L, -2, ++i);
+
+#ifdef CLOCK_MONOTONIC_COARSE
+      lua_pushstring(L, "CLOCK_MONOTONIC_COARSE");
+      lua_rawseti(L, -2, ++i);
+#endif
+
+#ifdef CLOCK_MONOTONIC_RAW
+      lua_pushstring(L, "CLOCK_MONOTONIC_RAW");
+      lua_rawseti(L, -2, ++i);
+#endif
+
+#ifdef CLOCK_MONOTONIC_RAW_APPROX
+      lua_pushstring(L, "CLOCK_MONOTONIC_RAW_APPROX");
+      lua_rawseti(L, -2, ++i);
+#endif
+
+#ifdef CLOCK_BOOTTIME
+      lua_pushstring(L, "CLOCK_BOOTTIME");
+      lua_rawseti(L, -2, ++i);
+#endif
+
+#ifdef CLOCK_UPTIME_RAW
+      lua_pushstring(L, "CLOCK_UPTIME_RAW");
+      lua_rawseti(L, -2, ++i);
+#endif
+
+#ifdef CLOCK_UPTIME_RAW_APPROX
+      lua_pushstring(L, "CLOCK_UPTIME_RAW_APPROX");
+      lua_rawseti(L, -2, ++i);
+#endif
+
+      return i;
+    }
   }
 }

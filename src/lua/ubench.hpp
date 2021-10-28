@@ -24,7 +24,7 @@ namespace brigid {
     void check_platform(std::ostream&);
 
     stopwatch* new_stopwatch(lua_State*, const char*);
-    void get_stopwatch_impl_names(lua_State*);
+    int get_stopwatch_impl_names(lua_State*, int);
   }
 }
 

@@ -71,6 +71,18 @@ namespace brigid {
         lua_pushlstring(L, result.data(), result.size());
       }
 
+      void impl_get_stopwatch_impl_names(lua_State* L) {
+        lua_newtable(L);
+        int i = get_stopwatch_impl_names(L, 0);
+
+        lua_pushstring(L, "std::chrono::system_clock");
+        lua_rawseti(L, -2, ++i);
+        lua_pushstring(L, "std::chrono::steady_clock");
+        lua_rawseti(L, -2, ++i);
+        lua_pushstring(L, "std::chrono::high_resolution_clock");
+        lua_rawseti(L, -2, ++i);
+      }
+
       void impl_gc(lua_State* L) {
         check_stopwatch(L, 1)->~stopwatch();
       }
@@ -105,6 +117,7 @@ namespace brigid {
         lua_newtable(L);
         {
           set_field(L, -1, "check_runtime", impl_check_runtime);
+          set_field(L, -1, "get_stopwatch_impl_names", impl_get_stopwatch_impl_names);
 
           lua_newtable(L);
           {
