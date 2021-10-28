@@ -11,11 +11,7 @@
 
 #include <stdint.h>
 #include <string.h>
-#include <time.h>
 #include <chrono>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
 
 namespace brigid {
   namespace {
@@ -124,6 +120,11 @@ namespace brigid {
       stopwatch* self = check_stopwatch(L, 1);
       lua_pushstring(L, self->get_name());
     }
+
+    void impl_get_resolution(lua_State* L) {
+      stopwatch* self = check_stopwatch(L, 1);
+      lua_pushnumber(L, self->get_resolution());
+    }
   }
 
   stopwatch::~stopwatch() {}
@@ -144,6 +145,7 @@ namespace brigid {
       set_field(L, -1, "stop", impl_stop);
       set_field(L, -1, "get_elapsed", impl_get_elapsed);
       set_field(L, -1, "get_name", impl_get_name);
+      set_field(L, -1, "get_resolution", impl_get_resolution);
     }
     lua_setfield(L, -2, "stopwatch");
   }

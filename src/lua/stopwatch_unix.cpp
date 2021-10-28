@@ -7,6 +7,8 @@
 #include "common.hpp"
 #include "stopwatch.hpp"
 
+#include <lua.hpp>
+
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
@@ -19,7 +21,7 @@ namespace brigid {
       "CLOCK_MONOTONIC",            // [2]
       "CLOCK_MONOTONIC_COARSE",     // [3] linux
       "CLOCK_MONOTONIC_RAW",        // [4] linux or apple
-      "CLOCK_MONOTONIC_RAW_APPROX", // [5] linux
+      "CLOCK_MONOTONIC_RAW_APPROX", // [5] apple
       "CLOCK_BOOTTIME",             // [6] linux
       "CLOCK_UPTIME_RAW",           // [7] apple
       "CLOCK_UPTIME_RAW_APPROX",    // [8] apple
