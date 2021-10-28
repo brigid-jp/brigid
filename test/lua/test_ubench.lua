@@ -60,4 +60,24 @@ function suite:test_ubench_stopwatch6()
   if debug then print(f_get_elapsed(t)) end
 end
 
+function suite:test_ubench_stopwatch_get_name1()
+  local t = brigid.ubench.stopwatch()
+  if debug then print(t:get_name()) end
+end
+
+function suite:test_ubench_stopwatch_get_name2()
+  local t = brigid.ubench.stopwatch "CLOCK_UPTIME_RAW"
+  if debug then print(t:get_name()) end
+  t:start()
+  t:stop()
+  if debug then print(t:get_elapsed()) end
+end
+
+function suite:test_ubench_get_stopwatch_names()
+  local names = brigid.ubench.get_stopwatch_names()
+  for i = 1, #names do
+    if debug then print(names[i]) end
+  end
+end
+
 return suite

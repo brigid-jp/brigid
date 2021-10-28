@@ -10,14 +10,73 @@
 #include <lua.hpp>
 
 #include <stdint.h>
+#include <string.h>
 #include <time.h>
 #include <chrono>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 
 namespace brigid {
   namespace ubench {
     namespace {
+      static const char* names[] = {
+        "std::chrono::system_clock",
+        "std::chrono::steady_clock",
+        "std::chrono::high_resolution_clock",
+      };
+
+      template <class T, int T_name>
+      class stopwatch_chrono : public stopwatch, private noncopyable {
+      public:
+        virtual void start() {
+          started_ = T::now();
+        }
+
+        virtual void stop() {
+          stopped_ = T::now();
+        }
+
+        virtual int64_t get_elapsed() const {
+          return std::chrono::duration_cast<std::chrono::nanoseconds>(stopped_ - started_).count();
+        }
+
+        virtual const char* get_name() const {
+          return names[T_name];
+        }
+
+        virtual double get_resolution() const {
+          return 0;
+        }
+
+      private:
+        typename T::time_point started_;
+        typename T::time_point stopped_;
+      };
+
+      template <class T, int T_name>
+      stopwatch* new_stopwatch_chrono(lua_State* L) {
+        return new_userdata<stopwatch_chrono<T, T_name> >(L, "brigid.ubench.stopwatch");
+      }
+
+      stopwatch* new_stopwatch_chrono(lua_State* L, const char* name) {
+        if (!name) {
+          return new_stopwatch_chrono<std::chrono::steady_clock, 1>(L);
+        }
+
+        if (strcasecmp(name, "std::chrono::system_clock") == 0) {
+          return new_stopwatch_chrono<std::chrono::system_clock, 0>(L);
+        }
+        if (strcasecmp(name, "std::chrono::steady_clock") == 0) {
+          return new_stopwatch_chrono<std::chrono::steady_clock, 1>(L);
+        }
+        if (strcasecmp(name, "std::chrono::high_resolution_clock") == 0) {
+          return new_stopwatch_chrono<std::chrono::high_resolution_clock, 2>(L);
+        }
+
+        return nullptr;
+      }
+
       template <class T>
       void check_chrono(std::ostream& out, const char* name) {
         using std::chrono::duration_cast;
@@ -71,93 +130,37 @@ namespace brigid {
         lua_pushlstring(L, result.data(), result.size());
       }
 
+      void impl_get_stopwatch_names(lua_State* L) {
+        lua_newtable(L);
+        int i = get_stopwatch_names(L, 0);
+
+        lua_pushstring(L, "std::chrono::system_clock");
+        lua_rawseti(L, -2, ++i);
+        lua_pushstring(L, "std::chrono::steady_clock");
+        lua_rawseti(L, -2, ++i);
+        lua_pushstring(L, "std::chrono::high_resolution_clock");
+        lua_rawseti(L, -2, ++i);
+      }
+
       void impl_gc(lua_State* L) {
         check_stopwatch(L, 1)->~stopwatch();
       }
 
       void impl_call(lua_State* L) {
-        if (stopwatch* self = new_stopwatch_platform(L, nullptr)) {
-          // noop
-        } else {
-          // die
+        const char* name = lua_tostring(L, 2);
+        if (!new_stopwatch(L, name)) {
+          if (!new_stopwatch_chrono(L, name)) {
+            luaL_error(L, "invalid name");
+          }
         }
       }
 
       void impl_start(lua_State* L) {
-        stopwatch* self = check_stopwatch(L, 1);
-        self->start();
+        check_stopwatch(L, 1)->start();
       }
-
-      stopwatch* cache = nullptr;
-      const void* cache_mt = nullptr;
 
       void impl_stop(lua_State* L) {
         check_stopwatch(L, 1)->stop();
-//        if (stopwatch* self = static_cast<stopwatch*>(lua_touserdata(L, 1))) {
-//          if (lua_getmetatable(L, 1)) {
-//            const void* mt = lua_topointer(L, -1);
-//            if (mt == cache_mt) {
-//              self->stop();
-//            } else {
-//              luaL_getmetatable(L, "brigid.ubench.stopwatch");
-//              if (lua_rawequal(L, -1, -2)) {
-//                self->stop();
-//              }
-//            }
-//          }
-//        }
-
-//        if (stopwatch* self = static_cast<stopwatch*>(lua_touserdata(L, 1))) {
-//          if (self == cache) {
-//            self->stop();
-//          } else {
-//            if (lua_getmetatable(L, 1)) {
-//              luaL_getmetatable(L, "brigid.ubench.stopwatch");
-//              if (lua_rawequal(L, -1, -2)) {
-//                self->stop();
-//                cache = self;
-//              }
-//            }
-//          }
-//        }
-      }
-
-      int impl_stop_c(lua_State* L) {
-        if (stopwatch* self = static_cast<stopwatch*>(lua_touserdata(L, 1))) {
-          if (self == cache) {
-            self->stop();
-          } else {
-            if (lua_getmetatable(L, 1)) {
-              const void* mt = lua_topointer(L, -1);
-              if (mt == cache_mt) {
-                self->stop();
-                cache = self;
-              } else {
-                luaL_getmetatable(L, "brigid.ubench.stopwatch");
-                if (lua_rawequal(L, -1, -2)) {
-                  self->stop();
-                  cache = self;
-                }
-              }
-            }
-          }
-        }
-
-
-//        if (stopwatch* self = static_cast<stopwatch*>(lua_touserdata(L, 1))) {
-//          if (self == cache) {
-//            self->stop();
-//          } else {
-//            if (lua_getmetatable(L, 1)) {
-//              luaL_getmetatable(L, "brigid.ubench.stopwatch");
-//              if (lua_rawequal(L, -1, -2)) {
-//                self->stop();
-//                cache = self;
-//              }
-//            }
-//          }
-//        }
-        return 0;
       }
 
       void impl_get_elapsed(lua_State* L) {
@@ -165,10 +168,16 @@ namespace brigid {
         push_integer(L, self->get_elapsed());
       }
 
+      void impl_get_name(lua_State* L) {
+        stopwatch* self = check_stopwatch(L, 1);
+        lua_pushstring(L, self->get_name());
+      }
+
       void initialize(lua_State* L) {
         lua_newtable(L);
         {
           set_field(L, -1, "check_runtime", impl_check_runtime);
+          set_field(L, -1, "get_stopwatch_names", impl_get_stopwatch_names);
 
           lua_newtable(L);
           {
@@ -176,19 +185,13 @@ namespace brigid {
             lua_pushvalue(L, -2);
             lua_setfield(L, -2, "__index");
             set_field(L, -1, "__gc", impl_gc);
-
-            cache_mt = lua_topointer(L, -1);
-
             lua_pop(L, 1);
 
             set_metafield(L, -1, "__call", impl_call);
             set_field(L, -1, "start", impl_start);
-
             set_field(L, -1, "stop", impl_stop);
-            // lua_pushcfunction(L, impl_stop_c);
-            // lua_setfield(L, -2, "stop");
-
             set_field(L, -1, "get_elapsed", impl_get_elapsed);
+            set_field(L, -1, "get_name", impl_get_name);
           }
           lua_setfield(L, -2, "stopwatch");
         }
