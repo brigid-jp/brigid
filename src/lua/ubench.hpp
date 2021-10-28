@@ -22,10 +22,11 @@ namespace brigid {
       virtual double get_resolution() const = 0;
     };
 
-    void check_platform(std::ostream&);
-
     stopwatch* new_stopwatch(lua_State*, const char*);
     int get_stopwatch_names(lua_State*, int);
+    int get_stopwatch_configs(lua_State*);
+
+    void check_platform(std::ostream&);
   }
 }
 
