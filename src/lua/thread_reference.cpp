@@ -43,7 +43,7 @@ namespace brigid {
   }
 
   thread_reference::operator bool() const {
-    return thread_;
+    return thread_ ? true : false;
   }
 
   void thread_reference::unref() {
