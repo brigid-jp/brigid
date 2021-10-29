@@ -14,8 +14,11 @@
 #include <chrono>
 
 namespace brigid {
-  template <void_function_t T_function>
-  struct closure {
+  template <class T, T (*T_function)(lua_State*)>
+  struct exception_handler;
+
+  template <void (*T_function)(lua_State*)>
+  struct exception_handler<void, T_function> {
     static int value(lua_State* L) {
       try {
         int top = lua_gettop(L);
@@ -38,7 +41,21 @@ namespace brigid {
       } catch (const std::exception& e) {
         return luaL_error(L, "%s", e.what());
       }
-      return luaL_error(L, "error???");
+    }
+  };
+
+  template <int (*T_function)(lua_State*)>
+  struct exception_handler<int, T_function> {
+    static int value(lua_State* L) {
+      try {
+        return T_function(L);
+      } catch (const std::runtime_error& e) {
+        lua_pushnil(L);
+        lua_pushstring(L, e.what());
+        return 2;
+      } catch (const std::exception& e) {
+        return luaL_error(L, "%s", e.what());
+      }
     }
   };
 
@@ -147,6 +164,18 @@ namespace brigid {
       self->stop();
     }
 
+    int impl_start_i(lua_State* L) {
+      stopwatch* self = check_stopwatch(L, 1);
+      self->start();
+      return 0;
+    }
+
+    int impl_stop_i(lua_State* L) {
+      stopwatch* self = check_stopwatch(L, 1);
+      self->stop();
+      return 0;
+    }
+
     void impl_get_elapsed(lua_State* L) {
       stopwatch* self = check_stopwatch(L, 1);
       push_integer(L, self->get_elapsed());
@@ -194,10 +223,12 @@ namespace brigid {
 
       set_metafield(L, -1, "__call", impl_call);
       // set_field(L, -1, "start", impl_start);
-      lua_pushcfunction(L, closure<impl_start>::value);
+      // lua_pushcclosure(L, exception_handler<void, impl_start>::value, 0);
+      lua_pushcclosure(L, exception_handler<int, impl_start_i>::value, 0);
       lua_setfield(L, -2, "start");
       // set_field(L, -1, "stop", impl_stop);
-      lua_pushcfunction(L, closure<impl_stop>::value);
+      // lua_pushcclosure(L, exception_handler<void, impl_stop>::value, 0);
+      lua_pushcclosure(L, exception_handler<int, impl_stop_i>::value, 0);
       lua_setfield(L, -2, "stop");
       set_field(L, -1, "get_elapsed", impl_get_elapsed);
       set_field(L, -1, "get_name", impl_get_name);

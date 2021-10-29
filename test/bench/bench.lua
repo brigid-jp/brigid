@@ -6,6 +6,7 @@ local brigid = require "brigid"
 
 local t = brigid.stopwatch()
 
+--[[
 t:start()
 t:stop()
 print(1, t:get_elapsed())
@@ -24,4 +25,28 @@ t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop()
 t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop()
 t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop()
 t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop()
+print(32, t:get_elapsed())
+]]
+
+local start = t.start
+local stop = t.stop
+
+start(t)
+stop(t)
+print(1, t:get_elapsed())
+
+start(t)
+stop(t) stop(t) stop(t) stop(t) stop(t) stop(t) stop(t) stop(t)
+print(8, t:get_elapsed())
+
+start(t)
+stop(t) stop(t) stop(t) stop(t) stop(t) stop(t) stop(t) stop(t)
+stop(t) stop(t) stop(t) stop(t) stop(t) stop(t) stop(t) stop(t)
+print(16, t:get_elapsed())
+
+start(t)
+stop(t) stop(t) stop(t) stop(t) stop(t) stop(t) stop(t) stop(t)
+stop(t) stop(t) stop(t) stop(t) stop(t) stop(t) stop(t) stop(t)
+stop(t) stop(t) stop(t) stop(t) stop(t) stop(t) stop(t) stop(t)
+stop(t) stop(t) stop(t) stop(t) stop(t) stop(t) stop(t) stop(t)
 print(32, t:get_elapsed())
