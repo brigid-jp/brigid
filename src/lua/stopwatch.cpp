@@ -10,6 +10,7 @@
 #include <lua.hpp>
 
 #include <stdint.h>
+#include <string.h>
 #include <chrono>
 #include <string>
 
