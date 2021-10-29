@@ -125,6 +125,22 @@ namespace brigid {
       stopwatch* self = check_stopwatch(L, 1);
       lua_pushnumber(L, self->get_resolution());
     }
+
+    int impl_pcall(lua_State* L) {
+      stopwatch* self = check_stopwatch(L, 1);
+      self->start();
+      int result = lua_pcall(L, lua_gettop(L) - 2, LUA_MULTRET, 0);
+      self->stop();
+      if (result == 0) {
+        lua_pushboolean(L, true);
+        lua_replace(L, 1);
+        return lua_gettop(L);
+      } else {
+        lua_pushboolean(L, false);
+        lua_replace(L, 1);
+        return 2;
+      }
+    }
   }
 
   stopwatch::~stopwatch() {}
@@ -146,6 +162,7 @@ namespace brigid {
       set_field(L, -1, "get_elapsed", impl_get_elapsed);
       set_field(L, -1, "get_name", impl_get_name);
       set_field(L, -1, "get_resolution", impl_get_resolution);
+      set_field(L, -1, "pcall", impl_pcall);
     }
     lua_setfield(L, -2, "stopwatch");
   }
