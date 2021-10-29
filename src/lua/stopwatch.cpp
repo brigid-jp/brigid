@@ -12,14 +12,13 @@
 #include <stdint.h>
 #include <string.h>
 #include <chrono>
-#include <string>
 
 namespace brigid {
   namespace {
     static const char* names[] = {
-      "std::chrono::system_clock",
-      "std::chrono::steady_clock",
-      "std::chrono::high_resolution_clock",
+      "std::chrono::system_clock",          // [0]
+      "std::chrono::steady_clock",          // [1]
+      "std::chrono::high_resolution_clock", // [2]
     };
 
     template <class T, int T_name>
