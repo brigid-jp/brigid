@@ -47,11 +47,7 @@ namespace brigid {
       }
 
       virtual int64_t get_elapsed() const {
-        int64_t u = stopped_.tv_sec - started_.tv_sec;
-        int64_t v = stopped_.tv_nsec - started_.tv_nsec;
-        u *= 1000000000;
-        u += v;
-        return u;
+        return (stopped_.tv_sec - started_.tv_sec) * 1000000000LL + stopped_.tv_nsec - started_.tv_nsec;
       }
 
       virtual const char* get_name() const {
@@ -63,11 +59,7 @@ namespace brigid {
         if (clock_getres(T_clock, &resolution) == -1) {
           throw BRIGID_SYSTEM_ERROR();
         }
-        int64_t u = resolution.tv_sec;
-        int64_t v = resolution.tv_nsec;
-        u *= 1000000000;
-        u += v;
-        return static_cast<double>(u);
+        return resolution.tv_sec * 1000000000LL + resolution.tv_nsec;
       }
 
     private:
