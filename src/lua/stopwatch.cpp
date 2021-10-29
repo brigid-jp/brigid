@@ -208,16 +208,22 @@ namespace brigid {
       new_metatable(L, "brigid.stopwatch");
       lua_pushvalue(L, -2);
       lua_setfield(L, -2, "__index");
-      set_field(L, -1, "__gc", impl_gc);
+      void_function<impl_gc>::set_field(L, -1, "__gc");
       lua_pop(L, 1);
 
-      set_metafield(L, -1, "__call", impl_call);
-      set_field(L, -1, "start", impl_start);
-      set_field(L, -1, "stop", impl_stop);
-      set_field(L, -1, "get_elapsed", impl_get_elapsed);
-      set_field(L, -1, "get_name", impl_get_name);
-      set_field(L, -1, "get_resolution", impl_get_resolution);
-      set_field(L, -1, "pcall", impl_pcall);
+      void_function<impl_call>::set_metafield(L, -1, "__call");
+      void_function<impl_start>::set_field(L, -1, "start");
+      void_function<impl_stop>::set_field(L, -1, "stop");
+      void_function<impl_get_elapsed>::set_field(L, -1, "get_elapsed");
+      void_function<impl_get_name>::set_field(L, -1, "get_name");
+      void_function<impl_get_resolution>::set_field(L, -1, "get_resolution");
+      int_function<impl_pcall>::set_field(L, -1, "pcall");
+
+      // set_field(L, -1, "stop", impl_stop);
+      // set_field(L, -1, "get_elapsed", impl_get_elapsed);
+      // set_field(L, -1, "get_name", impl_get_name);
+      // set_field(L, -1, "get_resolution", impl_get_resolution);
+      // set_field(L, -1, "pcall", impl_pcall);
     }
     lua_setfield(L, -2, "stopwatch");
   }

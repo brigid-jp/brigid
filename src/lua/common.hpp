@@ -9,8 +9,10 @@
 
 #include <lua.hpp>
 
+#include <exception>
 #include <limits>
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 
@@ -133,6 +135,72 @@ namespace brigid {
   inline T to_handle(lua_State* L, int index, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(void*))>* = nullptr) {
     return reinterpret_cast<T>(detail::to_handle(L, index));
   }
+
+  template <void (*T)(lua_State*)>
+  struct void_function {
+    static int value(lua_State* L) {
+      try {
+        int top = lua_gettop(L);
+        T(L);
+        int result = lua_gettop(L) - top;
+        if (result > 0) {
+          return result;
+        } else {
+          if (lua_toboolean(L, 1)) {
+            lua_pushvalue(L, 1);
+          } else {
+            lua_pushboolean(L, true);
+          }
+          return 1;
+        }
+      } catch (const std::runtime_error& e) {
+        lua_pushnil(L);
+        lua_pushstring(L, e.what());
+        return 2;
+      } catch (const std::exception& e) {
+        return luaL_error(L, "%s", e.what());
+      }
+    }
+
+    static void set_field(lua_State* L, int index, const char* key) {
+      index = abs_index(L, index);
+      lua_pushcfunction(L, value);
+      lua_setfield(L, index, key);
+    }
+
+    static void set_metafield(lua_State* L, int index, const char* key) {
+      index = abs_index(L, index);
+      if (lua_getmetatable(L, index)) {
+        set_field(L, -1, key);
+        lua_pop(L, 1);
+      } else {
+        lua_newtable(L);
+        set_field(L, -1, key);
+        lua_setmetatable(L, index);
+      }
+    }
+  };
+
+  template <int (*T)(lua_State*)>
+  struct int_function {
+    static int value(lua_State* L) {
+      try {
+        return T(L);
+      } catch (const std::runtime_error& e) {
+        lua_pushnil(L);
+        lua_pushstring(L, e.what());
+        return 2;
+      } catch (const std::exception& e) {
+        return luaL_error(L, "%s", e.what());
+      }
+    }
+
+    static void set_field(lua_State* L, int index, const char* key) {
+      index = abs_index(L, index);
+      lua_pushcfunction(L, value);
+      lua_setfield(L, index, key);
+    }
+  };
 }
 
 #endif
