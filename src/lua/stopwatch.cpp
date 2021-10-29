@@ -14,6 +14,42 @@
 #include <chrono>
 
 namespace brigid {
+  template <void_function_t T_function>
+  struct closure {
+    static int value(lua_State* L) {
+      try {
+        int top = lua_gettop(L);
+        T_function(L);
+        int result = lua_gettop(L) - top;
+        if (result > 0) {
+          return result;
+        } else {
+          if (lua_toboolean(L, 1)) {
+            lua_pushvalue(L, 1);
+          } else {
+            lua_pushboolean(L, true);
+          }
+          return 1;
+        }
+      } catch (const std::runtime_error& e) {
+        lua_pushnil(L);
+        lua_pushstring(L, e.what());
+        return 2;
+      } catch (const std::exception& e) {
+        return luaL_error(L, "%s", e.what());
+      }
+      return luaL_error(L, "error???");
+    }
+  };
+
+  template <void_function_t T_function>
+  struct closure_noeh {
+    static int value(lua_State* L) {
+      T_function(L);
+      return 0;
+    }
+  };
+
   namespace {
     static const char* names[] = {
       "std::chrono::system_clock",          // [0]
@@ -157,8 +193,12 @@ namespace brigid {
       lua_pop(L, 1);
 
       set_metafield(L, -1, "__call", impl_call);
-      set_field(L, -1, "start", impl_start);
-      set_field(L, -1, "stop", impl_stop);
+      // set_field(L, -1, "start", impl_start);
+      lua_pushcfunction(L, closure<impl_start>::value);
+      lua_setfield(L, -2, "start");
+      // set_field(L, -1, "stop", impl_stop);
+      lua_pushcfunction(L, closure<impl_stop>::value);
+      lua_setfield(L, -2, "stop");
       set_field(L, -1, "get_elapsed", impl_get_elapsed);
       set_field(L, -1, "get_name", impl_get_name);
       set_field(L, -1, "get_resolution", impl_get_resolution);
