@@ -12,14 +12,13 @@
 #include <stdint.h>
 #include <string.h>
 #include <chrono>
-#include <string>
 
 namespace brigid {
   namespace {
     static const char* names[] = {
-      "std::chrono::system_clock",
-      "std::chrono::steady_clock",
-      "std::chrono::high_resolution_clock",
+      "std::chrono::system_clock",          // [0]
+      "std::chrono::steady_clock",          // [1]
+      "std::chrono::high_resolution_clock", // [2]
     };
 
     template <class T, int T_name>
@@ -97,7 +96,7 @@ namespace brigid {
       const char* name = lua_tostring(L, 2);
       if (!new_stopwatch(L, name)) {
         if (!new_stopwatch_chrono(L, name)) {
-          luaL_argerror(L, 2, "unsupported stopwatch");
+          luaL_argerror(L, 2, "unsupported stopwatch name");
         }
       }
     }

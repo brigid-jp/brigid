@@ -6,103 +6,73 @@ local brigid = require "brigid"
 local test_suite = require "test_suite"
 
 local suite = test_suite "test_stopwatch"
-local debug = true
+local debug = false
 
 function suite:test_stopwatch1()
   local t = brigid.stopwatch()
-  t:start()
-  t:stop()
-  if debug then print(t:get_elapsed()) end
+  assert(t:start())
+  assert(t:stop())
+  assert(t:get_elapsed())
+  assert(t:get_name())
+  assert(t:get_resolution())
+  if debug then print(t:get_elapsed(), t:get_name(), t:get_resolution()) end
 end
 
 function suite:test_stopwatch2()
   local t = brigid.stopwatch()
-  t:start()
-  t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop()
-  if debug then print(t:get_elapsed()) end
+  local result, message = t:pcall(function () end)
+  if debug then print(t:get_elapsed(), t:get_name(), t:get_resolution()) end
+  assert(result)
+  assert(not message)
 end
 
 function suite:test_stopwatch3()
   local t = brigid.stopwatch()
-  t:start()
-  t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop()
-  t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop() t:stop()
-  if debug then print(t:get_elapsed()) end
+  local result, message = t:pcall(function () error "error" end)
+  if debug then print(t:get_elapsed(), t:get_name(), t:get_resolution()) end
+  assert(not result)
+  assert(message)
 end
-
-local f_start = brigid.stopwatch.start
-local f_stop = brigid.stopwatch.stop
-local f_get_elapsed = brigid.stopwatch.get_elapsed
 
 function suite:test_stopwatch4()
   local t = brigid.stopwatch()
-  f_start(t)
-  f_stop(t)
-  if debug then print(f_get_elapsed(t)) end
+  local result, x, y, z = t:pcall(function (a, b, c) return c, a, b end, 17, 23, 37)
+  if debug then print(t:get_elapsed(), t:get_name(), t:get_resolution()) end
+  assert(result)
+  assert(x == 37)
+  assert(y == 17)
+  assert(z == 23)
 end
 
 function suite:test_stopwatch5()
   local t = brigid.stopwatch()
-  f_start(t)
-  f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t)
-  if debug then print(f_get_elapsed(t)) end
+  local result, x, y, z = t:pcall(function (a, b, c) return a + b + c end, 17, 23, 37)
+  if debug then print(t:get_elapsed(), t:get_name(), t:get_resolution()) end
+  assert(result)
+  assert(x == 77)
+  assert(not y)
+  assert(not z)
 end
 
 function suite:test_stopwatch6()
-  local t = brigid.stopwatch()
-  f_start(t)
-  f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t)
-  f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t) f_stop(t)
-  if debug then print(f_get_elapsed(t)) end
-end
-
-function suite:test_stopwatch_get_name1()
-  local t = brigid.stopwatch()
-  if debug then print(t:get_name()) end
-  if debug then print(t:get_resolution()) end
-end
-
-function suite:test_stopwatch_get_name2()
-  local t = brigid.stopwatch "std::chrono::steady_clock"
-  if debug then print(t:get_name()) end
-  t:start()
-  t:stop()
-  if debug then print(t:get_elapsed()) end
-end
-
-function suite:test_stopwatch_get_name3()
-  local result, message = pcall(function () brigid.stopwatch "no_such_name" end)
-  assert(not result)
-  if debug then print(message) end
-end
-
-function suite:test_get_stopwatch_names()
   local names = brigid.get_stopwatch_names()
+  assert(#names > 3)
   for i = 1, #names do
-    if debug then print(names[i]) end
+    local name = names[i]
+    local t = brigid.stopwatch(name)
+    assert(t:start())
+    assert(t:stop())
+    assert(t:get_elapsed())
+    assert(t:get_name() == name)
+    assert(t:get_resolution())
+    if debug then print(t:get_elapsed(), t:get_name(), t:get_resolution()) end
   end
 end
 
-function suite:test_stopwatch_pcall1()
-  local t = brigid.stopwatch()
-  local result, message = t:pcall(function (a, b, c) print(a, b, c) end, 17, 23, 42)
-  assert(result)
-  if debug then print(t:get_elapsed()) end
-end
-
-function suite:test_stopwatch_pcall2()
-  local t = brigid.stopwatch()
-  local result, message = t:pcall(function (a, b, c) error "die" end, 17, 23, 42)
-  assert(not result)
+function suite:test_stopwatch7()
+  local result, message = pcall(function () brigid.stopwatch "no such name" end)
   if debug then print(message) end
-  if debug then print(t:get_elapsed()) end
-end
-
-function suite:test_stopwatch_pcall3()
-  local t = brigid.stopwatch()
-  local result, message = t:pcall(function () end)
-  assert(result)
-  if debug then print(t:get_elapsed()) end
+  assert(not result)
 end
 
 return suite
