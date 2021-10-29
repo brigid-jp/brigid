@@ -83,4 +83,26 @@ function suite:test_get_stopwatch_names()
   end
 end
 
+function suite:test_stopwatch_pcall1()
+  local t = brigid.stopwatch()
+  local result, message = t:pcall(function (a, b, c) print(a, b, c) end, 17, 23, 42)
+  assert(result)
+  if debug then print(t:get_elapsed()) end
+end
+
+function suite:test_stopwatch_pcall2()
+  local t = brigid.stopwatch()
+  local result, message = t:pcall(function (a, b, c) error "die" end, 17, 23, 42)
+  assert(not result)
+  if debug then print(message) end
+  if debug then print(t:get_elapsed()) end
+end
+
+function suite:test_stopwatch_pcall3()
+  local t = brigid.stopwatch()
+  local result, message = t:pcall(function () end)
+  assert(result)
+  if debug then print(t:get_elapsed()) end
+end
+
 return suite

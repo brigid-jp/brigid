@@ -17,7 +17,7 @@
 static_assert(std::is_same<lua_Number, double>::value, "lua_Number is not double");
 
 namespace brigid {
-  using cxx_function_t = void (*)(lua_State*);
+  using void_function_t = void (*)(lua_State*);
 
   static const int check_validate_none = 0;
   static const int check_validate_not_closed = 1;
@@ -102,8 +102,9 @@ namespace brigid {
     return luaL_argerror(L, arg, "out of bounds");
   }
 
-  void set_field(lua_State*, int, const char*, cxx_function_t);
-  void set_metafield(lua_State*, int, const char*, cxx_function_t);
+  void set_field(lua_State*, int, const char*, lua_CFunction);
+  void set_field(lua_State*, int, const char*, void_function_t);
+  void set_metafield(lua_State*, int, const char*, void_function_t);
 
   template <class T, class... T_args>
   inline T* new_userdata(lua_State* L, const char* name, T_args... args) {
