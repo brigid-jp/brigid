@@ -223,12 +223,12 @@ namespace brigid {
 
       set_metafield(L, -1, "__call", impl_call);
       // set_field(L, -1, "start", impl_start);
-      // lua_pushcclosure(L, exception_handler<void, impl_start>::value, 0);
-      lua_pushcclosure(L, exception_handler<int, impl_start_i>::value, 0);
+      lua_pushcclosure(L, exception_handler<void, impl_start>::value, 0);
+      // lua_pushcclosure(L, exception_handler<int, impl_start_i>::value, 0);
       lua_setfield(L, -2, "start");
       // set_field(L, -1, "stop", impl_stop);
-      // lua_pushcclosure(L, exception_handler<void, impl_stop>::value, 0);
-      lua_pushcclosure(L, exception_handler<int, impl_stop_i>::value, 0);
+      lua_pushcclosure(L, exception_handler<void, impl_stop>::value, 0);
+      // lua_pushcclosure(L, exception_handler<int, impl_stop_i>::value, 0);
       lua_setfield(L, -2, "stop");
       set_field(L, -1, "get_elapsed", impl_get_elapsed);
       set_field(L, -1, "get_name", impl_get_name);
