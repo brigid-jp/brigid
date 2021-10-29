@@ -14,6 +14,7 @@
 #include <chrono>
 
 namespace brigid {
+  /*
   template <class T, T (*T_function)(lua_State*)>
   struct exception_handler;
 
@@ -66,6 +67,7 @@ namespace brigid {
       return 0;
     }
   };
+  */
 
   namespace {
     static const char* names[] = {
@@ -164,18 +166,6 @@ namespace brigid {
       self->stop();
     }
 
-    int impl_start_i(lua_State* L) {
-      stopwatch* self = check_stopwatch(L, 1);
-      self->start();
-      return 0;
-    }
-
-    int impl_stop_i(lua_State* L) {
-      stopwatch* self = check_stopwatch(L, 1);
-      self->stop();
-      return 0;
-    }
-
     void impl_get_elapsed(lua_State* L) {
       stopwatch* self = check_stopwatch(L, 1);
       push_integer(L, self->get_elapsed());
@@ -222,14 +212,8 @@ namespace brigid {
       lua_pop(L, 1);
 
       set_metafield(L, -1, "__call", impl_call);
-      // set_field(L, -1, "start", impl_start);
-      lua_pushcclosure(L, exception_handler<void, impl_start>::value, 0);
-      // lua_pushcclosure(L, exception_handler<int, impl_start_i>::value, 0);
-      lua_setfield(L, -2, "start");
-      // set_field(L, -1, "stop", impl_stop);
-      lua_pushcclosure(L, exception_handler<void, impl_stop>::value, 0);
-      // lua_pushcclosure(L, exception_handler<int, impl_stop_i>::value, 0);
-      lua_setfield(L, -2, "stop");
+      set_field(L, -1, "start", impl_start);
+      set_field(L, -1, "stop", impl_stop);
       set_field(L, -1, "get_elapsed", impl_get_elapsed);
       set_field(L, -1, "get_name", impl_get_name);
       set_field(L, -1, "get_resolution", impl_get_resolution);
