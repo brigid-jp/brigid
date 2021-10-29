@@ -136,8 +136,29 @@ namespace brigid {
     return reinterpret_cast<T>(detail::to_handle(L, index));
   }
 
+  template <class T>
+  struct function_impl {
+    static void set_field(lua_State* L, int index, const char* key) {
+      index = abs_index(L, index);
+      lua_pushcfunction(L, T::value);
+      lua_setfield(L, index, key);
+    }
+
+    static void set_metafield(lua_State* L, int index, const char* key) {
+      index = abs_index(L, index);
+      if (lua_getmetatable(L, index)) {
+        set_field(L, -1, key);
+        lua_pop(L, 1);
+      } else {
+        lua_newtable(L);
+        set_field(L, -1, key);
+        lua_setmetatable(L, index);
+      }
+    }
+  };
+
   template <void (*T)(lua_State*)>
-  struct void_function {
+  struct void_function : function_impl<void_function<T> > {
     static int value(lua_State* L) {
       try {
         int top = lua_gettop(L);
@@ -161,28 +182,10 @@ namespace brigid {
         return luaL_error(L, "%s", e.what());
       }
     }
-
-    static void set_field(lua_State* L, int index, const char* key) {
-      index = abs_index(L, index);
-      lua_pushcfunction(L, value);
-      lua_setfield(L, index, key);
-    }
-
-    static void set_metafield(lua_State* L, int index, const char* key) {
-      index = abs_index(L, index);
-      if (lua_getmetatable(L, index)) {
-        set_field(L, -1, key);
-        lua_pop(L, 1);
-      } else {
-        lua_newtable(L);
-        set_field(L, -1, key);
-        lua_setmetatable(L, index);
-      }
-    }
   };
 
   template <int (*T)(lua_State*)>
-  struct int_function {
+  struct int_function : function_impl<int_function<T> > {
     static int value(lua_State* L) {
       try {
         return T(L);
@@ -193,12 +196,6 @@ namespace brigid {
       } catch (const std::exception& e) {
         return luaL_error(L, "%s", e.what());
       }
-    }
-
-    static void set_field(lua_State* L, int index, const char* key) {
-      index = abs_index(L, index);
-      lua_pushcfunction(L, value);
-      lua_setfield(L, index, key);
     }
   };
 }
