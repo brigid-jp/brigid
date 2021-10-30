@@ -35,13 +35,13 @@ namespace brigid {
   void set_metatable(lua_State*, const char*);
   bool is_false(lua_State*, int);
 
-  template <class T>
-  inline void push_integer(lua_State* L, T source, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) <= sizeof(lua_Integer))>* = nullptr) {
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) <= sizeof(lua_Integer)), std::nullptr_t> = nullptr>
+  inline void push_integer(lua_State* L, T source) {
     lua_pushinteger(L, source);
   }
 
-  template <class T>
-  inline void push_integer(lua_State* L, T source, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) > sizeof(lua_Integer))>* = nullptr) {
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) > sizeof(lua_Integer)), std::nullptr_t> = nullptr>
+  inline void push_integer(lua_State* L, T source) {
     static const T max = std::numeric_limits<lua_Integer>::max();
     static const T min = std::numeric_limits<lua_Integer>::min();
     if (min <= source && source <= max) {
@@ -51,13 +51,13 @@ namespace brigid {
     }
   }
 
-  template <class T>
-  inline void push_integer(lua_State* L, T source, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) < sizeof(lua_Integer))>* = nullptr) {
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) < sizeof(lua_Integer)), std::nullptr_t> = nullptr>
+  inline void push_integer(lua_State* L, T source) {
     lua_pushinteger(L, source);
   }
 
-  template <class T>
-  inline void push_integer(lua_State* L, T source, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) >= sizeof(lua_Integer))>* = nullptr) {
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) >= sizeof(lua_Integer)), std::nullptr_t> = nullptr>
+  inline void push_integer(lua_State* L, T source) {
     static const T max = std::numeric_limits<lua_Integer>::max();
     if (source <= max) {
       lua_pushinteger(L, source);
