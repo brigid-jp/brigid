@@ -27,9 +27,10 @@ namespace brigid {
   static const int check_validate_all = 3;
 
   namespace detail {
-    void push_handle(lua_State*, const void*);
     void push_pointer(lua_State*, const void*);
-    void* to_handle(lua_State*, int);
+    void* to_pointer(lua_State*, int);
+    void set_field(lua_State*, int, const char*, lua_CFunction);
+    void set_metafield(lua_State*, int, const char*, lua_CFunction);
   }
 
   int abs_index(lua_State*, int);
@@ -104,10 +105,6 @@ namespace brigid {
     return luaL_argerror(L, arg, "out of bounds");
   }
 
-  void set_field(lua_State*, int, const char*, lua_CFunction);
-  void set_field(lua_State*, int, const char*, void_function_t);
-  void set_metafield(lua_State*, int, const char*, void_function_t);
-
   template <class T, class... T_args>
   inline T* new_userdata(lua_State* L, const char* name, T_args... args) {
     T* data = static_cast<T*>(lua_newuserdata(L, sizeof(T)));
@@ -122,48 +119,20 @@ namespace brigid {
   }
 
   template <class T>
-  inline void push_handle(lua_State* L, T source, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(const void*))>* = nullptr) {
-    detail::push_handle(L, reinterpret_cast<const void*>(source));
-  }
-
-  template <class T>
   inline void push_pointer(lua_State* L, T source, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(const void*))>* = nullptr) {
     detail::push_pointer(L, reinterpret_cast<const void*>(source));
   }
 
   template <class T>
-  inline T to_handle(lua_State* L, int index, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(void*))>* = nullptr) {
-    return reinterpret_cast<T>(detail::to_handle(L, index));
+  inline T to_pointer(lua_State* L, int index, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(void*))>* = nullptr) {
+    return reinterpret_cast<T>(detail::to_pointer(L, index));
   }
-
-  template <class T>
-  struct function_wrapper_impl {
-    static void set_field(lua_State* L, int index, const char* key) {
-      index = abs_index(L, index);
-      lua_pushcfunction(L, T::value);
-      lua_setfield(L, index, key);
-    }
-
-    static void set_metafield(lua_State* L, int index, const char* key) {
-      index = abs_index(L, index);
-      if (lua_getmetatable(L, index)) {
-        lua_pushcfunction(L, T::value);
-        lua_setfield(L, -2, key);
-        lua_pop(L, 1);
-      } else {
-        lua_newtable(L);
-        lua_pushcfunction(L, T::value);
-        lua_setfield(L, -2, key);
-        lua_setmetatable(L, index);
-      }
-    }
-  };
 
   template <class T, T (*)(lua_State*)>
   struct function_wrapper;
 
   template <int (*T)(lua_State*)>
-  struct function_wrapper<int, T> : function_wrapper_impl<function_wrapper<int, T> > {
+  struct function_wrapper<int, T> {
     static int value(lua_State* L) {
       try {
         return T(L);
@@ -175,10 +144,18 @@ namespace brigid {
         return luaL_error(L, "%s", e.what());
       }
     }
+
+    static void set_field(lua_State* L, int index, const char* key) {
+      detail::set_field(L, index, key, value);
+    }
+
+    static void set_metafield(lua_State* L, int index, const char* key) {
+      detail::set_metafield(L, index, key, value);
+    }
   };
 
   template <void (*T)(lua_State*)>
-  struct function_wrapper<void, T> : function_wrapper_impl<function_wrapper<void, T> > {
+  struct function_wrapper<void, T> {
     static int value(lua_State* L) {
       try {
         int top = lua_gettop(L);
@@ -201,6 +178,14 @@ namespace brigid {
       } catch (const std::exception& e) {
         return luaL_error(L, "%s", e.what());
       }
+    }
+
+    static void set_field(lua_State* L, int index, const char* key) {
+      detail::set_field(L, index, key, value);
+    }
+
+    static void set_metafield(lua_State* L, int index, const char* key) {
+      detail::set_metafield(L, index, key, value);
     }
   };
 
