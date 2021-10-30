@@ -45,7 +45,7 @@ namespace brigid {
     static const T max = std::numeric_limits<lua_Integer>::max();
     static const T min = std::numeric_limits<lua_Integer>::min();
     if (min <= source && source <= max) {
-      lua_pushinteger(L, source);
+      lua_pushinteger(L, static_cast<lua_Integer>(source));
     } else {
       lua_pushnumber(L, static_cast<lua_Number>(source));
     }
@@ -60,7 +60,7 @@ namespace brigid {
   inline void push_integer(lua_State* L, T source) {
     static const T max = std::numeric_limits<lua_Integer>::max();
     if (source <= max) {
-      lua_pushinteger(L, source);
+      lua_pushinteger(L, static_cast<lua_Integer>(source));
     } else {
       lua_pushnumber(L, static_cast<lua_Number>(source));
     }
