@@ -146,7 +146,7 @@ namespace brigid {
   stopwatch::~stopwatch() {}
 
   void initialize_stopwatch(lua_State* L) {
-    set_field(L, -1, "get_stopwatch_names", impl_get_stopwatch_names);
+    decltype(function<impl_get_stopwatch_names>())::set_field(L, -1, "get_stopwatch_names");
 
     lua_newtable(L);
     {

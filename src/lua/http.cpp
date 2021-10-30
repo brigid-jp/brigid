@@ -322,13 +322,13 @@ namespace brigid {
       new_metatable(L, "brigid.http_session");
       lua_pushvalue(L, -2);
       lua_setfield(L, -2, "__index");
-      set_field(L, -1, "__gc", impl_gc);
-      set_field(L, -1, "__close", impl_close);
+      decltype(function<impl_gc>())::set_field(L, -1, "__gc");
+      decltype(function<impl_close>())::set_field(L, -1, "__close");
       lua_pop(L, 1);
 
-      set_metafield(L, -1, "__call", impl_call);
-      set_field(L, -1, "request", impl_request);
-      set_field(L, -1, "close", impl_close);
+      decltype(function<impl_call>())::set_metafield(L, -1, "__call");
+      decltype(function<impl_request>())::set_field(L, -1, "request");
+      decltype(function<impl_close>())::set_field(L, -1, "close");
     }
     lua_setfield(L, -2, "http_session");
   }
