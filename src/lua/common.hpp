@@ -147,18 +147,38 @@ namespace brigid {
     static void set_metafield(lua_State* L, int index, const char* key) {
       index = abs_index(L, index);
       if (lua_getmetatable(L, index)) {
-        set_field(L, -1, key);
+        lua_pushcfunction(L, T::value);
+        lua_setfield(L, -2, key);
         lua_pop(L, 1);
       } else {
         lua_newtable(L);
-        set_field(L, -1, key);
+        lua_pushcfunction(L, T::value);
+        lua_setfield(L, -2, key);
         lua_setmetatable(L, index);
       }
     }
   };
 
+  template <class T, T (*)(lua_State*)>
+  struct function;
+
+  template <int (*T)(lua_State*)>
+  struct function<int, T> : function_impl<function<int, T> > {
+    static int value(lua_State* L) {
+      try {
+        return T(L);
+      } catch (const std::runtime_error& e) {
+        lua_pushnil(L);
+        lua_pushstring(L, e.what());
+        return 2;
+      } catch (const std::exception& e) {
+        return luaL_error(L, "%s", e.what());
+      }
+    }
+  };
+
   template <void (*T)(lua_State*)>
-  struct void_function : function_impl<void_function<T> > {
+  struct function<void, T> : function_impl<function<void, T> > {
     static int value(lua_State* L) {
       try {
         int top = lua_gettop(L);
@@ -174,21 +194,6 @@ namespace brigid {
           }
           return 1;
         }
-      } catch (const std::runtime_error& e) {
-        lua_pushnil(L);
-        lua_pushstring(L, e.what());
-        return 2;
-      } catch (const std::exception& e) {
-        return luaL_error(L, "%s", e.what());
-      }
-    }
-  };
-
-  template <int (*T)(lua_State*)>
-  struct int_function : function_impl<int_function<T> > {
-    static int value(lua_State* L) {
-      try {
-        return T(L);
       } catch (const std::runtime_error& e) {
         lua_pushnil(L);
         lua_pushstring(L, e.what());
