@@ -14,61 +14,6 @@
 #include <chrono>
 
 namespace brigid {
-  /*
-  template <class T, T (*T_function)(lua_State*)>
-  struct exception_handler;
-
-  template <void (*T_function)(lua_State*)>
-  struct exception_handler<void, T_function> {
-    static int value(lua_State* L) {
-      try {
-        int top = lua_gettop(L);
-        T_function(L);
-        int result = lua_gettop(L) - top;
-        if (result > 0) {
-          return result;
-        } else {
-          if (lua_toboolean(L, 1)) {
-            lua_pushvalue(L, 1);
-          } else {
-            lua_pushboolean(L, true);
-          }
-          return 1;
-        }
-      } catch (const std::runtime_error& e) {
-        lua_pushnil(L);
-        lua_pushstring(L, e.what());
-        return 2;
-      } catch (const std::exception& e) {
-        return luaL_error(L, "%s", e.what());
-      }
-    }
-  };
-
-  template <int (*T_function)(lua_State*)>
-  struct exception_handler<int, T_function> {
-    static int value(lua_State* L) {
-      try {
-        return T_function(L);
-      } catch (const std::runtime_error& e) {
-        lua_pushnil(L);
-        lua_pushstring(L, e.what());
-        return 2;
-      } catch (const std::exception& e) {
-        return luaL_error(L, "%s", e.what());
-      }
-    }
-  };
-
-  template <void_function_t T_function>
-  struct closure_noeh {
-    static int value(lua_State* L) {
-      T_function(L);
-      return 0;
-    }
-  };
-  */
-
   namespace {
     static const char* names[] = {
       "std::chrono::system_clock",          // [0]
@@ -208,22 +153,16 @@ namespace brigid {
       new_metatable(L, "brigid.stopwatch");
       lua_pushvalue(L, -2);
       lua_setfield(L, -2, "__index");
-      void_function<impl_gc>::set_field(L, -1, "__gc");
+      function<void, impl_gc>::set_field(L, -1, "__gc");
       lua_pop(L, 1);
 
-      void_function<impl_call>::set_metafield(L, -1, "__call");
-      void_function<impl_start>::set_field(L, -1, "start");
-      void_function<impl_stop>::set_field(L, -1, "stop");
-      void_function<impl_get_elapsed>::set_field(L, -1, "get_elapsed");
-      void_function<impl_get_name>::set_field(L, -1, "get_name");
-      void_function<impl_get_resolution>::set_field(L, -1, "get_resolution");
-      int_function<impl_pcall>::set_field(L, -1, "pcall");
-
-      // set_field(L, -1, "stop", impl_stop);
-      // set_field(L, -1, "get_elapsed", impl_get_elapsed);
-      // set_field(L, -1, "get_name", impl_get_name);
-      // set_field(L, -1, "get_resolution", impl_get_resolution);
-      // set_field(L, -1, "pcall", impl_pcall);
+      function<decltype(impl_call(nullptr)), impl_call>::set_metafield(L, -1, "__call");
+      function<void, impl_start>::set_field(L, -1, "start");
+      function<void, impl_stop>::set_field(L, -1, "stop");
+      function<void, impl_get_elapsed>::set_field(L, -1, "get_elapsed");
+      function<void, impl_get_name>::set_field(L, -1, "get_name");
+      function<void, impl_get_resolution>::set_field(L, -1, "get_resolution");
+      function<int, impl_pcall>::set_field(L, -1, "pcall");
     }
     lua_setfield(L, -2, "stopwatch");
   }
