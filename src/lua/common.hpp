@@ -27,7 +27,6 @@ namespace brigid {
   static const int check_validate_all = 3;
 
   namespace detail {
-    void push_handle(lua_State*, const void*);
     void push_pointer(lua_State*, const void*);
     void* to_handle(lua_State*, int);
     void set_field(lua_State*, int, const char*, lua_CFunction);
@@ -117,11 +116,6 @@ namespace brigid {
   template <class T>
   inline T* check_udata(lua_State* L, int arg, const char* name) {
     return static_cast<T*>(luaL_checkudata(L, arg, name));
-  }
-
-  template <class T>
-  inline void push_handle(lua_State* L, T source, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(const void*))>* = nullptr) {
-    detail::push_handle(L, reinterpret_cast<const void*>(source));
   }
 
   template <class T>
