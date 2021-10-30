@@ -13,10 +13,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
-#include <exception>
 #include <limits>
 #include <mutex>
-#include <stdexcept>
 
 namespace brigid {
   namespace {
