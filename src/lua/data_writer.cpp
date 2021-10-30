@@ -120,19 +120,19 @@ namespace brigid {
       new_metatable(L, "brigid.data_writer");
       lua_pushvalue(L, -2);
       lua_setfield(L, -2, "__index");
-      set_field(L, -1, "__gc", impl_gc);
-      set_field(L, -1, "__close", impl_close);
-      set_field(L, -1, "__len", impl_get_size);
-      set_field(L, -1, "__tostring", impl_get_string);
+      decltype(function<impl_gc>())::set_field(L, -1, "__gc");
+      decltype(function<impl_close>())::set_field(L, -1, "__close");
+      decltype(function<impl_get_size>())::set_field(L, -1, "__len");
+      decltype(function<impl_get_string>())::set_field(L, -1, "__tostring");
       lua_pop(L, 1);
 
-      set_metafield(L, -1, "__call", impl_call);
-      set_field(L, -1, "get_pointer", impl_get_pointer);
-      set_field(L, -1, "get_size", impl_get_size);
-      set_field(L, -1, "get_string", impl_get_string);
-      set_field(L, -1, "close", impl_close);
-      set_field(L, -1, "write", impl_write);
-      set_field(L, -1, "reserve", impl_reserve);
+      decltype(function<impl_call>())::set_metafield(L, -1, "__call");
+      decltype(function<impl_get_pointer>())::set_field(L, -1, "get_pointer");
+      decltype(function<impl_get_size>())::set_field(L, -1, "get_size");
+      decltype(function<impl_get_string>())::set_field(L, -1, "get_string");
+      decltype(function<impl_close>())::set_field(L, -1, "close");
+      decltype(function<impl_write>())::set_field(L, -1, "write");
+      decltype(function<impl_reserve>())::set_field(L, -1, "reserve");
     }
     lua_setfield(L, -2, "data_writer");
   }

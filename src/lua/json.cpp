@@ -26,7 +26,7 @@ namespace brigid {
 
     lua_newtable(L);
     {
-      set_field(L, -1, "array", impl_array);
+      decltype(function<impl_array>())::set_field(L, -1, "array");
 
       initialize_json_parse(L);
     }

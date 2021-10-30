@@ -249,7 +249,7 @@ namespace brigid {
     lua_pushlightuserdata(L, nullptr);
     lua_setfield(L, -2, "null");
 
-    set_field(L, -1, "get_lightuserdata_bits", impl_get_lightuserdata_bits);
-    set_field(L, -1, "get_version", impl_get_version);
+    decltype(function<impl_get_lightuserdata_bits>())::set_field(L, -1, "get_lightuserdata_bits");
+    decltype(function<impl_get_version>())::set_field(L, -1, "get_version");
   }
 }

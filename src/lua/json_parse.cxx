@@ -2610,6 +2610,6 @@ case 87:
   }
 
   void initialize_json_parse(lua_State* L) {
-    set_field(L, -1, "parse", impl_parse);
+    decltype(function<impl_parse>())::set_field(L, -1, "parse");
   }
 }
