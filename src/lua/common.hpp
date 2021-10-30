@@ -147,11 +147,13 @@ namespace brigid {
     static void set_metafield(lua_State* L, int index, const char* key) {
       index = abs_index(L, index);
       if (lua_getmetatable(L, index)) {
-        set_field(L, -1, key);
+        lua_pushcfunction(L, T::value);
+        lua_setfield(L, -2, key);
         lua_pop(L, 1);
       } else {
         lua_newtable(L);
-        set_field(L, -1, key);
+        lua_pushcfunction(L, T::value);
+        lua_setfield(L, -2, key);
         lua_setmetatable(L, index);
       }
     }
