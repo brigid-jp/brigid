@@ -145,6 +145,12 @@ namespace brigid {
 
   stopwatch::~stopwatch() {}
 
+  template <int (*T)(lua_State*)>
+  function<int, T> f();
+
+  template <void (*T)(lua_State*)>
+  function<void, T> f();
+
   void initialize_stopwatch(lua_State* L) {
     set_field(L, -1, "get_stopwatch_names", impl_get_stopwatch_names);
 
@@ -162,7 +168,8 @@ namespace brigid {
       function<void, impl_get_elapsed>::set_field(L, -1, "get_elapsed");
       function<void, impl_get_name>::set_field(L, -1, "get_name");
       function<void, impl_get_resolution>::set_field(L, -1, "get_resolution");
-      function<int, impl_pcall>::set_field(L, -1, "pcall");
+      // function<int, impl_pcall>::set_field(L, -1, "pcall");
+      decltype(f<impl_pcall>())::set_field(L, -1, "pcall");
     }
     lua_setfield(L, -2, "stopwatch");
   }
