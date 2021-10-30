@@ -43,48 +43,6 @@ namespace brigid {
       }
     }
 
-    int impl_int_closure(lua_State* L) {
-      try {
-        if (lua_CFunction function = to_handle<lua_CFunction>(L, lua_upvalueindex(1))) {
-          return function(L);
-        }
-      } catch (const std::runtime_error& e) {
-        lua_pushnil(L);
-        lua_pushstring(L, e.what());
-        return 2;
-      } catch (const std::exception& e) {
-        return luaL_error(L, "%s", e.what());
-      }
-      return luaL_error(L, "attempt to call an invalid upvalue");
-    }
-
-    int impl_void_closure(lua_State* L) {
-      try {
-        if (void_function_t function = to_handle<void_function_t>(L, lua_upvalueindex(1))) {
-          int top = lua_gettop(L);
-          function(L);
-          int result = lua_gettop(L) - top;
-          if (result > 0) {
-            return result;
-          } else {
-            if (lua_toboolean(L, 1)) {
-              lua_pushvalue(L, 1);
-            } else {
-              lua_pushboolean(L, true);
-            }
-            return 1;
-          }
-        }
-      } catch (const std::runtime_error& e) {
-        lua_pushnil(L);
-        lua_pushstring(L, e.what());
-        return 2;
-      } catch (const std::exception& e) {
-        return luaL_error(L, "%s", e.what());
-      }
-      return luaL_error(L, "attempt to call an invalid upvalue");
-    }
-
     void impl_get_lightuserdata_bits(lua_State* L) {
       push_integer(L, lightuserdata_bits);
     }
@@ -141,6 +99,26 @@ namespace brigid {
           return nullptr;
       }
     }
+
+    void set_field(lua_State* L, int index, const char* key, lua_CFunction value) {
+      index = abs_index(L, index);
+      lua_pushcfunction(L, value);
+      lua_setfield(L, index, key);
+    }
+
+    void set_metafield(lua_State* L, int index, const char* key, lua_CFunction value) {
+      index = abs_index(L, index);
+      if (lua_getmetatable(L, index)) {
+        lua_pushcfunction(L, value);
+        lua_setfield(L, -2, key);
+        lua_pop(L, 1);
+      } else {
+        lua_newtable(L);
+        lua_pushcfunction(L, value);
+        lua_setfield(L, -2, key);
+        lua_setmetatable(L, index);
+      }
+    }
   }
 
   int abs_index(lua_State* L, int index) {
@@ -189,32 +167,6 @@ namespace brigid {
 
   bool is_false(lua_State* L, int index) {
     return lua_isboolean(L, index) && !lua_toboolean(L, index);
-  }
-
-  void set_field(lua_State* L, int index, const char* key, lua_CFunction value) {
-    index = abs_index(L, index);
-    push_handle(L, value);
-    lua_pushcclosure(L, impl_int_closure, 1);
-    lua_setfield(L, index, key);
-  }
-
-  void set_field(lua_State* L, int index, const char* key, void_function_t value) {
-    index = abs_index(L, index);
-    push_handle(L, value);
-    lua_pushcclosure(L, impl_void_closure, 1);
-    lua_setfield(L, index, key);
-  }
-
-  void set_metafield(lua_State* L, int index, const char* key, void_function_t value) {
-    index = abs_index(L, index);
-    if (lua_getmetatable(L, index)) {
-      set_field(L, -1, key, value);
-      lua_pop(L, 1);
-    } else {
-      lua_newtable(L);
-      set_field(L, -1, key, value);
-      lua_setmetatable(L, index);
-    }
   }
 
   void initialize_common(lua_State* L) {
