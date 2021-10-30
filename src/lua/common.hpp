@@ -28,7 +28,7 @@ namespace brigid {
 
   namespace detail {
     void push_pointer(lua_State*, const void*);
-    void* to_handle(lua_State*, int);
+    void* to_pointer(lua_State*, int);
     void set_field(lua_State*, int, const char*, lua_CFunction);
     void set_metafield(lua_State*, int, const char*, lua_CFunction);
   }
@@ -124,8 +124,8 @@ namespace brigid {
   }
 
   template <class T>
-  inline T to_handle(lua_State* L, int index, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(void*))>* = nullptr) {
-    return reinterpret_cast<T>(detail::to_handle(L, index));
+  inline T to_pointer(lua_State* L, int index, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(void*))>* = nullptr) {
+    return reinterpret_cast<T>(detail::to_pointer(L, index));
   }
 
   template <class T, T (*)(lua_State*)>

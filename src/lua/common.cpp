@@ -68,7 +68,7 @@ namespace brigid {
       }
     }
 
-    void* to_handle(lua_State* L, int index) {
+    void* to_pointer(lua_State* L, int index) {
       switch (lua_type(L, index)) {
         case LUA_TSTRING:
           {
