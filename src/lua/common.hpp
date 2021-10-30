@@ -72,7 +72,7 @@ namespace brigid {
     static const lua_Integer min = std::numeric_limits<T>::min();
     lua_Integer result = luaL_checkinteger(L, arg);
     if (min <= result && result <= max) {
-      return result;
+      return static_cast<T>(result);
     }
     return luaL_argerror(L, arg, "out of bounds");
   }
@@ -87,7 +87,7 @@ namespace brigid {
     static const lua_Integer max = std::numeric_limits<T>::max();
     lua_Integer result = luaL_checkinteger(L, arg);
     if (0 <= result && result <= max) {
-      return result;
+      return static_cast<T>(result);
     }
     return luaL_argerror(L, arg, "out of bounds");
   }
