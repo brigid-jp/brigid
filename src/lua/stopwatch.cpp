@@ -145,12 +145,6 @@ namespace brigid {
 
   stopwatch::~stopwatch() {}
 
-  template <int (*T)(lua_State*)>
-  function<int, T> f();
-
-  template <void (*T)(lua_State*)>
-  function<void, T> f();
-
   void initialize_stopwatch(lua_State* L) {
     set_field(L, -1, "get_stopwatch_names", impl_get_stopwatch_names);
 
@@ -159,17 +153,16 @@ namespace brigid {
       new_metatable(L, "brigid.stopwatch");
       lua_pushvalue(L, -2);
       lua_setfield(L, -2, "__index");
-      function<void, impl_gc>::set_field(L, -1, "__gc");
+      decltype(function<impl_gc>())::set_field(L, -1, "__gc");
       lua_pop(L, 1);
 
-      function<decltype(impl_call(nullptr)), impl_call>::set_metafield(L, -1, "__call");
-      function<void, impl_start>::set_field(L, -1, "start");
-      function<void, impl_stop>::set_field(L, -1, "stop");
-      function<void, impl_get_elapsed>::set_field(L, -1, "get_elapsed");
-      function<void, impl_get_name>::set_field(L, -1, "get_name");
-      function<void, impl_get_resolution>::set_field(L, -1, "get_resolution");
-      // function<int, impl_pcall>::set_field(L, -1, "pcall");
-      decltype(f<impl_pcall>())::set_field(L, -1, "pcall");
+      decltype(function<impl_call>())::set_metafield(L, -1, "__call");
+      decltype(function<impl_start>())::set_field(L, -1, "start");
+      decltype(function<impl_stop>())::set_field(L, -1, "stop");
+      decltype(function<impl_get_elapsed>())::set_field(L, -1, "get_elapsed");
+      decltype(function<impl_get_name>())::set_field(L, -1, "get_name");
+      decltype(function<impl_get_resolution>())::set_field(L, -1, "get_resolution");
+      decltype(function<impl_pcall>())::set_field(L, -1, "pcall");
     }
     lua_setfield(L, -2, "stopwatch");
   }

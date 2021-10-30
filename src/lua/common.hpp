@@ -137,7 +137,7 @@ namespace brigid {
   }
 
   template <class T>
-  struct function_impl {
+  struct function_wrapper_impl {
     static void set_field(lua_State* L, int index, const char* key) {
       index = abs_index(L, index);
       lua_pushcfunction(L, T::value);
@@ -160,10 +160,10 @@ namespace brigid {
   };
 
   template <class T, T (*)(lua_State*)>
-  struct function;
+  struct function_wrapper;
 
   template <int (*T)(lua_State*)>
-  struct function<int, T> : function_impl<function<int, T> > {
+  struct function_wrapper<int, T> : function_wrapper_impl<function_wrapper<int, T> > {
     static int value(lua_State* L) {
       try {
         return T(L);
@@ -178,7 +178,7 @@ namespace brigid {
   };
 
   template <void (*T)(lua_State*)>
-  struct function<void, T> : function_impl<function<void, T> > {
+  struct function_wrapper<void, T> : function_wrapper_impl<function_wrapper<void, T> > {
     static int value(lua_State* L) {
       try {
         int top = lua_gettop(L);
@@ -203,6 +203,12 @@ namespace brigid {
       }
     }
   };
+
+  template <int (*T)(lua_State*)>
+  function_wrapper<int, T> function();
+
+  template <void (*T)(lua_State*)>
+  function_wrapper<void , T> function();
 }
 
 #endif
