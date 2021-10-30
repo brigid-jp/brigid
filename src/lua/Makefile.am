@@ -11,6 +11,7 @@ noinst_HEADERS = \
 	common.hpp \
 	common.lua \
 	data.hpp \
+	function.hpp \
 	scope_exit.hpp \
 	stack_guard.hpp \
 	stopwatch.hpp \
@@ -26,6 +27,7 @@ brigid_la_SOURCES = \
 	data.cpp \
 	data_writer.cpp \
 	file_writer.cpp \
+	function.cpp \
 	hasher.cpp \
 	http.cpp \
 	json.cpp \

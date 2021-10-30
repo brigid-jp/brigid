@@ -5,6 +5,7 @@
 #include <brigid/error.hpp>
 #include <brigid/version.hpp>
 #include "common.hpp"
+#include "function.hpp"
 #include "stack_guard.hpp"
 
 #include <lua.hpp>
@@ -12,10 +13,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
-#include <exception>
 #include <limits>
 #include <mutex>
-#include <stdexcept>
 
 namespace brigid {
   namespace {
@@ -86,26 +85,6 @@ namespace brigid {
           return lua_touserdata(L, index);
         default:
           return nullptr;
-      }
-    }
-
-    void set_field(lua_State* L, int index, const char* key, lua_CFunction value) {
-      index = abs_index(L, index);
-      lua_pushcfunction(L, value);
-      lua_setfield(L, index, key);
-    }
-
-    void set_metafield(lua_State* L, int index, const char* key, lua_CFunction value) {
-      index = abs_index(L, index);
-      if (lua_getmetatable(L, index)) {
-        lua_pushcfunction(L, value);
-        lua_setfield(L, -2, key);
-        lua_pop(L, 1);
-      } else {
-        lua_newtable(L);
-        lua_pushcfunction(L, value);
-        lua_setfield(L, -2, key);
-        lua_setmetatable(L, index);
       }
     }
   }

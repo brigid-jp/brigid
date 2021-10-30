@@ -7,6 +7,7 @@
 #include <brigid/noncopyable.hpp>
 #include "common.hpp"
 #include "data.hpp"
+#include "function.hpp"
 #include "scope_exit.hpp"
 #include "stack_guard.hpp"
 #include "thread_reference.hpp"

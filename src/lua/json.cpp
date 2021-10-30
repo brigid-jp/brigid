@@ -3,6 +3,7 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include "common.hpp"
+#include "function.hpp"
 
 #include <lua.hpp>
 

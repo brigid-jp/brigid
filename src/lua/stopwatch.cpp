@@ -5,6 +5,7 @@
 #include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
 #include "common.hpp"
+#include "function.hpp"
 #include "stopwatch.hpp"
 
 #include <lua.hpp>
