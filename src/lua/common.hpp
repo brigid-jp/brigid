@@ -47,7 +47,7 @@ namespace brigid {
     if (min <= source && source <= max) {
       lua_pushinteger(L, source);
     } else {
-      lua_pushnumber(L, source);
+      lua_pushnumber(L, static_cast<lua_Number>(source));
     }
   }
 
@@ -62,7 +62,7 @@ namespace brigid {
     if (source <= max) {
       lua_pushinteger(L, source);
     } else {
-      lua_pushnumber(L, source);
+      lua_pushnumber(L, static_cast<lua_Number>(source));
     }
   }
 
