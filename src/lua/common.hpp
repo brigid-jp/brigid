@@ -66,8 +66,8 @@ namespace brigid {
     }
   }
 
-  template <class T>
-  inline T check_integer(lua_State* L, int arg, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) < sizeof(lua_Integer))>* = nullptr) {
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) < sizeof(lua_Integer)), std::nullptr_t> = nullptr>
+  inline T check_integer(lua_State* L, int arg) {
     static const lua_Integer max = std::numeric_limits<T>::max();
     static const lua_Integer min = std::numeric_limits<T>::min();
     lua_Integer result = luaL_checkinteger(L, arg);
@@ -77,13 +77,13 @@ namespace brigid {
     return luaL_argerror(L, arg, "out of bounds");
   }
 
-  template <class T>
-  inline T check_integer(lua_State* L, int arg, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) >= sizeof(lua_Integer))>* = nullptr) {
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) >= sizeof(lua_Integer)), std::nullptr_t> = nullptr>
+  inline T check_integer(lua_State* L, int arg) {
     return luaL_checkinteger(L, arg);
   }
 
-  template <class T>
-  inline T check_integer(lua_State* L, int arg, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) < sizeof(lua_Integer))>* = nullptr) {
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) < sizeof(lua_Integer)), std::nullptr_t> = nullptr>
+  inline T check_integer(lua_State* L, int arg) {
     static const lua_Integer max = std::numeric_limits<T>::max();
     lua_Integer result = luaL_checkinteger(L, arg);
     if (0 <= result && result <= max) {
@@ -92,8 +92,8 @@ namespace brigid {
     return luaL_argerror(L, arg, "out of bounds");
   }
 
-  template <class T>
-  inline T check_integer(lua_State* L, int arg, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) >= sizeof(lua_Integer))>* = nullptr) {
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) >= sizeof(lua_Integer)), std::nullptr_t> = nullptr>
+  inline T check_integer(lua_State* L, int arg) {
     lua_Integer result = luaL_checkinteger(L, arg);
     if (0 <= result) {
       return result;
