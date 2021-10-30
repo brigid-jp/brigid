@@ -20,6 +20,7 @@ OBJS = \
 	src\lua\data.obj \
 	src\lua\data_writer.obj \
 	src\lua\file_writer.obj \
+	src\lua\function.obj \
 	src\lua\hasher.obj \
 	src\lua\http.obj \
 	src\lua\json.obj \
