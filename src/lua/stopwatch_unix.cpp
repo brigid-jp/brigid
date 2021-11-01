@@ -73,15 +73,15 @@ namespace brigid {
     }
   }
 
-  stopwatch* new_stopwatch(lua_State* L, const char* name) {
-    if (!name) {
+  stopwatch* new_stopwatch(lua_State* L) {
 #ifdef CLOCK_MONOTONIC_RAW
-      return new_stopwatch_unix<CLOCK_MONOTONIC_RAW, 4>(L);
+    return new_stopwatch_unix<CLOCK_MONOTONIC_RAW, 4>(L);
 #else
-      return new_stopwatch_unix<CLOCK_MONOTONIC, 2>(L);
+    return new_stopwatch_unix<CLOCK_MONOTONIC, 2>(L);
 #endif
-    }
+  }
 
+  stopwatch* new_stopwatch(lua_State* L, const char* name) {
     if (strcasecmp(name, "CLOCK_REALTIME") == 0) {
       return new_stopwatch_unix<CLOCK_REALTIME, 0>(L);
     }

@@ -94,11 +94,12 @@ namespace brigid {
     }
 
     void impl_call(lua_State* L) {
-      const char* name = lua_tostring(L, 2);
-      if (!new_stopwatch(L, name)) {
-        if (!new_stopwatch_chrono(L, name)) {
+      if (const char* name = lua_tostring(L, 2)) {
+        if (!new_stopwatch(L, name) && !new_stopwatch_chrono(L, name)) {
           luaL_argerror(L, 2, "unsupported stopwatch name");
         }
+      } else {
+        new_stopwatch(L);
       }
     }
 
