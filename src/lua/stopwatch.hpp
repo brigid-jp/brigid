@@ -20,6 +20,7 @@ namespace brigid {
     virtual double get_resolution() const = 0;
   };
 
+  stopwatch* new_stopwatch(lua_State*);
   stopwatch* new_stopwatch(lua_State*, const char*);
   int get_stopwatch_names(lua_State*, int);
 }
