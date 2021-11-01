@@ -6,7 +6,7 @@ local brigid = require "brigid"
 local test_suite = require "test_suite"
 
 local suite = test_suite "test_stopwatch"
-local debug = false
+local debug = test_debug()
 
 function suite:test_stopwatch1()
   local t = brigid.stopwatch()

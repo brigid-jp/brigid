@@ -15,19 +15,17 @@
 
 namespace brigid {
   namespace {
-    static const char* names[] = {
-      "CLOCK_REALTIME",             // [0]
-      "CLOCK_REALTIME_COARSE",      // [1] linux
-      "CLOCK_MONOTONIC",            // [2]
-      "CLOCK_MONOTONIC_COARSE",     // [3] linux
-      "CLOCK_MONOTONIC_RAW",        // [4] linux or apple
-      "CLOCK_MONOTONIC_RAW_APPROX", // [5] apple
-      "CLOCK_BOOTTIME",             // [6] linux
-      "CLOCK_UPTIME_RAW",           // [7] apple
-      "CLOCK_UPTIME_RAW_APPROX",    // [8] apple
-    };
+    static const char NAME_CLOCK_REALTIME             [] = "CLOCK_REALTIME";
+    static const char NAME_CLOCK_REALTIME_COARSE      [] = "CLOCK_REALTIME_COARSE";
+    static const char NAME_CLOCK_MONOTONIC            [] = "CLOCK_MONOTONIC";
+    static const char NAME_CLOCK_MONOTONIC_COARSE     [] = "CLOCK_MONOTONIC_COARSE";
+    static const char NAME_CLOCK_MONOTONIC_RAW        [] = "CLOCK_MONOTONIC_RAW";
+    static const char NAME_CLOCK_MONOTONIC_RAW_APPROX [] = "CLOCK_MONOTONIC_RAW_APPROX";
+    static const char NAME_CLOCK_BOOTTIME             [] = "CLOCK_BOOTTIME";
+    static const char NAME_CLOCK_UPTIME_RAW           [] = "CLOCK_UPTIME_RAW";
+    static const char NAME_CLOCK_UPTIME_RAW_APPROX    [] = "CLOCK_UPTIME_RAW_APPROX";
 
-    template <clockid_t T_clock, int T_name>
+    template <clockid_t T_clock, const char* T_name>
     class stopwatch_unix : public stopwatch, private noncopyable {
     public:
       stopwatch_unix()
@@ -51,7 +49,7 @@ namespace brigid {
       }
 
       virtual const char* get_name() const {
-        return names[T_name];
+        return T_name;
       }
 
       virtual double get_resolution() const {
@@ -67,7 +65,7 @@ namespace brigid {
       struct timespec stopped_;
     };
 
-    template <clockid_t T_clock, int T_name>
+    template <clockid_t T_clock, const char* T_name>
     stopwatch* new_stopwatch_unix(lua_State* L) {
       return new_userdata<stopwatch_unix<T_clock, T_name> >(L, "brigid.stopwatch");
     }
@@ -75,60 +73,60 @@ namespace brigid {
 
   stopwatch* new_stopwatch(lua_State* L) {
 #ifdef CLOCK_MONOTONIC_RAW
-    return new_stopwatch_unix<CLOCK_MONOTONIC_RAW, 4>(L);
+    return new_stopwatch_unix<CLOCK_MONOTONIC_RAW, NAME_CLOCK_MONOTONIC_RAW>(L);
 #else
-    return new_stopwatch_unix<CLOCK_MONOTONIC, 2>(L);
+    return new_stopwatch_unix<CLOCK_MONOTONIC, NAME_CLOCK_MONOTONIC>(L);
 #endif
   }
 
   stopwatch* new_stopwatch(lua_State* L, const char* name) {
     if (strcasecmp(name, "CLOCK_REALTIME") == 0) {
-      return new_stopwatch_unix<CLOCK_REALTIME, 0>(L);
+      return new_stopwatch_unix<CLOCK_REALTIME, NAME_CLOCK_REALTIME>(L);
     }
 
 #ifdef CLOCK_REALTIME_COARSE
     if (strcasecmp(name, "CLOCK_REALTIME_COARSE") == 0) {
-      return new_stopwatch_unix<CLOCK_REALTIME_COARSE, 1>(L);
+      return new_stopwatch_unix<CLOCK_REALTIME_COARSE, NAME_CLOCK_REALTIME_COARSE>(L);
     }
 #endif
 
     if (strcasecmp(name, "CLOCK_MONOTONIC") == 0) {
-      return new_stopwatch_unix<CLOCK_MONOTONIC, 2>(L);
+      return new_stopwatch_unix<CLOCK_MONOTONIC, NAME_CLOCK_MONOTONIC>(L);
     }
 
 #ifdef CLOCK_MONOTONIC_COARSE
     if (strcasecmp(name, "CLOCK_MONOTONIC_COARSE") == 0) {
-      return new_stopwatch_unix<CLOCK_MONOTONIC_COARSE, 3>(L);
+      return new_stopwatch_unix<CLOCK_MONOTONIC_COARSE, NAME_CLOCK_MONOTONIC_COARSE>(L);
     }
 #endif
 
 #ifdef CLOCK_MONOTONIC_RAW
     if (strcasecmp(name, "CLOCK_MONOTONIC_RAW") == 0) {
-      return new_stopwatch_unix<CLOCK_MONOTONIC_RAW, 4>(L);
+      return new_stopwatch_unix<CLOCK_MONOTONIC_RAW, NAME_CLOCK_MONOTONIC_RAW>(L);
     }
 #endif
 
 #ifdef CLOCK_MONOTONIC_RAW_APPROX
     if (strcasecmp(name, "CLOCK_MONOTONIC_RAW_APPROX") == 0) {
-      return new_stopwatch_unix<CLOCK_MONOTONIC_RAW_APPROX, 5>(L);
+      return new_stopwatch_unix<CLOCK_MONOTONIC_RAW_APPROX, NAME_CLOCK_MONOTONIC_RAW_APPROX>(L);
     }
 #endif
 
 #ifdef CLOCK_BOOTTIME
     if (strcasecmp(name, "CLOCK_BOOTTIME") == 0) {
-      return new_stopwatch_unix<CLOCK_BOOTTIME, 6>(L);
+      return new_stopwatch_unix<CLOCK_BOOTTIME, NAME_CLOCK_BOOTTIME>(L);
     }
 #endif
 
 #ifdef CLOCK_UPTIME_RAW
     if (strcasecmp(name, "CLOCK_UPTIME_RAW") == 0) {
-      return new_stopwatch_unix<CLOCK_UPTIME_RAW, 7>(L);
+      return new_stopwatch_unix<CLOCK_UPTIME_RAW, NAME_CLOCK_UPTIME_RAW>(L);
     }
 #endif
 
 #ifdef CLOCK_UPTIME_RAW_APPROX
     if (strcasecmp(name, "CLOCK_UPTIME_RAW_APPROX") == 0) {
-      return new_stopwatch_unix<CLOCK_UPTIME_RAW_APPROX, 8>(L);
+      return new_stopwatch_unix<CLOCK_UPTIME_RAW_APPROX, NAME_CLOCK_UPTIME_RAW_APPROX>(L);
     }
 #endif
 
