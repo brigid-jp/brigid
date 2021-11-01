@@ -111,12 +111,12 @@ namespace brigid {
     return static_cast<T*>(luaL_checkudata(L, arg, name));
   }
 
-  template <class T, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(const void*)), std::nullptr_t> = nullptr>
+  template <class T, enable_if_t<std::is_pointer<T>::value, std::nullptr_t> = nullptr>
   inline void push_pointer(lua_State* L, T source) {
     detail::push_pointer(L, reinterpret_cast<const void*>(source));
   }
 
-  template <class T, enable_if_t<(std::is_pointer<T>::value && sizeof(T) == sizeof(void*)), std::nullptr_t> = nullptr>
+  template <class T, enable_if_t<std::is_pointer<T>::value, std::nullptr_t> = nullptr>
   inline T to_pointer(lua_State* L, int index) {
     return reinterpret_cast<T>(detail::to_pointer(L, index));
   }
