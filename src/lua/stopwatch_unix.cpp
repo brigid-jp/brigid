@@ -46,6 +46,10 @@ namespace brigid {
         : started_(),
           stopped_() {}
 
+      virtual const char* get_name() const {
+        return T_name;
+      }
+
       virtual void start() {
         if (clock_gettime(T_clock, &started_) == -1) {
           throw BRIGID_SYSTEM_ERROR();
@@ -60,18 +64,6 @@ namespace brigid {
 
       virtual int64_t get_elapsed() const {
         return (stopped_.tv_sec - started_.tv_sec) * 1000000000LL + stopped_.tv_nsec - started_.tv_nsec;
-      }
-
-      virtual const char* get_name() const {
-        return T_name;
-      }
-
-      virtual double get_resolution() const {
-        struct timespec resolution = {};
-        if (clock_getres(T_clock, &resolution) == -1) {
-          throw BRIGID_SYSTEM_ERROR();
-        }
-        return resolution.tv_sec * 1000000000LL + resolution.tv_nsec;
       }
 
     private:

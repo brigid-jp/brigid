@@ -25,6 +25,10 @@ namespace brigid {
     template <class T, int T_name>
     class stopwatch_chrono : public stopwatch, private noncopyable {
     public:
+      virtual const char* get_name() const {
+        return names[T_name];
+      }
+
       virtual void start() {
         started_ = T::now();
       }
@@ -35,14 +39,6 @@ namespace brigid {
 
       virtual int64_t get_elapsed() const {
         return std::chrono::duration_cast<std::chrono::nanoseconds>(stopped_ - started_).count();
-      }
-
-      virtual const char* get_name() const {
-        return names[T_name];
-      }
-
-      virtual double get_resolution() const {
-        return 0;
       }
 
     private:
@@ -123,11 +119,6 @@ namespace brigid {
       lua_pushstring(L, self->get_name());
     }
 
-    void impl_get_resolution(lua_State* L) {
-      stopwatch* self = check_stopwatch(L, 1);
-      lua_pushnumber(L, self->get_resolution());
-    }
-
     int impl_pcall(lua_State* L) {
       stopwatch* self = check_stopwatch(L, 1);
       self->start();
@@ -159,11 +150,10 @@ namespace brigid {
       lua_pop(L, 1);
 
       decltype(function<impl_call>())::set_metafield(L, -1, "__call");
+      decltype(function<impl_get_name>())::set_field(L, -1, "get_name");
       decltype(function<impl_start>())::set_field(L, -1, "start");
       decltype(function<impl_stop>())::set_field(L, -1, "stop");
       decltype(function<impl_get_elapsed>())::set_field(L, -1, "get_elapsed");
-      decltype(function<impl_get_name>())::set_field(L, -1, "get_name");
-      decltype(function<impl_get_resolution>())::set_field(L, -1, "get_resolution");
       decltype(function<impl_pcall>())::set_field(L, -1, "pcall");
     }
     lua_setfield(L, -2, "stopwatch");

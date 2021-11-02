@@ -13,11 +13,10 @@ namespace brigid {
   class stopwatch {
   public:
     virtual ~stopwatch() = 0;
+    virtual const char* get_name() const = 0;
     virtual void start() = 0;
     virtual void stop() = 0;
     virtual int64_t get_elapsed() const = 0;
-    virtual const char* get_name() const = 0;
-    virtual double get_resolution() const = 0;
   };
 
   stopwatch* new_stopwatch(lua_State*);
