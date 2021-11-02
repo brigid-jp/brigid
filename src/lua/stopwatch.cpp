@@ -16,9 +16,9 @@
 
 namespace brigid {
   namespace {
-    static const char NAME_SYSTEM_CLOCK[] = "std::chrono::system_clock";
-    static const char NAME_STEADY_CLOCK[] = "std::chrono::steady_clock";
-    static const char NAME_HIGH_RESOLUTION_CLOCK[] = "std::chrono::high_resolution_clock";
+    char NAME_SYSTEM_CLOCK[] = "std::chrono::system_clock";
+    char NAME_STEADY_CLOCK[] = "std::chrono::steady_clock";
+    char NAME_HIGH_RESOLUTION_CLOCK[] = "std::chrono::high_resolution_clock";
 
     template <class T, const char* T_name>
     class stopwatch_chrono : public stopwatch, private noncopyable {
