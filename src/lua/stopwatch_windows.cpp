@@ -56,10 +56,6 @@ namespace brigid {
       virtual int64_t get_elapsed() const {
         return (stopped.QuadPart - started.QuadPart) * 100;
       }
-
-      virtual double get_resolution() const {
-        return 100;
-      }
     };
 
     class stopwatch_windows : public stopwatch_windows_impl, private noncopyable {
@@ -67,11 +63,6 @@ namespace brigid {
       virtual int64_t get_elapsed() const {
         int64_t d = stopped.QuadPart - started.QuadPart;
         return d / frequency * 1000000000 + d % frequency * 1000000000 / frequency;
-      }
-
-      virtual double get_resolution() const {
-        static const double resolution = 1000000000 / static_cast<double>(frequency);
-        return resolution;
       }
     };
   }
