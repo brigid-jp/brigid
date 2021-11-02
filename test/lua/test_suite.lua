@@ -14,6 +14,11 @@ function test_skip()
   error(private_skip)
 end
 
+function test_debug()
+  local debug = tonumber(os.getenv "BRIGID_TEST_SUITE_DEBUG")
+  return debug and debug > 0
+end
+
 local function new(name)
   return {
     [private_impl] = {

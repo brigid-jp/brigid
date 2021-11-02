@@ -16,15 +16,17 @@
 
 namespace brigid {
   namespace {
-    static const char* names[] = {
-      "std::chrono::system_clock",          // [0]
-      "std::chrono::steady_clock",          // [1]
-      "std::chrono::high_resolution_clock", // [2]
-    };
+    static const char NAME_SYSTEM_CLOCK[] = "std::chrono::system_clock";
+    static const char NAME_STEADY_CLOCK[] = "std::chrono::steady_clock";
+    static const char NAME_HIGH_RESOLUTION_CLOCK[] = "std::chrono::high_resolution_clock";
 
-    template <class T, int T_name>
+    template <class T, const char* T_name>
     class stopwatch_chrono : public stopwatch, private noncopyable {
     public:
+      virtual const char* get_name() const {
+        return T_name;
+      }
+
       virtual void start() {
         started_ = T::now();
       }
@@ -37,37 +39,25 @@ namespace brigid {
         return std::chrono::duration_cast<std::chrono::nanoseconds>(stopped_ - started_).count();
       }
 
-      virtual const char* get_name() const {
-        return names[T_name];
-      }
-
-      virtual double get_resolution() const {
-        return 0;
-      }
-
     private:
       typename T::time_point started_;
       typename T::time_point stopped_;
     };
 
-    template <class T, int T_name>
+    template <class T, const char* T_name>
     stopwatch* new_stopwatch_chrono(lua_State* L) {
       return new_userdata<stopwatch_chrono<T, T_name> >(L, "brigid.stopwatch");
     }
 
     stopwatch* new_stopwatch_chrono(lua_State* L, const char* name) {
-      if (!name) {
-        return new_stopwatch_chrono<std::chrono::steady_clock, 1>(L);
-      }
-
       if (strcmp(name, "std::chrono::system_clock") == 0) {
-        return new_stopwatch_chrono<std::chrono::system_clock, 0>(L);
+        return new_stopwatch_chrono<std::chrono::system_clock, NAME_SYSTEM_CLOCK>(L);
       }
       if (strcmp(name, "std::chrono::steady_clock") == 0) {
-        return new_stopwatch_chrono<std::chrono::steady_clock, 1>(L);
+        return new_stopwatch_chrono<std::chrono::steady_clock, NAME_STEADY_CLOCK>(L);
       }
       if (strcmp(name, "std::chrono::high_resolution_clock") == 0) {
-        return new_stopwatch_chrono<std::chrono::high_resolution_clock, 2>(L);
+        return new_stopwatch_chrono<std::chrono::high_resolution_clock, NAME_HIGH_RESOLUTION_CLOCK>(L);
       }
 
       return nullptr;
@@ -81,11 +71,11 @@ namespace brigid {
       lua_newtable(L);
       int i = get_stopwatch_names(L, 0);
 
-      lua_pushstring(L, "std::chrono::system_clock");
+      lua_pushstring(L, NAME_SYSTEM_CLOCK);
       lua_rawseti(L, -2, ++i);
-      lua_pushstring(L, "std::chrono::steady_clock");
+      lua_pushstring(L, NAME_STEADY_CLOCK);
       lua_rawseti(L, -2, ++i);
-      lua_pushstring(L, "std::chrono::high_resolution_clock");
+      lua_pushstring(L, NAME_HIGH_RESOLUTION_CLOCK);
       lua_rawseti(L, -2, ++i);
     }
 
@@ -103,6 +93,11 @@ namespace brigid {
       }
     }
 
+    void impl_get_name(lua_State* L) {
+      stopwatch* self = check_stopwatch(L, 1);
+      lua_pushstring(L, self->get_name());
+    }
+
     void impl_start(lua_State* L) {
       stopwatch* self = check_stopwatch(L, 1);
       self->start();
@@ -116,16 +111,6 @@ namespace brigid {
     void impl_get_elapsed(lua_State* L) {
       stopwatch* self = check_stopwatch(L, 1);
       push_integer(L, self->get_elapsed());
-    }
-
-    void impl_get_name(lua_State* L) {
-      stopwatch* self = check_stopwatch(L, 1);
-      lua_pushstring(L, self->get_name());
-    }
-
-    void impl_get_resolution(lua_State* L) {
-      stopwatch* self = check_stopwatch(L, 1);
-      lua_pushnumber(L, self->get_resolution());
     }
 
     int impl_pcall(lua_State* L) {
@@ -159,11 +144,10 @@ namespace brigid {
       lua_pop(L, 1);
 
       decltype(function<impl_call>())::set_metafield(L, -1, "__call");
+      decltype(function<impl_get_name>())::set_field(L, -1, "get_name");
       decltype(function<impl_start>())::set_field(L, -1, "start");
       decltype(function<impl_stop>())::set_field(L, -1, "stop");
       decltype(function<impl_get_elapsed>())::set_field(L, -1, "get_elapsed");
-      decltype(function<impl_get_name>())::set_field(L, -1, "get_name");
-      decltype(function<impl_get_resolution>())::set_field(L, -1, "get_resolution");
       decltype(function<impl_pcall>())::set_field(L, -1, "pcall");
     }
     lua_setfield(L, -2, "stopwatch");
