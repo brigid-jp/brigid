@@ -1,3 +1,5 @@
+// vim: syntax=ragel:
+
 // Copyright (c) 2021 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
@@ -25,6 +27,37 @@ namespace brigid {
       "no such name",
     };
 
+    %%{
+      machine comparator;
+
+      main :=
+        ( /CLOCK_REALTIME/             @{ return 1; }
+        | /CLOCK_REALTIME_COARSE/      @{ return 2; }
+        | /CLOCK_MONOTONIC/            @{ return 3; }
+        | /CLOCK_MONOTONIC_COARSE/     @{ return 4; }
+        | /CLOCK_MONOTONIC_RAW/        @{ return 5; }
+        | /CLOCK_MONOTONIC_RAW_APPROX/ @{ return 6; }
+        | /CLOCK_BOOTTIME/             @{ return 7; }
+        | /CLOCK_UPTIME_RAW/           @{ return 8; }
+        | /CLOCK_UPTIME_RAW_APPROX/    @{ return 9; }
+        );
+
+      write data noerror nofinal noentry;
+    }%%
+
+    int test_compare_ragel(const char* name) {
+      int cs = 0;
+
+      %%write init;
+
+      const char* p = name;
+      const char* pe = nullptr;
+
+      %%write exec;
+
+      return 0;
+    }
+
     int test_compare_pure(const char* name) {
       if (strcmp(name, "CLOCK_REALTIME") == 0) {
         return 1;
@@ -50,11 +83,12 @@ namespace brigid {
     }
 
     int x;
-    void test_pure() {
+    void test() {
       x = 0;
       for (int i = 0; i < 1000000; ++i) {
         for (size_t j = 0; j < sizeof(test_names) / sizeof(test_names[0]); ++j ) {
-          x += test_compare_pure(test_names[j]);
+          // x += test_compare_pure(test_names[j]);
+          x += test_compare_ragel(test_names[j]);
         }
       }
     }
@@ -65,7 +99,7 @@ namespace brigid {
       typename clock_type::time_point stopped;
 
       started = clock_type::now();
-      test_pure();
+      test();
       stopped = clock_type::now();
 
       std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(stopped - started).count() << "\n";
