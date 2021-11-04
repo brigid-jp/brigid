@@ -60,19 +60,24 @@ static const int stopwatch_name_chooser_start = 1;
 #line 66 "stopwatch.rl"
 
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
+
     stopwatch* new_stopwatch_chrono(lua_State* L, const char* name) {
       int cs = 0;
       
-#line 67 "stopwatch.cxx"
+#line 72 "stopwatch.cxx"
 	{
 	cs = stopwatch_name_chooser_start;
 	}
 
-#line 71 "stopwatch.rl"
+#line 76 "stopwatch.rl"
       const char* p = name;
       const char* pe = nullptr;
       
-#line 76 "stopwatch.cxx"
+#line 81 "stopwatch.cxx"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -341,7 +346,7 @@ st59:
 	if ( ++p == pe )
 		goto _test_eof59;
 case 59:
-#line 345 "stopwatch.cxx"
+#line 350 "stopwatch.cxx"
 	goto st0;
 st36:
 	if ( ++p == pe )
@@ -570,9 +575,13 @@ case 58:
 	_out: {}
 	}
 
-#line 74 "stopwatch.rl"
+#line 79 "stopwatch.rl"
       return nullptr;
     }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
     stopwatch* check_stopwatch(lua_State* L, int arg) {
       return check_udata<stopwatch>(L, arg, "brigid.stopwatch");
