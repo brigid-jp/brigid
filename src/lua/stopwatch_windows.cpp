@@ -2,8 +2,8 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <brigid/noncopyable.hpp>
 #include "common.hpp"
+#include "noncopyable.hpp"
 #include "stopwatch.hpp"
 
 #define NOMINMAX
