@@ -42,6 +42,9 @@
 /test/lib/libjavatest.dylib
 /test/lua/brigid-test.love
 Makefile
+bench*.exe
+bench*.log
+bench*.trs
 test*.exe
 test*.log
 test*.trs
