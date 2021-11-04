@@ -2,8 +2,8 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <brigid/error.hpp>
 #include "common_windows.hpp"
+#include "error.hpp"
 
 #define NOMINMAX
 #include <windows.h>

@@ -2,9 +2,9 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <brigid/error.hpp>
-#include <brigid/noncopyable.hpp>
 #include "crypto.hpp"
+#include "error.hpp"
+#include "noncopyable.hpp"
 #include "type_traits.hpp"
 
 #include <CommonCrypto/CommonCrypto.h>

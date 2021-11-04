@@ -6,9 +6,9 @@
 #error http_apple.mm should be compiled with -fobjc-arc
 #endif
 
-#include <brigid/error.hpp>
-#include <brigid/noncopyable.hpp>
+#include "error.hpp"
 #include "http.hpp"
+#include "noncopyable.hpp"
 
 #include <Foundation/Foundation.h>
 

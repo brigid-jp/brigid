@@ -5,7 +5,7 @@
 #ifndef BRIGID_CRYPTO_HPP
 #define BRIGID_CRYPTO_HPP
 
-#include <brigid/noncopyable.hpp>
+#include "noncopyable.hpp"
 
 #include <stddef.h>
 #include <memory>

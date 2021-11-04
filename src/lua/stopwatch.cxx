@@ -6,10 +6,10 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <brigid/error.hpp>
-#include <brigid/noncopyable.hpp>
 #include "common.hpp"
+#include "error.hpp"
 #include "function.hpp"
+#include "noncopyable.hpp"
 #include "stopwatch.hpp"
 
 #include <lua.hpp>
