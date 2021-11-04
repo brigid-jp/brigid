@@ -81,7 +81,7 @@ namespace brigid {
 
     
 #line 84 "stopwatch_unix.cxx"
-static const int stopwatch_name_parser_start = 1;
+static const int stopwatch_name_chooser_start = 1;
 
 
 #line 151 "stopwatch_unix.rl"
@@ -98,20 +98,17 @@ static const int stopwatch_name_parser_start = 1;
 
   stopwatch* new_stopwatch(lua_State* L, const char* name) {
     int cs = 0;
-
     
-#line 104 "stopwatch_unix.cxx"
+#line 103 "stopwatch_unix.cxx"
 	{
-	cs = stopwatch_name_parser_start;
+	cs = stopwatch_name_chooser_start;
 	}
 
-#line 166 "stopwatch_unix.rl"
-
+#line 165 "stopwatch_unix.rl"
     const char* p = name;
     const char* pe = nullptr;
-
     
-#line 115 "stopwatch_unix.cxx"
+#line 112 "stopwatch_unix.cxx"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -312,7 +309,7 @@ st74:
 	if ( ++p == pe )
 		goto _test_eof74;
 case 74:
-#line 316 "stopwatch_unix.cxx"
+#line 313 "stopwatch_unix.cxx"
 	goto st0;
 st16:
 	if ( ++p == pe )
@@ -809,8 +806,7 @@ case 73:
 	_out: {}
 	}
 
-#line 171 "stopwatch_unix.rl"
-
+#line 168 "stopwatch_unix.rl"
     return nullptr;
   }
 

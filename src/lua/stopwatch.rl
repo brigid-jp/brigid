@@ -1,3 +1,5 @@
+// vim: syntax=ragel:
+
 // Copyright (c) 2021 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
@@ -11,7 +13,6 @@
 #include <lua.hpp>
 
 #include <stdint.h>
-#include <string.h>
 #include <chrono>
 
 namespace brigid {
@@ -49,17 +50,27 @@ namespace brigid {
       return new_userdata<stopwatch_chrono<T, T_name> >(L, "brigid.stopwatch");
     }
 
-    stopwatch* new_stopwatch_chrono(lua_State* L, const char* name) {
-      if (strcmp(name, "std::chrono::system_clock") == 0) {
-        return new_stopwatch_chrono<std::chrono::system_clock, NAME_SYSTEM_CLOCK>(L);
-      }
-      if (strcmp(name, "std::chrono::steady_clock") == 0) {
-        return new_stopwatch_chrono<std::chrono::steady_clock, NAME_STEADY_CLOCK>(L);
-      }
-      if (strcmp(name, "std::chrono::high_resolution_clock") == 0) {
-        return new_stopwatch_chrono<std::chrono::high_resolution_clock, NAME_HIGH_RESOLUTION_CLOCK>(L);
-      }
+    %%{
+      machine stopwatch_name_chooser;
 
+      main :=
+        ( "std::chrono::system_clock\0"
+          @{ return new_stopwatch_chrono<std::chrono::system_clock, NAME_SYSTEM_CLOCK>(L); }
+        | "std::chrono::steady_clock\0"
+          @{ return new_stopwatch_chrono<std::chrono::steady_clock, NAME_STEADY_CLOCK>(L); }
+        | "std::chrono::high_resolution_clock\0"
+          @{ return new_stopwatch_chrono<std::chrono::high_resolution_clock, NAME_HIGH_RESOLUTION_CLOCK>(L); }
+        );
+
+      write data noerror nofinal noentry;
+    }%%
+
+    stopwatch* new_stopwatch_chrono(lua_State* L, const char* name) {
+      int cs = 0;
+      %%write init;
+      const char* p = name;
+      const char* pe = nullptr;
+      %%write exec;
       return nullptr;
     }
 
@@ -80,13 +91,15 @@ namespace brigid {
     }
 
     void impl_gc(lua_State* L) {
-      check_stopwatch(L, 1)->~stopwatch();
+      stopwatch* self = check_stopwatch(L, 1);
+      self->~stopwatch();
     }
 
     void impl_call(lua_State* L) {
-      if (const char* name = lua_tostring(L, 2)) {
+      const char* name = lua_tostring(L, 2);
+      if (name) {
         if (!new_stopwatch(L, name) && !new_stopwatch_chrono(L, name)) {
-          luaL_argerror(L, 2, "unsupported stopwatch name");
+          luaL_argerror(L, 2, "unsupported stopwatch");
         }
       } else {
         new_stopwatch(L);

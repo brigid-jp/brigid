@@ -35,7 +35,7 @@ brigid_la_SOURCES = \
 	module.cpp \
 	scope_exit.cpp \
 	stack_guard.cpp \
-	stopwatch.cpp \
+	stopwatch.cxx \
 	stopwatch_unix.cxx \
 	thread_reference.cpp \
 	view.cpp
