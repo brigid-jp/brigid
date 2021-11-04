@@ -14,7 +14,6 @@ OBJS = \
 	src\lib\http_impl.obj \
 	src\lib\http_windows.obj \
 	src\lib\stdio.obj \
-	src\lib\version.obj \
 	src\lua\common.obj \
 	src\lua\cryptor.obj \
 	src\lua\data.obj \

@@ -16,8 +16,7 @@ libbrigid_la_SOURCES = \
 	error.cpp \
 	http.cpp \
 	http_impl.cpp \
-	stdio.cpp \
-	version.cpp
+	stdio.cpp
 
 if CRYPTO_APPLE
 libbrigid_la_SOURCES += crypto_apple.cpp
