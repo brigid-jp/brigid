@@ -5,8 +5,8 @@
 #ifndef BRIGID_HTTP_IMPL_HPP
 #define BRIGID_HTTP_IMPL_HPP
 
-#include <brigid/http.hpp>
-#include <brigid/noncopyable.hpp>
+#include "http.hpp"
+#include "noncopyable.hpp"
 
 #include <stddef.h>
 #include <map>
