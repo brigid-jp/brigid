@@ -4,10 +4,10 @@
 
 #include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
-#include <brigid/stdio.hpp>
 #include "common.hpp"
 #include "data.hpp"
 #include "function.hpp"
+#include "stdio.hpp"
 
 #include <lua.hpp>
 

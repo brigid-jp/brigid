@@ -4,8 +4,8 @@
 
 #include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
-#include <brigid/type_traits.hpp>
 #include "crypto.hpp"
+#include "type_traits.hpp"
 
 #include <CommonCrypto/CommonCrypto.h>
 
