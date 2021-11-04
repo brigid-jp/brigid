@@ -32,15 +32,15 @@ namespace brigid {
       machine comparator;
 
       main :=
-        ( /CLOCK_REALTIME/             0 @{ return 1; }
-        | /CLOCK_REALTIME_COARSE/      0 @{ return 2; }
-        | /CLOCK_MONOTONIC/            0 @{ return 3; }
-        | /CLOCK_MONOTONIC_COARSE/     0 @{ return 4; }
-        | /CLOCK_MONOTONIC_RAW/        0 @{ return 5; }
-        | /CLOCK_MONOTONIC_RAW_APPROX/ 0 @{ return 6; }
-        | /CLOCK_BOOTTIME/             0 @{ return 7; }
-        | /CLOCK_UPTIME_RAW/           0 @{ return 8; }
-        | /CLOCK_UPTIME_RAW_APPROX/    0 @{ return 9; }
+        ( "CLOCK_REALTIME\0"             @{ return 1; }
+        | "CLOCK_REALTIME_COARSE\0"      @{ return 2; }
+        | "CLOCK_MONOTONIC\0"            @{ return 3; }
+        | "CLOCK_MONOTONIC_COARSE\0"     @{ return 4; }
+        | "CLOCK_MONOTONIC_RAW\0"        @{ return 5; }
+        | "CLOCK_MONOTONIC_RAW_APPROX\0" @{ return 6; }
+        | "CLOCK_BOOTTIME\0"             @{ return 7; }
+        | "CLOCK_UPTIME_RAW\0"           @{ return 8; }
+        | "CLOCK_UPTIME_RAW_APPROX\0"    @{ return 9; }
         );
 
       write data noerror nofinal noentry;

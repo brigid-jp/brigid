@@ -1,59 +1,117 @@
 
-#line 1 "bench_compare.rl"
+#line 1 "stopwatch_unix.rl"
 // vim: syntax=ragel:
 
 // Copyright (c) 2021 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <stddef.h>
-#include <string.h>
-#include <chrono>
-#include <iostream>
-#include <string>
+#include <brigid/error.hpp>
+#include <brigid/noncopyable.hpp>
+#include "common.hpp"
+#include "stopwatch.hpp"
+
+#include <lua.hpp>
+
+#include <stdint.h>
+#include <time.h>
 
 namespace brigid {
   namespace {
-    const char* test_names[] = {
-      "CLOCK_REALTIME",
-      "CLOCK_REALTIME_COARSE",
-      "CLOCK_MONOTONIC",
-      "CLOCK_MONOTONIC_COARSE",
-      "CLOCK_MONOTONIC_RAW",
-      "CLOCK_MONOTONIC_RAW_APPROX",
-      "CLOCK_BOOTTIME",
-      "CLOCK_UPTIME_RAW",
-      "CLOCK_UPTIME_RAW_APPROX",
-      "std::chrono::system_clock",
-      "std::chrono::steady_clock",
-      "std::chrono::high_resolution_clock",
-      "no such name",
+    char NAME_CLOCK_REALTIME[] = "CLOCK_REALTIME";
+#ifdef CLOCK_REALTIME_COARSE
+    char NAME_CLOCK_REALTIME_COARSE[] = "CLOCK_REALTIME_COARSE";
+#endif
+    char NAME_CLOCK_MONOTONIC[] = "CLOCK_MONOTONIC";
+#ifdef CLOCK_MONOTONIC_COARSE
+    char NAME_CLOCK_MONOTONIC_COARSE[] = "CLOCK_MONOTONIC_COARSE";
+#endif
+#ifdef CLOCK_MONOTONIC_RAW
+    char NAME_CLOCK_MONOTONIC_RAW[] = "CLOCK_MONOTONIC_RAW";
+#endif
+#ifdef CLOCK_MONOTONIC_RAW_APPROX
+    char NAME_CLOCK_MONOTONIC_RAW_APPROX[] = "CLOCK_MONOTONIC_RAW_APPROX";
+#endif
+#ifdef CLOCK_BOOTTIME
+    char NAME_CLOCK_BOOTTIME[] = "CLOCK_BOOTTIME";
+#endif
+#ifdef CLOCK_UPTIME_RAW
+    char NAME_CLOCK_UPTIME_RAW[] = "CLOCK_UPTIME_RAW";
+#endif
+#ifdef CLOCK_UPTIME_RAW_APPROX
+    char NAME_CLOCK_UPTIME_RAW_APPROX[] = "CLOCK_UPTIME_RAW_APPROX";
+#endif
+
+    template <clockid_t T_clock, const char* T_name>
+    class stopwatch_unix : public stopwatch, private noncopyable {
+    public:
+      stopwatch_unix()
+        : started_(),
+          stopped_() {}
+
+      virtual const char* get_name() const {
+        return T_name;
+      }
+
+      virtual void start() {
+        if (clock_gettime(T_clock, &started_) == -1) {
+          throw BRIGID_SYSTEM_ERROR();
+        }
+      }
+
+      virtual void stop() {
+        if (clock_gettime(T_clock, &stopped_) == -1) {
+          throw BRIGID_SYSTEM_ERROR();
+        }
+      }
+
+      virtual int64_t get_elapsed() const {
+        return (stopped_.tv_sec - started_.tv_sec) * 1000000000LL + stopped_.tv_nsec - started_.tv_nsec;
+      }
+
+    private:
+      struct timespec started_;
+      struct timespec stopped_;
     };
 
+    template <clockid_t T_clock, const char* T_name>
+    stopwatch* new_stopwatch_unix(lua_State* L) {
+      return new_userdata<stopwatch_unix<T_clock, T_name> >(L, "brigid.stopwatch");
+    }
+
     
-#line 35 "bench_compare.cxx"
-static const int comparator_start = 1;
+#line 84 "stopwatch_unix.cxx"
+static const int stopwatch_name_parser_start = 1;
 
 
-#line 47 "bench_compare.rl"
+#line 151 "stopwatch_unix.rl"
 
+  }
 
-    int test_compare_ragel(const char* name) {
-      int cs = 0;
+  stopwatch* new_stopwatch(lua_State* L) {
+#ifdef CLOCK_MONOTONIC_RAW
+    return new_stopwatch_unix<CLOCK_MONOTONIC_RAW, NAME_CLOCK_MONOTONIC_RAW>(L);
+#else
+    return new_stopwatch_unix<CLOCK_MONOTONIC, NAME_CLOCK_MONOTONIC>(L);
+#endif
+  }
 
-      
-#line 46 "bench_compare.cxx"
+  stopwatch* new_stopwatch(lua_State* L, const char* name) {
+    int cs = 0;
+
+    
+#line 104 "stopwatch_unix.cxx"
 	{
-	cs = comparator_start;
+	cs = stopwatch_name_parser_start;
 	}
 
-#line 53 "bench_compare.rl"
+#line 166 "stopwatch_unix.rl"
 
-      const char* p = name;
-      const char* pe = nullptr;
+    const char* p = name;
+    const char* pe = nullptr;
 
-      
-#line 57 "bench_compare.cxx"
+    
+#line 115 "stopwatch_unix.cxx"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -169,46 +227,92 @@ case 15:
 		goto tr18;
 	goto st0;
 tr18:
-#line 41 "bench_compare.rl"
-	{ return 7; }
+#line 125 "stopwatch_unix.rl"
+	{
+#ifdef CLOCK_BOOTTIME
+            return new_stopwatch_unix<CLOCK_BOOTTIME, NAME_CLOCK_BOOTTIME>(L);
+#else
+            return nullptr;
+#endif
+          }
 	goto st74;
 tr27:
-#line 37 "bench_compare.rl"
-	{ return 3; }
+#line 97 "stopwatch_unix.rl"
+	{
+            return new_stopwatch_unix<CLOCK_MONOTONIC, NAME_CLOCK_MONOTONIC>(L);
+          }
 	goto st74;
 tr36:
-#line 38 "bench_compare.rl"
-	{ return 4; }
+#line 101 "stopwatch_unix.rl"
+	{
+#ifdef CLOCK_MONOTONIC_COARSE
+            return new_stopwatch_unix<CLOCK_MONOTONIC_COARSE, NAME_CLOCK_MONOTONIC_COARSE>(L);
+#else
+            return nullptr;
+#endif
+          }
 	goto st74;
 tr39:
-#line 39 "bench_compare.rl"
-	{ return 5; }
+#line 109 "stopwatch_unix.rl"
+	{
+#ifdef CLOCK_MONOTONIC_RAW
+            return new_stopwatch_unix<CLOCK_MONOTONIC_RAW, NAME_CLOCK_MONOTONIC_RAW>(L);
+#else
+            return nullptr;
+#endif
+          }
 	goto st74;
 tr47:
-#line 40 "bench_compare.rl"
-	{ return 6; }
+#line 117 "stopwatch_unix.rl"
+	{
+#ifdef CLOCK_MONOTONIC_RAW_APPROX
+            return new_stopwatch_unix<CLOCK_MONOTONIC_RAW_APPROX, NAME_CLOCK_MONOTONIC_RAW_APPROX>(L);
+#else
+            return nullptr;
+#endif
+          }
 	goto st74;
 tr55:
-#line 35 "bench_compare.rl"
-	{ return 1; }
+#line 85 "stopwatch_unix.rl"
+	{
+            return new_stopwatch_unix<CLOCK_REALTIME, NAME_CLOCK_REALTIME>(L);
+          }
 	goto st74;
 tr63:
-#line 36 "bench_compare.rl"
-	{ return 2; }
+#line 89 "stopwatch_unix.rl"
+	{
+#ifdef CLOCK_REALTIME_COARSE
+            return new_stopwatch_unix<CLOCK_REALTIME_COARSE, NAME_CLOCK_REALTIME_COARSE>(L);
+#else
+            return nullptr;
+#endif
+          }
 	goto st74;
 tr73:
-#line 42 "bench_compare.rl"
-	{ return 8; }
+#line 133 "stopwatch_unix.rl"
+	{
+#ifdef CLOCK_UPTIME_RAW
+            return new_stopwatch_unix<CLOCK_UPTIME_RAW, NAME_CLOCK_UPTIME_RAW>(L);
+#else
+            return nullptr;
+#endif
+          }
 	goto st74;
 tr81:
-#line 43 "bench_compare.rl"
-	{ return 9; }
+#line 141 "stopwatch_unix.rl"
+	{
+#ifdef CLOCK_UPTIME_RAW_APPROX
+            return new_stopwatch_unix<CLOCK_UPTIME_RAW_APPROX, NAME_CLOCK_UPTIME_RAW_APPROX>(L);
+#else
+            return nullptr;
+#endif
+          }
 	goto st74;
 st74:
 	if ( ++p == pe )
 		goto _test_eof74;
 case 74:
-#line 212 "bench_compare.cxx"
+#line 316 "stopwatch_unix.cxx"
 	goto st0;
 st16:
 	if ( ++p == pe )
@@ -705,140 +809,53 @@ case 73:
 	_out: {}
 	}
 
-#line 58 "bench_compare.rl"
+#line 171 "stopwatch_unix.rl"
 
-      return 0;
-    }
-
-    int test_compare_strcmp(const char* name) {
-      if (strcmp(name, "CLOCK_REALTIME") == 0) {
-        return 1;
-      } else if (strcmp(name, "CLOCK_REALTIME_COARSE") == 0) {
-        return 2;
-      } else if (strcmp(name, "CLOCK_MONOTONIC") == 0) {
-        return 3;
-      } else if (strcmp(name, "CLOCK_MONOTONIC_COARSE") == 0) {
-        return 4;
-      } else if (strcmp(name, "CLOCK_MONOTONIC_RAW") == 0) {
-        return 5;
-      } else if (strcmp(name, "CLOCK_MONOTONIC_RAW_APPROX") == 0) {
-        return 6;
-      } else if (strcmp(name, "CLOCK_BOOTTIME") == 0) {
-        return 7;
-      } else if (strcmp(name, "CLOCK_UPTIME_RAW") == 0) {
-        return 8;
-      } else if (strcmp(name, "CLOCK_UPTIME_RAW_APPROX") == 0) {
-        return 9;
-      } else {
-        return 0;
-      }
-    }
-
-    int test_compare_strcasecmp(const char* name) {
-      if (strcasecmp(name, "CLOCK_REALTIME") == 0) {
-        return 1;
-      } else if (strcasecmp(name, "CLOCK_REALTIME_COARSE") == 0) {
-        return 2;
-      } else if (strcasecmp(name, "CLOCK_MONOTONIC") == 0) {
-        return 3;
-      } else if (strcasecmp(name, "CLOCK_MONOTONIC_COARSE") == 0) {
-        return 4;
-      } else if (strcasecmp(name, "CLOCK_MONOTONIC_RAW") == 0) {
-        return 5;
-      } else if (strcasecmp(name, "CLOCK_MONOTONIC_RAW_APPROX") == 0) {
-        return 6;
-      } else if (strcasecmp(name, "CLOCK_BOOTTIME") == 0) {
-        return 7;
-      } else if (strcasecmp(name, "CLOCK_UPTIME_RAW") == 0) {
-        return 8;
-      } else if (strcasecmp(name, "CLOCK_UPTIME_RAW_APPROX") == 0) {
-        return 9;
-      } else {
-        return 0;
-      }
-    }
-
-    int test_compare_string(const std::string& name) {
-      if (name == "CLOCK_REALTIME") {
-        return 1;
-      } else if (name == "CLOCK_REALTIME_COARSE") {
-        return 2;
-      } else if (name == "CLOCK_MONOTONIC") {
-        return 3;
-      } else if (name == "CLOCK_MONOTONIC_COARSE") {
-        return 4;
-      } else if (name == "CLOCK_MONOTONIC_RAW") {
-        return 5;
-      } else if (name == "CLOCK_MONOTONIC_RAW_APPROX") {
-        return 6;
-      } else if (name == "CLOCK_BOOTTIME") {
-        return 7;
-      } else if (name == "CLOCK_UPTIME_RAW") {
-        return 8;
-      } else if (name == "CLOCK_UPTIME_RAW_APPROX") {
-        return 9;
-      } else {
-        return 0;
-      }
-    }
-
-    int x;
-    void test(const std::string& mode) {
-      x = 0;
-
-      if (mode == "strcmp") {
-        for (int i = 0; i < 1000000; ++i) {
-          for (size_t j = 0; j < sizeof(test_names) / sizeof(test_names[0]); ++j ) {
-            x += test_compare_strcmp(test_names[j]);
-          }
-        }
-      } else if (mode == "strcasecmp") {
-        for (int i = 0; i < 1000000; ++i) {
-          for (size_t j = 0; j < sizeof(test_names) / sizeof(test_names[0]); ++j ) {
-            x += test_compare_strcasecmp(test_names[j]);
-          }
-        }
-      } else if (mode == "string") {
-        for (int i = 0; i < 1000000; ++i) {
-          for (size_t j = 0; j < sizeof(test_names) / sizeof(test_names[0]); ++j ) {
-            x += test_compare_string(test_names[j]);
-          }
-        }
-      } else if (mode == "ragel") {
-        for (int i = 0; i < 1000000; ++i) {
-          for (size_t j = 0; j < sizeof(test_names) / sizeof(test_names[0]); ++j ) {
-            x += test_compare_ragel(test_names[j]);
-          }
-        }
-      } else if (mode == "ragel-each") {
-        for (size_t j = 0; j < sizeof(test_names) / sizeof(test_names[0]); ++j ) {
-          int v = test_compare_ragel(test_names[j]);
-          std::cout << test_names[j] << " " << v << "\n";
-          x += v;
-        }
-      }
-    }
-
-    void bench(int ac, char* av[]) {
-      using clock_type = std::chrono::steady_clock;
-      typename clock_type::time_point started;
-      typename clock_type::time_point stopped;
-
-      std::string mode = "strcmp";
-      if (ac > 1) {
-        mode = av[1];
-      }
-
-      started = clock_type::now();
-      test(mode);
-      stopped = clock_type::now();
-
-      std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(stopped - started).count() << "\n";
-    }
+    return nullptr;
   }
-}
 
-int main(int ac, char* av[]) {
-  brigid::bench(ac, av);
-  return 0;
+  int get_stopwatch_names(lua_State* L, int i) {
+    lua_pushstring(L, NAME_CLOCK_REALTIME);
+    lua_rawseti(L, -2, ++i);
+
+#ifdef CLOCK_REALTIME_COARSE
+    lua_pushstring(L, NAME_CLOCK_REALTIME_COARSE);
+    lua_rawseti(L, -2, ++i);
+#endif
+
+    lua_pushstring(L, NAME_CLOCK_MONOTONIC);
+    lua_rawseti(L, -2, ++i);
+
+#ifdef CLOCK_MONOTONIC_COARSE
+    lua_pushstring(L, NAME_CLOCK_MONOTONIC_COARSE);
+    lua_rawseti(L, -2, ++i);
+#endif
+
+#ifdef CLOCK_MONOTONIC_RAW
+    lua_pushstring(L, NAME_CLOCK_MONOTONIC_RAW);
+    lua_rawseti(L, -2, ++i);
+#endif
+
+#ifdef CLOCK_MONOTONIC_RAW_APPROX
+    lua_pushstring(L, NAME_CLOCK_MONOTONIC_RAW_APPROX);
+    lua_rawseti(L, -2, ++i);
+#endif
+
+#ifdef CLOCK_BOOTTIME
+    lua_pushstring(L, NAME_CLOCK_BOOTTIME);
+    lua_rawseti(L, -2, ++i);
+#endif
+
+#ifdef CLOCK_UPTIME_RAW
+    lua_pushstring(L, NAME_CLOCK_UPTIME_RAW);
+    lua_rawseti(L, -2, ++i);
+#endif
+
+#ifdef CLOCK_UPTIME_RAW_APPROX
+    lua_pushstring(L, NAME_CLOCK_UPTIME_RAW_APPROX);
+    lua_rawseti(L, -2, ++i);
+#endif
+
+    return i;
+  }
 }
