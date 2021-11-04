@@ -5,7 +5,7 @@
 #ifndef BRIGID_COMMON_HPP
 #define BRIGID_COMMON_HPP
 
-#include <brigid/type_traits.hpp>
+#include "type_traits.hpp"
 
 #include <lua.hpp>
 

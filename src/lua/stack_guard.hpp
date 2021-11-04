@@ -5,7 +5,7 @@
 #ifndef BRIGID_STACK_GUARD_HPP
 #define BRIGID_STACK_GUARD_HPP
 
-#include <brigid/noncopyable.hpp>
+#include "noncopyable.hpp"
 
 #include <lua.hpp>
 

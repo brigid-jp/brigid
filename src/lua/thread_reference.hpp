@@ -5,7 +5,7 @@
 #ifndef BRIGID_THREAD_REFERENCE_HPP
 #define BRIGID_THREAD_REFERENCE_HPP
 
-#include <brigid/noncopyable.hpp>
+#include "noncopyable.hpp"
 
 #include <lua.hpp>
 

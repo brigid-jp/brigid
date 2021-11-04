@@ -2,9 +2,8 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <brigid/error.hpp>
-#include <brigid/version.hpp>
 #include "common.hpp"
+#include "error.hpp"
 #include "function.hpp"
 #include "stack_guard.hpp"
 
@@ -47,7 +46,12 @@ namespace brigid {
     }
 
     void impl_get_version(lua_State* L) {
-      lua_pushstring(L, get_version());
+      static const char version[] =
+#define m4_define(_, value) #value;
+#include "brigid_version.m4"
+#undef m4_define
+      ;
+      lua_pushstring(L, version);
     }
   }
 

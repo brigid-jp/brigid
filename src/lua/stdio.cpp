@@ -2,8 +2,8 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <brigid/error.hpp>
-#include <brigid/stdio.hpp>
+#include "error.hpp"
+#include "stdio.hpp"
 
 #include <stdio.h>
 

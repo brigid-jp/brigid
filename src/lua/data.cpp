@@ -2,9 +2,9 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <brigid/error.hpp>
 #include "common.hpp"
 #include "data.hpp"
+#include "error.hpp"
 #include "stack_guard.hpp"
 
 #include <lua.hpp>

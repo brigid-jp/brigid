@@ -2,8 +2,10 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <brigid/http.hpp>
+#include "crypto.hpp"
 
 namespace brigid {
-  http_session::~http_session() {}
+  cryptor::~cryptor() {}
+
+  hasher::~hasher() {}
 }

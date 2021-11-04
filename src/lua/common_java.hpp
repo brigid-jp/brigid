@@ -5,9 +5,9 @@
 #ifndef BRIGID_COMMON_JAVA_HPP
 #define BRIGID_COMMON_JAVA_HPP
 
-#include <brigid/error.hpp>
-#include <brigid/noncopyable.hpp>
-#include <brigid/type_traits.hpp>
+#include "error.hpp"
+#include "noncopyable.hpp"
+#include "type_traits.hpp"
 
 #include <jni.h>
 

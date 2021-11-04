@@ -5,7 +5,7 @@
 #ifndef BRIGID_HTTP_HPP
 #define BRIGID_HTTP_HPP
 
-#include <brigid/noncopyable.hpp>
+#include "noncopyable.hpp"
 
 #include <stddef.h>
 #include <functional>
