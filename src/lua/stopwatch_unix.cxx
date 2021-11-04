@@ -18,14 +18,6 @@
 
 namespace brigid {
   namespace {
-    
-#line 23 "stopwatch_unix.cxx"
-static const int stopwatch_name_parser_start = 1;
-
-
-#line 90 "stopwatch_unix.rl"
-
-
     char NAME_CLOCK_REALTIME[] = "CLOCK_REALTIME";
 #ifdef CLOCK_REALTIME_COARSE
     char NAME_CLOCK_REALTIME_COARSE[] = "CLOCK_REALTIME_COARSE";
@@ -86,6 +78,14 @@ static const int stopwatch_name_parser_start = 1;
     stopwatch* new_stopwatch_unix(lua_State* L) {
       return new_userdata<stopwatch_unix<T_clock, T_name> >(L, "brigid.stopwatch");
     }
+
+    
+#line 84 "stopwatch_unix.cxx"
+static const int stopwatch_name_parser_start = 1;
+
+
+#line 151 "stopwatch_unix.rl"
+
   }
 
   stopwatch* new_stopwatch(lua_State* L) {
@@ -227,7 +227,7 @@ case 15:
 		goto tr18;
 	goto st0;
 tr18:
-#line 64 "stopwatch_unix.rl"
+#line 125 "stopwatch_unix.rl"
 	{
 #ifdef CLOCK_BOOTTIME
             return new_stopwatch_unix<CLOCK_BOOTTIME, NAME_CLOCK_BOOTTIME>(L);
@@ -237,13 +237,13 @@ tr18:
           }
 	goto st74;
 tr27:
-#line 36 "stopwatch_unix.rl"
+#line 97 "stopwatch_unix.rl"
 	{
             return new_stopwatch_unix<CLOCK_MONOTONIC, NAME_CLOCK_MONOTONIC>(L);
           }
 	goto st74;
 tr36:
-#line 40 "stopwatch_unix.rl"
+#line 101 "stopwatch_unix.rl"
 	{
 #ifdef CLOCK_MONOTONIC_COARSE
             return new_stopwatch_unix<CLOCK_MONOTONIC_COARSE, NAME_CLOCK_MONOTONIC_COARSE>(L);
@@ -253,7 +253,7 @@ tr36:
           }
 	goto st74;
 tr39:
-#line 48 "stopwatch_unix.rl"
+#line 109 "stopwatch_unix.rl"
 	{
 #ifdef CLOCK_MONOTONIC_RAW
             return new_stopwatch_unix<CLOCK_MONOTONIC_RAW, NAME_CLOCK_MONOTONIC_RAW>(L);
@@ -263,7 +263,7 @@ tr39:
           }
 	goto st74;
 tr47:
-#line 56 "stopwatch_unix.rl"
+#line 117 "stopwatch_unix.rl"
 	{
 #ifdef CLOCK_MONOTONIC_RAW_APPROX
             return new_stopwatch_unix<CLOCK_MONOTONIC_RAW_APPROX, NAME_CLOCK_MONOTONIC_RAW_APPROX>(L);
@@ -273,13 +273,13 @@ tr47:
           }
 	goto st74;
 tr55:
-#line 24 "stopwatch_unix.rl"
+#line 85 "stopwatch_unix.rl"
 	{
             return new_stopwatch_unix<CLOCK_REALTIME, NAME_CLOCK_REALTIME>(L);
           }
 	goto st74;
 tr63:
-#line 28 "stopwatch_unix.rl"
+#line 89 "stopwatch_unix.rl"
 	{
 #ifdef CLOCK_REALTIME_COARSE
             return new_stopwatch_unix<CLOCK_REALTIME_COARSE, NAME_CLOCK_REALTIME_COARSE>(L);
@@ -289,7 +289,7 @@ tr63:
           }
 	goto st74;
 tr73:
-#line 72 "stopwatch_unix.rl"
+#line 133 "stopwatch_unix.rl"
 	{
 #ifdef CLOCK_UPTIME_RAW
             return new_stopwatch_unix<CLOCK_UPTIME_RAW, NAME_CLOCK_UPTIME_RAW>(L);
@@ -299,7 +299,7 @@ tr73:
           }
 	goto st74;
 tr81:
-#line 80 "stopwatch_unix.rl"
+#line 141 "stopwatch_unix.rl"
 	{
 #ifdef CLOCK_UPTIME_RAW_APPROX
             return new_stopwatch_unix<CLOCK_UPTIME_RAW_APPROX, NAME_CLOCK_UPTIME_RAW_APPROX>(L);

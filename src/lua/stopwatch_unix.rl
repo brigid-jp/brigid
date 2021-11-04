@@ -16,6 +16,67 @@
 
 namespace brigid {
   namespace {
+    char NAME_CLOCK_REALTIME[] = "CLOCK_REALTIME";
+#ifdef CLOCK_REALTIME_COARSE
+    char NAME_CLOCK_REALTIME_COARSE[] = "CLOCK_REALTIME_COARSE";
+#endif
+    char NAME_CLOCK_MONOTONIC[] = "CLOCK_MONOTONIC";
+#ifdef CLOCK_MONOTONIC_COARSE
+    char NAME_CLOCK_MONOTONIC_COARSE[] = "CLOCK_MONOTONIC_COARSE";
+#endif
+#ifdef CLOCK_MONOTONIC_RAW
+    char NAME_CLOCK_MONOTONIC_RAW[] = "CLOCK_MONOTONIC_RAW";
+#endif
+#ifdef CLOCK_MONOTONIC_RAW_APPROX
+    char NAME_CLOCK_MONOTONIC_RAW_APPROX[] = "CLOCK_MONOTONIC_RAW_APPROX";
+#endif
+#ifdef CLOCK_BOOTTIME
+    char NAME_CLOCK_BOOTTIME[] = "CLOCK_BOOTTIME";
+#endif
+#ifdef CLOCK_UPTIME_RAW
+    char NAME_CLOCK_UPTIME_RAW[] = "CLOCK_UPTIME_RAW";
+#endif
+#ifdef CLOCK_UPTIME_RAW_APPROX
+    char NAME_CLOCK_UPTIME_RAW_APPROX[] = "CLOCK_UPTIME_RAW_APPROX";
+#endif
+
+    template <clockid_t T_clock, const char* T_name>
+    class stopwatch_unix : public stopwatch, private noncopyable {
+    public:
+      stopwatch_unix()
+        : started_(),
+          stopped_() {}
+
+      virtual const char* get_name() const {
+        return T_name;
+      }
+
+      virtual void start() {
+        if (clock_gettime(T_clock, &started_) == -1) {
+          throw BRIGID_SYSTEM_ERROR();
+        }
+      }
+
+      virtual void stop() {
+        if (clock_gettime(T_clock, &stopped_) == -1) {
+          throw BRIGID_SYSTEM_ERROR();
+        }
+      }
+
+      virtual int64_t get_elapsed() const {
+        return (stopped_.tv_sec - started_.tv_sec) * 1000000000LL + stopped_.tv_nsec - started_.tv_nsec;
+      }
+
+    private:
+      struct timespec started_;
+      struct timespec stopped_;
+    };
+
+    template <clockid_t T_clock, const char* T_name>
+    stopwatch* new_stopwatch_unix(lua_State* L) {
+      return new_userdata<stopwatch_unix<T_clock, T_name> >(L, "brigid.stopwatch");
+    }
+
     %%{
       machine stopwatch_name_parser;
 
@@ -88,67 +149,6 @@ namespace brigid {
 
       write data noerror nofinal noentry;
     }%%
-
-    char NAME_CLOCK_REALTIME[] = "CLOCK_REALTIME";
-#ifdef CLOCK_REALTIME_COARSE
-    char NAME_CLOCK_REALTIME_COARSE[] = "CLOCK_REALTIME_COARSE";
-#endif
-    char NAME_CLOCK_MONOTONIC[] = "CLOCK_MONOTONIC";
-#ifdef CLOCK_MONOTONIC_COARSE
-    char NAME_CLOCK_MONOTONIC_COARSE[] = "CLOCK_MONOTONIC_COARSE";
-#endif
-#ifdef CLOCK_MONOTONIC_RAW
-    char NAME_CLOCK_MONOTONIC_RAW[] = "CLOCK_MONOTONIC_RAW";
-#endif
-#ifdef CLOCK_MONOTONIC_RAW_APPROX
-    char NAME_CLOCK_MONOTONIC_RAW_APPROX[] = "CLOCK_MONOTONIC_RAW_APPROX";
-#endif
-#ifdef CLOCK_BOOTTIME
-    char NAME_CLOCK_BOOTTIME[] = "CLOCK_BOOTTIME";
-#endif
-#ifdef CLOCK_UPTIME_RAW
-    char NAME_CLOCK_UPTIME_RAW[] = "CLOCK_UPTIME_RAW";
-#endif
-#ifdef CLOCK_UPTIME_RAW_APPROX
-    char NAME_CLOCK_UPTIME_RAW_APPROX[] = "CLOCK_UPTIME_RAW_APPROX";
-#endif
-
-    template <clockid_t T_clock, const char* T_name>
-    class stopwatch_unix : public stopwatch, private noncopyable {
-    public:
-      stopwatch_unix()
-        : started_(),
-          stopped_() {}
-
-      virtual const char* get_name() const {
-        return T_name;
-      }
-
-      virtual void start() {
-        if (clock_gettime(T_clock, &started_) == -1) {
-          throw BRIGID_SYSTEM_ERROR();
-        }
-      }
-
-      virtual void stop() {
-        if (clock_gettime(T_clock, &stopped_) == -1) {
-          throw BRIGID_SYSTEM_ERROR();
-        }
-      }
-
-      virtual int64_t get_elapsed() const {
-        return (stopped_.tv_sec - started_.tv_sec) * 1000000000LL + stopped_.tv_nsec - started_.tv_nsec;
-      }
-
-    private:
-      struct timespec started_;
-      struct timespec stopped_;
-    };
-
-    template <clockid_t T_clock, const char* T_name>
-    stopwatch* new_stopwatch_unix(lua_State* L) {
-      return new_userdata<stopwatch_unix<T_clock, T_name> >(L, "brigid.stopwatch");
-    }
   }
 
   stopwatch* new_stopwatch(lua_State* L) {
