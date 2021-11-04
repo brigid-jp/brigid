@@ -32,6 +32,7 @@ brigid_la_SOURCES = \
 	function.cpp \
 	hasher.cpp \
 	http.cpp \
+	http_impl.cpp \
 	json.cpp \
 	json_parse.cxx \
 	module.cpp \
