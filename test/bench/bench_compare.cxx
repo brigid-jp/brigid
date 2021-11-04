@@ -786,7 +786,7 @@ case 73:
     void test(const std::string& mode) {
       x = 0;
 
-if (mode == "strcmp") {
+      if (mode == "strcmp") {
         for (int i = 0; i < 1000000; ++i) {
           for (size_t j = 0; j < sizeof(test_names) / sizeof(test_names[0]); ++j ) {
             x += test_compare_strcmp(test_names[j]);
