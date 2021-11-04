@@ -3,9 +3,9 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/error.hpp>
-#include <brigid/http.hpp>
 #include <brigid/noncopyable.hpp>
 #include <brigid/stdio.hpp>
+#include "http.hpp"
 #include "http_impl.hpp"
 
 #include <sys/types.h>

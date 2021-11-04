@@ -50,6 +50,15 @@ brigid_la_SOURCES += crypto_openssl.cpp
 endif
 endif
 
+if HTTP_APPLE
+brigid_la_SOURCES += http_apple.mm
+else
+if HTTP_CURL
+brigid_la_CPPFLAGS += $(CURL_CFLAGS)
+brigid_la_SOURCES += http_curl.cpp
+endif
+endif
+
 if CRYPTO_OPENSSL
 brigid_la_LDFLAGS += $(OPENSSL_LDFLAGS)
 brigid_la_LIBADD += $(OPENSSL_LIBS)
@@ -67,4 +76,6 @@ endif
 EXTRA_DIST = \
 	*.rl
 	crypto_java.cpp \
-	crypto_windows.cpp
+	crypto_windows.cpp \
+	http_java.cpp \
+	http_windows.cpp

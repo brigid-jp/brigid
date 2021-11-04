@@ -3,8 +3,8 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include <brigid/error.hpp>
-#include <brigid/http.hpp>
 #include <brigid/noncopyable.hpp>
+#include "http.hpp"
 #include "common.hpp"
 #include "data.hpp"
 #include "function.hpp"
@@ -309,6 +309,8 @@ namespace brigid {
       }
     }
   }
+
+  http_session::~http_session() {}
 
   void initialize_http(lua_State* L) {
     try {
