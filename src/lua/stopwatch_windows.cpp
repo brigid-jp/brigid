@@ -77,11 +77,7 @@ namespace brigid {
 
   stopwatch* new_stopwatch(lua_State* L, const char* name) {
     if (strcmp(name, "QueryPerformanceCounter") == 0) {
-      if (frequency == 10000000) {
-        return new_userdata<stopwatch_windows_10mhz>(L, "brigid.stopwatch");
-      } else {
-        return new_userdata<stopwatch_windows>(L, "brigid.stopwatch");
-      }
+      return new_stopwatch(L);
     }
     return nullptr;
   }
