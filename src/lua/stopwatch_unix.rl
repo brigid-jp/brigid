@@ -12,7 +12,6 @@
 #include <lua.hpp>
 
 #include <stdint.h>
-#include <string.h>
 #include <time.h>
 
 namespace brigid {
@@ -21,11 +20,11 @@ namespace brigid {
       machine stopwatch_name_parser;
 
       main :=
-        ( "CLOCK_REALTIME" 0
+        ( "CLOCK_REALTIME\0"
           @{
             return new_stopwatch_unix<CLOCK_REALTIME, NAME_CLOCK_REALTIME>(L);
           }
-        | "CLOCK_REALTIME_COARSE" 0
+        | "CLOCK_REALTIME_COARSE\0"
           @{
 #ifdef CLOCK_REALTIME_COARSE
             return new_stopwatch_unix<CLOCK_REALTIME_COARSE, NAME_CLOCK_REALTIME_COARSE>(L);
@@ -33,11 +32,11 @@ namespace brigid {
             return nullptr;
 #endif
           }
-        | "CLOCK_MONOTONIC" 0
+        | "CLOCK_MONOTONIC\0"
           @{
             return new_stopwatch_unix<CLOCK_MONOTONIC, NAME_CLOCK_MONOTONIC>(L);
           }
-        | "CLOCK_MONOTONIC_COARSE" 0
+        | "CLOCK_MONOTONIC_COARSE\0"
           @{
 #ifdef CLOCK_MONOTONIC_COARSE
             return new_stopwatch_unix<CLOCK_MONOTONIC_COARSE, NAME_CLOCK_MONOTONIC_COARSE>(L);
@@ -45,7 +44,7 @@ namespace brigid {
             return nullptr;
 #endif
           }
-        | "CLOCK_MONOTONIC_RAW" 0
+        | "CLOCK_MONOTONIC_RAW\0"
           @{
 #ifdef CLOCK_MONOTONIC_RAW
             return new_stopwatch_unix<CLOCK_MONOTONIC_RAW, NAME_CLOCK_MONOTONIC_RAW>(L);
@@ -53,7 +52,7 @@ namespace brigid {
             return nullptr;
 #endif
           }
-        | "CLOCK_MONOTONIC_RAW_APPROX" 0
+        | "CLOCK_MONOTONIC_RAW_APPROX\0"
           @{
 #ifdef CLOCK_MONOTONIC_RAW_APPROX
             return new_stopwatch_unix<CLOCK_MONOTONIC_RAW_APPROX, NAME_CLOCK_MONOTONIC_RAW_APPROX>(L);
@@ -61,7 +60,7 @@ namespace brigid {
             return nullptr;
 #endif
           }
-        | "CLOCK_BOOTTIME" 0
+        | "CLOCK_BOOTTIME\0"
           @{
 #ifdef CLOCK_BOOTTIME
             return new_stopwatch_unix<CLOCK_BOOTTIME, NAME_CLOCK_BOOTTIME>(L);
@@ -69,7 +68,7 @@ namespace brigid {
             return nullptr;
 #endif
           }
-        | "CLOCK_UPTIME_RAW" 0
+        | "CLOCK_UPTIME_RAW\0"
           @{
 #ifdef CLOCK_UPTIME_RAW
             return new_stopwatch_unix<CLOCK_UPTIME_RAW, NAME_CLOCK_UPTIME_RAW>(L);
@@ -77,7 +76,7 @@ namespace brigid {
             return nullptr;
 #endif
           }
-        | "CLOCK_UPTIME_RAW_APPROX" 0
+        | "CLOCK_UPTIME_RAW_APPROX\0"
           @{
 #ifdef CLOCK_UPTIME_RAW_APPROX
             return new_stopwatch_unix<CLOCK_UPTIME_RAW_APPROX, NAME_CLOCK_UPTIME_RAW_APPROX>(L);
