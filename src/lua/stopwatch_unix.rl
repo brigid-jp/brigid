@@ -1,3 +1,5 @@
+// vim: syntax=ragel:
+
 // Copyright (c) 2021 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
@@ -15,6 +17,79 @@
 
 namespace brigid {
   namespace {
+    %%{
+      machine stopwatch_name_parser;
+
+      main :=
+        ( "CLOCK_REALTIME" 0
+          @{
+            return new_stopwatch_unix<CLOCK_REALTIME, NAME_CLOCK_REALTIME>(L);
+          }
+        | "CLOCK_REALTIME_COARSE" 0
+          @{
+#ifdef CLOCK_REALTIME_COARSE
+            return new_stopwatch_unix<CLOCK_REALTIME_COARSE, NAME_CLOCK_REALTIME_COARSE>(L);
+#else
+            return nullptr;
+#endif
+          }
+        | "CLOCK_MONOTONIC" 0
+          @{
+            return new_stopwatch_unix<CLOCK_MONOTONIC, NAME_CLOCK_MONOTONIC>(L);
+          }
+        | "CLOCK_MONOTONIC_COARSE" 0
+          @{
+#ifdef CLOCK_MONOTONIC_COARSE
+            return new_stopwatch_unix<CLOCK_MONOTONIC_COARSE, NAME_CLOCK_MONOTONIC_COARSE>(L);
+#else
+            return nullptr;
+#endif
+          }
+        | "CLOCK_MONOTONIC_RAW" 0
+          @{
+#ifdef CLOCK_MONOTONIC_RAW
+            return new_stopwatch_unix<CLOCK_MONOTONIC_RAW, NAME_CLOCK_MONOTONIC_RAW>(L);
+#else
+            return nullptr;
+#endif
+          }
+        | "CLOCK_MONOTONIC_RAW_APPROX" 0
+          @{
+#ifdef CLOCK_MONOTONIC_RAW_APPROX
+            return new_stopwatch_unix<CLOCK_MONOTONIC_RAW_APPROX, NAME_CLOCK_MONOTONIC_RAW_APPROX>(L);
+#else
+            return nullptr;
+#endif
+          }
+        | "CLOCK_BOOTTIME" 0
+          @{
+#ifdef CLOCK_BOOTTIME
+            return new_stopwatch_unix<CLOCK_BOOTTIME, NAME_CLOCK_BOOTTIME>(L);
+#else
+            return nullptr;
+#endif
+          }
+        | "CLOCK_UPTIME_RAW" 0
+          @{
+#ifdef CLOCK_UPTIME_RAW
+            return new_stopwatch_unix<CLOCK_UPTIME_RAW, NAME_CLOCK_UPTIME_RAW>(L);
+#else
+            return nullptr;
+#endif
+          }
+        | "CLOCK_UPTIME_RAW_APPROX" 0
+          @{
+#ifdef CLOCK_UPTIME_RAW_APPROX
+            return new_stopwatch_unix<CLOCK_UPTIME_RAW_APPROX, NAME_CLOCK_UPTIME_RAW_APPROX>(L);
+#else
+            return nullptr;
+#endif
+          }
+        );
+
+      write data noerror nofinal noentry;
+    }%%
+
     char NAME_CLOCK_REALTIME[] = "CLOCK_REALTIME";
 #ifdef CLOCK_REALTIME_COARSE
     char NAME_CLOCK_REALTIME_COARSE[] = "CLOCK_REALTIME_COARSE";
@@ -86,55 +161,14 @@ namespace brigid {
   }
 
   stopwatch* new_stopwatch(lua_State* L, const char* name) {
-    if (strcmp(name, NAME_CLOCK_REALTIME) == 0) {
-      return new_stopwatch_unix<CLOCK_REALTIME, NAME_CLOCK_REALTIME>(L);
-    }
+    int cs = 0;
 
-#ifdef CLOCK_REALTIME_COARSE
-    if (strcmp(name, NAME_CLOCK_REALTIME_COARSE) == 0) {
-      return new_stopwatch_unix<CLOCK_REALTIME_COARSE, NAME_CLOCK_REALTIME_COARSE>(L);
-    }
-#endif
+    %%write init;
 
-    if (strcmp(name, NAME_CLOCK_MONOTONIC) == 0) {
-      return new_stopwatch_unix<CLOCK_MONOTONIC, NAME_CLOCK_MONOTONIC>(L);
-    }
+    const char* p = name;
+    const char* pe = nullptr;
 
-#ifdef CLOCK_MONOTONIC_COARSE
-    if (strcmp(name, NAME_CLOCK_MONOTONIC_COARSE) == 0) {
-      return new_stopwatch_unix<CLOCK_MONOTONIC_COARSE, NAME_CLOCK_MONOTONIC_COARSE>(L);
-    }
-#endif
-
-#ifdef CLOCK_MONOTONIC_RAW
-    if (strcmp(name, NAME_CLOCK_MONOTONIC_RAW) == 0) {
-      return new_stopwatch_unix<CLOCK_MONOTONIC_RAW, NAME_CLOCK_MONOTONIC_RAW>(L);
-    }
-#endif
-
-#ifdef CLOCK_MONOTONIC_RAW_APPROX
-    if (strcmp(name, NAME_CLOCK_MONOTONIC_RAW_APPROX) == 0) {
-      return new_stopwatch_unix<CLOCK_MONOTONIC_RAW_APPROX, NAME_CLOCK_MONOTONIC_RAW_APPROX>(L);
-    }
-#endif
-
-#ifdef CLOCK_BOOTTIME
-    if (strcmp(name, NAME_CLOCK_BOOTTIME) == 0) {
-      return new_stopwatch_unix<CLOCK_BOOTTIME, NAME_CLOCK_BOOTTIME>(L);
-    }
-#endif
-
-#ifdef CLOCK_UPTIME_RAW
-    if (strcmp(name, NAME_CLOCK_UPTIME_RAW) == 0) {
-      return new_stopwatch_unix<CLOCK_UPTIME_RAW, NAME_CLOCK_UPTIME_RAW>(L);
-    }
-#endif
-
-#ifdef CLOCK_UPTIME_RAW_APPROX
-    if (strcmp(name, NAME_CLOCK_UPTIME_RAW_APPROX) == 0) {
-      return new_stopwatch_unix<CLOCK_UPTIME_RAW_APPROX, NAME_CLOCK_UPTIME_RAW_APPROX>(L);
-    }
-#endif
+    %%write exec;
 
     return nullptr;
   }
