@@ -9,7 +9,6 @@
 
 #include <lua.hpp>
 
-#include <cstddef>
 #include <limits>
 #include <memory>
 #include <type_traits>
@@ -20,6 +19,8 @@ namespace brigid {
   static const int check_validate_not_closed = 1;
   static const int check_validate_not_running = 2;
   static const int check_validate_all = 3;
+
+  using nullptr_t = decltype(nullptr);
 
   namespace detail {
     void push_pointer(lua_State*, const void*);
@@ -32,12 +33,12 @@ namespace brigid {
   void set_metatable(lua_State*, const char*);
   bool is_false(lua_State*, int);
 
-  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) <= sizeof(lua_Integer)), std::nullptr_t> = nullptr>
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) <= sizeof(lua_Integer)), nullptr_t> = nullptr>
   inline void push_integer(lua_State* L, T source) {
     lua_pushinteger(L, source);
   }
 
-  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) > sizeof(lua_Integer)), std::nullptr_t> = nullptr>
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) > sizeof(lua_Integer)), nullptr_t> = nullptr>
   inline void push_integer(lua_State* L, T source) {
     static const T max = std::numeric_limits<lua_Integer>::max();
     static const T min = std::numeric_limits<lua_Integer>::min();
@@ -48,12 +49,12 @@ namespace brigid {
     }
   }
 
-  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) < sizeof(lua_Integer)), std::nullptr_t> = nullptr>
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) < sizeof(lua_Integer)), nullptr_t> = nullptr>
   inline void push_integer(lua_State* L, T source) {
     lua_pushinteger(L, source);
   }
 
-  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) >= sizeof(lua_Integer)), std::nullptr_t> = nullptr>
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) >= sizeof(lua_Integer)), nullptr_t> = nullptr>
   inline void push_integer(lua_State* L, T source) {
     static const T max = std::numeric_limits<lua_Integer>::max();
     if (source <= max) {
@@ -63,7 +64,7 @@ namespace brigid {
     }
   }
 
-  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) < sizeof(lua_Integer)), std::nullptr_t> = nullptr>
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) < sizeof(lua_Integer)), nullptr_t> = nullptr>
   inline T check_integer(lua_State* L, int arg) {
     static const lua_Integer max = std::numeric_limits<T>::max();
     static const lua_Integer min = std::numeric_limits<T>::min();
@@ -74,12 +75,12 @@ namespace brigid {
     return luaL_argerror(L, arg, "out of bounds");
   }
 
-  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) >= sizeof(lua_Integer)), std::nullptr_t> = nullptr>
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) >= sizeof(lua_Integer)), nullptr_t> = nullptr>
   inline T check_integer(lua_State* L, int arg) {
     return luaL_checkinteger(L, arg);
   }
 
-  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) < sizeof(lua_Integer)), std::nullptr_t> = nullptr>
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) < sizeof(lua_Integer)), nullptr_t> = nullptr>
   inline T check_integer(lua_State* L, int arg) {
     static const lua_Integer max = std::numeric_limits<T>::max();
     lua_Integer result = luaL_checkinteger(L, arg);
@@ -89,7 +90,7 @@ namespace brigid {
     return luaL_argerror(L, arg, "out of bounds");
   }
 
-  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) >= sizeof(lua_Integer)), std::nullptr_t> = nullptr>
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) >= sizeof(lua_Integer)), nullptr_t> = nullptr>
   inline T check_integer(lua_State* L, int arg) {
     lua_Integer result = luaL_checkinteger(L, arg);
     if (0 <= result) {
@@ -111,12 +112,12 @@ namespace brigid {
     return static_cast<T*>(luaL_checkudata(L, arg, name));
   }
 
-  template <class T, enable_if_t<std::is_pointer<T>::value, std::nullptr_t> = nullptr>
+  template <class T, enable_if_t<std::is_pointer<T>::value, nullptr_t> = nullptr>
   inline void push_pointer(lua_State* L, T source) {
     detail::push_pointer(L, reinterpret_cast<const void*>(source));
   }
 
-  template <class T, enable_if_t<std::is_pointer<T>::value, std::nullptr_t> = nullptr>
+  template <class T, enable_if_t<std::is_pointer<T>::value, nullptr_t> = nullptr>
   inline T to_pointer(lua_State* L, int index) {
     return reinterpret_cast<T>(detail::to_pointer(L, index));
   }
