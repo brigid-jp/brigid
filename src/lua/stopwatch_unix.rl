@@ -159,6 +159,11 @@ namespace brigid {
 #endif
   }
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
+
   stopwatch* new_stopwatch(lua_State* L, const char* name) {
     int cs = 0;
     %%write init;
@@ -167,6 +172,10 @@ namespace brigid {
     %%write exec;
     return nullptr;
   }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
   int get_stopwatch_names(lua_State* L, int i) {
     lua_pushstring(L, NAME_CLOCK_REALTIME);

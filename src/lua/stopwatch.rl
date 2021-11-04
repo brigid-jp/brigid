@@ -65,6 +65,11 @@ namespace brigid {
       write data noerror nofinal noentry;
     }%%
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
+
     stopwatch* new_stopwatch_chrono(lua_State* L, const char* name) {
       int cs = 0;
       %%write init;
@@ -73,6 +78,10 @@ namespace brigid {
       %%write exec;
       return nullptr;
     }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
     stopwatch* check_stopwatch(lua_State* L, int arg) {
       return check_udata<stopwatch>(L, arg, "brigid.stopwatch");

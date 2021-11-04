@@ -96,19 +96,24 @@ static const int stopwatch_name_chooser_start = 1;
 #endif
   }
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
+
   stopwatch* new_stopwatch(lua_State* L, const char* name) {
     int cs = 0;
     
-#line 103 "stopwatch_unix.cxx"
+#line 108 "stopwatch_unix.cxx"
 	{
 	cs = stopwatch_name_chooser_start;
 	}
 
-#line 165 "stopwatch_unix.rl"
+#line 170 "stopwatch_unix.rl"
     const char* p = name;
     const char* pe = nullptr;
     
-#line 112 "stopwatch_unix.cxx"
+#line 117 "stopwatch_unix.cxx"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -309,7 +314,7 @@ st74:
 	if ( ++p == pe )
 		goto _test_eof74;
 case 74:
-#line 313 "stopwatch_unix.cxx"
+#line 318 "stopwatch_unix.cxx"
 	goto st0;
 st16:
 	if ( ++p == pe )
@@ -806,9 +811,13 @@ case 73:
 	_out: {}
 	}
 
-#line 168 "stopwatch_unix.rl"
+#line 173 "stopwatch_unix.rl"
     return nullptr;
   }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
   int get_stopwatch_names(lua_State* L, int i) {
     lua_pushstring(L, NAME_CLOCK_REALTIME);
