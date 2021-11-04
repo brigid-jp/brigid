@@ -6,29 +6,29 @@ CPPFLAGS = /I$(LUA_INCDIR) /I. /Iinclude /D_CRT_SECURE_NO_WARNINGS
 CXXFLAGS = $(CFLAGS) /W3 /EHsc
 
 OBJS = \
+	src\lua\common.obj \
 	src\lua\common_windows.obj \
 	src\lua\crypto.obj \
 	src\lua\crypto_windows.obj \
-	src\lua\error.obj \
-	src\lua\http.obj \
-	src\lua\http_impl.obj \
-	src\lua\http_windows.obj \
-	src\lua\stdio.obj \
-	src\lua\common.obj \
 	src\lua\cryptor.obj \
 	src\lua\data.obj \
 	src\lua\data_writer.obj \
+	src\lua\error.obj \
 	src\lua\file_writer.obj \
 	src\lua\function.obj \
 	src\lua\hasher.obj \
+	src\lua\http.obj \
+	src\lua\http_impl.obj \
+	src\lua\http_windows.obj \
 	src\lua\json.obj \
 	src\lua\json_parse.obj \
 	src\lua\module.obj \
 	src\lua\scope_exit.obj \
 	src\lua\stack_guard.obj \
-	src\lua\thread_reference.obj \
+	src\lua\stdio.obj \
 	src\lua\stopwatch.obj \
 	src\lua\stopwatch_windows.obj \
+	src\lua\thread_reference.obj \
 	src\lua\view.obj
 TARGET = brigid.dll
 
