@@ -2,10 +2,10 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <brigid/crypto.hpp>
 #include <brigid/error.hpp>
 #include <brigid/noncopyable.hpp>
 #include "common.hpp"
+#include "crypto.hpp"
 #include "data.hpp"
 #include "function.hpp"
 

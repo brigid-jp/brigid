@@ -12,20 +12,10 @@ noinst_HEADERS = \
 libbrigid_la_CPPFLAGS = -I$(top_srcdir)/include
 libbrigid_la_LDFLAGS = -static
 libbrigid_la_SOURCES = \
-	crypto.cpp \
 	error.cpp \
 	http.cpp \
 	http_impl.cpp \
 	stdio.cpp
-
-if CRYPTO_APPLE
-libbrigid_la_SOURCES += crypto_apple.cpp
-else
-if CRYPTO_OPENSSL
-libbrigid_la_CPPFLAGS += $(OPENSSL_INCLUDES)
-libbrigid_la_SOURCES += crypto_openssl.cpp
-endif
-endif
 
 if HTTP_APPLE
 libbrigid_la_SOURCES += http_apple.mm
@@ -39,8 +29,6 @@ endif
 EXTRA_DIST = \
 	common_java.cpp \
 	common_windows.cpp \
-	crypto_java.cpp \
-	crypto_windows.cpp \
 	http_java.cpp \
 	http_windows.cpp \
 	java.mk \

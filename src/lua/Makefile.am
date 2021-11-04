@@ -23,6 +23,7 @@ brigid_la_LDFLAGS = -module -avoid-version -shared
 brigid_la_LIBADD = $(top_srcdir)/src/lib/libbrigid.la
 brigid_la_SOURCES = \
 	common.cpp \
+	crypto.cpp \
 	cryptor.cpp \
 	data.cpp \
 	data_writer.cpp \
@@ -40,6 +41,15 @@ brigid_la_SOURCES = \
 	thread_reference.cpp \
 	view.cpp
 
+if CRYPTO_APPLE
+brigid_la_SOURCES += crypto_apple.cpp
+else
+if CRYPTO_OPENSSL
+brigid_la_CPPFLAGS += $(OPENSSL_INCLUDES)
+brigid_la_SOURCES += crypto_openssl.cpp
+endif
+endif
+
 if CRYPTO_OPENSSL
 brigid_la_LDFLAGS += $(OPENSSL_LDFLAGS)
 brigid_la_LIBADD += $(OPENSSL_LIBS)
@@ -54,4 +64,7 @@ brigid_la_LIBADD += $(CURL_LIBS)
 endif
 endif
 
-EXTRA_DIST = *.rl
+EXTRA_DIST = \
+	*.rl
+	crypto_java.cpp \
+	crypto_windows.cpp
