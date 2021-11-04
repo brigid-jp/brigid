@@ -78,7 +78,7 @@ namespace brigid {
     }
 
     %%{
-      machine stopwatch_name_parser;
+      machine stopwatch_name_chooser;
 
       main :=
         ( "CLOCK_REALTIME\0"
