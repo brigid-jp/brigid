@@ -161,14 +161,10 @@ namespace brigid {
 
   stopwatch* new_stopwatch(lua_State* L, const char* name) {
     int cs = 0;
-
     %%write init;
-
     const char* p = name;
     const char* pe = nullptr;
-
     %%write exec;
-
     return nullptr;
   }
 
