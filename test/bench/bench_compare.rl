@@ -32,15 +32,15 @@ namespace brigid {
       machine comparator;
 
       main :=
-        ( /CLOCK_REALTIME/             @{ return 1; }
-        | /CLOCK_REALTIME_COARSE/      @{ return 2; }
-        | /CLOCK_MONOTONIC/            @{ return 3; }
-        | /CLOCK_MONOTONIC_COARSE/     @{ return 4; }
-        | /CLOCK_MONOTONIC_RAW/        @{ return 5; }
-        | /CLOCK_MONOTONIC_RAW_APPROX/ @{ return 6; }
-        | /CLOCK_BOOTTIME/             @{ return 7; }
-        | /CLOCK_UPTIME_RAW/           @{ return 8; }
-        | /CLOCK_UPTIME_RAW_APPROX/    @{ return 9; }
+        ( /CLOCK_REALTIME/             0 @{ return 1; }
+        | /CLOCK_REALTIME_COARSE/      0 @{ return 2; }
+        | /CLOCK_MONOTONIC/            0 @{ return 3; }
+        | /CLOCK_MONOTONIC_COARSE/     0 @{ return 4; }
+        | /CLOCK_MONOTONIC_RAW/        0 @{ return 5; }
+        | /CLOCK_MONOTONIC_RAW_APPROX/ 0 @{ return 6; }
+        | /CLOCK_BOOTTIME/             0 @{ return 7; }
+        | /CLOCK_UPTIME_RAW/           0 @{ return 8; }
+        | /CLOCK_UPTIME_RAW_APPROX/    0 @{ return 9; }
         );
 
       write data noerror nofinal noentry;
@@ -158,6 +158,12 @@ namespace brigid {
           for (size_t j = 0; j < sizeof(test_names) / sizeof(test_names[0]); ++j ) {
             x += test_compare_ragel(test_names[j]);
           }
+        }
+      } else if (mode == "ragel-each") {
+        for (size_t j = 0; j < sizeof(test_names) / sizeof(test_names[0]); ++j ) {
+          int v = test_compare_ragel(test_names[j]);
+          std::cout << test_names[j] << " " << v << "\n";
+          x += v;
         }
       }
     }
