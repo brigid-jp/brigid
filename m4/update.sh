@@ -5,6 +5,7 @@
 # https://opensource.org/licenses/mit-license.php
 
 for i in \
+  ax_check_java_home.m4 \
   ax_check_openssl.m4 \
   ax_compare_version.m4 \
   ax_cxx_compile_stdcxx.m4 \

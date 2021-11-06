@@ -30,6 +30,7 @@ AX_LUA_HEADERS([], [AC_MSG_ERROR([could not find lua])])
 AX_PROG_JAVAC
 AX_PROG_JAVA
 AX_JAVA_OPTIONS
+AX_CHECK_JAVA_HOME
 
 AC_CHECK_HEADERS([CommonCrypto/CommonCrypto.h], [
   AC_DEFINE(CRYPTO_APPLE, 1, [Define to 1 if using CommonCrypto.])
