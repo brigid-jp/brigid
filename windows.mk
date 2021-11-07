@@ -2,7 +2,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
-CPPFLAGS = /I$(LUA_INCDIR) /I. /Iinclude /D_CRT_SECURE_NO_WARNINGS
+CPPFLAGS = /I$(LUA_INCDIR) /I. /D_CRT_SECURE_NO_WARNINGS
 CXXFLAGS = $(CFLAGS) /W3 /EHsc
 
 OBJS = \
