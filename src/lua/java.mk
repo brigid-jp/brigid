@@ -13,6 +13,7 @@ CXXFLAGS = -Wall -W -Wno-missing-field-initializers -std=c++11 $(CFLAGS)
 
 OBJS = \
 	common.o \
+	common_java.o \
 	crypto.o \
 	crypto_java.o \
 	cryptor.o \
