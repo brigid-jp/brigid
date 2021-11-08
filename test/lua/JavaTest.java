@@ -7,9 +7,9 @@ public class JavaTest {
     System.loadLibrary("javatest");
   }
 
-  private native static int test();
+  private native static int test(byte[] filename);
 
-  public static void main(String[] args) {
-    System.exit(test());
+  public static void main(String[] args) throws Exception {
+    System.exit(test(args[0].getBytes("UTF-8")));
   }
 }
