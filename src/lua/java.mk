@@ -2,12 +2,18 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
+.SUFFIXES: .cxx
+
 UNAME = $(shell uname | tr [:upper:] [:lower:])
-CPPFLAGS = "-I$(JAVA_HOME)/include" "-I$(JAVA_HOME)/include/$(UNAME)" -I../.. -I../../include
-CXXFLAGS = -Wall -W -Wno-missing-field-initializers -O2 -std=c++11 -fPIC
+CFLAGS = $(shell luarocks config variables.CFLAGS)
+LUA_INCDIR = $(shell luarocks config variables.LUA_INCDIR)
+
+CPPFLAGS = "-I$(LUA_INCDIR)" "-I$(JAVA_HOME)/include" "-I$(JAVA_HOME)/include/$(UNAME)" -I../..
+CXXFLAGS = -Wall -W -Wno-missing-field-initializers -std=c++11 $(CFLAGS)
 
 OBJS = \
 	common.o \
+	common_java.o \
 	crypto.o \
 	crypto_java.o \
 	cryptor.o \
@@ -45,4 +51,7 @@ $(TARGET): $(OBJS)
 	ar cru $@ $^
 
 .cpp.o:
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
+.cxx.o:
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<

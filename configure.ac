@@ -9,7 +9,7 @@ LT_INIT
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADER([config.h])
-AC_CONFIG_FILES([Makefile src/lua/Makefile test/lib/Makefile test/lua/Makefile test/lab/Makefile test/bench/Makefile])
+AC_CONFIG_FILES([Makefile src/lua/Makefile test/lua/Makefile test/lab/Makefile test/bench/Makefile])
 
 AC_PROG_CXX
 AX_CXX_COMPILE_STDCXX(11, noext)
@@ -26,11 +26,6 @@ AC_PROG_OBJCXX
 
 AX_PROG_LUA([5.1], [], [], [AC_MSG_ERROR([could not find lua])])
 AX_LUA_HEADERS([], [AC_MSG_ERROR([could not find lua])])
-
-AX_PROG_JAVAC
-AX_PROG_JAVA
-AX_JAVA_OPTIONS
-AX_CHECK_JAVA_HOME
 
 AC_CHECK_HEADERS([CommonCrypto/CommonCrypto.h], [
   AC_DEFINE(CRYPTO_APPLE, 1, [Define to 1 if using CommonCrypto.])
