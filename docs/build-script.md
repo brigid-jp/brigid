@@ -12,10 +12,26 @@ LUA_LIBDIR
 
 #### フラグ
 
-`LIBFLAG`はWindowsでだけ使う。UNIX系はlibtoolで共有リンクライブラリをビルドする。
+`LIBFLAG`はWindowsでだけ使う。
+UNIX系はlibtoolで共有リンクライブラリをビルドする。
+`LUALIB`はWindowsだけでなく、Java用のドライバ作成でも使える。
 
 ```
 CFLAGS
 LIBFLAG
+LUALIB
+```
+
+### Makeの既定変数
+
+```
+CC
+```
+
+### Makeの設定変数
+
+```
+CPPFLAGS
+CXXFLAGS
 ```
 
