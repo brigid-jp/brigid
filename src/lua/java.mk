@@ -7,6 +7,7 @@
 UNAME = $(shell uname | tr [:upper:] [:lower:])
 CFLAGS = $(shell luarocks config variables.CFLAGS)
 LUA_INCDIR = $(shell luarocks config variables.LUA_INCDIR)
+JAVA_HOME = $(shell ./java_home.sh)
 
 CPPFLAGS = "-I$(LUA_INCDIR)" "-I$(JAVA_HOME)/include" "-I$(JAVA_HOME)/include/$(UNAME)" -I../..
 CXXFLAGS = -Wall -W -Wno-missing-field-initializers -std=c++11 $(CFLAGS)
