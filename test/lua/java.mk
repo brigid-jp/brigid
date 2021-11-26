@@ -2,7 +2,9 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
+JAVA_HOME = $(shell ../../java_home.sh)
 UNAME = $(shell uname | tr [:upper:] [:lower:])
+
 CFLAGS = $(shell luarocks config variables.CFLAGS)
 LUA_INCDIR = $(shell luarocks config variables.LUA_INCDIR)
 LUA_LIBDIR = $(shell luarocks config variables.LUA_LIBDIR)
@@ -14,9 +16,7 @@ LDFLAGS = -shared -L$(LUA_LIBDIR)
 ifeq ($(UNAME),darwin)
 	TARGET_SUFFIX = .dylib
 else
-ifeq ($(UNAME),linux)
 	TARGET_SUFFIX = .so
-endif
 endif
 
 OBJS = test_java.o
@@ -32,7 +32,7 @@ clean:
 	(cd ../../src/lua && $(MAKE) -f java.mk clean)
 
 check:
-	java -classpath ../../src/java:. -Djava.library.path=. -Xcheck:jni JavaTest
+	java -classpath ../../src/java:. -Djava.library.path=. -Xcheck:jni JavaTest test.lua
 
 JavaTest.h: JavaTest.java
 	javac -h . JavaTest.java
