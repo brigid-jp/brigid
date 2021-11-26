@@ -20,7 +20,9 @@ then
       if test -x "$i/java"
       then
         i=`(cd "$i" && pwd)`
-        echo "$i/java"
+        i=`readlink -f "$i/java"`
+        i=`expr "X$i" : 'X\(.*\)/bin/java'`
+        echo "$i"
         break
       fi
       path=`expr "X$path" : 'X:[^:]*\(:.*\)' '|' X`
