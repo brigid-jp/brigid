@@ -17,15 +17,20 @@ then
       case X$i in
         X) i=.;;
       esac
-      if test -x "$i/java"
+      if test -x "$i/javac"
       then
         i=`(cd "$i" && pwd)`
-        i=`readlink -f "$i/java"`
-        i=`expr "X$i" : 'X\(.*\)/bin/java'`
-        echo "$i"
-        break
+        i=`readlink -f "$i/javac"`
+        i=`expr "X:$i" : 'X\(:.*\)/bin/javac' '|' "X:$i" : 'X\(:.*\)/javac' '|' X`
+        case X$i in
+          XX) ;;
+          *) echo "$i" | sed 's/^.//'; break;;
+        esac
       fi
       path=`expr "X$path" : 'X:[^:]*\(:.*\)' '|' X`
+      case X$path in
+        XX) break;;
+      esac
     done
   fi
 else
