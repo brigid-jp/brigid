@@ -11,7 +11,7 @@ LUA_LIBDIR = $(shell luarocks config variables.LUA_LIBDIR)
 
 CPPFLAGS = "-I$(LUA_INCDIR)" "-I$(JAVA_HOME)/include" "-I$(JAVA_HOME)/include/$(UNAME)" -I../..
 CXXFLAGS = -Wall -W -Wno-missing-field-initializers -std=c++11 $(CFLAGS)
-LDFLAGS = -shared -L$(LUA_LIBDIR)
+LDFLAGS = -shared "-L$(LUA_LIBDIR)" "-Wl,-rpath,$(LUA_LIBDIR)"
 
 ifeq ($(UNAME),darwin)
 	TARGET_SUFFIX = .dylib
