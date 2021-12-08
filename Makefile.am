@@ -3,7 +3,7 @@
 # https://opensource.org/licenses/mit-license.php
 
 ACLOCAL_AMFLAGS = -I m4
-SUBDIRS = src/lua test/lua test/lab test/bench
+SUBDIRS = src/lua test/lua
 
 EXTRA_DIST = \
 	.gitignore \
