@@ -1,12 +1,15 @@
-// Copyright (c) 2021 <dev@brigid.jp>
+// Copyright (c) 2021,2022 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include "common.hpp"
 #include "common_windows.hpp"
 #include "crypto.hpp"
 #include "error.hpp"
 #include "noncopyable.hpp"
 #include "type_traits.hpp"
+
+#include <lua.hpp>
 
 #define NOMINMAX
 #include <windows.h>
@@ -21,6 +24,10 @@
 
 namespace brigid {
   namespace {
+    char NAME_SHA1[] = "sha1";
+    char NAME_SHA256[] = "sha256";
+    char NAME_SHA512[] = "sha512";
+
     void check(NTSTATUS code) {
       if (!BCRYPT_SUCCESS(code)) {
         std::string message;
@@ -217,6 +224,7 @@ namespace brigid {
       }
     };
 
+    template <const char* T_name>
     class hasher_impl : public hasher, private noncopyable {
     public:
       explicit hasher_impl(LPCWSTR algorithm)
@@ -251,6 +259,10 @@ namespace brigid {
             0,
             0));
         hash_ = make_hash_handle(hash);
+      }
+
+      virtual const char* get_name() const {
+        return T_name;
       }
 
       virtual void update(const char* data, size_t size) {
@@ -321,15 +333,15 @@ namespace brigid {
     throw BRIGID_LOGIC_ERROR("unsupported cipher");
   }
 
-  std::unique_ptr<hasher> make_hasher(crypto_hash hash) {
-    switch (hash) {
-      case crypto_hash::sha1:
-        return std::unique_ptr<hasher>(new hasher_impl(BCRYPT_SHA1_ALGORITHM));
-      case crypto_hash::sha256:
-        return std::unique_ptr<hasher>(new hasher_impl(BCRYPT_SHA256_ALGORITHM));
-      case crypto_hash::sha512:
-        return std::unique_ptr<hasher>(new hasher_impl(BCRYPT_SHA512_ALGORITHM));
-    }
-    throw BRIGID_LOGIC_ERROR("unsupported hash");
+  hasher* new_sha1_hasher(lua_State* L) {
+    return new_userdata<hasher_impl<NAME_SHA1> >(L, "brigid.hasher", BCRYPT_SHA1_ALGORITHM);
+  }
+
+  hasher* new_sha256_hasher(lua_State* L) {
+    return new_userdata<hasher_impl<NAME_SHA256> >(L, "brigid.hasher", BCRYPT_SHA256_ALGORITHM);
+  }
+
+  hasher* new_sha512_hasher(lua_State* L) {
+    return new_userdata<hasher_impl<NAME_SHA512> >(L, "brigid.hasher", BCRYPT_SHA512_ALGORITHM);
   }
 }
