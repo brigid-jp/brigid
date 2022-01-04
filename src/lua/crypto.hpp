@@ -27,7 +27,6 @@ namespace brigid {
   }
 
   void open_cryptor();
-  void open_hasher();
 
   class cryptor {
   public:
@@ -38,6 +37,8 @@ namespace brigid {
 
   std::unique_ptr<cryptor> make_encryptor(crypto_cipher, const char*, size_t, const char*, size_t);
   std::unique_ptr<cryptor> make_decryptor(crypto_cipher, const char*, size_t, const char*, size_t);
+
+  void open_hasher();
 
   class hasher {
   public:
