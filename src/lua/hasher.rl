@@ -12,7 +12,6 @@
 #include <lua.hpp>
 
 #include <exception>
-#include <vector>
 
 namespace brigid {
   namespace {
@@ -77,8 +76,7 @@ namespace brigid {
 
     void impl_digest(lua_State* L) {
       hasher* self = check_hasher(L, 1);
-      std::vector<char> result = self->digest();
-      lua_pushlstring(L, result.data(), result.size());
+      self->digest(L);
     }
   }
 

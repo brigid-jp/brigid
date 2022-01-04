@@ -14,16 +14,15 @@
 #include <lua.hpp>
 
 #include <exception>
-#include <vector>
 
 namespace brigid {
   namespace {
     
-#line 23 "hasher.cxx"
+#line 22 "hasher.cxx"
 static const int hasher_name_chooser_start = 1;
 
 
-#line 31 "hasher.rl"
+#line 30 "hasher.rl"
 
 
 #ifdef __GNUC__
@@ -34,16 +33,16 @@ static const int hasher_name_chooser_start = 1;
     hasher* new_hasher(lua_State* L, const char* name) {
       int cs = 0;
       
-#line 38 "hasher.cxx"
+#line 37 "hasher.cxx"
 	{
 	cs = hasher_name_chooser_start;
 	}
 
-#line 41 "hasher.rl"
+#line 40 "hasher.rl"
       const char* p = name;
       const char* pe = nullptr;
       
-#line 47 "hasher.cxx"
+#line 46 "hasher.cxx"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -88,22 +87,22 @@ case 5:
 		goto tr7;
 	goto st0;
 tr7:
-#line 24 "hasher.rl"
+#line 23 "hasher.rl"
 	{ return new_sha1_hasher(L); }
 	goto st12;
 tr10:
-#line 26 "hasher.rl"
+#line 25 "hasher.rl"
 	{ return new_sha256_hasher(L); }
 	goto st12;
 tr13:
-#line 28 "hasher.rl"
+#line 27 "hasher.rl"
 	{ return new_sha512_hasher(L); }
 	goto st12;
 st12:
 	if ( ++p == pe )
 		goto _test_eof12;
 case 12:
-#line 107 "hasher.cxx"
+#line 106 "hasher.cxx"
 	goto st0;
 st6:
 	if ( ++p == pe )
@@ -164,7 +163,7 @@ case 11:
 	_out: {}
 	}
 
-#line 44 "hasher.rl"
+#line 43 "hasher.rl"
       return nullptr;
     }
 
@@ -201,8 +200,7 @@ case 11:
 
     void impl_digest(lua_State* L) {
       hasher* self = check_hasher(L, 1);
-      std::vector<char> result = self->digest();
-      lua_pushlstring(L, result.data(), result.size());
+      self->digest(L);
     }
   }
 
