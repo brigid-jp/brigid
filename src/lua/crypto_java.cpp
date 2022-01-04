@@ -15,7 +15,6 @@
 #include <stddef.h>
 #include <memory>
 #include <mutex>
-#include <vector>
 
 namespace brigid {
   namespace {
@@ -77,7 +76,7 @@ namespace brigid {
       method<jbyteArray> digest;
     };
 
-    template <const char* T_name>
+    template <const char* T_name, size_t T_size>
     class hasher_impl : public hasher, private noncopyable {
     public:
       hasher_impl(const char* algorithm)
@@ -93,11 +92,14 @@ namespace brigid {
         vt_.update(instance_, make_direct_byte_buffer(const_cast<char*>(data), size));
       }
 
-      virtual std::vector<char> digest() {
+      virtual void digest(lua_State* L) {
         local_ref_t<jbyteArray> result = vt_.digest(instance_);
-        std::vector<char> buffer(get_array_length(result));
-        get_byte_array_region(result, 0, buffer.size(), buffer.data());
-        return buffer;
+        if (get_array_length(result) != T_size) {
+          throw BRIGID_LOGIC_ERROR("invalid buffer size");
+        }
+        char buffer[T_size] = {};
+        get_byte_array_region(result, 0, T_size, buffer);
+        lua_pushlstring(L, buffer, T_size);
       }
 
     private:
@@ -147,14 +149,14 @@ namespace brigid {
   }
 
   hasher* new_sha1_hasher(lua_State* L) {
-    return new_userdata<hasher_impl<NAME_SHA1> >(L, "brigid.hasher", "SHA-1");
+    return new_userdata<hasher_impl<NAME_SHA1, 20> >(L, "brigid.hasher", "SHA-1");
   }
 
   hasher* new_sha256_hasher(lua_State* L) {
-    return new_userdata<hasher_impl<NAME_SHA256> >(L, "brigid.hasher", "SHA-256");
+    return new_userdata<hasher_impl<NAME_SHA256, 32> >(L, "brigid.hasher", "SHA-256");
   }
 
   hasher* new_sha512_hasher(lua_State* L) {
-    return new_userdata<hasher_impl<NAME_SHA512> >(L, "brigid.hasher", "SHA-512");
+    return new_userdata<hasher_impl<NAME_SHA512, 64> >(L, "brigid.hasher", "SHA-512");
   }
 }

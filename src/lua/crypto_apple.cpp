@@ -146,7 +146,7 @@ namespace brigid {
       }
 
       virtual void digest(lua_State* L) {
-        char buffer[CC_SHA512_DIGEST_LENGTH];
+        char buffer[CC_SHA512_DIGEST_LENGTH] = {};
         CC_SHA512_Final(reinterpret_cast<unsigned char*>(buffer), &ctx_);
         lua_pushlstring(L, buffer, CC_SHA512_DIGEST_LENGTH);
       }
