@@ -14,7 +14,6 @@
 
 #include <stddef.h>
 #include <memory>
-#include <vector>
 
 namespace brigid {
   namespace {
@@ -96,10 +95,10 @@ namespace brigid {
         CC_SHA1_Update(&ctx_, data, size);
       }
 
-      virtual std::vector<char> digest() {
-        std::vector<char> buffer(CC_SHA1_DIGEST_LENGTH);
-        CC_SHA1_Final(reinterpret_cast<unsigned char*>(buffer.data()), &ctx_);
-        return buffer;
+      virtual void digest(lua_State* L) {
+        char buffer[CC_SHA1_DIGEST_LENGTH] = {};
+        CC_SHA1_Final(reinterpret_cast<unsigned char*>(buffer), &ctx_);
+        lua_pushlstring(L, buffer, CC_SHA1_DIGEST_LENGTH);
       }
 
     private:
@@ -121,10 +120,10 @@ namespace brigid {
         CC_SHA256_Update(&ctx_, data, size);
       }
 
-      virtual std::vector<char> digest() {
-        std::vector<char> buffer(CC_SHA256_DIGEST_LENGTH);
-        CC_SHA256_Final(reinterpret_cast<unsigned char*>(buffer.data()), &ctx_);
-        return buffer;
+      virtual void digest(lua_State* L) {
+        char buffer[CC_SHA256_DIGEST_LENGTH] = {};
+        CC_SHA256_Final(reinterpret_cast<unsigned char*>(buffer), &ctx_);
+        lua_pushlstring(L, buffer, CC_SHA256_DIGEST_LENGTH);
       }
 
     private:
@@ -146,10 +145,10 @@ namespace brigid {
         CC_SHA512_Update(&ctx_, data, size);
       }
 
-      virtual std::vector<char> digest() {
-        std::vector<char> buffer(CC_SHA512_DIGEST_LENGTH);
-        CC_SHA512_Final(reinterpret_cast<unsigned char*>(buffer.data()), &ctx_);
-        return buffer;
+      virtual void digest(lua_State* L) {
+        char buffer[CC_SHA512_DIGEST_LENGTH];
+        CC_SHA512_Final(reinterpret_cast<unsigned char*>(buffer), &ctx_);
+        lua_pushlstring(L, buffer, CC_SHA512_DIGEST_LENGTH);
       }
 
     private:
