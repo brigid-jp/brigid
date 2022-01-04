@@ -5,7 +5,6 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include "common.hpp"
-#include "error.hpp"
 #include "function.hpp"
 #include "noncopyable.hpp"
 #include "stopwatch.hpp"

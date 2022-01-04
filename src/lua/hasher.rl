@@ -7,16 +7,11 @@
 #include "common.hpp"
 #include "crypto.hpp"
 #include "data.hpp"
-#include "error.hpp"
 #include "function.hpp"
-#include "noncopyable.hpp"
 
 #include <lua.hpp>
 
-#include <stddef.h>
-#include <memory>
-#include <utility>
-#include <string>
+#include <exception>
 #include <vector>
 
 namespace brigid {
