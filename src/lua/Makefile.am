@@ -30,7 +30,7 @@ brigid_la_SOURCES = \
 	error.cpp \
 	file_writer.cpp \
 	function.cpp \
-	hasher.cpp \
+	hasher.cxx \
 	http.cpp \
 	http_impl.cpp \
 	json.cpp \
@@ -68,7 +68,7 @@ endif
 endif
 
 EXTRA_DIST = \
-	*.rl
+	*.rl \
 	crypto_java.cpp \
 	crypto_windows.cpp \
 	http_java.cpp \

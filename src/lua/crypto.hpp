@@ -49,12 +49,9 @@ namespace brigid {
 
   std::unique_ptr<hasher> make_hasher(crypto_hash);
 
-  class crypto {
-  public:
-    virtual ~crypto() = 0;
-    virtual const char* get_name() const = 0;
-    virtual hasher* new_hasher(lua_State* L, const char*) const = 0;
-  };
+  hasher* new_sha1_hasher(lua_State*);
+  hasher* new_sha256_hasher(lua_State*);
+  hasher* new_sha512_hasher(lua_State*);
 }
 
 #endif
