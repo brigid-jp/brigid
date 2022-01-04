@@ -1,11 +1,14 @@
-// Copyright (c) 2021 <dev@brigid.jp>
+// Copyright (c) 2021,2022 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include "common.hpp"
 #include "crypto.hpp"
 #include "error.hpp"
 #include "noncopyable.hpp"
 #include "type_traits.hpp"
+
+#include <lua.hpp>
 
 #include <CommonCrypto/CommonCrypto.h>
 
@@ -184,5 +187,17 @@ namespace brigid {
         return std::unique_ptr<hasher>(new sha512_hasher_impl());
     }
     throw BRIGID_LOGIC_ERROR("unsupported hash");
+  }
+
+  hasher* new_sha1_hasher(lua_State* L) {
+    return new_userdata<sha1_hasher_impl>(L, "brigid.hasher");
+  }
+
+  hasher* new_sha256_hasher(lua_State* L) {
+    return new_userdata<sha256_hasher_impl>(L, "brigid.hasher");
+  }
+
+  hasher* new_sha512_hasher(lua_State* L) {
+    return new_userdata<sha512_hasher_impl>(L, "brigid.hasher");
   }
 }

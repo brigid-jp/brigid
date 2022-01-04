@@ -1,4 +1,4 @@
-// Copyright (c) 2021 <dev@brigid.jp>
+// Copyright (c) 2021,2022 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -6,6 +6,8 @@
 #define BRIGID_CRYPTO_HPP
 
 #include "noncopyable.hpp"
+
+#include <lua.hpp>
 
 #include <stddef.h>
 #include <memory>
@@ -46,6 +48,10 @@ namespace brigid {
   };
 
   std::unique_ptr<hasher> make_hasher(crypto_hash);
+
+  hasher* new_sha1_hasher(lua_State*);
+  hasher* new_sha256_hasher(lua_State*);
+  hasher* new_sha512_hasher(lua_State*);
 }
 
 #endif
