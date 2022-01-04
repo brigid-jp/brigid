@@ -2,7 +2,7 @@
 #line 1 "stopwatch.rl"
 // vim: syntax=ragel:
 
-// Copyright (c) 2021 <dev@brigid.jp>
+// Copyright (c) 2021,2022 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
