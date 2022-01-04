@@ -1,11 +1,14 @@
-// Copyright (c) 2021 <dev@brigid.jp>
+// Copyright (c) 2021,2022 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include "common.hpp"
 #include "common_java.hpp"
 #include "crypto.hpp"
 #include "error.hpp"
 #include "noncopyable.hpp"
+
+#include <lua.hpp>
 
 #include <jni.h>
 
@@ -16,6 +19,10 @@
 
 namespace brigid {
   namespace {
+    char NAME_SHA1[] = "sha1";
+    char NAME_SHA256[] = "sha256";
+    char NAME_SHA512[] = "sha512";
+
     jclass aes_cryptor_clazz;
 
     class aes_cryptor_vtable : private noncopyable {
@@ -70,12 +77,17 @@ namespace brigid {
       method<jbyteArray> digest;
     };
 
+    template <const char* T_name>
     class hasher_impl : public hasher, private noncopyable {
     public:
       hasher_impl(const char* algorithm)
         : instance_(make_global_ref(vt_.constructor(
               hasher_clazz,
               make_byte_array(algorithm)))) {}
+
+      virtual const char* get_name() const {
+        return T_name;
+      }
 
       virtual void update(const char* data, size_t size) {
         vt_.update(instance_, make_direct_byte_buffer(const_cast<char*>(data), size));
@@ -134,15 +146,15 @@ namespace brigid {
     throw BRIGID_LOGIC_ERROR("unsupported cipher");
   }
 
-  std::unique_ptr<hasher> make_hasher(crypto_hash hash) {
-    switch (hash) {
-      case crypto_hash::sha1:
-        return std::unique_ptr<hasher>(new hasher_impl("SHA-1"));
-      case crypto_hash::sha256:
-        return std::unique_ptr<hasher>(new hasher_impl("SHA-256"));
-      case crypto_hash::sha512:
-        return std::unique_ptr<hasher>(new hasher_impl("SHA-512"));
-    }
-    throw BRIGID_LOGIC_ERROR("unsupported hash");
+  hasher* new_sha1_hasher(lua_State* L) {
+    return new_userdata<hasher_impl<NAME_SHA1> >(L, "brigid.hasher", "SHA-1");
+  }
+
+  hasher* new_sha256_hasher(lua_State* L) {
+    return new_userdata<hasher_impl<NAME_SHA256> >(L, "brigid.hasher", "SHA-256");
+  }
+
+  hasher* new_sha512_hasher(lua_State* L) {
+    return new_userdata<hasher_impl<NAME_SHA512> >(L, "brigid.hasher", "SHA-512");
   }
 }
