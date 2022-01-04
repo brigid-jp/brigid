@@ -2,12 +2,11 @@
 #line 1 "stopwatch.rl"
 // vim: syntax=ragel:
 
-// Copyright (c) 2021 <dev@brigid.jp>
+// Copyright (c) 2021,2022 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
 #include "common.hpp"
-#include "error.hpp"
 #include "function.hpp"
 #include "noncopyable.hpp"
 #include "stopwatch.hpp"
@@ -53,11 +52,11 @@ namespace brigid {
     }
 
     
-#line 57 "stopwatch.cxx"
+#line 56 "stopwatch.cxx"
 static const int stopwatch_name_chooser_start = 1;
 
 
-#line 66 "stopwatch.rl"
+#line 65 "stopwatch.rl"
 
 
 #ifdef __GNUC__
@@ -68,16 +67,16 @@ static const int stopwatch_name_chooser_start = 1;
     stopwatch* new_stopwatch_chrono(lua_State* L, const char* name) {
       int cs = 0;
       
-#line 72 "stopwatch.cxx"
+#line 71 "stopwatch.cxx"
 	{
 	cs = stopwatch_name_chooser_start;
 	}
 
-#line 76 "stopwatch.rl"
+#line 75 "stopwatch.rl"
       const char* p = name;
       const char* pe = nullptr;
       
-#line 81 "stopwatch.cxx"
+#line 80 "stopwatch.cxx"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -331,22 +330,22 @@ case 35:
 		goto tr36;
 	goto st0;
 tr36:
-#line 62 "stopwatch.rl"
+#line 61 "stopwatch.rl"
 	{ return new_stopwatch_chrono<std::chrono::high_resolution_clock, NAME_HIGH_RESOLUTION_CLOCK>(L); }
 	goto st59;
 tr49:
-#line 60 "stopwatch.rl"
+#line 59 "stopwatch.rl"
 	{ return new_stopwatch_chrono<std::chrono::steady_clock, NAME_STEADY_CLOCK>(L); }
 	goto st59;
 tr60:
-#line 58 "stopwatch.rl"
+#line 57 "stopwatch.rl"
 	{ return new_stopwatch_chrono<std::chrono::system_clock, NAME_SYSTEM_CLOCK>(L); }
 	goto st59;
 st59:
 	if ( ++p == pe )
 		goto _test_eof59;
 case 59:
-#line 350 "stopwatch.cxx"
+#line 349 "stopwatch.cxx"
 	goto st0;
 st36:
 	if ( ++p == pe )
@@ -575,7 +574,7 @@ case 58:
 	_out: {}
 	}
 
-#line 79 "stopwatch.rl"
+#line 78 "stopwatch.rl"
       return nullptr;
     }
 

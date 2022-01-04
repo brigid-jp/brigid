@@ -9,26 +9,21 @@
 #include "common.hpp"
 #include "crypto.hpp"
 #include "data.hpp"
-#include "error.hpp"
 #include "function.hpp"
-#include "noncopyable.hpp"
 
 #include <lua.hpp>
 
-#include <stddef.h>
-#include <memory>
-#include <utility>
-#include <string>
+#include <exception>
 #include <vector>
 
 namespace brigid {
   namespace {
     
-#line 28 "hasher.cxx"
+#line 23 "hasher.cxx"
 static const int hasher_name_chooser_start = 1;
 
 
-#line 36 "hasher.rl"
+#line 31 "hasher.rl"
 
 
 #ifdef __GNUC__
@@ -39,16 +34,16 @@ static const int hasher_name_chooser_start = 1;
     hasher* new_hasher(lua_State* L, const char* name) {
       int cs = 0;
       
-#line 43 "hasher.cxx"
+#line 38 "hasher.cxx"
 	{
 	cs = hasher_name_chooser_start;
 	}
 
-#line 46 "hasher.rl"
+#line 41 "hasher.rl"
       const char* p = name;
       const char* pe = nullptr;
       
-#line 52 "hasher.cxx"
+#line 47 "hasher.cxx"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -93,22 +88,22 @@ case 5:
 		goto tr7;
 	goto st0;
 tr7:
-#line 29 "hasher.rl"
+#line 24 "hasher.rl"
 	{ return new_sha1_hasher(L); }
 	goto st12;
 tr10:
-#line 31 "hasher.rl"
+#line 26 "hasher.rl"
 	{ return new_sha256_hasher(L); }
 	goto st12;
 tr13:
-#line 33 "hasher.rl"
+#line 28 "hasher.rl"
 	{ return new_sha512_hasher(L); }
 	goto st12;
 st12:
 	if ( ++p == pe )
 		goto _test_eof12;
 case 12:
-#line 112 "hasher.cxx"
+#line 107 "hasher.cxx"
 	goto st0;
 st6:
 	if ( ++p == pe )
@@ -169,66 +164,13 @@ case 11:
 	_out: {}
 	}
 
-#line 49 "hasher.rl"
+#line 44 "hasher.rl"
       return nullptr;
     }
 
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
-
-/*
-    crypto_hash check_hash(lua_State* L, int arg) {
-      size_t size = 0;
-      if (const char* data = lua_tolstring(L, arg, &size)) {
-        std::string hash(data, size);
-        if (hash == "sha1") {
-          return crypto_hash::sha1;
-        } else if (hash == "sha256") {
-          return crypto_hash::sha256;
-        } else if (hash == "sha512") {
-          return crypto_hash::sha512;
-        }
-      }
-      luaL_argerror(L, arg, "unsupported hash");
-      throw BRIGID_LOGIC_ERROR("unreachable");
-    }
-
-    class hasher_t : private noncopyable {
-    public:
-      explicit hasher_t(std::unique_ptr<hasher>&& hasher)
-        : hasher_(std::move(hasher)) {}
-
-      void update(const char* data, size_t size) {
-        hasher_->update(data, size);
-      }
-
-      std::vector<char> digest() {
-        return hasher_->digest();
-      }
-
-      void close() {
-        hasher_ = nullptr;
-      }
-
-      bool closed() const {
-        return !hasher_;
-      }
-
-    private:
-      std::unique_ptr<hasher> hasher_;
-    };
-
-    hasher_t* check_hasher(lua_State* L, int arg, int validate = check_validate_all) {
-      hasher_t* self = check_udata<hasher_t>(L, arg, "brigid.hasher");
-      if (validate & check_validate_not_closed) {
-        if (self->closed()) {
-          luaL_error(L, "attempt to use a closed brigid.hasher");
-        }
-      }
-      return self;
-    }
-*/
 
     hasher* check_hasher(lua_State* L, int arg) {
       return check_udata<hasher>(L, arg, "brigid.hasher");
@@ -239,20 +181,16 @@ case 11:
       self->~hasher();
     }
 
-/*
-    void impl_close(lua_State* L) {
-      hasher_t* self = check_hasher(L, 1, check_validate_none);
-      if (!self->closed()) {
-        self->close();
-      }
-    }
-*/
-
     void impl_call(lua_State* L) {
       const char* name = luaL_checkstring(L, 2);
       if (!new_hasher(L, name)) {
         luaL_argerror(L, 2, "unsupported hash");
       }
+    }
+
+    void impl_get_name(lua_State* L) {
+      hasher* self = check_hasher(L, 1);
+      lua_pushstring(L, self->get_name());
     }
 
     void impl_update(lua_State* L) {
@@ -282,13 +220,12 @@ case 11:
       lua_pushvalue(L, -2);
       lua_setfield(L, -2, "__index");
       decltype(function<impl_gc>())::set_field(L, -1, "__gc");
-      // decltype(function<impl_close>())::set_field(L, -1, "__close");
       lua_pop(L, 1);
 
       decltype(function<impl_call>())::set_metafield(L, -1, "__call");
+      decltype(function<impl_get_name>())::set_field(L, -1, "get_name");
       decltype(function<impl_update>())::set_field(L, -1, "update");
       decltype(function<impl_digest>())::set_field(L, -1, "digest");
-      // decltype(function<impl_close>())::set_field(L, -1, "close");
     }
     lua_setfield(L, -2, "hasher");
   }

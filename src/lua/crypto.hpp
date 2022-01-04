@@ -15,7 +15,6 @@
 
 namespace brigid {
   enum class crypto_cipher { aes_128_cbc, aes_192_cbc, aes_256_cbc };
-  enum class crypto_hash { sha1, sha256, sha512 };
 
   class crypto_initializer : private noncopyable {
   public:
@@ -43,11 +42,10 @@ namespace brigid {
   class hasher {
   public:
     virtual ~hasher() = 0;
+    virtual const char* get_name() const = 0;
     virtual void update(const char*, size_t) = 0;
     virtual std::vector<char> digest() = 0;
   };
-
-  std::unique_ptr<hasher> make_hasher(crypto_hash);
 
   hasher* new_sha1_hasher(lua_State*);
   hasher* new_sha256_hasher(lua_State*);

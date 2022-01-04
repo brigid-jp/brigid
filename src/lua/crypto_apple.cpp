@@ -88,6 +88,10 @@ namespace brigid {
         CC_SHA1_Init(&ctx_);
       }
 
+      virtual const char* get_name() const {
+        return "sha1";
+      }
+
       virtual void update(const char* data, size_t size) {
         CC_SHA1_Update(&ctx_, data, size);
       }
@@ -109,6 +113,10 @@ namespace brigid {
         CC_SHA256_Init(&ctx_);
       }
 
+      virtual const char* get_name() const {
+        return "sha256";
+      }
+
       virtual void update(const char* data, size_t size) {
         CC_SHA256_Update(&ctx_, data, size);
       }
@@ -128,6 +136,10 @@ namespace brigid {
       sha512_hasher_impl()
         : ctx_() {
         CC_SHA512_Init(&ctx_);
+      }
+
+      virtual const char* get_name() const {
+        return "sha512";
       }
 
       virtual void update(const char* data, size_t size) {
@@ -175,18 +187,6 @@ namespace brigid {
         return std::unique_ptr<cryptor>(new aes_cryptor_impl(kCCDecrypt, key_data, key_size, iv_data, 0));
     }
     throw BRIGID_LOGIC_ERROR("unsupported cipher");
-  }
-
-  std::unique_ptr<hasher> make_hasher(crypto_hash hash) {
-    switch (hash) {
-      case crypto_hash::sha1:
-        return std::unique_ptr<hasher>(new sha1_hasher_impl());
-      case crypto_hash::sha256:
-        return std::unique_ptr<hasher>(new sha256_hasher_impl());
-      case crypto_hash::sha512:
-        return std::unique_ptr<hasher>(new sha512_hasher_impl());
-    }
-    throw BRIGID_LOGIC_ERROR("unsupported hash");
   }
 
   hasher* new_sha1_hasher(lua_State* L) {
