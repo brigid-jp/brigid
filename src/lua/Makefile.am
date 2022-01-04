@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 <dev@brigid.jp>
+# Copyright (c) 2019-2022 <dev@brigid.jp>
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
@@ -49,6 +49,8 @@ brigid_la_SOURCES += crypto_apple.cpp
 else
 if CRYPTO_OPENSSL
 brigid_la_CPPFLAGS += $(OPENSSL_INCLUDES)
+brigid_la_LDFLAGS += $(OPENSSL_LDFLAGS)
+brigid_la_LIBADD += $(OPENSSL_LIBS)
 brigid_la_SOURCES += crypto_openssl.cpp
 endif
 endif
@@ -60,11 +62,6 @@ if HTTP_CURL
 brigid_la_CPPFLAGS += $(CURL_CFLAGS)
 brigid_la_SOURCES += http_curl.cpp
 endif
-endif
-
-if CRYPTO_OPENSSL
-brigid_la_LDFLAGS += $(OPENSSL_LDFLAGS)
-brigid_la_LIBADD += $(OPENSSL_LIBS)
 endif
 
 if HTTP_APPLE
