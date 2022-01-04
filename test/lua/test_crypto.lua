@@ -91,16 +91,6 @@ for i = 1, #ciphers do
   end
 end
 
-function suite:test_hasher()
-  local hasher = brigid.hasher "sha256"
-  assert(getmetatable(hasher).__close)
-  assert(hasher:close())
-  assert(hasher:close()) -- can close
-  local result, message = pcall(function () hasher:update "0" end)
-  print(message)
-  assert(not result)
-end
-
 function suite:test_sha1_1()
   local result = brigid.hasher "sha1":update "":digest()
   assert(result == table.concat {

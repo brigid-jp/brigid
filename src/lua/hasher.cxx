@@ -177,7 +177,7 @@ case 11:
 #pragma GCC diagnostic pop
 #endif
 
-
+/*
     crypto_hash check_hash(lua_State* L, int arg) {
       size_t size = 0;
       if (const char* data = lua_tolstring(L, arg, &size)) {
@@ -228,17 +228,25 @@ case 11:
       }
       return self;
     }
+*/
 
-    void impl_gc(lua_State* L) {
-      check_hasher(L, 1, check_validate_none)->~hasher_t();
+    hasher* check_hasher(lua_State* L, int arg) {
+      return check_udata<hasher>(L, arg, "brigid.hasher");
     }
 
+    void impl_gc(lua_State* L) {
+      hasher* self = check_hasher(L, 1);
+      self->~hasher();
+    }
+
+/*
     void impl_close(lua_State* L) {
       hasher_t* self = check_hasher(L, 1, check_validate_none);
       if (!self->closed()) {
         self->close();
       }
     }
+*/
 
     void impl_call(lua_State* L) {
       const char* name = luaL_checkstring(L, 2);
@@ -248,13 +256,13 @@ case 11:
     }
 
     void impl_update(lua_State* L) {
-      hasher_t* self = check_hasher(L, 1);
+      hasher* self = check_hasher(L, 1);
       data_t source = check_data(L, 2);
       self->update(source.data(), source.size());
     }
 
     void impl_digest(lua_State* L) {
-      hasher_t* self = check_hasher(L, 1);
+      hasher* self = check_hasher(L, 1);
       std::vector<char> result = self->digest();
       lua_pushlstring(L, result.data(), result.size());
     }
@@ -274,13 +282,13 @@ case 11:
       lua_pushvalue(L, -2);
       lua_setfield(L, -2, "__index");
       decltype(function<impl_gc>())::set_field(L, -1, "__gc");
-      decltype(function<impl_close>())::set_field(L, -1, "__close");
+      // decltype(function<impl_close>())::set_field(L, -1, "__close");
       lua_pop(L, 1);
 
       decltype(function<impl_call>())::set_metafield(L, -1, "__call");
       decltype(function<impl_update>())::set_field(L, -1, "update");
       decltype(function<impl_digest>())::set_field(L, -1, "digest");
-      decltype(function<impl_close>())::set_field(L, -1, "close");
+      // decltype(function<impl_close>())::set_field(L, -1, "close");
     }
     lua_setfield(L, -2, "hasher");
   }
