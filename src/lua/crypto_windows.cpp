@@ -224,7 +224,7 @@ namespace brigid {
       }
     };
 
-    template <const char* T_name>
+    template <const char* T_name, size_t T_size>
     class hasher_impl : public hasher, private noncopyable {
     public:
       explicit hasher_impl(LPCWSTR algorithm)
@@ -273,7 +273,7 @@ namespace brigid {
             0));
       }
 
-      virtual std::vector<char> digest() {
+      virtual void digest(lua_State* L) {
         DWORD size = 0;
         DWORD result = 0;
         check(BCryptGetProperty(
@@ -283,15 +283,16 @@ namespace brigid {
             sizeof(size),
             &result,
             0));
-        std::vector<char> buffer(size);
-
+        if (size != T_size) {
+          throw BRIGID_LOGIC_ERROR("invalid buffer size");
+        }
+        char buffer[T_size] = {};
         check(BCryptFinishHash(
             hash_.get(),
-            reinterpret_cast<PUCHAR>(buffer.data()),
-            static_cast<ULONG>(buffer.size()),
+            reinterpret_cast<PUCHAR>(buffer),
+            static_cast<ULONG>(T_size),
             0));
-
-        return buffer;
+        lua_pushlstring(L, buffer, T_size);
       }
 
     private:
@@ -334,14 +335,14 @@ namespace brigid {
   }
 
   hasher* new_sha1_hasher(lua_State* L) {
-    return new_userdata<hasher_impl<NAME_SHA1> >(L, "brigid.hasher", BCRYPT_SHA1_ALGORITHM);
+    return new_userdata<hasher_impl<NAME_SHA1, 20> >(L, "brigid.hasher", BCRYPT_SHA1_ALGORITHM);
   }
 
   hasher* new_sha256_hasher(lua_State* L) {
-    return new_userdata<hasher_impl<NAME_SHA256> >(L, "brigid.hasher", BCRYPT_SHA256_ALGORITHM);
+    return new_userdata<hasher_impl<NAME_SHA256, 32> >(L, "brigid.hasher", BCRYPT_SHA256_ALGORITHM);
   }
 
   hasher* new_sha512_hasher(lua_State* L) {
-    return new_userdata<hasher_impl<NAME_SHA512> >(L, "brigid.hasher", BCRYPT_SHA512_ALGORITHM);
+    return new_userdata<hasher_impl<NAME_SHA512, 64> >(L, "brigid.hasher", BCRYPT_SHA512_ALGORITHM);
   }
 }
