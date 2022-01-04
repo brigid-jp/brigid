@@ -7,6 +7,8 @@
 
 #include "noncopyable.hpp"
 
+#include <lua.hpp>
+
 #include <stddef.h>
 #include <memory>
 #include <vector>
@@ -46,6 +48,13 @@ namespace brigid {
   };
 
   std::unique_ptr<hasher> make_hasher(crypto_hash);
+
+  class crypto {
+  public:
+    virtual ~crypto() = 0;
+    virtual const char* get_name() const = 0;
+    virtual hasher* new_hasher(lua_State* L, const char*) const = 0;
+  };
 }
 
 #endif
