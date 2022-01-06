@@ -41,10 +41,11 @@ namespace brigid {
   cryptor* new_aes_128_cbc_encryptor(lua_State*, const char*, size_t, const char*, size_t);
   cryptor* new_aes_192_cbc_encryptor(lua_State*, const char*, size_t, const char*, size_t);
   cryptor* new_aes_256_cbc_encryptor(lua_State*, const char*, size_t, const char*, size_t);
-
   cryptor* new_aes_128_cbc_decryptor(lua_State*, const char*, size_t, const char*, size_t);
   cryptor* new_aes_192_cbc_decryptor(lua_State*, const char*, size_t, const char*, size_t);
   cryptor* new_aes_256_cbc_decryptor(lua_State*, const char*, size_t, const char*, size_t);
+
+  cryptor* new_encryptor(lua_State*, const char*, const char*, size_t, const char*, size_t);
 
   class hasher {
   public:
