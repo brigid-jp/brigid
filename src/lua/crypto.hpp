@@ -38,6 +38,14 @@ namespace brigid {
   std::unique_ptr<cryptor> make_encryptor(crypto_cipher, const char*, size_t, const char*, size_t);
   std::unique_ptr<cryptor> make_decryptor(crypto_cipher, const char*, size_t, const char*, size_t);
 
+  cryptor* new_aes_128_cbc_encryptor(lua_State*, const char*, size_t, const char*, size_t);
+  cryptor* new_aes_192_cbc_encryptor(lua_State*, const char*, size_t, const char*, size_t);
+  cryptor* new_aes_256_cbc_encryptor(lua_State*, const char*, size_t, const char*, size_t);
+
+  cryptor* new_aes_128_cbc_decryptor(lua_State*, const char*, size_t, const char*, size_t);
+  cryptor* new_aes_192_cbc_decryptor(lua_State*, const char*, size_t, const char*, size_t);
+  cryptor* new_aes_256_cbc_decryptor(lua_State*, const char*, size_t, const char*, size_t);
+
   class hasher {
   public:
     virtual ~hasher() = 0;

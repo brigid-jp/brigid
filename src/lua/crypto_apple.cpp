@@ -188,6 +188,44 @@ namespace brigid {
     throw BRIGID_LOGIC_ERROR("unsupported cipher");
   }
 
+  cryptor* new_aes_cbc_encryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+    if (iv_size != 16) {
+      throw BRIGID_LOGIC_ERROR("invalid initialization vector size");
+    }
+    return new_userdata<aes_cryptor_impl>(L, "brigid.cryptor", kCCEncrypt, key_data, key_size, iv_data, 16);
+  }
+
+  cryptor* new_aes_128_cbc_encryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+    return new_aes_cbc_encryptor(L, key_data, key_size, iv_data, iv_size);
+  }
+
+  cryptor* new_aes_192_cbc_encryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+    return new_aes_cbc_encryptor(L, key_data, key_size, iv_data, iv_size);
+  }
+
+  cryptor* new_aes_256_cbc_encryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+    return new_aes_cbc_encryptor(L, key_data, key_size, iv_data, iv_size);
+  }
+
+  cryptor* new_aes_cbc_decryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+    if (iv_size != 16) {
+      throw BRIGID_LOGIC_ERROR("invalid initialization vector size");
+    }
+    return new_userdata<aes_cryptor_impl>(L, "brigid.cryptor", kCCDecrypt, key_data, key_size, iv_data, 0);
+  }
+
+  cryptor* new_aes_128_cbc_decryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+    return new_aes_cbc_decryptor(L, key_data, key_size, iv_data, iv_size);
+  }
+
+  cryptor* new_aes_192_cbc_decryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+    return new_aes_cbc_decryptor(L, key_data, key_size, iv_data, iv_size);
+  }
+
+  cryptor* new_aes_256_cbc_decryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+    return new_aes_cbc_decryptor(L, key_data, key_size, iv_data, iv_size);
+  }
+
   hasher* new_sha1_hasher(lua_State* L) {
     return new_userdata<sha1_hasher_impl>(L, "brigid.hasher");
   }
