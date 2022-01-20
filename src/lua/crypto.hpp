@@ -6,11 +6,13 @@
 #define BRIGID_CRYPTO_HPP
 
 #include "noncopyable.hpp"
+#include "thread_reference.hpp"
 
 #include <lua.hpp>
 
 #include <stddef.h>
 #include <memory>
+#include <vector>
 
 namespace brigid {
   enum class crypto_cipher { aes_128_cbc, aes_192_cbc, aes_256_cbc };
@@ -31,22 +33,39 @@ namespace brigid {
   class cryptor {
   public:
     virtual ~cryptor() = 0;
-    virtual size_t calculate_buffer_size(size_t) const = 0;
-    virtual size_t update(const char*, size_t, char*, size_t, bool) = 0;
+    void update(const char*, size_t, bool);
+    void close();
+    bool closed() const;
+    bool running() const;
+
+  protected:
+    explicit cryptor(thread_reference&&);
+
+  private:
+    size_t in_size_;
+    size_t out_size_;
+    std::vector<char> buffer_;
+    thread_reference ref_;
+    bool running_;
+
+    void ensure_buffer_size(size_t);
+
+    virtual size_t impl_calculate_buffer_size(size_t) const = 0;
+    virtual size_t impl_update(const char*, size_t, char*, size_t, bool) = 0;
   };
 
-  std::unique_ptr<cryptor> make_encryptor(crypto_cipher, const char*, size_t, const char*, size_t);
-  std::unique_ptr<cryptor> make_decryptor(crypto_cipher, const char*, size_t, const char*, size_t);
+  // std::unique_ptr<cryptor> make_encryptor(crypto_cipher, const char*, size_t, const char*, size_t);
+  // std::unique_ptr<cryptor> make_decryptor(crypto_cipher, const char*, size_t, const char*, size_t);
 
-  cryptor* new_aes_128_cbc_encryptor(lua_State*, const char*, size_t, const char*, size_t);
-  cryptor* new_aes_192_cbc_encryptor(lua_State*, const char*, size_t, const char*, size_t);
-  cryptor* new_aes_256_cbc_encryptor(lua_State*, const char*, size_t, const char*, size_t);
-  cryptor* new_aes_128_cbc_decryptor(lua_State*, const char*, size_t, const char*, size_t);
-  cryptor* new_aes_192_cbc_decryptor(lua_State*, const char*, size_t, const char*, size_t);
-  cryptor* new_aes_256_cbc_decryptor(lua_State*, const char*, size_t, const char*, size_t);
+  cryptor* new_aes_128_cbc_encryptor(lua_State*, const char*, size_t, const char*, size_t, thread_reference&&);
+  cryptor* new_aes_192_cbc_encryptor(lua_State*, const char*, size_t, const char*, size_t, thread_reference&&);
+  cryptor* new_aes_256_cbc_encryptor(lua_State*, const char*, size_t, const char*, size_t, thread_reference&&);
+  cryptor* new_aes_128_cbc_decryptor(lua_State*, const char*, size_t, const char*, size_t, thread_reference&&);
+  cryptor* new_aes_192_cbc_decryptor(lua_State*, const char*, size_t, const char*, size_t, thread_reference&&);
+  cryptor* new_aes_256_cbc_decryptor(lua_State*, const char*, size_t, const char*, size_t, thread_reference&&);
 
-  cryptor* new_encryptor(lua_State*, const char*, const char*, size_t, const char*, size_t);
-  cryptor* new_decryptor(lua_State*, const char*, const char*, size_t, const char*, size_t);
+  cryptor* new_encryptor(lua_State*, const char*, const char*, size_t, const char*, size_t, thread_reference&&);
+  cryptor* new_decryptor(lua_State*, const char*, const char*, size_t, const char*, size_t, thread_reference&&);
 
   class hasher {
   public:

@@ -69,7 +69,7 @@ local key = keys[cipher]
 local ciphertext = ciphertexts[cipher]
 
 function suite:test_cryptor()
-  local cryptor = assert(brigid.encryptor(cipher, key, iv))
+  local cryptor = assert(brigid.encryptor(cipher, key, iv, function () end))
   assert(cryptor:update(plaintext, true))
   assert(cryptor:close())
   assert(cryptor:close()) -- can close

@@ -17,11 +17,11 @@ namespace brigid {
 
       main :=
         ( "aes-128-cbc\0"
-          @{ return new_aes_128_cbc_encryptor(L, key_data, key_size, iv_data, iv_size); }
+          @{ return new_aes_128_cbc_encryptor(L, key_data, key_size, iv_data, iv_size, std::move(ref)); }
         | "aes-192-cbc\0"
-          @{ return new_aes_192_cbc_encryptor(L, key_data, key_size, iv_data, iv_size); }
+          @{ return new_aes_192_cbc_encryptor(L, key_data, key_size, iv_data, iv_size, std::move(ref)); }
         | "aes-256-cbc\0"
-          @{ return new_aes_256_cbc_encryptor(L, key_data, key_size, iv_data, iv_size); }
+          @{ return new_aes_256_cbc_encryptor(L, key_data, key_size, iv_data, iv_size, std::move(ref)); }
         );
       write data noerror nofinal noentry;
     }%%
@@ -32,7 +32,7 @@ namespace brigid {
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #endif
 
-  cryptor* new_encryptor(lua_State* L, const char* name, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+  cryptor* new_encryptor(lua_State* L, const char* name, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
     int cs = 0;
     %%write init;
     const char* p = name;

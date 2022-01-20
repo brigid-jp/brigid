@@ -28,7 +28,7 @@ static const int encryptor_name_chooser_start = 1;
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #endif
 
-  cryptor* new_encryptor(lua_State* L, const char* name, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
+  cryptor* new_encryptor(lua_State* L, const char* name, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
     int cs = 0;
     
 #line 35 "new_encryptor.cxx"
@@ -136,15 +136,15 @@ case 12:
 	goto st0;
 tr14:
 #line 20 "new_encryptor.rl"
-	{ return new_aes_128_cbc_encryptor(L, key_data, key_size, iv_data, iv_size); }
+	{ return new_aes_128_cbc_encryptor(L, key_data, key_size, iv_data, iv_size, std::move(ref)); }
 	goto st26;
 tr20:
 #line 22 "new_encryptor.rl"
-	{ return new_aes_192_cbc_encryptor(L, key_data, key_size, iv_data, iv_size); }
+	{ return new_aes_192_cbc_encryptor(L, key_data, key_size, iv_data, iv_size, std::move(ref)); }
 	goto st26;
 tr27:
 #line 24 "new_encryptor.rl"
-	{ return new_aes_256_cbc_encryptor(L, key_data, key_size, iv_data, iv_size); }
+	{ return new_aes_256_cbc_encryptor(L, key_data, key_size, iv_data, iv_size, std::move(ref)); }
 	goto st26;
 st26:
 	if ( ++p == pe )
