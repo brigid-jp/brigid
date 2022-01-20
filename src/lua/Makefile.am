@@ -36,6 +36,8 @@ brigid_la_SOURCES = \
 	json.cpp \
 	json_parse.cxx \
 	module.cpp \
+	new_decryptor.cxx \
+	new_encryptor.cxx \
 	scope_exit.cpp \
 	stack_guard.cpp \
 	stdio.cpp \

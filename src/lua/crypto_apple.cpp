@@ -53,19 +53,20 @@ namespace brigid {
 
     class aes_cryptor_impl : public cryptor, private noncopyable {
     public:
-      aes_cryptor_impl(CCOperation operation, const char* key_data, size_t key_size, const char* iv_data, size_t buffer_size)
-        : cryptor_(make_cryptor_ref()),
+      aes_cryptor_impl(CCOperation operation, const char* key_data, size_t key_size, const char* iv_data, size_t buffer_size, thread_reference&& ref)
+        : cryptor(std::move(ref)),
+          cryptor_(make_cryptor_ref()),
           buffer_size_(buffer_size) {
         CCCryptorRef cryptor = nullptr;
         check(CCCryptorCreateWithMode(operation, kCCModeCBC, kCCAlgorithmAES, kCCOptionPKCS7Padding, iv_data, key_data, key_size, nullptr, 0, 0, 0, &cryptor));
         cryptor_ = make_cryptor_ref(cryptor);
       }
 
-      virtual size_t calculate_buffer_size(size_t in_size) const {
+      virtual size_t impl_calculate_buffer_size(size_t in_size) const {
         return in_size + buffer_size_;
       };
 
-      virtual size_t update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
+      virtual size_t impl_update(const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) {
         size_t size1 = 0;
         size_t size2 = 0;
         check(CCCryptorUpdate(cryptor_.get(), in_data, in_size, out_data, out_size, &size1));
@@ -156,12 +157,13 @@ namespace brigid {
     };
   }
 
-  crypto_initializer::crypto_initializer() {}
-  crypto_initializer::~crypto_initializer() {}
+  // crypto_initializer::crypto_initializer() {}
+  // crypto_initializer::~crypto_initializer() {}
 
   void open_cryptor() {}
   void open_hasher() {}
 
+/*
   std::unique_ptr<cryptor> make_encryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
     switch (cipher) {
       case crypto_cipher::aes_128_cbc:
@@ -186,6 +188,45 @@ namespace brigid {
         return std::unique_ptr<cryptor>(new aes_cryptor_impl(kCCDecrypt, key_data, key_size, iv_data, 0));
     }
     throw BRIGID_LOGIC_ERROR("unsupported cipher");
+  }
+*/
+
+  cryptor* new_aes_cbc_encryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
+    if (iv_size != 16) {
+      throw BRIGID_LOGIC_ERROR("invalid initialization vector size");
+    }
+    return new_userdata<aes_cryptor_impl>(L, "brigid.cryptor", kCCEncrypt, key_data, key_size, iv_data, 16, std::move(ref));
+  }
+
+  cryptor* new_aes_128_cbc_encryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
+    return new_aes_cbc_encryptor(L, key_data, key_size, iv_data, iv_size, std::move(ref));
+  }
+
+  cryptor* new_aes_192_cbc_encryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
+    return new_aes_cbc_encryptor(L, key_data, key_size, iv_data, iv_size, std::move(ref));
+  }
+
+  cryptor* new_aes_256_cbc_encryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
+    return new_aes_cbc_encryptor(L, key_data, key_size, iv_data, iv_size, std::move(ref));
+  }
+
+  cryptor* new_aes_cbc_decryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
+    if (iv_size != 16) {
+      throw BRIGID_LOGIC_ERROR("invalid initialization vector size");
+    }
+    return new_userdata<aes_cryptor_impl>(L, "brigid.cryptor", kCCDecrypt, key_data, key_size, iv_data, 0, std::move(ref));
+  }
+
+  cryptor* new_aes_128_cbc_decryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
+    return new_aes_cbc_decryptor(L, key_data, key_size, iv_data, iv_size, std::move(ref));
+  }
+
+  cryptor* new_aes_192_cbc_decryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
+    return new_aes_cbc_decryptor(L, key_data, key_size, iv_data, iv_size, std::move(ref));
+  }
+
+  cryptor* new_aes_256_cbc_decryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
+    return new_aes_cbc_decryptor(L, key_data, key_size, iv_data, iv_size, std::move(ref));
   }
 
   hasher* new_sha1_hasher(lua_State* L) {
