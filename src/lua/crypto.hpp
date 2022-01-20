@@ -15,17 +15,15 @@
 #include <vector>
 
 namespace brigid {
-  enum class crypto_cipher { aes_128_cbc, aes_192_cbc, aes_256_cbc };
+  // class crypto_initializer : private noncopyable {
+  // public:
+  //   crypto_initializer();
+  //   ~crypto_initializer();
+  // };
 
-  class crypto_initializer : private noncopyable {
-  public:
-    crypto_initializer();
-    ~crypto_initializer();
-  };
-
-  namespace {
-    crypto_initializer crypto_initializer_instance;
-  }
+  // namespace {
+  //   crypto_initializer crypto_initializer_instance;
+  // }
 
   void open_cryptor();
   void open_hasher();
