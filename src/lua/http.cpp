@@ -109,10 +109,9 @@ namespace brigid {
             push_integer(L, code);
             lua_newtable(L);
             for (const auto& field : header) {
-              // TODO rawset?
               lua_pushlstring(L, field.first.data(), field.first.size());
               lua_pushlstring(L, field.second.data(), field.second.size());
-              lua_settable(L, -3);
+              lua_rawset(L, -3);
             }
             running_ = true;
             scope_exit scope_guard([&]() {
