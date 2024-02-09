@@ -39,6 +39,7 @@ namespace brigid {
 
     virtual size_t impl_calculate_buffer_size(size_t) const = 0;
     virtual size_t impl_update(const char*, size_t, char*, size_t, bool) = 0;
+    virtual void impl_close() = 0;
   };
 
   cryptor* new_aes_128_cbc_encryptor(lua_State*, const char*, size_t, const char*, size_t, thread_reference&&);

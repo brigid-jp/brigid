@@ -53,6 +53,10 @@ namespace brigid {
             to_boolean(padding));
       }
 
+      virtual void impl_close() {
+        instance_ = make_global_ref<jobject>();
+      }
+
     private:
       aes_cryptor_vtable vt_;
       global_ref_t<jobject> instance_;

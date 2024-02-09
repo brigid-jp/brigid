@@ -33,7 +33,7 @@ namespace brigid {
 
     using cipher_ctx_t = std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)>;
 
-    cipher_ctx_t make_cipher_ctx(EVP_CIPHER_CTX* ctx) {
+    cipher_ctx_t make_cipher_ctx(EVP_CIPHER_CTX* ctx = nullptr) {
       return cipher_ctx_t(ctx, &EVP_CIPHER_CTX_free);
     }
 
@@ -59,6 +59,10 @@ namespace brigid {
           check(EVP_EncryptFinal_ex(ctx_.get(), reinterpret_cast<unsigned char*>(out_data + size1), &size2));
         }
         return size1 + size2;
+      }
+
+      virtual void impl_close() {
+        ctx_ = make_cipher_ctx();
       }
 
     private:
@@ -87,6 +91,10 @@ namespace brigid {
           check(EVP_DecryptFinal_ex(ctx_.get(), reinterpret_cast<unsigned char*>(out_data + size1), &size2));
         }
         return size1 + size2;
+      }
+
+      virtual void impl_close() {
+        ctx_ = make_cipher_ctx();
       }
 
     private:

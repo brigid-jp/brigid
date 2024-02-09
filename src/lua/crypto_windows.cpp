@@ -159,6 +159,14 @@ namespace brigid {
         return result;
       }
 
+      virtual void impl_close() {
+        alg_ = make_alg_handle();
+        key_buffer_.clear();
+        key_ = make_key_handle();
+        iv_.clear();
+        in_buffer_.clear();
+      }
+
       virtual size_t impl_execute(BCRYPT_KEY_HANDLE, std::vector<UCHAR>&, const char* in_data, size_t in_size, char* out_data, size_t out_size, bool padding) = 0;
 
     private:

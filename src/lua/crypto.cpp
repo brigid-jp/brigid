@@ -48,6 +48,7 @@ namespace brigid {
     in_size_ = 0;
     out_size_ = 0;
     ref_ = thread_reference();
+    impl_close();
   }
 
   bool cryptor::closed() const {
