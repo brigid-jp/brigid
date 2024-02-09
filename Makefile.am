@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 <dev@brigid.jp>
+# Copyright (c) 2019-2021,2024 <dev@brigid.jp>
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
@@ -13,7 +13,6 @@ EXTRA_DIST = \
 	brigid.def \
 	brigid.hpp \
 	docs \
-	include \
 	m4/update.sh \
 	src/java/java.mk \
 	src/java/jp/brigid/*.java \
