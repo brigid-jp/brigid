@@ -13,8 +13,8 @@
 #include <jni.h>
 
 #include <stddef.h>
-#include <algorithm>
 #include <mutex>
+#include <utility>
 
 namespace brigid {
   namespace {

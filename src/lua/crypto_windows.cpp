@@ -17,9 +17,9 @@
 
 #include <stddef.h>
 #include <string.h>
-#include <algorithm>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace brigid {
@@ -303,38 +303,8 @@ namespace brigid {
     };
   }
 
-  // crypto_initializer::crypto_initializer() {}
-  // crypto_initializer::~crypto_initializer() {}
-
   void open_cryptor() {}
   void open_hasher() {}
-
-  // std::unique_ptr<cryptor> make_encryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-  //   switch (cipher) {
-  //     case crypto_cipher::aes_128_cbc:
-  //     case crypto_cipher::aes_192_cbc:
-  //     case crypto_cipher::aes_256_cbc:
-  //       if (iv_size != 16) {
-  //         throw BRIGID_LOGIC_ERROR("invalid initialization vector size");
-  //       }
-  //       return std::unique_ptr<cryptor>(new aes_encryptor_impl(key_data, key_size, iv_data, iv_size));
-  //   }
-  //   throw BRIGID_LOGIC_ERROR("unsupported cipher");
-  // }
-
-  // std::unique_ptr<cryptor> make_decryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-  //   switch (cipher) {
-  //     case crypto_cipher::aes_128_cbc:
-  //     case crypto_cipher::aes_192_cbc:
-  //     case crypto_cipher::aes_256_cbc:
-  //       if (iv_size != 16) {
-  //         throw BRIGID_LOGIC_ERROR("invalid initialization vector size");
-  //       }
-  //       return std::unique_ptr<cryptor>(new aes_decryptor_impl(key_data, key_size, iv_data, iv_size));
-  //   }
-  //   throw BRIGID_LOGIC_ERROR("unsupported cipher");
-  // }
-
 
   cryptor* new_aes_cbc_encryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
     if (iv_size != 16) {
@@ -355,9 +325,6 @@ namespace brigid {
     return new_aes_cbc_encryptor(L, key_data, key_size, iv_data, iv_size, std::move(ref));
   }
 
-
-
-
   cryptor* new_aes_cbc_decryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
     if (iv_size != 16) {
       throw BRIGID_LOGIC_ERROR("invalid initialization vector size");
@@ -376,10 +343,6 @@ namespace brigid {
   cryptor* new_aes_256_cbc_decryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
     return new_aes_cbc_decryptor(L, key_data, key_size, iv_data, iv_size, std::move(ref));
   }
-
-
-
-
 
   hasher* new_sha1_hasher(lua_State* L) {
     return new_userdata<hasher_impl<NAME_SHA1, 20> >(L, "brigid.hasher", BCRYPT_SHA1_ALGORITHM);
