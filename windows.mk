@@ -23,6 +23,8 @@ OBJS = \
 	src\lua\json.obj \
 	src\lua\json_parse.obj \
 	src\lua\module.obj \
+	src\lua\new_decryptor.obj \
+	src\lua\new_encryptor.obj \
 	src\lua\scope_exit.obj \
 	src\lua\stack_guard.obj \
 	src\lua\stdio.obj \

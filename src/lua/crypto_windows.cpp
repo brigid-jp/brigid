@@ -303,8 +303,8 @@ namespace brigid {
     };
   }
 
-  crypto_initializer::crypto_initializer() {}
-  crypto_initializer::~crypto_initializer() {}
+  // crypto_initializer::crypto_initializer() {}
+  // crypto_initializer::~crypto_initializer() {}
 
   void open_cryptor() {}
   void open_hasher() {}
