@@ -10,3 +10,5 @@ local suites = test_suites()
 if not suites() then
   error "test failed"
 end
+collectgarbage()
+collectgarbage()
