@@ -13,6 +13,7 @@ EXTRA_DIST = \
 	brigid.def \
 	brigid.hpp \
 	docs \
+	java_home.sh \
 	m4/update.sh \
 	src/java/java.mk \
 	src/java/jp/brigid/*.java \

@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2022 <dev@brigid.jp>
+# Copyright (c) 2019-2022,2024 <dev@brigid.jp>
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
@@ -10,12 +10,21 @@ luaexec_LTLIBRARIES = brigid.la
 noinst_HEADERS = \
 	common.hpp \
 	common.lua \
+	common_java.hpp \
+	common_windows.hpp \
+	crypto.hpp \
 	data.hpp \
+	error.hpp \
 	function.hpp \
+	http.hpp \
+	http_impl.hpp \
+	noncopyable.hpp \
 	scope_exit.hpp \
 	stack_guard.hpp \
+	stdio.hpp \
 	stopwatch.hpp \
 	thread_reference.hpp \
+	type_traits.hpp \
 	view.hpp
 
 brigid_la_CPPFLAGS = -I$(top_srcdir)/include
@@ -71,7 +80,11 @@ endif
 
 EXTRA_DIST = \
 	*.rl \
+	common_java.cpp \
+	common_windows.cpp \
 	crypto_java.cpp \
 	crypto_windows.cpp \
 	http_java.cpp \
-	http_windows.cpp
+	http_windows.cpp \
+	java.mk \
+	stopwatch_windows.cpp
