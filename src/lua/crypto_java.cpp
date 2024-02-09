@@ -13,16 +13,11 @@
 #include <jni.h>
 
 #include <stddef.h>
-#include <algorithm>
-#include <memory>
 #include <mutex>
+#include <utility>
 
 namespace brigid {
   namespace {
-    char NAME_SHA1[] = "sha1";
-    char NAME_SHA256[] = "sha256";
-    char NAME_SHA512[] = "sha512";
-
     jclass aes_cryptor_clazz;
 
     class aes_cryptor_vtable : private noncopyable {
@@ -78,17 +73,13 @@ namespace brigid {
       method<jbyteArray> digest;
     };
 
-    template <const char* T_name, size_t T_size>
+    template <size_t T_size>
     class hasher_impl : public hasher, private noncopyable {
     public:
       hasher_impl(const char* algorithm)
         : instance_(make_global_ref(vt_.constructor(
               hasher_clazz,
               make_byte_array(algorithm)))) {}
-
-      virtual const char* get_name() const {
-        return T_name;
-      }
 
       virtual void update(const char* data, size_t size) {
         vt_.update(instance_, make_direct_byte_buffer(const_cast<char*>(data), size));
@@ -113,9 +104,6 @@ namespace brigid {
     std::mutex open_hasher_mutex;
   }
 
-  // crypto_initializer::crypto_initializer() {}
-  // crypto_initializer::~crypto_initializer() {}
-
   void open_cryptor() {
     std::lock_guard<std::mutex> lock(open_cryptor_mutex);
     if (!aes_cryptor_clazz) {
@@ -129,27 +117,6 @@ namespace brigid {
       hasher_clazz = make_global_ref(find_class("jp/brigid/Hasher")).release();
     }
   }
-
-  // std::unique_ptr<cryptor> make_encryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-  //   switch (cipher) {
-  //     case crypto_cipher::aes_128_cbc:
-  //     case crypto_cipher::aes_192_cbc:
-  //     case crypto_cipher::aes_256_cbc:
-  //       return std::unique_ptr<cryptor>(new aes_cryptor_impl(true, key_data, key_size, iv_data, iv_size, 16));
-  //   }
-  //   throw BRIGID_LOGIC_ERROR("unsupported cipher");
-  // }
-
-  // std::unique_ptr<cryptor> make_decryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-  //   switch (cipher) {
-  //     case crypto_cipher::aes_128_cbc:
-  //     case crypto_cipher::aes_192_cbc:
-  //     case crypto_cipher::aes_256_cbc:
-  //       return std::unique_ptr<cryptor>(new aes_cryptor_impl(false, key_data, key_size, iv_data, iv_size, 0));
-  //   }
-  //   throw BRIGID_LOGIC_ERROR("unsupported cipher");
-  // }
-
 
   cryptor* new_aes_cbc_encryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
     if (iv_size != 16) {
@@ -189,20 +156,15 @@ namespace brigid {
     return new_aes_cbc_decryptor(L, key_data, key_size, iv_data, iv_size, std::move(ref));
   }
 
-
-
-
-
-
   hasher* new_sha1_hasher(lua_State* L) {
-    return new_userdata<hasher_impl<NAME_SHA1, 20> >(L, "brigid.hasher", "SHA-1");
+    return new_userdata<hasher_impl<20> >(L, "brigid.hasher", "SHA-1");
   }
 
   hasher* new_sha256_hasher(lua_State* L) {
-    return new_userdata<hasher_impl<NAME_SHA256, 32> >(L, "brigid.hasher", "SHA-256");
+    return new_userdata<hasher_impl<32> >(L, "brigid.hasher", "SHA-256");
   }
 
   hasher* new_sha512_hasher(lua_State* L) {
-    return new_userdata<hasher_impl<NAME_SHA512, 64> >(L, "brigid.hasher", "SHA-512");
+    return new_userdata<hasher_impl<64> >(L, "brigid.hasher", "SHA-512");
   }
 }

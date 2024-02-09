@@ -13,7 +13,7 @@
 #include <CommonCrypto/CommonCrypto.h>
 
 #include <stddef.h>
-#include <algorithm>
+#include <utility>
 #include <memory>
 
 namespace brigid {
@@ -89,10 +89,6 @@ namespace brigid {
         CC_SHA1_Init(&ctx_);
       }
 
-      virtual const char* get_name() const {
-        return "sha1";
-      }
-
       virtual void update(const char* data, size_t size) {
         CC_SHA1_Update(&ctx_, data, size);
       }
@@ -112,10 +108,6 @@ namespace brigid {
       sha256_hasher_impl()
         : ctx_() {
         CC_SHA256_Init(&ctx_);
-      }
-
-      virtual const char* get_name() const {
-        return "sha256";
       }
 
       virtual void update(const char* data, size_t size) {
@@ -139,10 +131,6 @@ namespace brigid {
         CC_SHA512_Init(&ctx_);
       }
 
-      virtual const char* get_name() const {
-        return "sha512";
-      }
-
       virtual void update(const char* data, size_t size) {
         CC_SHA512_Update(&ctx_, data, size);
       }
@@ -158,39 +146,8 @@ namespace brigid {
     };
   }
 
-  // crypto_initializer::crypto_initializer() {}
-  // crypto_initializer::~crypto_initializer() {}
-
   void open_cryptor() {}
   void open_hasher() {}
-
-/*
-  std::unique_ptr<cryptor> make_encryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-    switch (cipher) {
-      case crypto_cipher::aes_128_cbc:
-      case crypto_cipher::aes_192_cbc:
-      case crypto_cipher::aes_256_cbc:
-        if (iv_size != 16) {
-          throw BRIGID_LOGIC_ERROR("invalid initialization vector size");
-        }
-        return std::unique_ptr<cryptor>(new aes_cryptor_impl(kCCEncrypt, key_data, key_size, iv_data, 16));
-    }
-    throw BRIGID_LOGIC_ERROR("unsupported cipher");
-  }
-
-  std::unique_ptr<cryptor> make_decryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-    switch (cipher) {
-      case crypto_cipher::aes_128_cbc:
-      case crypto_cipher::aes_192_cbc:
-      case crypto_cipher::aes_256_cbc:
-        if (iv_size != 16) {
-          throw BRIGID_LOGIC_ERROR("invalid initialization vector size");
-        }
-        return std::unique_ptr<cryptor>(new aes_cryptor_impl(kCCDecrypt, key_data, key_size, iv_data, 0));
-    }
-    throw BRIGID_LOGIC_ERROR("unsupported cipher");
-  }
-*/
 
   cryptor* new_aes_cbc_encryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
     if (iv_size != 16) {

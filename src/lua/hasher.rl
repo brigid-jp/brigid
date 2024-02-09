@@ -1,6 +1,6 @@
 // vim: syntax=ragel:
 
-// Copyright (c) 2022 <dev@brigid.jp>
+// Copyright (c) 2022,2024 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -63,11 +63,6 @@ namespace brigid {
       }
     }
 
-    void impl_get_name(lua_State* L) {
-      hasher* self = check_hasher(L, 1);
-      lua_pushstring(L, self->get_name());
-    }
-
     void impl_update(lua_State* L) {
       hasher* self = check_hasher(L, 1);
       data_t source = check_data(L, 2);
@@ -97,7 +92,6 @@ namespace brigid {
       lua_pop(L, 1);
 
       decltype(function<impl_call>())::set_metafield(L, -1, "__call");
-      decltype(function<impl_get_name>())::set_field(L, -1, "get_name");
       decltype(function<impl_update>())::set_field(L, -1, "update");
       decltype(function<impl_digest>())::set_field(L, -1, "digest");
     }

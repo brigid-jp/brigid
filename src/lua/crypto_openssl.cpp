@@ -14,8 +14,8 @@
 #include <openssl/sha.h>
 
 #include <stddef.h>
-#include <algorithm>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace brigid {
@@ -100,10 +100,6 @@ namespace brigid {
         check(SHA1_Init(&ctx_));
       }
 
-      virtual const char* get_name() const {
-        return "sha1";
-      }
-
       virtual void update(const char* data, size_t size) {
         check(SHA1_Update(&ctx_, data, size));
       }
@@ -123,10 +119,6 @@ namespace brigid {
       sha256_hasher_impl()
         : ctx_() {
         check(SHA256_Init(&ctx_));
-      }
-
-      virtual const char* get_name() const {
-        return "sha256";
       }
 
       virtual void update(const char* data, size_t size) {
@@ -150,10 +142,6 @@ namespace brigid {
         check(SHA512_Init(&ctx_));
       }
 
-      virtual const char* get_name() const {
-        return "sha512";
-      }
-
       virtual void update(const char* data, size_t size) {
         check(SHA512_Update(&ctx_, data, size));
       }
@@ -167,71 +155,13 @@ namespace brigid {
     private:
       SHA512_CTX ctx_;
     };
-
-    // int crypto_initializer_count = 0;
   }
-
-  // crypto_initializer::crypto_initializer() {
-  //   if (++crypto_initializer_count == 1) {
-  //     ERR_load_crypto_strings();
-  //   }
-  // }
-
-  // crypto_initializer::~crypto_initializer() {
-  //   if (--crypto_initializer_count == 0) {
-  //     ERR_free_strings();
-  //   }
-  // }
 
   void open_cryptor() {
     ERR_load_crypto_strings();
   }
 
-  void open_hasher() {
-    ERR_load_crypto_strings();
-  }
-
-//   std::unique_ptr<cryptor> make_encryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-//     const EVP_CIPHER* evp_cipher = nullptr;
-//     switch (cipher) {
-//       case crypto_cipher::aes_128_cbc:
-//         evp_cipher = EVP_aes_128_cbc();
-//         break;
-//       case crypto_cipher::aes_192_cbc:
-//         evp_cipher = EVP_aes_192_cbc();
-//         break;
-//       case crypto_cipher::aes_256_cbc:
-//         evp_cipher = EVP_aes_256_cbc();
-//         break;
-//       default:
-//         throw BRIGID_LOGIC_ERROR("unsupported cipher");
-//     }
-//     if (iv_size != 16) {
-//       throw BRIGID_LOGIC_ERROR("invalid initialization vector size");
-//     }
-//     return std::unique_ptr<cryptor>(new aes_encryptor_impl(evp_cipher, key_data, key_size, iv_data));
-//   }
-// 
-//   std::unique_ptr<cryptor> make_decryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-//     const EVP_CIPHER* evp_cipher = nullptr;
-//     switch (cipher) {
-//       case crypto_cipher::aes_128_cbc:
-//         evp_cipher = EVP_aes_128_cbc();
-//         break;
-//       case crypto_cipher::aes_192_cbc:
-//         evp_cipher = EVP_aes_192_cbc();
-//         break;
-//       case crypto_cipher::aes_256_cbc:
-//         evp_cipher = EVP_aes_256_cbc();
-//         break;
-//       default:
-//         throw BRIGID_LOGIC_ERROR("unsupported cipher");
-//     }
-//     if (iv_size != 16) {
-//       throw BRIGID_LOGIC_ERROR("invalid initialization vector size");
-//     }
-//     return std::unique_ptr<cryptor>(new aes_decryptor_impl(evp_cipher, key_data, key_size, iv_data));
-//   }
+  void open_hasher() {}
 
   cryptor* new_aes_cbc_encryptor(lua_State* L, const EVP_CIPHER* cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
     if (iv_size != 16) {
@@ -252,9 +182,6 @@ namespace brigid {
     return new_aes_cbc_encryptor(L, EVP_aes_256_cbc(), key_data, key_size, iv_data, iv_size, std::move(ref));
   }
 
-
-
-
   cryptor* new_aes_cbc_decryptor(lua_State* L, const EVP_CIPHER* cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
     if (iv_size != 16) {
       throw BRIGID_LOGIC_ERROR("invalid initialization vector size");
@@ -273,10 +200,6 @@ namespace brigid {
   cryptor* new_aes_256_cbc_decryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
     return new_aes_cbc_decryptor(L, EVP_aes_256_cbc(), key_data, key_size, iv_data, iv_size, std::move(ref));
   }
-
-
-
-
 
   hasher* new_sha1_hasher(lua_State* L) {
     return new_userdata<sha1_hasher_impl>(L, "brigid.hasher");

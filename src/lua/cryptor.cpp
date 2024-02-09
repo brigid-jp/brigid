@@ -7,38 +7,15 @@
 #include "data.hpp"
 #include "error.hpp"
 #include "function.hpp"
-#include "noncopyable.hpp"
 #include "thread_reference.hpp"
 
 #include <lua.hpp>
 
 #include <stddef.h>
-#include <algorithm>
-#include <memory>
 #include <utility>
-#include <string>
-#include <vector>
 
 namespace brigid {
   namespace {
-    /*
-    crypto_cipher check_cipher(lua_State* L, int arg) {
-      size_t size = 0;
-      if (const char* data = lua_tolstring(L, arg, &size)) {
-        std::string cipher(data, size);
-        if (cipher == "aes-128-cbc") {
-          return crypto_cipher::aes_128_cbc;
-        } else if (cipher == "aes-192-cbc") {
-          return crypto_cipher::aes_192_cbc;
-        } else if (cipher == "aes-256-cbc") {
-          return crypto_cipher::aes_256_cbc;
-        }
-      }
-      luaL_argerror(L, arg, "unsupported cipher");
-      throw BRIGID_LOGIC_ERROR("unreachable");
-    }
-    */
-
     cryptor* check_cryptor(lua_State* L, int arg, int validate = check_validate_all) {
       cryptor* self = check_udata<cryptor>(L, arg, "brigid.cryptor");
       if (validate & check_validate_not_closed) {

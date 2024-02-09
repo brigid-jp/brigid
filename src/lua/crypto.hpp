@@ -11,20 +11,9 @@
 #include <lua.hpp>
 
 #include <stddef.h>
-#include <memory>
 #include <vector>
 
 namespace brigid {
-  // class crypto_initializer : private noncopyable {
-  // public:
-  //   crypto_initializer();
-  //   ~crypto_initializer();
-  // };
-
-  // namespace {
-  //   crypto_initializer crypto_initializer_instance;
-  // }
-
   void open_cryptor();
   void open_hasher();
 
@@ -52,9 +41,6 @@ namespace brigid {
     virtual size_t impl_update(const char*, size_t, char*, size_t, bool) = 0;
   };
 
-  // std::unique_ptr<cryptor> make_encryptor(crypto_cipher, const char*, size_t, const char*, size_t);
-  // std::unique_ptr<cryptor> make_decryptor(crypto_cipher, const char*, size_t, const char*, size_t);
-
   cryptor* new_aes_128_cbc_encryptor(lua_State*, const char*, size_t, const char*, size_t, thread_reference&&);
   cryptor* new_aes_192_cbc_encryptor(lua_State*, const char*, size_t, const char*, size_t, thread_reference&&);
   cryptor* new_aes_256_cbc_encryptor(lua_State*, const char*, size_t, const char*, size_t, thread_reference&&);
@@ -68,7 +54,6 @@ namespace brigid {
   class hasher {
   public:
     virtual ~hasher() = 0;
-    virtual const char* get_name() const = 0; // TODO 不要では？
     virtual void update(const char*, size_t) = 0;
     virtual void digest(lua_State*) = 0;
   };
