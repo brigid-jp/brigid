@@ -77,6 +77,10 @@ namespace brigid {
         return size1 + size2;
       }
 
+      virtual void impl_close() {
+        cryptor_ = make_cryptor_ref();
+      }
+
     private:
       cryptor_ref_t cryptor_;
       size_t buffer_size_;
