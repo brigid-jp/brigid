@@ -14,7 +14,6 @@
 
 #include <stddef.h>
 #include <algorithm>
-#include <memory>
 #include <mutex>
 
 namespace brigid {
@@ -113,9 +112,6 @@ namespace brigid {
     std::mutex open_hasher_mutex;
   }
 
-  // crypto_initializer::crypto_initializer() {}
-  // crypto_initializer::~crypto_initializer() {}
-
   void open_cryptor() {
     std::lock_guard<std::mutex> lock(open_cryptor_mutex);
     if (!aes_cryptor_clazz) {
@@ -129,27 +125,6 @@ namespace brigid {
       hasher_clazz = make_global_ref(find_class("jp/brigid/Hasher")).release();
     }
   }
-
-  // std::unique_ptr<cryptor> make_encryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-  //   switch (cipher) {
-  //     case crypto_cipher::aes_128_cbc:
-  //     case crypto_cipher::aes_192_cbc:
-  //     case crypto_cipher::aes_256_cbc:
-  //       return std::unique_ptr<cryptor>(new aes_cryptor_impl(true, key_data, key_size, iv_data, iv_size, 16));
-  //   }
-  //   throw BRIGID_LOGIC_ERROR("unsupported cipher");
-  // }
-
-  // std::unique_ptr<cryptor> make_decryptor(crypto_cipher cipher, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size) {
-  //   switch (cipher) {
-  //     case crypto_cipher::aes_128_cbc:
-  //     case crypto_cipher::aes_192_cbc:
-  //     case crypto_cipher::aes_256_cbc:
-  //       return std::unique_ptr<cryptor>(new aes_cryptor_impl(false, key_data, key_size, iv_data, iv_size, 0));
-  //   }
-  //   throw BRIGID_LOGIC_ERROR("unsupported cipher");
-  // }
-
 
   cryptor* new_aes_cbc_encryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
     if (iv_size != 16) {
@@ -188,11 +163,6 @@ namespace brigid {
   cryptor* new_aes_256_cbc_decryptor(lua_State* L, const char* key_data, size_t key_size, const char* iv_data, size_t iv_size, thread_reference&& ref) {
     return new_aes_cbc_decryptor(L, key_data, key_size, iv_data, iv_size, std::move(ref));
   }
-
-
-
-
-
 
   hasher* new_sha1_hasher(lua_State* L) {
     return new_userdata<hasher_impl<NAME_SHA1, 20> >(L, "brigid.hasher", "SHA-1");
