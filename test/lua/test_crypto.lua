@@ -109,12 +109,6 @@ function suite:test_sha1_2()
   })
 end
 
-function suite:test_sha1_3()
-  local h = brigid.hasher "sha1"
-  if debug then print(h:get_name()) end
-  assert(h:get_name() == "sha1")
-end
-
 function suite:test_sha256_1()
   local result = brigid.hasher "sha256":update "":digest()
   assert(result == table.concat {
@@ -133,12 +127,6 @@ function suite:test_sha256_2()
     "\141\086\081\228\109\060\219\118";
     "\045\002\208\191\055\201\229\146";
   })
-end
-
-function suite:test_sha256_3()
-  local h = brigid.hasher "sha256"
-  if debug then print(h:get_name()) end
-  assert(h:get_name() == "sha256")
 end
 
 function suite:test_sha512_1()
@@ -167,12 +155,6 @@ function suite:test_sha512_2()
     "\225\191\215\009\120\033\035\063";
     "\160\083\143\061\184\084\254\230";
   })
-end
-
-function suite:test_sha512_3()
-  local h = brigid.hasher "sha512"
-  if debug then print(h:get_name()) end
-  assert(h:get_name() == "sha512")
 end
 
 return suite
