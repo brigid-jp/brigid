@@ -13,6 +13,7 @@
 #include <CommonCrypto/CommonCrypto.h>
 
 #include <stddef.h>
+#include <algorithm>
 #include <memory>
 
 namespace brigid {

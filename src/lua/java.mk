@@ -31,6 +31,8 @@ OBJS = \
 	json.o \
 	json_parse.o \
 	module.o \
+	new_decryptor.o \
+	new_encryptor.o \
 	scope_exit.o \
 	stack_guard.o \
 	stdio.o \
