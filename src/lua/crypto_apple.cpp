@@ -1,4 +1,4 @@
-// Copyright (c) 2021,2022 <dev@brigid.jp>
+// Copyright (c) 2021,2022,2024 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -13,6 +13,7 @@
 #include <CommonCrypto/CommonCrypto.h>
 
 #include <stddef.h>
+#include <algorithm>
 #include <memory>
 
 namespace brigid {

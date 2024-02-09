@@ -1,4 +1,4 @@
-# Copyright (c) 2021 <dev@brigid.jp>
+# Copyright (c) 2021,2024 <dev@brigid.jp>
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
@@ -31,6 +31,8 @@ OBJS = \
 	json.o \
 	json_parse.o \
 	module.o \
+	new_decryptor.o \
+	new_encryptor.o \
 	scope_exit.o \
 	stack_guard.o \
 	stdio.o \
