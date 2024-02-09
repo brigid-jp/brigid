@@ -100,10 +100,6 @@ namespace brigid {
         check(SHA1_Init(&ctx_));
       }
 
-      virtual const char* get_name() const {
-        return "sha1";
-      }
-
       virtual void update(const char* data, size_t size) {
         check(SHA1_Update(&ctx_, data, size));
       }
@@ -125,10 +121,6 @@ namespace brigid {
         check(SHA256_Init(&ctx_));
       }
 
-      virtual const char* get_name() const {
-        return "sha256";
-      }
-
       virtual void update(const char* data, size_t size) {
         check(SHA256_Update(&ctx_, data, size));
       }
@@ -148,10 +140,6 @@ namespace brigid {
       sha512_hasher_impl()
         : ctx_() {
         check(SHA512_Init(&ctx_));
-      }
-
-      virtual const char* get_name() const {
-        return "sha512";
       }
 
       virtual void update(const char* data, size_t size) {

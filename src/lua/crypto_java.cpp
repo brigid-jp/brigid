@@ -18,10 +18,6 @@
 
 namespace brigid {
   namespace {
-    char NAME_SHA1[] = "sha1";
-    char NAME_SHA256[] = "sha256";
-    char NAME_SHA512[] = "sha512";
-
     jclass aes_cryptor_clazz;
 
     class aes_cryptor_vtable : private noncopyable {
@@ -77,17 +73,13 @@ namespace brigid {
       method<jbyteArray> digest;
     };
 
-    template <const char* T_name, size_t T_size>
+    template <size_t T_size>
     class hasher_impl : public hasher, private noncopyable {
     public:
       hasher_impl(const char* algorithm)
         : instance_(make_global_ref(vt_.constructor(
               hasher_clazz,
               make_byte_array(algorithm)))) {}
-
-      virtual const char* get_name() const {
-        return T_name;
-      }
 
       virtual void update(const char* data, size_t size) {
         vt_.update(instance_, make_direct_byte_buffer(const_cast<char*>(data), size));
@@ -165,14 +157,14 @@ namespace brigid {
   }
 
   hasher* new_sha1_hasher(lua_State* L) {
-    return new_userdata<hasher_impl<NAME_SHA1, 20> >(L, "brigid.hasher", "SHA-1");
+    return new_userdata<hasher_impl<20> >(L, "brigid.hasher", "SHA-1");
   }
 
   hasher* new_sha256_hasher(lua_State* L) {
-    return new_userdata<hasher_impl<NAME_SHA256, 32> >(L, "brigid.hasher", "SHA-256");
+    return new_userdata<hasher_impl<32> >(L, "brigid.hasher", "SHA-256");
   }
 
   hasher* new_sha512_hasher(lua_State* L) {
-    return new_userdata<hasher_impl<NAME_SHA512, 64> >(L, "brigid.hasher", "SHA-512");
+    return new_userdata<hasher_impl<64> >(L, "brigid.hasher", "SHA-512");
   }
 }

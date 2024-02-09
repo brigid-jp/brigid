@@ -24,10 +24,6 @@
 
 namespace brigid {
   namespace {
-    char NAME_SHA1[] = "sha1";
-    char NAME_SHA256[] = "sha256";
-    char NAME_SHA512[] = "sha512";
-
     void check(NTSTATUS code) {
       if (!BCRYPT_SUCCESS(code)) {
         std::string message;
@@ -225,7 +221,7 @@ namespace brigid {
       }
     };
 
-    template <const char* T_name, size_t T_size>
+    template <size_t T_size>
     class hasher_impl : public hasher, private noncopyable {
     public:
       explicit hasher_impl(LPCWSTR algorithm)
@@ -260,10 +256,6 @@ namespace brigid {
             0,
             0));
         hash_ = make_hash_handle(hash);
-      }
-
-      virtual const char* get_name() const {
-        return T_name;
       }
 
       virtual void update(const char* data, size_t size) {
@@ -345,14 +337,14 @@ namespace brigid {
   }
 
   hasher* new_sha1_hasher(lua_State* L) {
-    return new_userdata<hasher_impl<NAME_SHA1, 20> >(L, "brigid.hasher", BCRYPT_SHA1_ALGORITHM);
+    return new_userdata<hasher_impl<20> >(L, "brigid.hasher", BCRYPT_SHA1_ALGORITHM);
   }
 
   hasher* new_sha256_hasher(lua_State* L) {
-    return new_userdata<hasher_impl<NAME_SHA256, 32> >(L, "brigid.hasher", BCRYPT_SHA256_ALGORITHM);
+    return new_userdata<hasher_impl<32> >(L, "brigid.hasher", BCRYPT_SHA256_ALGORITHM);
   }
 
   hasher* new_sha512_hasher(lua_State* L) {
-    return new_userdata<hasher_impl<NAME_SHA512, 64> >(L, "brigid.hasher", BCRYPT_SHA512_ALGORITHM);
+    return new_userdata<hasher_impl<64> >(L, "brigid.hasher", BCRYPT_SHA512_ALGORITHM);
   }
 }

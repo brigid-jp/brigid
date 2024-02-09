@@ -54,7 +54,6 @@ namespace brigid {
   class hasher {
   public:
     virtual ~hasher() = 0;
-    virtual const char* get_name() const = 0;
     virtual void update(const char*, size_t) = 0;
     virtual void digest(lua_State*) = 0;
   };
