@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2021 <dev@brigid.jp>
+// Copyright (c) 2019-2021,2024 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -109,10 +109,9 @@ namespace brigid {
             push_integer(L, code);
             lua_newtable(L);
             for (const auto& field : header) {
-              // TODO rawset?
               lua_pushlstring(L, field.first.data(), field.first.size());
               lua_pushlstring(L, field.second.data(), field.second.size());
-              lua_settable(L, -3);
+              lua_rawset(L, -3);
             }
             running_ = true;
             scope_exit scope_guard([&]() {
