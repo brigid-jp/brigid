@@ -284,7 +284,9 @@ namespace brigid {
       }
 
       virtual ~http_session_impl() {
-        [session_ invalidateAndCancel];
+        // Disabling NSURLSession explicitly results in an "Attempt to use unknown class" error.
+        // [session_ invalidateAndCancel];
+        // [session_ finishTasksAndInvalidate];
       }
 
       virtual bool request(
