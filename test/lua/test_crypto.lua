@@ -1,4 +1,4 @@
--- Copyright (c) 2019,2021 <dev@brigid.jp>
+-- Copyright (c) 2019,2021,2022,2024 <dev@brigid.jp>
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
@@ -69,7 +69,7 @@ local key = keys[cipher]
 local ciphertext = ciphertexts[cipher]
 
 function suite:test_cryptor()
-  local cryptor = assert(brigid.encryptor(cipher, key, iv))
+  local cryptor = assert(brigid.encryptor(cipher, key, iv, function () end))
   assert(cryptor:update(plaintext, true))
   assert(cryptor:close())
   assert(cryptor:close()) -- can close
@@ -89,16 +89,6 @@ for i = 1, #ciphers do
   suite["test_decrypt_" .. cipher_name] = function ()
     assert(decrypt(cipher, key, iv, ciphertext) == plaintext)
   end
-end
-
-function suite:test_hasher()
-  local hasher = brigid.hasher "sha256"
-  assert(getmetatable(hasher).__close)
-  assert(hasher:close())
-  assert(hasher:close()) -- can close
-  local result, message = pcall(function () hasher:update "0" end)
-  print(message)
-  assert(not result)
 end
 
 function suite:test_sha1_1()

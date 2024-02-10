@@ -5,8 +5,8 @@
 #ifndef BRIGID_VIEW_HPP
 #define BRIGID_VIEW_HPP
 
-#include <brigid/noncopyable.hpp>
 #include "data.hpp"
+#include "noncopyable.hpp"
 
 #include <lua.hpp>
 

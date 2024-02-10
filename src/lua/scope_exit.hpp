@@ -5,7 +5,7 @@
 #ifndef BRIGID_SCOPE_EXIT_HPP
 #define BRIGID_SCOPE_EXIT_HPP
 
-#include <brigid/noncopyable.hpp>
+#include "noncopyable.hpp"
 
 #include <functional>
 

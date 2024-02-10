@@ -3,6 +3,7 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include "common.hpp"
+#include "function.hpp"
 
 #include <lua.hpp>
 
@@ -26,7 +27,7 @@ namespace brigid {
 
     lua_newtable(L);
     {
-      set_field(L, -1, "array", impl_array);
+      decltype(function<impl_array>())::set_field(L, -1, "array");
 
       initialize_json_parse(L);
     }

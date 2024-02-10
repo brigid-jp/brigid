@@ -1,12 +1,13 @@
-// Copyright (c) 2019-2021 <dev@brigid.jp>
+// Copyright (c) 2019-2021,2024 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <brigid/error.hpp>
-#include <brigid/http.hpp>
-#include <brigid/noncopyable.hpp>
 #include "common.hpp"
 #include "data.hpp"
+#include "error.hpp"
+#include "function.hpp"
+#include "http.hpp"
+#include "noncopyable.hpp"
 #include "scope_exit.hpp"
 #include "stack_guard.hpp"
 #include "thread_reference.hpp"
@@ -108,10 +109,9 @@ namespace brigid {
             push_integer(L, code);
             lua_newtable(L);
             for (const auto& field : header) {
-              // TODO rawset?
               lua_pushlstring(L, field.first.data(), field.first.size());
               lua_pushlstring(L, field.second.data(), field.second.size());
-              lua_settable(L, -3);
+              lua_rawset(L, -3);
             }
             running_ = true;
             scope_exit scope_guard([&]() {
@@ -309,6 +309,8 @@ namespace brigid {
     }
   }
 
+  http_session::~http_session() {}
+
   void initialize_http(lua_State* L) {
     try {
       open_http();
@@ -322,13 +324,13 @@ namespace brigid {
       new_metatable(L, "brigid.http_session");
       lua_pushvalue(L, -2);
       lua_setfield(L, -2, "__index");
-      set_field(L, -1, "__gc", impl_gc);
-      set_field(L, -1, "__close", impl_close);
+      decltype(function<impl_gc>())::set_field(L, -1, "__gc");
+      decltype(function<impl_close>())::set_field(L, -1, "__close");
       lua_pop(L, 1);
 
-      set_metafield(L, -1, "__call", impl_call);
-      set_field(L, -1, "request", impl_request);
-      set_field(L, -1, "close", impl_close);
+      decltype(function<impl_call>())::set_metafield(L, -1, "__call");
+      decltype(function<impl_request>())::set_field(L, -1, "request");
+      decltype(function<impl_close>())::set_field(L, -1, "close");
     }
     lua_setfield(L, -2, "http_session");
   }

@@ -38,10 +38,13 @@
 /stamp-h1
 /test-driver
 /test/lab/abnf.rl
-/test/lib/JavaTest.h
-/test/lib/libjavatest.dylib
+/test/lua/JavaTest.h
 /test/lua/brigid-test.love
+/test/lua/libjavatest.dylib
 Makefile
+bench*.exe
+bench*.log
+bench*.trs
 test*.exe
 test*.log
 test*.trs

@@ -2,18 +2,17 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <brigid/error.hpp>
-#include <brigid/noncopyable.hpp>
-#include <brigid/stdio.hpp>
 #include "common.hpp"
 #include "data.hpp"
+#include "error.hpp"
+#include "function.hpp"
+#include "noncopyable.hpp"
+#include "stdio.hpp"
 
 #include <lua.hpp>
 
-#include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <system_error>
 
 namespace brigid {
   namespace {
@@ -32,15 +31,13 @@ namespace brigid {
 
       void write(const char* data, size_t size) {
         if (fwrite(data, 1, size, handle_.get()) != size) {
-          int code = errno;
-          throw BRIGID_RUNTIME_ERROR(std::generic_category().message(code), make_error_code("error number", code));
+          throw BRIGID_SYSTEM_ERROR();
         }
       }
 
       void flush() {
         if (fflush(handle_.get()) != 0) {
-          int code = errno;
-          throw BRIGID_RUNTIME_ERROR(std::generic_category().message(code), make_error_code("error number", code));
+          throw BRIGID_SYSTEM_ERROR();
         }
       }
 
@@ -92,14 +89,14 @@ namespace brigid {
       new_metatable(L, "brigid.file_writer");
       lua_pushvalue(L, -2);
       lua_setfield(L, -2, "__index");
-      set_field(L, -1, "__gc", impl_gc);
-      set_field(L, -1, "__close", impl_close);
+      decltype(function<impl_gc>())::set_field(L, -1, "__gc");
+      decltype(function<impl_close>())::set_field(L, -1, "__close");
       lua_pop(L, 1);
 
-      set_metafield(L, -1, "__call", impl_call);
-      set_field(L, -1, "close", impl_close);
-      set_field(L, -1, "write", impl_write);
-      set_field(L, -1, "flush", impl_flush);
+      decltype(function<impl_call>())::set_metafield(L, -1, "__call");
+      decltype(function<impl_close>())::set_field(L, -1, "close");
+      decltype(function<impl_write>())::set_field(L, -1, "write");
+      decltype(function<impl_flush>())::set_field(L, -1, "flush");
     }
     lua_setfield(L, -2, "file_writer");
   }

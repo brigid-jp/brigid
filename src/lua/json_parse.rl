@@ -4,9 +4,10 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <brigid/error.hpp>
 #include "common.hpp"
 #include "data.hpp"
+#include "error.hpp"
+#include "function.hpp"
 
 #include <lua.hpp>
 
@@ -19,12 +20,12 @@
 #include <vector>
 
 namespace brigid {
-  using lua_unsigned_t = std::make_unsigned<lua_Integer>::type;
-  static const size_t integer_digs = std::numeric_limits<lua_Integer>::digits10 + 1;
-  static const lua_unsigned_t integer_max_div10 = std::numeric_limits<lua_Integer>::max() / 10;
-  static const lua_unsigned_t integer_max_mod10 = std::numeric_limits<lua_Integer>::max() % 10;
-
   namespace {
+    using lua_unsigned_t = std::make_unsigned<lua_Integer>::type;
+    static const size_t integer_digs = std::numeric_limits<lua_Integer>::digits10 + 1;
+    static const lua_unsigned_t integer_max_div10 = std::numeric_limits<lua_Integer>::max() / 10;
+    static const lua_unsigned_t integer_max_mod10 = std::numeric_limits<lua_Integer>::max() % 10;
+
     %%{
       machine json_parser;
 
@@ -223,7 +224,7 @@ namespace brigid {
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #endif
 
-    void impl_parse(lua_State* L) {
+    int impl_parse(lua_State* L) {
       data_t data = check_data(L, 1);
 
       int cs = 0;
@@ -251,8 +252,7 @@ namespace brigid {
       %%write exec;
 
       if (cs >= %%{ write first_final; }%% && stack.empty()) {
-        lua_remove(L, array_index);
-        return;
+        return 1;
       }
 
       std::ostringstream out;
@@ -266,6 +266,6 @@ namespace brigid {
   }
 
   void initialize_json_parse(lua_State* L) {
-    set_field(L, -1, "parse", impl_parse);
+    decltype(function<impl_parse>())::set_field(L, -1, "parse");
   }
 }

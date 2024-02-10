@@ -2,9 +2,9 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include <brigid/error.hpp>
 #include "common.hpp"
 #include "data.hpp"
+#include "error.hpp"
 #include "stack_guard.hpp"
 
 #include <lua.hpp>
@@ -35,7 +35,7 @@ namespace brigid {
         throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
       }
       if (!lua_isnil(L, -2)) {
-        result = data_t(to_handle<const char*>(L, -2), lua_tointeger(L, -1));
+        result = data_t(to_pointer<const char*>(L, -2), lua_tointeger(L, -1));
         return true;
       }
       return false;

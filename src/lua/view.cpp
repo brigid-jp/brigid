@@ -3,6 +3,7 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include "common.hpp"
+#include "function.hpp"
 #include "view.hpp"
 
 #include <lua.hpp>
@@ -64,13 +65,13 @@ namespace brigid {
       new_metatable(L, "brigid.view");
       lua_pushvalue(L, -2);
       lua_setfield(L, -2, "__index");
-      set_field(L, -1, "__len", impl_get_size);
-      set_field(L, -1, "__tostring", impl_get_string);
+      decltype(function<impl_get_size>())::set_field(L, -1, "__len");
+      decltype(function<impl_get_string>())::set_field(L, -1, "__tostring");
       lua_pop(L, 1);
 
-      set_field(L, -1, "get_pointer", impl_get_pointer);
-      set_field(L, -1, "get_size", impl_get_size);
-      set_field(L, -1, "get_string", impl_get_string);
+      decltype(function<impl_get_pointer>())::set_field(L, -1, "get_pointer");
+      decltype(function<impl_get_size>())::set_field(L, -1, "get_size");
+      decltype(function<impl_get_string>())::set_field(L, -1, "get_string");
     }
     lua_setfield(L, -2, "view");
   }
