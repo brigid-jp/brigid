@@ -20,5 +20,5 @@ public class Hasher {
     return messageDigest.digest();
   }
 
-  MessageDigest messageDigest;
+  private MessageDigest messageDigest;
 }
