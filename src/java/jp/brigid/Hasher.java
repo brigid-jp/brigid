@@ -1,4 +1,4 @@
-// Copyright (c) 2019 <dev@brigid.jp>
+// Copyright (c) 2019,2024 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -20,5 +20,5 @@ public class Hasher {
     return messageDigest.digest();
   }
 
-  MessageDigest messageDigest;
+  private MessageDigest messageDigest;
 }

@@ -1,6 +1,10 @@
-// Copyright (c) 2019-2021 <dev@brigid.jp>
+// Copyright (c) 2019-2021,2024 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "common.hpp"
 #include "error.hpp"
@@ -9,11 +13,17 @@
 
 #include <lua.hpp>
 
+#ifdef HAVE_DLFCN_H
+#include <dlfcn.h>
+#endif
+
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
 #include <limits>
 #include <mutex>
+
+extern "C" int luaopen_brigid(lua_State*);
 
 namespace brigid {
   namespace {
@@ -53,6 +63,21 @@ namespace brigid {
       ;
       lua_pushstring(L, version);
     }
+
+#if defined(HAVE_DLADDR) && defined(HAVE_DLOPEN)
+    void impl_dlopen_self(lua_State* L) {
+      Dl_info info = {};
+      if (!dladdr(reinterpret_cast<const void*>(luaopen_brigid), &info)) {
+        throw BRIGID_RUNTIME_ERROR(dlerror());
+      }
+      if (!dlopen(info.dli_fname, RTLD_NOW | RTLD_LOCAL)) {
+        throw BRIGID_RUNTIME_ERROR(dlerror());
+      }
+      lua_pushstring(L, info.dli_fname);
+    }
+#else
+    void impl_dlopen_self(lua_State*) {}
+#endif
   }
 
   namespace detail {
@@ -175,5 +200,6 @@ namespace brigid {
 
     decltype(function<impl_get_lightuserdata_bits>())::set_field(L, -1, "get_lightuserdata_bits");
     decltype(function<impl_get_version>())::set_field(L, -1, "get_version");
+    decltype(function<impl_dlopen_self>())::set_field(L, -1, "dlopen_self");
   }
 }
