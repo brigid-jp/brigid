@@ -79,6 +79,7 @@ namespace brigid {
         self->close();
       }
     }
+
     void impl_call(lua_State* L) {
       new_userdata<data_writer_t>(L, "brigid.data_writer");
     }
