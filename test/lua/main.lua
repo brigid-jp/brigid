@@ -10,7 +10,6 @@ local text_y = 0
 local text_h = 0
 local text_drag
 
-
 function love.load()
   -- cache Java classes on Android
   pcall(function ()
@@ -55,5 +54,11 @@ end
 function love.mousereleased(x, y, button, is_touch, presses)
   if button == 1 then
     text_drag = nil
+  end
+end
+
+function love.keypressed(key)
+  if key == "escape" then
+    love.event.quit()
   end
 end

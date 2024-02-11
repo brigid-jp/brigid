@@ -10,11 +10,7 @@ local function write(out)
   -- ...
 end
 
-local module_path = brigid.dladdr()
-print(module_path)
-local result, message = brigid.dlopen(module_path)
--- local result, message = brigid.dlopen "brigid.so"
--- print(result, message)
+print(brigid.dlopen_self())
 
 local session = brigid.http_session { write = write }
 session:close()

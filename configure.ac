@@ -53,4 +53,6 @@ AX_LIB_CURL([7.17.0], [
 ])
 AM_CONDITIONAL([HTTP_CURL], [test "X$http_curl" = Xyes])
 
+AC_CHECK_FUNCS([dladdr dlopen])
+
 AC_OUTPUT
