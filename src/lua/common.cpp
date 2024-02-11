@@ -9,11 +9,14 @@
 
 #include <lua.hpp>
 
+#include <dlfcn.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
 #include <limits>
 #include <mutex>
+
+extern "C" int luaopen_brigid(lua_State*);
 
 namespace brigid {
   namespace {
@@ -52,6 +55,22 @@ namespace brigid {
 #undef m4_define
       ;
       lua_pushstring(L, version);
+    }
+
+    void impl_dladdr(lua_State* L) {
+      Dl_info info = {};
+      if (dladdr(reinterpret_cast<const void*>(luaopen_brigid), &info)) {
+        lua_pushstring(L, info.dli_fname);
+      } else {
+        throw BRIGID_RUNTIME_ERROR(dlerror());
+      }
+    }
+
+    void impl_dlopen(lua_State* L) {
+      const char* path = luaL_checkstring(L, 1);
+      if (!dlopen(path, RTLD_NOW | RTLD_GLOBAL)) {
+        throw BRIGID_RUNTIME_ERROR(dlerror());
+      }
     }
   }
 
@@ -175,5 +194,7 @@ namespace brigid {
 
     decltype(function<impl_get_lightuserdata_bits>())::set_field(L, -1, "get_lightuserdata_bits");
     decltype(function<impl_get_version>())::set_field(L, -1, "get_version");
+    decltype(function<impl_dladdr>())::set_field(L, -1, "dladdr");
+    decltype(function<impl_dlopen>())::set_field(L, -1, "dlopen");
   }
 }
