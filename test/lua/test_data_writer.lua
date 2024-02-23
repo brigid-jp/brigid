@@ -133,8 +133,8 @@ function suite:test_write_json_string1()
   local data_writer = assert(brigid.data_writer():write_json_string(source))
   local result = assert(data_writer:get_string())
   if debug then print(result) end
-  print(expect)
   assert(result == expect)
+  assert(brigid.json.parse(result) == source)
 end
 
 return suite
