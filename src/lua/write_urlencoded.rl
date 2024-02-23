@@ -4,6 +4,9 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include "data.hpp"
+#include "error.hpp"
+
 #include <stdint.h>
 
 namespace brigid {
@@ -12,11 +15,11 @@ namespace brigid {
       machine urlencoder;
 
       main :=
-        ( [A-Za-z0-9*\-._] @{ self->write(fc); }
-        | ' ' @{ self->write('+'); }
-        | [^A-Za-z0-9*\-._ ] @{
+        ( ' '              @{ self->write('+'); }
+        | [0-9A-Za-z*\-._] @{ self->write(fc); }
+        | [^ 0-9A-Za-z*\-._] @{
             uint8_t v = static_cast<uint8_t>(fc);
-            const char data[] = { '%', HEX[v >> 4], HEX[v & 0x0F] };
+            const char data[] = { '%', HEX[v >> 4], HEX[v & 0xF] };
             self->write(data, sizeof(data));
           }
         )*;
@@ -40,6 +43,14 @@ namespace brigid {
       const char* const pe = p + data.size();
 
       %%write exec;
+
+      if (cs >= %%{ write first_final; }%%) {
+        return;
+      }
+
+      std::ostringstream out;
+      out << "cannot percent-encode at position " << (p - pb + 1);
+      throw BRIGID_RUNTIME_ERROR(out.str());
     }
   }
 }
