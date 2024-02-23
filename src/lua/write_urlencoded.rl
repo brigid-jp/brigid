@@ -13,7 +13,8 @@ namespace brigid {
 
       main :=
         ( [A-Za-z0-9*\-._] @{ self->write(fc); }
-        | [^A-Za-z0-9*\-._] @{
+        | ' ' @{ self->write('+'); }
+        | [^A-Za-z0-9*\-._ ] @{
             uint8_t v = static_cast<uint8_t>(fc);
             const char data[] = { '%', HEX[v >> 4], HEX[v & 0x0F] };
             self->write(data, sizeof(data));
