@@ -1,4 +1,4 @@
-// Copyright (c) 2019,2021 <dev@brigid.jp>
+// Copyright (c) 2019,2021,2024 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -8,6 +8,7 @@
 #include "function.hpp"
 #include "noncopyable.hpp"
 #include "stdio.hpp"
+#include "writer.hpp"
 
 #include <lua.hpp>
 
@@ -31,6 +32,12 @@ namespace brigid {
 
       void write(const char* data, size_t size) {
         if (fwrite(data, 1, size, handle_.get()) != size) {
+          throw BRIGID_SYSTEM_ERROR();
+        }
+      }
+
+      void write(char c) {
+        if (fputc(c, handle_.get()) == EOF) {
           throw BRIGID_SYSTEM_ERROR();
         }
       }
@@ -97,6 +104,8 @@ namespace brigid {
       decltype(function<impl_close>())::set_field(L, -1, "close");
       decltype(function<impl_write>())::set_field(L, -1, "write");
       decltype(function<impl_flush>())::set_field(L, -1, "flush");
+
+      writer<file_writer_t, check_file_writer>::initialize(L);
     }
     lua_setfield(L, -2, "file_writer");
   }

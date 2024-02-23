@@ -4,6 +4,8 @@
 
 .rl.cxx:
 	ragel -G2 $< -o $@
+.rl.hxx:
+	ragel -G2 $< -o $@
 
 luaexec_LTLIBRARIES = brigid.la
 
@@ -25,7 +27,9 @@ noinst_HEADERS = \
 	stopwatch.hpp \
 	thread_reference.hpp \
 	type_traits.hpp \
-	view.hpp
+	view.hpp \
+	write_urlencoded.hxx \
+	writer.hpp
 
 brigid_la_CPPFLAGS = -I$(top_srcdir)/include
 brigid_la_LDFLAGS = -module -avoid-version -shared
