@@ -17,10 +17,33 @@ namespace brigid {
     %%{
       machine json_string_encoder;
 
+#   UTF8-octets = *( UTF8-char )
+#   UTF8-char   = UTF8-1 / UTF8-2 / UTF8-3 / UTF8-4
+#   UTF8-1      = %x00-7F
+#   UTF8-2      = %xC2-DF UTF8-tail
+#   UTF8-3      = %xE0 %xA0-BF UTF8-tail
+#               / %xE1-EC 2( UTF8-tail )
+#               / %xED %x80-9F UTF8-tail
+#               / %xEE-EF 2( UTF8-tail )
+#   UTF8-4      = %xF0 %x90-BF 2( UTF8-tail )
+#               / %xF1-F3 3( UTF8-tail )
+#               / %xF4 %x80-8F 2( UTF8-tail )
+#   UTF8-tail   = %x80-BF
+
+      # Accept not valid UTF-8 characters
+      utf8_1 = 0x00..0x7F;
+      utf8_2 = 0xC2..0xDF any;
+      utf8_3 = 0xE0..0xEF any{2};
+      utf8_4 = 0xF0..0xF4 any{3};
+
+      LINE_SEPARATOR = 0xE2 0x80 0xA8;
+      PARA_SEPARATOR = 0xE2 0x80 0xA8;
+
       main :=
         ( 0x22 @{ self->write("\\\"", 2); }
         | 0x5C @{ self->write("\\\\", 2); }
         | 0x2F @{ self->write("\\/", 2); }
+
         | 0x08 @{ self->write("\\b", 2); }
         | 0x0C @{ self->write("\\f", 2); }
         | 0x0A @{ self->write("\\n", 2); }
@@ -28,12 +51,20 @@ namespace brigid {
         | 0x09 @{ self->write("\\t", 2); }
         | (0x00..0x07 | 0x0B | 0x0E..0x1F) @{
             uint8_t v = static_cast<uint8_t>(fc);
-            const char data[] = { '\\', '0', '0', HEX[v >> 4], HEX[v & 0xF] };
+            const char data[] = { '\\', 'u', '0', '0', HEX[v >> 4], HEX[v & 0xF] };
             self->write(data, sizeof(data));
           }
         | 0x7F @{ self->write("\\u007F", 6); }
-        | 0xE2 0x80 0xA8 @{ self->write("\\u2028", 6); }
-        | 0xE2 0x80 0xA9 @{ self->write("\\u2029", 6); }
+
+        | (0x20 | 0x21 | 0x23..0x2E | 0x30..0x5B | 0x5D..0x7E) @{ self->write(fc); }
+
+        | utf8_2 @{ self->write(fpc - 1, 2); }
+
+        | LINE_SEPARATOR @{ self->write("\\u2028", 6); }
+        | PARA_SEPARATOR @{ self->write("\\u2029", 6); }
+        | (utf8_3 - LINE_SEPARATOR - PARA_SEPARATOR) @{ self->write(fpc - 2, 3); }
+
+        | utf8_4 @{ self->write(fpc - 3, 4); }
         )*;
 
       write data noerror nofinal noentry;
@@ -54,7 +85,9 @@ namespace brigid {
       const char* p = pb;
       const char* const pe = p + data.size();
 
+      self->write('"');
       %%write exec;
+      self->write('"');
 
       if (cs >= %%{ write first_final; }%%) {
         return;

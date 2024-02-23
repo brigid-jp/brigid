@@ -30,6 +30,7 @@ namespace brigid {
     }
 
     static void initialize(lua_State* L) {
+      decltype(function<write_json_string>())::set_field(L, -1, "write_json_string");
       decltype(function<write_urlencoded>())::set_field(L, -1, "write_urlencoded");
     }
   };

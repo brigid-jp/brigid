@@ -18,10 +18,10 @@ namespace brigid {
   namespace {
     
 #line 21 "write_json_string.hxx"
-static const int json_string_encoder_start = 3;
+static const int json_string_encoder_start = 9;
 
 
-#line 40 "write_json_string.rl"
+#line 71 "write_json_string.rl"
 
 
     template <class T>
@@ -39,91 +39,121 @@ static const int json_string_encoder_start = 3;
 	cs = json_string_encoder_start;
 	}
 
-#line 52 "write_json_string.rl"
+#line 83 "write_json_string.rl"
 
       const char* const pb = data.data();
       const char* p = pb;
       const char* const pe = p + data.size();
 
+      self->write('"');
       
-#line 50 "write_json_string.hxx"
+#line 51 "write_json_string.hxx"
 	{
 	if ( p == pe )
 		goto _test_eof;
 	switch ( cs )
 	{
+tr0:
+#line 61 "write_json_string.rl"
+	{ self->write(p - 1, 2); }
+	goto st9;
 tr2:
-#line 35 "write_json_string.rl"
+#line 65 "write_json_string.rl"
+	{ self->write(p - 2, 3); }
+	goto st9;
+tr4:
+#line 63 "write_json_string.rl"
 	{ self->write("\\u2028", 6); }
-	goto st3;
-tr3:
-#line 36 "write_json_string.rl"
+#line 64 "write_json_string.rl"
 	{ self->write("\\u2029", 6); }
-	goto st3;
-tr5:
-#line 29 "write_json_string.rl"
+	goto st9;
+tr7:
+#line 67 "write_json_string.rl"
+	{ self->write(p - 3, 4); }
+	goto st9;
+tr13:
+#line 52 "write_json_string.rl"
 	{
             uint8_t v = static_cast<uint8_t>((*p));
-            const char data[] = { '\\', '0', '0', HEX[v >> 4], HEX[v & 0xF] };
+            const char data[] = { '\\', 'u', '0', '0', HEX[v >> 4], HEX[v & 0xF] };
             self->write(data, sizeof(data));
           }
-	goto st3;
-tr6:
-#line 24 "write_json_string.rl"
-	{ self->write("\\b", 2); }
-	goto st3;
-tr7:
-#line 28 "write_json_string.rl"
-	{ self->write("\\t", 2); }
-	goto st3;
-tr8:
-#line 26 "write_json_string.rl"
-	{ self->write("\\n", 2); }
-	goto st3;
-tr9:
-#line 25 "write_json_string.rl"
-	{ self->write("\\f", 2); }
-	goto st3;
-tr10:
-#line 27 "write_json_string.rl"
-	{ self->write("\\r", 2); }
-	goto st3;
-tr11:
-#line 21 "write_json_string.rl"
-	{ self->write("\\\"", 2); }
-	goto st3;
-tr12:
-#line 23 "write_json_string.rl"
-	{ self->write("\\/", 2); }
-	goto st3;
-tr13:
-#line 22 "write_json_string.rl"
-	{ self->write("\\\\", 2); }
-	goto st3;
+	goto st9;
 tr14:
-#line 34 "write_json_string.rl"
+#line 47 "write_json_string.rl"
+	{ self->write("\\b", 2); }
+	goto st9;
+tr15:
+#line 51 "write_json_string.rl"
+	{ self->write("\\t", 2); }
+	goto st9;
+tr16:
+#line 49 "write_json_string.rl"
+	{ self->write("\\n", 2); }
+	goto st9;
+tr17:
+#line 48 "write_json_string.rl"
+	{ self->write("\\f", 2); }
+	goto st9;
+tr18:
+#line 50 "write_json_string.rl"
+	{ self->write("\\r", 2); }
+	goto st9;
+tr19:
+#line 59 "write_json_string.rl"
+	{ self->write((*p)); }
+	goto st9;
+tr20:
+#line 43 "write_json_string.rl"
+	{ self->write("\\\"", 2); }
+	goto st9;
+tr21:
+#line 45 "write_json_string.rl"
+	{ self->write("\\/", 2); }
+	goto st9;
+tr22:
+#line 44 "write_json_string.rl"
+	{ self->write("\\\\", 2); }
+	goto st9;
+tr23:
+#line 57 "write_json_string.rl"
 	{ self->write("\\u007F", 6); }
-	goto st3;
-st3:
+	goto st9;
+st9:
 	if ( ++p == pe )
-		goto _test_eof3;
-case 3:
-#line 112 "write_json_string.hxx"
+		goto _test_eof9;
+case 9:
+#line 127 "write_json_string.hxx"
 	switch( (*p) ) {
-		case -30: goto st1;
-		case 8: goto tr6;
-		case 9: goto tr7;
-		case 10: goto tr8;
-		case 12: goto tr9;
-		case 13: goto tr10;
-		case 34: goto tr11;
-		case 47: goto tr12;
-		case 92: goto tr13;
-		case 127: goto tr14;
+		case -30: goto st4;
+		case 8: goto tr14;
+		case 9: goto tr15;
+		case 10: goto tr16;
+		case 12: goto tr17;
+		case 13: goto tr18;
+		case 34: goto tr20;
+		case 47: goto tr21;
+		case 92: goto tr22;
+		case 127: goto tr23;
 	}
-	if ( 0 <= (*p) && (*p) <= 31 )
-		goto tr5;
-	goto st0;
+	if ( (*p) < -32 ) {
+		if ( (*p) > -63 ) {
+			if ( -62 <= (*p) && (*p) <= -33 )
+				goto st1;
+		} else
+			goto st0;
+	} else if ( (*p) > -17 ) {
+		if ( (*p) < -11 ) {
+			if ( -16 <= (*p) && (*p) <= -12 )
+				goto st6;
+		} else if ( (*p) > -1 ) {
+			if ( 0 <= (*p) && (*p) <= 31 )
+				goto tr13;
+		} else
+			goto st0;
+	} else
+		goto st2;
+	goto tr19;
 st0:
 cs = 0;
 	goto _out;
@@ -131,30 +161,65 @@ st1:
 	if ( ++p == pe )
 		goto _test_eof1;
 case 1:
-	if ( (*p) == -128 )
-		goto st2;
-	goto st0;
+	goto tr0;
 st2:
 	if ( ++p == pe )
 		goto _test_eof2;
 case 2:
-	switch( (*p) ) {
-		case -88: goto tr2;
-		case -87: goto tr3;
+	goto st3;
+st3:
+	if ( ++p == pe )
+		goto _test_eof3;
+case 3:
+	goto tr2;
+st4:
+	if ( ++p == pe )
+		goto _test_eof4;
+case 4:
+	if ( (*p) == -128 )
+		goto st5;
+	goto st3;
+st5:
+	if ( ++p == pe )
+		goto _test_eof5;
+case 5:
+	if ( (*p) == -88 )
+		goto tr4;
+	goto tr2;
+st6:
+	if ( ++p == pe )
+		goto _test_eof6;
+case 6:
+	goto st7;
+st7:
+	if ( ++p == pe )
+		goto _test_eof7;
+case 7:
+	goto st8;
+st8:
+	if ( ++p == pe )
+		goto _test_eof8;
+case 8:
+	goto tr7;
 	}
-	goto st0;
-	}
-	_test_eof3: cs = 3; goto _test_eof; 
+	_test_eof9: cs = 9; goto _test_eof; 
 	_test_eof1: cs = 1; goto _test_eof; 
 	_test_eof2: cs = 2; goto _test_eof; 
+	_test_eof3: cs = 3; goto _test_eof; 
+	_test_eof4: cs = 4; goto _test_eof; 
+	_test_eof5: cs = 5; goto _test_eof; 
+	_test_eof6: cs = 6; goto _test_eof; 
+	_test_eof7: cs = 7; goto _test_eof; 
+	_test_eof8: cs = 8; goto _test_eof; 
 
 	_test_eof: {}
 	_out: {}
 	}
 
-#line 58 "write_json_string.rl"
+#line 90 "write_json_string.rl"
+      self->write('"');
 
-      if (cs >= 3) {
+      if (cs >= 9) {
         return;
       }
 
