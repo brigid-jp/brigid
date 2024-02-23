@@ -36,6 +36,12 @@ namespace brigid {
         }
       }
 
+      void write(char c) {
+        if (fputc(c, handle_.get()) == EOF) {
+          throw BRIGID_SYSTEM_ERROR();
+        }
+      }
+
       void flush() {
         if (fflush(handle_.get()) != 0) {
           throw BRIGID_SYSTEM_ERROR();

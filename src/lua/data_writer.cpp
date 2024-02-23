@@ -51,6 +51,10 @@ namespace brigid {
         memcpy(buffer_.data() + position, data, size);
       }
 
+      void write(char c) {
+        buffer_.push_back(c);
+      }
+
       void reserve(size_t size) {
         buffer_.reserve(size);
       }
