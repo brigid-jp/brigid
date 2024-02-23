@@ -21,7 +21,7 @@ namespace brigid {
 static const int json_string_encoder_start = 9;
 
 
-#line 71 "write_json_string.rl"
+#line 57 "write_json_string.rl"
 
 
     template <class T>
@@ -39,7 +39,7 @@ static const int json_string_encoder_start = 9;
 	cs = json_string_encoder_start;
 	}
 
-#line 83 "write_json_string.rl"
+#line 69 "write_json_string.rl"
 
       const char* const pb = data.data();
       const char* p = pb;
@@ -54,27 +54,27 @@ static const int json_string_encoder_start = 9;
 	switch ( cs )
 	{
 tr0:
-#line 61 "write_json_string.rl"
+#line 47 "write_json_string.rl"
 	{ self->write(p - 1, 2); }
 	goto st9;
 tr2:
-#line 65 "write_json_string.rl"
+#line 51 "write_json_string.rl"
 	{ self->write(p - 2, 3); }
 	goto st9;
 tr4:
-#line 63 "write_json_string.rl"
+#line 49 "write_json_string.rl"
 	{ self->write("\\u2028", 6); }
 	goto st9;
 tr5:
-#line 64 "write_json_string.rl"
+#line 50 "write_json_string.rl"
 	{ self->write("\\u2029", 6); }
 	goto st9;
 tr8:
-#line 67 "write_json_string.rl"
+#line 53 "write_json_string.rl"
 	{ self->write(p - 3, 4); }
 	goto st9;
 tr14:
-#line 52 "write_json_string.rl"
+#line 35 "write_json_string.rl"
 	{
             uint8_t v = static_cast<uint8_t>((*p));
             const char data[] = { '\\', 'u', '0', '0', HEX[v >> 4], HEX[v & 0xF] };
@@ -82,43 +82,43 @@ tr14:
           }
 	goto st9;
 tr15:
-#line 47 "write_json_string.rl"
+#line 30 "write_json_string.rl"
 	{ self->write("\\b", 2); }
 	goto st9;
 tr16:
-#line 51 "write_json_string.rl"
+#line 31 "write_json_string.rl"
 	{ self->write("\\t", 2); }
 	goto st9;
 tr17:
-#line 49 "write_json_string.rl"
+#line 32 "write_json_string.rl"
 	{ self->write("\\n", 2); }
 	goto st9;
 tr18:
-#line 48 "write_json_string.rl"
+#line 33 "write_json_string.rl"
 	{ self->write("\\f", 2); }
 	goto st9;
 tr19:
-#line 50 "write_json_string.rl"
+#line 34 "write_json_string.rl"
 	{ self->write("\\r", 2); }
 	goto st9;
 tr20:
-#line 59 "write_json_string.rl"
+#line 45 "write_json_string.rl"
 	{ self->write((*p)); }
 	goto st9;
 tr21:
-#line 43 "write_json_string.rl"
+#line 41 "write_json_string.rl"
 	{ self->write("\\\"", 2); }
 	goto st9;
 tr22:
-#line 45 "write_json_string.rl"
+#line 42 "write_json_string.rl"
 	{ self->write("\\/", 2); }
 	goto st9;
 tr23:
-#line 44 "write_json_string.rl"
+#line 43 "write_json_string.rl"
 	{ self->write("\\\\", 2); }
 	goto st9;
 tr24:
-#line 57 "write_json_string.rl"
+#line 44 "write_json_string.rl"
 	{ self->write("\\u007F", 6); }
 	goto st9;
 st9:
@@ -220,7 +220,7 @@ case 8:
 	_out: {}
 	}
 
-#line 90 "write_json_string.rl"
+#line 76 "write_json_string.rl"
       self->write('"');
 
       if (cs >= 9) {

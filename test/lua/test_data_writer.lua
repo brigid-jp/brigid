@@ -160,4 +160,11 @@ function suite:test_write_json_string2()
   assert(brigid.json.parse(result) == source)
 end
 
+function suite:test_write_json_string3()
+  local data_writer = assert(brigid.data_writer():write_json_string "")
+  local result = assert(data_writer:get_string())
+  if debug then print(result) end
+  assert(result == [[""]])
+end
+
 return suite

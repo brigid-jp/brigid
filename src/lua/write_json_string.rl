@@ -27,22 +27,21 @@ namespace brigid {
       PARA_SEPARATOR = 0xE2 0x80 0xA9;
 
       main :=
-        ( 0x22 @{ self->write("\\\"", 2); }
-        | 0x5C @{ self->write("\\\\", 2); }
-        | 0x2F @{ self->write("\\/", 2); }
-
-        | 0x08 @{ self->write("\\b", 2); }
-        | 0x0C @{ self->write("\\f", 2); }
-        | 0x0A @{ self->write("\\n", 2); }
-        | 0x0D @{ self->write("\\r", 2); }
+        ( 0x08 @{ self->write("\\b", 2); }
         | 0x09 @{ self->write("\\t", 2); }
+        | 0x0A @{ self->write("\\n", 2); }
+        | 0x0C @{ self->write("\\f", 2); }
+        | 0x0D @{ self->write("\\r", 2); }
         | (0x00..0x07 | 0x0B | 0x0E..0x1F) @{
             uint8_t v = static_cast<uint8_t>(fc);
             const char data[] = { '\\', 'u', '0', '0', HEX[v >> 4], HEX[v & 0xF] };
             self->write(data, sizeof(data));
           }
-        | 0x7F @{ self->write("\\u007F", 6); }
 
+        | 0x22 @{ self->write("\\\"", 2); }
+        | 0x2F @{ self->write("\\/", 2); }
+        | 0x5C @{ self->write("\\\\", 2); }
+        | 0x7F @{ self->write("\\u007F", 6); }
         | (0x20 | 0x21 | 0x23..0x2E | 0x30..0x5B | 0x5D..0x7E) @{ self->write(fc); }
 
         | utf8_2 @{ self->write(fpc - 1, 2); }
