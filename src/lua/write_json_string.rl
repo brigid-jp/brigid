@@ -12,8 +12,8 @@
 
 #include <stdint.h>
 
-namespace {
-  namespace brigid {
+namespace brigid {
+  namespace {
     %%{
       machine json_string_encoder;
 
