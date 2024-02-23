@@ -10,11 +10,18 @@
 
 #include <lua.hpp>
 
+#include "write_json_string.hxx"
 #include "write_urlencoded.hxx"
 
 namespace brigid {
   template <class T, T* (*T_check_writer)(lua_State*, int, int)>
   struct writer {
+    static void write_json_string(lua_State* L) {
+      T* self = T_check_writer(L, 1, check_validate_all);
+      data_t data = check_data(L, 2);
+      impl_write_json_string(self, data);
+    }
+
     // https://url.spec.whatwg.org/#urlencoded-serializing
     static void write_urlencoded(lua_State* L) {
       T* self = T_check_writer(L, 1, check_validate_all);
