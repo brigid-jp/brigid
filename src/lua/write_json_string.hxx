@@ -64,14 +64,16 @@ tr2:
 tr4:
 #line 63 "write_json_string.rl"
 	{ self->write("\\u2028", 6); }
+	goto st9;
+tr5:
 #line 64 "write_json_string.rl"
 	{ self->write("\\u2029", 6); }
 	goto st9;
-tr7:
+tr8:
 #line 67 "write_json_string.rl"
 	{ self->write(p - 3, 4); }
 	goto st9;
-tr13:
+tr14:
 #line 52 "write_json_string.rl"
 	{
             uint8_t v = static_cast<uint8_t>((*p));
@@ -79,43 +81,43 @@ tr13:
             self->write(data, sizeof(data));
           }
 	goto st9;
-tr14:
+tr15:
 #line 47 "write_json_string.rl"
 	{ self->write("\\b", 2); }
 	goto st9;
-tr15:
+tr16:
 #line 51 "write_json_string.rl"
 	{ self->write("\\t", 2); }
 	goto st9;
-tr16:
+tr17:
 #line 49 "write_json_string.rl"
 	{ self->write("\\n", 2); }
 	goto st9;
-tr17:
+tr18:
 #line 48 "write_json_string.rl"
 	{ self->write("\\f", 2); }
 	goto st9;
-tr18:
+tr19:
 #line 50 "write_json_string.rl"
 	{ self->write("\\r", 2); }
 	goto st9;
-tr19:
+tr20:
 #line 59 "write_json_string.rl"
 	{ self->write((*p)); }
 	goto st9;
-tr20:
+tr21:
 #line 43 "write_json_string.rl"
 	{ self->write("\\\"", 2); }
 	goto st9;
-tr21:
+tr22:
 #line 45 "write_json_string.rl"
 	{ self->write("\\/", 2); }
 	goto st9;
-tr22:
+tr23:
 #line 44 "write_json_string.rl"
 	{ self->write("\\\\", 2); }
 	goto st9;
-tr23:
+tr24:
 #line 57 "write_json_string.rl"
 	{ self->write("\\u007F", 6); }
 	goto st9;
@@ -123,18 +125,18 @@ st9:
 	if ( ++p == pe )
 		goto _test_eof9;
 case 9:
-#line 127 "write_json_string.hxx"
+#line 129 "write_json_string.hxx"
 	switch( (*p) ) {
 		case -30: goto st4;
-		case 8: goto tr14;
-		case 9: goto tr15;
-		case 10: goto tr16;
-		case 12: goto tr17;
-		case 13: goto tr18;
-		case 34: goto tr20;
-		case 47: goto tr21;
-		case 92: goto tr22;
-		case 127: goto tr23;
+		case 8: goto tr15;
+		case 9: goto tr16;
+		case 10: goto tr17;
+		case 12: goto tr18;
+		case 13: goto tr19;
+		case 34: goto tr21;
+		case 47: goto tr22;
+		case 92: goto tr23;
+		case 127: goto tr24;
 	}
 	if ( (*p) < -32 ) {
 		if ( (*p) > -63 ) {
@@ -148,12 +150,12 @@ case 9:
 				goto st6;
 		} else if ( (*p) > -1 ) {
 			if ( 0 <= (*p) && (*p) <= 31 )
-				goto tr13;
+				goto tr14;
 		} else
 			goto st0;
 	} else
 		goto st2;
-	goto tr19;
+	goto tr20;
 st0:
 cs = 0;
 	goto _out;
@@ -183,8 +185,10 @@ st5:
 	if ( ++p == pe )
 		goto _test_eof5;
 case 5:
-	if ( (*p) == -88 )
-		goto tr4;
+	switch( (*p) ) {
+		case -88: goto tr4;
+		case -87: goto tr5;
+	}
 	goto tr2;
 st6:
 	if ( ++p == pe )
@@ -200,7 +204,7 @@ st8:
 	if ( ++p == pe )
 		goto _test_eof8;
 case 8:
-	goto tr7;
+	goto tr8;
 	}
 	_test_eof9: cs = 9; goto _test_eof; 
 	_test_eof1: cs = 1; goto _test_eof; 

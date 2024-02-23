@@ -17,19 +17,6 @@ namespace brigid {
     %%{
       machine json_string_encoder;
 
-#   UTF8-octets = *( UTF8-char )
-#   UTF8-char   = UTF8-1 / UTF8-2 / UTF8-3 / UTF8-4
-#   UTF8-1      = %x00-7F
-#   UTF8-2      = %xC2-DF UTF8-tail
-#   UTF8-3      = %xE0 %xA0-BF UTF8-tail
-#               / %xE1-EC 2( UTF8-tail )
-#               / %xED %x80-9F UTF8-tail
-#               / %xEE-EF 2( UTF8-tail )
-#   UTF8-4      = %xF0 %x90-BF 2( UTF8-tail )
-#               / %xF1-F3 3( UTF8-tail )
-#               / %xF4 %x80-8F 2( UTF8-tail )
-#   UTF8-tail   = %x80-BF
-
       # Accept not valid UTF-8 characters
       utf8_1 = 0x00..0x7F;
       utf8_2 = 0xC2..0xDF any;
@@ -37,7 +24,7 @@ namespace brigid {
       utf8_4 = 0xF0..0xF4 any{3};
 
       LINE_SEPARATOR = 0xE2 0x80 0xA8;
-      PARA_SEPARATOR = 0xE2 0x80 0xA8;
+      PARA_SEPARATOR = 0xE2 0x80 0xA9;
 
       main :=
         ( 0x22 @{ self->write("\\\"", 2); }

@@ -6,7 +6,7 @@ local brigid = require "brigid"
 local test_suite = require "test_suite"
 
 local suite = test_suite "test_data_writer"
-local debug = true
+local debug = false
 
 function suite:test_data_writer1()
   local ffi
@@ -129,6 +129,29 @@ function suite:test_write_json_string1()
     source[i + 1] = i
   end
   local source = string.char((table.unpack or unpack)(source))
+
+  local data_writer = assert(brigid.data_writer():write_json_string(source))
+  local result = assert(data_writer:get_string())
+  if debug then print(result) end
+  assert(result == expect)
+  assert(brigid.json.parse(result) == source)
+end
+
+function suite:test_write_json_string2()
+  local source1 = string.char(
+    0x41, 0xE2, 0x89, 0xA2, 0xCE, 0x91, 0x2E, -- U+0041 U+2262 U+0391 U+002E
+    0xED, 0x95, 0x9C, 0xEA, 0xB5, 0xAD, 0xEC, 0x96, 0xB4, -- U+D55C U+AD6D U+C5B4
+    0xE6, 0x97, 0xA5, 0xE6, 0x9C, 0xAC, 0xE8, 0xAA, 0x9E, -- U+65E5 U+672C U+8A9E
+    0xEF, 0xBB, 0xBF, 0xF0, 0xA3, 0x8E, 0xB4, -- U+233B4
+    0xE2, 0x80, 0xA7) -- U+2027
+  local source2 = string.char(
+    0xE2, 0x80, 0xA8, -- U+2028
+    0xE2, 0x80, 0xA9) -- U+2029
+  local source3 = string.char(
+    0xE2, 0x80, 0xAA) -- U+202A
+
+  local source = source1..source2..source2..source3
+  local expect = "\""..source1.."\\u2028\\u2029\\u2028\\u2029"..source3.."\""
 
   local data_writer = assert(brigid.data_writer():write_json_string(source))
   local result = assert(data_writer:get_string())
