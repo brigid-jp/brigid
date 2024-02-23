@@ -59,8 +59,7 @@ namespace brigid {
     template <class T>
     inline void impl_write_json_string(T* self, const data_t& data) {
       static const char HEX[] = {
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        'A', 'B', 'C', 'D', 'E', 'F',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
       };
 
       int cs = 0;
@@ -80,7 +79,7 @@ namespace brigid {
       }
 
       std::ostringstream out;
-      out << "cannot encode json string at position " << (p - pb + 1);
+      out << "cannot write json string at position " << (p - pb + 1);
       throw BRIGID_RUNTIME_ERROR(out.str());
     }
   }

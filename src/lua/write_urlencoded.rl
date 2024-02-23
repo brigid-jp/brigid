@@ -17,10 +17,12 @@ namespace brigid {
     %%{
       machine urlencoder;
 
+      unencoded_set = alnum | "*" | "-" | "." | "_";
+
       main :=
-        ( " "              @{ self->write('+'); }
-        | [0-9A-Za-z*\-._] @{ self->write(fc); }
-        | [^ 0-9A-Za-z*\-._] @{
+        ( " " @{ self->write('+'); }
+        | unencoded_set @{ self->write(fc); }
+        | (any - " " - unencoded_set) @{
             uint8_t v = static_cast<uint8_t>(fc);
             const char data[] = { '%', HEX[v >> 4], HEX[v & 0xF] };
             self->write(data, sizeof(data));
@@ -33,8 +35,7 @@ namespace brigid {
     template <class T>
     inline void impl_write_urlencoded(T* self, const data_t& data) {
       static const char HEX[] = {
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        'A', 'B', 'C', 'D', 'E', 'F',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
       };
 
       int cs = 0;
@@ -52,7 +53,7 @@ namespace brigid {
       }
 
       std::ostringstream out;
-      out << "cannot percent-encode at position " << (p - pb + 1);
+      out << "cannot write urlencoded at position " << (p - pb + 1);
       throw BRIGID_RUNTIME_ERROR(out.str());
     }
   }

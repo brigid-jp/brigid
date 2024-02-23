@@ -27,19 +27,18 @@ static const int json_string_encoder_start = 9;
     template <class T>
     inline void impl_write_json_string(T* self, const data_t& data) {
       static const char HEX[] = {
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        'A', 'B', 'C', 'D', 'E', 'F',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
       };
 
       int cs = 0;
 
       
-#line 38 "write_json_string.hxx"
+#line 37 "write_json_string.hxx"
 	{
 	cs = json_string_encoder_start;
 	}
 
-#line 69 "write_json_string.rl"
+#line 68 "write_json_string.rl"
 
       const char* const pb = data.data();
       const char* p = pb;
@@ -47,7 +46,7 @@ static const int json_string_encoder_start = 9;
 
       self->write('"');
       
-#line 51 "write_json_string.hxx"
+#line 50 "write_json_string.hxx"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -125,7 +124,7 @@ st9:
 	if ( ++p == pe )
 		goto _test_eof9;
 case 9:
-#line 129 "write_json_string.hxx"
+#line 128 "write_json_string.hxx"
 	switch( (*p) ) {
 		case -30: goto st4;
 		case 8: goto tr15;
@@ -220,7 +219,7 @@ case 8:
 	_out: {}
 	}
 
-#line 76 "write_json_string.rl"
+#line 75 "write_json_string.rl"
       self->write('"');
 
       if (cs >= 9) {
@@ -228,7 +227,7 @@ case 8:
       }
 
       std::ostringstream out;
-      out << "cannot encode json string at position " << (p - pb + 1);
+      out << "cannot write json string at position " << (p - pb + 1);
       throw BRIGID_RUNTIME_ERROR(out.str());
     }
   }
