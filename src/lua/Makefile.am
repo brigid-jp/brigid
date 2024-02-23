@@ -25,7 +25,8 @@ noinst_HEADERS = \
 	stopwatch.hpp \
 	thread_reference.hpp \
 	type_traits.hpp \
-	view.hpp
+	view.hpp \
+	writer.hpp
 
 brigid_la_CPPFLAGS = -I$(top_srcdir)/include
 brigid_la_LDFLAGS = -module -avoid-version -shared

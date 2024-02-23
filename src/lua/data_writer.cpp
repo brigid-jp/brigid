@@ -6,6 +6,7 @@
 #include "data.hpp"
 #include "function.hpp"
 #include "noncopyable.hpp"
+#include "writer.hpp"
 
 #include <lua.hpp>
 
@@ -135,6 +136,8 @@ namespace brigid {
       decltype(function<impl_close>())::set_field(L, -1, "close");
       decltype(function<impl_write>())::set_field(L, -1, "write");
       decltype(function<impl_reserve>())::set_field(L, -1, "reserve");
+
+      writer<data_writer_t, check_data_writer>::initialize(L);
     }
     lua_setfield(L, -2, "data_writer");
   }

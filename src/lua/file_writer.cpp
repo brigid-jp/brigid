@@ -8,6 +8,7 @@
 #include "function.hpp"
 #include "noncopyable.hpp"
 #include "stdio.hpp"
+#include "writer.hpp"
 
 #include <lua.hpp>
 
@@ -97,6 +98,8 @@ namespace brigid {
       decltype(function<impl_close>())::set_field(L, -1, "close");
       decltype(function<impl_write>())::set_field(L, -1, "write");
       decltype(function<impl_flush>())::set_field(L, -1, "flush");
+
+      writer<file_writer_t, check_file_writer>::initialize(L);
     }
     lua_setfield(L, -2, "file_writer");
   }
