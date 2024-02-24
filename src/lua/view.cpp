@@ -34,6 +34,10 @@ namespace brigid {
     }
   }
 
+  abstract_data_t* to_abstract_data_view(lua_State* L, int arg) {
+    return test_udata<view_t>(L, arg, "brigid.view");
+  }
+
   view_t::view_t(const char* data, size_t size)
     : data_(data),
       size_(size) {}

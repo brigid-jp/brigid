@@ -19,9 +19,9 @@
 namespace brigid {
   namespace {
     writer_t* check_writer_impl(lua_State* L, int arg) {
-      if (writer_t* self = to_data_writer(L, arg)) {
+      if (writer_t* self = to_writer_data_writer(L, arg)) {
         return self;
-      } else if (writer_t* self = to_file_writer(L, arg)) {
+      } else if (writer_t* self = to_writer_file_writer(L, arg)) {
         return self;
       }
       luaL_argerror(L, arg, "brigid.writer expected");

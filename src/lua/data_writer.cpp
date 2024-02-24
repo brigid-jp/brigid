@@ -121,7 +121,11 @@ namespace brigid {
     }
   }
 
-  writer_t* to_data_writer(lua_State* L, int arg) {
+  abstract_data_t* to_abstract_data_data_writer(lua_State* L, int arg) {
+    return test_udata<data_writer_t>(L, arg, "brigid.data_writer");
+  }
+
+  writer_t* to_writer_data_writer(lua_State* L, int arg) {
     return test_udata<data_writer_t>(L, arg, "brigid.data_writer");
   }
 

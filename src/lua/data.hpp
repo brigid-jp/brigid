@@ -29,6 +29,9 @@ namespace brigid {
     size_t size_;
   };
 
+  abstract_data_t* to_abstract_data_data_writer(lua_State*, int);
+  abstract_data_t* to_abstract_data_view(lua_State*, int);
+
   data_t to_data(lua_State*, int);
   data_t check_data(lua_State*, int);
 }

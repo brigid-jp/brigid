@@ -20,8 +20,8 @@ namespace brigid {
     virtual void write(char) = 0;
   };
 
-  writer_t* to_data_writer(lua_State*, int);
-  writer_t* to_file_writer(lua_State*, int);
+  writer_t* to_writer_data_writer(lua_State*, int);
+  writer_t* to_writer_file_writer(lua_State*, int);
   void initialize_writer(lua_State*);
 }
 

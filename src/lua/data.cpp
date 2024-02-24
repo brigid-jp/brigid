@@ -14,18 +14,6 @@
 
 namespace brigid {
   namespace {
-    bool is_data(lua_State* L, int index) {
-      stack_guard guard(L);
-      if (luaL_getmetafield(L, index, "__name")) {
-        size_t size = 0;
-        if (const char* data = lua_tolstring(L, -1, &size)) {
-          std::string name(data, size);
-          return name == "brigid.data_writer" || name == "brigid.view";
-        }
-      }
-      return false;
-    }
-
     bool is_love2d_data(lua_State* L, int index, data_t& result) {
       stack_guard guard(L);
       index = abs_index(L, index);
@@ -61,9 +49,12 @@ namespace brigid {
   }
 
   data_t to_data(lua_State* L, int index) {
-    if (const void* userdata = lua_touserdata(L, index)) {
-      if (is_data(L, index)) {
-        const abstract_data_t* self = static_cast<const abstract_data_t*>(userdata);
+    if (lua_isuserdata(L, index)) {
+      const abstract_data_t* self = to_abstract_data_data_writer(L, index);
+      if (!self) {
+        self = to_abstract_data_view(L, index);
+      }
+      if (self) {
         if (!self->closed()) {
           return data_t(self->data(), self->size());
         }
@@ -73,20 +64,22 @@ namespace brigid {
           return result;
         }
       }
-      return data_t();
     } else {
       size_t size = 0;
       if (const char* data = lua_tolstring(L, index, &size)) {
         return data_t(data, size);
       }
-      return data_t();
     }
+    return data_t();
   }
 
   data_t check_data(lua_State* L, int arg) {
-    if (const void* userdata = lua_touserdata(L, arg)) {
-      if (is_data(L, arg)) {
-        const abstract_data_t* self = static_cast<const abstract_data_t*>(userdata);
+    if (lua_isuserdata(L, arg)) {
+      const abstract_data_t* self = to_abstract_data_data_writer(L, arg);
+      if (!self) {
+        self = to_abstract_data_view(L, arg);
+      }
+      if (self) {
         if (!self->closed()) {
           return data_t(self->data(), self->size());
         }
