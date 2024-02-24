@@ -167,4 +167,64 @@ function suite:test_write_json_string3()
   assert(result == [[""]])
 end
 
+function suite:test_write_json_number1()
+  local data_writer = brigid.data_writer()
+
+  assert(data_writer:write_json_number(42)):write ","
+  assert(data_writer:write_json_number(69.125)):write ","
+
+  local inf = 1 / 0
+  local result, message = data_writer:write_json_number(inf)
+  if debug then print(message) end
+  assert(not result)
+
+  local nan = 0 / 0
+  local result, message = data_writer:write_json_number(nan)
+  if debug then print(message) end
+  assert(not result)
+
+  local pzero = 1 / inf
+  local mzero = -1 / inf
+  assert(data_writer:write_json_number(pzero)):write ","
+  assert(data_writer:write_json_number(mzero)):write ","
+
+  local result = assert(data_writer:get_string())
+  if debug then print(result) end
+  assert(result == "42,69.125,0,0,")
+end
+
+function suite:test_write_json_number2()
+  if not math.type or math.maxinteger ~= 0x7FFFFFFFFFFFFFFF then
+    return test_skip()
+  end
+
+  local data_writer = brigid.data_writer()
+
+  -- numeric_limits<int64_t>::digits10 == 18
+  local v = 999999999999999999 -- 18 digits
+  assert(math.type(v) == "integer")
+  assert(data_writer:write_json_number(v)):write ","
+  assert(data_writer:write_json_number(-v)):write ","
+  local result = data_writer:get_string()
+  if debug then print(result) end
+  assert(result == "999999999999999999,-999999999999999999,")
+end
+
+function suite:test_write_json_number3()
+  if not math.type or math.maxinteger ~= 0x7FFFFFFFFFFFFFFF then
+    return test_skip()
+  end
+
+  local data_writer = brigid.data_writer()
+
+  -- numeric_limits<int64_t>::digits10 == 18
+  local v = 9999999999999999999 -- 19 digits
+  assert(math.type(v) == "float")
+  assert(data_writer:write_json_number(v)):write ","
+  assert(data_writer:write_json_number(-v)):write ","
+  local result = data_writer:get_string()
+  if debug then print(result) end
+  assert(result == "1e+19,-1e+19,")
+end
+
 return suite
