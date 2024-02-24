@@ -6,6 +6,9 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#ifndef BRIGID_WRITE_URLENCODED_HPP
+#define BRIGID_WRITE_URLENCODED_HPP
+
 #include "data.hpp"
 #include "error.hpp"
 
@@ -14,43 +17,42 @@
 namespace brigid {
   namespace {
     
-#line 18 "write_urlencoded.hxx"
+#line 21 "write_urlencoded.hxx"
 static const int urlencoder_start = 0;
 
 
-#line 28 "write_urlencoded.rl"
+#line 33 "write_urlencoded.rl"
 
 
     template <class T>
     inline void impl_write_urlencoded(T* self, const data_t& data) {
       static const char HEX[] = {
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        'A', 'B', 'C', 'D', 'E', 'F',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
       };
 
       int cs = 0;
 
       
-#line 35 "write_urlencoded.hxx"
+#line 37 "write_urlencoded.hxx"
 	{
 	cs = urlencoder_start;
 	}
 
-#line 40 "write_urlencoded.rl"
+#line 44 "write_urlencoded.rl"
 
       const char* const pb = data.data();
       const char* p = pb;
       const char* const pe = p + data.size();
 
       
-#line 47 "write_urlencoded.hxx"
+#line 49 "write_urlencoded.hxx"
 	{
 	if ( p == pe )
 		goto _test_eof;
 	switch ( cs )
 	{
 tr0:
-#line 20 "write_urlencoded.rl"
+#line 25 "write_urlencoded.rl"
 	{
             uint8_t v = static_cast<uint8_t>((*p));
             const char data[] = { '%', HEX[v >> 4], HEX[v & 0xF] };
@@ -58,18 +60,18 @@ tr0:
           }
 	goto st0;
 tr1:
-#line 18 "write_urlencoded.rl"
+#line 23 "write_urlencoded.rl"
 	{ self->write('+'); }
 	goto st0;
 tr2:
-#line 19 "write_urlencoded.rl"
+#line 24 "write_urlencoded.rl"
 	{ self->write((*p)); }
 	goto st0;
 st0:
 	if ( ++p == pe )
 		goto _test_eof0;
 case 0:
-#line 73 "write_urlencoded.hxx"
+#line 75 "write_urlencoded.hxx"
 	switch( (*p) ) {
 		case 32: goto tr1;
 		case 42: goto tr2;
@@ -93,15 +95,17 @@ case 0:
 	_test_eof: {}
 	}
 
-#line 46 "write_urlencoded.rl"
+#line 50 "write_urlencoded.rl"
 
       if (cs >= 0) {
         return;
       }
 
       std::ostringstream out;
-      out << "cannot percent-encode at position " << (p - pb + 1);
+      out << "cannot write urlencoded at position " << (p - pb + 1);
       throw BRIGID_RUNTIME_ERROR(out.str());
     }
   }
 }
+
+#endif

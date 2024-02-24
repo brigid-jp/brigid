@@ -28,6 +28,7 @@ noinst_HEADERS = \
 	thread_reference.hpp \
 	type_traits.hpp \
 	view.hpp \
+	write_json_string.hxx \
 	write_urlencoded.hxx \
 	writer.hpp
 
