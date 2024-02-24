@@ -170,7 +170,8 @@ end
 function suite:test_write_json_number1()
   local data_writer = brigid.data_writer()
 
-  assert(data_writer:write_json_number(42)):write ","
+  assert(data_writer:write_json_number(17)):write ","
+  assert(data_writer:write_json_number(42.0)):write ","
   assert(data_writer:write_json_number(69.125)):write ","
 
   local inf = 1 / 0
@@ -190,7 +191,7 @@ function suite:test_write_json_number1()
 
   local result = assert(data_writer:get_string())
   if debug then print(result) end
-  assert(result == "42,69.125,0,0,")
+  assert(result == "17,42,69.125,0,0,")
 end
 
 function suite:test_write_json_number2()
