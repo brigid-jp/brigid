@@ -47,7 +47,11 @@ namespace brigid {
         int result = 0;
         lua_Integer value = lua_tointegerx(L, 2, &result);
         if (result) {
+#ifdef _MSC_VER
+          int size = _snprintf_s(buffer, sizeof(buffer), sizeof(buffer) - 1, LUA_INTEGER_FMT, value);
+#else
           int size = snprintf(buffer, sizeof(buffer), LUA_INTEGER_FMT, value);
+#endif
           if (size < 0) {
             throw BRIGID_SYSTEM_ERROR();
           }
@@ -66,7 +70,11 @@ namespace brigid {
         return;
       }
 
+#ifdef _MSC_VER
+      int size = _snprintf_s(buffer, sizeof(buffer), sizeof(buffer) - 1, "%.17g", value);
+#else
       int size = snprintf(buffer, sizeof(buffer), "%.17g", value);
+#endif
       if (size < 0) {
         throw BRIGID_SYSTEM_ERROR();
       }
