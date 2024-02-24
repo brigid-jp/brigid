@@ -1,4 +1,4 @@
-// Copyright (c) 2019,2021 <dev@brigid.jp>
+// Copyright (c) 2019,2021,2024 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -32,6 +32,10 @@ namespace brigid {
       view_t* self = check_view(L, 1);
       lua_pushlstring(L, self->data(), self->size());
     }
+  }
+
+  abstract_data_t* to_abstract_data_view(lua_State* L, int arg) {
+    return to_udata<view_t>(L, arg, "brigid.view");
   }
 
   view_t::view_t(const char* data, size_t size)

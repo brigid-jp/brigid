@@ -81,6 +81,20 @@ namespace brigid {
   }
 
   namespace detail {
+    // Ths function is equivalent to luaL_testudata
+    void* to_udata(lua_State* L, int index, const char* name) {
+      if (void* data = lua_touserdata(L, index)) {
+        stack_guard guard(L);
+        if (lua_getmetatable(L, index)) {
+          luaL_getmetatable(L, name);
+          if (lua_rawequal(L, -1, -2)) {
+            return data;
+          }
+        }
+      }
+      return nullptr;
+    }
+
     void push_pointer(lua_State* L, const void* source) {
       if (reinterpret_cast<uintptr_t>(source) & lightuserdata_mask) {
         static const size_t size = sizeof(source);

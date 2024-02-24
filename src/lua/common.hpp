@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2021 <dev@brigid.jp>
+// Copyright (c) 2019-2021,2024 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -23,6 +23,7 @@ namespace brigid {
   using nullptr_t = decltype(nullptr);
 
   namespace detail {
+    void* to_udata(lua_State*, int, const char*);
     void push_pointer(lua_State*, const void*);
     void* to_pointer(lua_State*, int);
   }
@@ -110,6 +111,11 @@ namespace brigid {
   template <class T>
   inline T* check_udata(lua_State* L, int arg, const char* name) {
     return static_cast<T*>(luaL_checkudata(L, arg, name));
+  }
+
+  template <class T>
+  inline T* to_udata(lua_State* L, int index, const char* name) {
+    return static_cast<T*>(detail::to_udata(L, index, name));
   }
 
   template <class T, enable_if_t<std::is_pointer<T>::value, nullptr_t> = nullptr>

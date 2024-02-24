@@ -16,7 +16,7 @@
 
 namespace brigid {
   namespace {
-    class data_writer_t : public abstract_data_t, private noncopyable {
+    class data_writer_t : public abstract_data_t, public writer_t, private noncopyable {
     public:
       data_writer_t()
         : closed_() {}
@@ -45,13 +45,13 @@ namespace brigid {
         memcpy(data + size, data, size);
       }
 
-      void write(const char* data, size_t size) {
+      virtual void write(const char* data, size_t size) {
         size_t position = buffer_.size();
         buffer_.resize(position + size);
         memcpy(buffer_.data() + position, data, size);
       }
 
-      void write(char c) {
+      virtual void write(char c) {
         buffer_.push_back(c);
       }
 
@@ -121,6 +121,14 @@ namespace brigid {
     }
   }
 
+  abstract_data_t* to_abstract_data_data_writer(lua_State* L, int arg) {
+    return to_udata<data_writer_t>(L, arg, "brigid.data_writer");
+  }
+
+  writer_t* to_writer_data_writer(lua_State* L, int arg) {
+    return to_udata<data_writer_t>(L, arg, "brigid.data_writer");
+  }
+
   void initialize_data_writer(lua_State* L) {
     lua_newtable(L);
     {
@@ -141,7 +149,7 @@ namespace brigid {
       decltype(function<impl_write>())::set_field(L, -1, "write");
       decltype(function<impl_reserve>())::set_field(L, -1, "reserve");
 
-      writer<data_writer_t, check_data_writer>::initialize(L);
+      initialize_writer(L);
     }
     lua_setfield(L, -2, "data_writer");
   }
