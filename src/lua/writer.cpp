@@ -61,6 +61,11 @@ namespace brigid {
       if (!isfinite(value)) {
         throw BRIGID_RUNTIME_ERROR("inf or nan");
       }
+      if (value == 0) { // check for both zero and minus zero
+        self->write('0');
+        return;
+      }
+
       int size = snprintf(buffer, sizeof(buffer), "%.17g", value);
       if (size < 0) {
         throw BRIGID_SYSTEM_ERROR();
