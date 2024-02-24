@@ -81,6 +81,11 @@ namespace brigid {
   }
 
   namespace detail {
+    void* test_udata(lua_State* L, int arg, const char* name) {
+      // TODO impl 5.1
+      return luaL_testudata(L, arg, name);
+    }
+
     void push_pointer(lua_State* L, const void* source) {
       if (reinterpret_cast<uintptr_t>(source) & lightuserdata_mask) {
         static const size_t size = sizeof(source);

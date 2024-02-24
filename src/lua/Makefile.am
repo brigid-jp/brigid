@@ -58,7 +58,8 @@ brigid_la_SOURCES = \
 	stopwatch.cxx \
 	stopwatch_unix.cxx \
 	thread_reference.cpp \
-	view.cpp
+	view.cpp \
+	writer.cpp
 
 if CRYPTO_APPLE
 brigid_la_SOURCES += crypto_apple.cpp

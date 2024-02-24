@@ -17,7 +17,7 @@
 
 namespace brigid {
   namespace {
-    class file_writer_t : private noncopyable {
+    class file_writer_t : public writer_t, private noncopyable {
     public:
       explicit file_writer_t(const char* path)
         : handle_(open_file_handle(path, "wb")) {}
@@ -30,13 +30,13 @@ namespace brigid {
         handle_.reset();
       }
 
-      void write(const char* data, size_t size) {
+      virtual void write(const char* data, size_t size) {
         if (fwrite(data, 1, size, handle_.get()) != size) {
           throw BRIGID_SYSTEM_ERROR();
         }
       }
 
-      void write(char c) {
+      virtual void write(char c) {
         if (fputc(c, handle_.get()) == EOF) {
           throw BRIGID_SYSTEM_ERROR();
         }
@@ -90,6 +90,10 @@ namespace brigid {
     }
   }
 
+  writer_t* to_file_writer(lua_State* L, int arg) {
+    return test_udata<file_writer_t>(L, arg, "brigid.file_writer");
+  }
+
   void initialize_file_writer(lua_State* L) {
     lua_newtable(L);
     {
@@ -105,7 +109,7 @@ namespace brigid {
       decltype(function<impl_write>())::set_field(L, -1, "write");
       decltype(function<impl_flush>())::set_field(L, -1, "flush");
 
-      writer<file_writer_t, check_file_writer>::initialize(L);
+      initialize_writer(L);
     }
     lua_setfield(L, -2, "file_writer");
   }
