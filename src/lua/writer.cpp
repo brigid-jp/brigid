@@ -6,7 +6,6 @@
 #include "data.hpp"
 #include "error.hpp"
 #include "function.hpp"
-#include "stack_guard.hpp"
 #include "writer.hpp"
 
 #include <lua.hpp>
@@ -18,88 +17,6 @@
 #include "write_urlencoded.hxx"
 
 namespace brigid {
-/*
-  template <class T, T* (*T_check_writer)(lua_State*, int, int)>
-  struct writer {
-    static void write_json_number(lua_State* L) {
-      char buffer[64] = {};
-
-      T* self = T_check_writer(L, 1, check_validate_all);
-#if LUA_VERSION_NUM >= 503
-      {
-        int result = 0;
-        lua_Integer value = lua_tointegerx(L, 2, &result);
-        if (result) {
-          int size = snprintf(buffer, sizeof(buffer), LUA_INTEGER_FMT, value);
-          if (size < 0) {
-            throw BRIGID_SYSTEM_ERROR();
-          }
-          self->write(buffer, size);
-          return;
-        }
-      }
-#endif
-      lua_Number value = luaL_checknumber(L, 2);
-      if (!isfinite(value)) {
-        throw BRIGID_RUNTIME_ERROR("inf or nan");
-      }
-      int size = snprintf(buffer, sizeof(buffer), "%.17g", value);
-      if (size < 0) {
-        throw BRIGID_SYSTEM_ERROR();
-      }
-      self->write(buffer, size);
-    }
-
-    static void write_json_string(lua_State* L) {
-      T* self = T_check_writer(L, 1, check_validate_all);
-      data_t data = check_data(L, 2);
-      impl_write_json_string(self, data);
-    }
-
-    static void write_urlencoded(lua_State* L) {
-      T* self = T_check_writer(L, 1, check_validate_all);
-      data_t data = check_data(L, 2);
-      impl_write_urlencoded(self, data);
-    }
-  };
-
-    inline bool luaX_to_udata_impl(lua_State* L, const char* name) {
-      luaL_getmetatable(L, name);
-      bool result = lua_rawequal(L, -1, -2);
-      lua_pop(L, 1);
-      return result;
-    }
-
-    template <class T>
-    inline T* luaX_to_udata(lua_State* L, int index, const char* name) {
-      if (T* data = static_cast<T*>(lua_touserdata(L, index))) {
-        if (lua_getmetatable(L, index)) {
-          if (!luaX_to_udata_impl(L, name)) {
-            data = 0;
-          }
-          lua_pop(L, 1);
-          return data;
-        }
-      }
-      return 0;
-    }
-
-    template <class T>
-    inline T* luaX_to_udata(lua_State* L, int index, const char* name1, const char* name2) {
-      if (T* data = static_cast<T*>(lua_touserdata(L, index))) {
-        if (lua_getmetatable(L, index)) {
-          if (!(luaX_to_udata_impl(L, name1) || luaX_to_udata_impl(L, name2))) {
-            data = 0;
-          }
-          lua_pop(L, 1);
-          return data;
-        }
-      }
-      return 0;
-    }
-
-*/
-
   namespace {
     writer_t* check_writer_impl(lua_State* L, int arg) {
       if (writer_t* self = to_data_writer(L, arg)) {
