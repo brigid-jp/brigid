@@ -23,7 +23,7 @@ namespace brigid {
   using nullptr_t = decltype(nullptr);
 
   namespace detail {
-    void* test_udata(lua_State*, int, const char*);
+    void* to_udata(lua_State*, int, const char*);
     void push_pointer(lua_State*, const void*);
     void* to_pointer(lua_State*, int);
   }
@@ -114,8 +114,8 @@ namespace brigid {
   }
 
   template <class T>
-  inline T* test_udata(lua_State* L, int arg, const char* name) {
-    return static_cast<T*>(detail::test_udata(L, arg, name));
+  inline T* to_udata(lua_State* L, int index, const char* name) {
+    return static_cast<T*>(detail::to_udata(L, index, name));
   }
 
   template <class T, enable_if_t<std::is_pointer<T>::value, nullptr_t> = nullptr>

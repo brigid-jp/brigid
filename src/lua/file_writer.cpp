@@ -91,7 +91,7 @@ namespace brigid {
   }
 
   writer_t* to_writer_file_writer(lua_State* L, int arg) {
-    return test_udata<file_writer_t>(L, arg, "brigid.file_writer");
+    return to_udata<file_writer_t>(L, arg, "brigid.file_writer");
   }
 
   void initialize_file_writer(lua_State* L) {

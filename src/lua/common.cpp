@@ -81,13 +81,11 @@ namespace brigid {
   }
 
   namespace detail {
-    void* test_udata(lua_State* L, int arg, const char* name) {
-#if LUA_VERSION_NUM >= 502
-      return luaL_testudata(L, arg, name);
-#else
-      if (void* data = lua_touserdata(L, arg)) {
+    // Ths function is equivalent to luaL_testudata
+    void* to_udata(lua_State* L, int index, const char* name) {
+      if (void* data = lua_touserdata(L, index)) {
         stack_guard guard(L);
-        if (lua_getmetatable(L, arg)) {
+        if (lua_getmetatable(L, index)) {
           luaL_getmetatable(L, name);
           if (lua_rawequal(L, -1, -2)) {
             return data;
@@ -95,7 +93,6 @@ namespace brigid {
         }
       }
       return nullptr;
-#endif
     }
 
     void push_pointer(lua_State* L, const void* source) {
