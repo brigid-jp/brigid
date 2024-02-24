@@ -39,7 +39,8 @@ OBJS = \
 	stopwatch.o \
 	stopwatch_unix.o \
 	thread_reference.o \
-	view.o
+	view.o \
+	writer.o
 TARGET = libbrigid.a
 
 all: all-recursive $(TARGET)
