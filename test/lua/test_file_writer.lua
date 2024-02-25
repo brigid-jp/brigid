@@ -1,4 +1,4 @@
--- Copyright (c) 2021 <dev@brigid.jp>
+-- Copyright (c) 2021,2024 <dev@brigid.jp>
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
@@ -56,6 +56,24 @@ function suite:test_file_writer3()
   assert(16 * 257 == n)
 
   assert(file_writer:close())
+  os.remove(path)
+end
+
+function suite:test_file_writer_write_urlencoded()
+  local expect = "%E3%82%AD%E3%83%BC1=%E5%80%A41&%E3%82%AD%E3%83%BC2=%E5%80%A42&%E3%82%AD%E3%83%BC3=%E5%80%A43"
+
+  local path = test_cwd .. "/test.dat"
+  local file_writer = assert(brigid.file_writer(path))
+
+  file_writer:write_urlencoded("キー1"):write"=":write_urlencoded("値1")
+    :write"&":write_urlencoded("キー2"):write"=":write_urlencoded("値2")
+    :write"&":write_urlencoded("キー3"):write"=":write_urlencoded("値3")
+  assert(file_writer:close())
+
+  local handle = assert(io.open(path))
+  assert(handle:read "*a" == expect)
+  handle:close()
+
   os.remove(path)
 end
 

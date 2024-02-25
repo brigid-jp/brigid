@@ -4,6 +4,8 @@
 
 .rl.cxx:
 	ragel -G2 $< -o $@
+.rl.hxx:
+	ragel -G2 $< -o $@
 
 luaexec_LTLIBRARIES = brigid.la
 
@@ -18,6 +20,7 @@ noinst_HEADERS = \
 	function.hpp \
 	http.hpp \
 	http_impl.hpp \
+	module.lua \
 	noncopyable.hpp \
 	scope_exit.hpp \
 	stack_guard.hpp \
@@ -25,7 +28,10 @@ noinst_HEADERS = \
 	stopwatch.hpp \
 	thread_reference.hpp \
 	type_traits.hpp \
-	view.hpp
+	view.hpp \
+	write_json_string.hxx \
+	write_urlencoded.hxx \
+	writer.hpp
 
 brigid_la_CPPFLAGS = -I$(top_srcdir)/include
 brigid_la_LDFLAGS = -module -avoid-version -shared
@@ -53,7 +59,8 @@ brigid_la_SOURCES = \
 	stopwatch.cxx \
 	stopwatch_unix.cxx \
 	thread_reference.cpp \
-	view.cpp
+	view.cpp \
+	writer.cpp
 
 if CRYPTO_APPLE
 brigid_la_SOURCES += crypto_apple.cpp

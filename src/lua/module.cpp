@@ -1,9 +1,13 @@
-// Copyright (c) 2019-2021 <dev@brigid.jp>
+// Copyright (c) 2019-2021,2024 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
+#include "error.hpp"
+#include "stack_guard.hpp"
+
 #include <lua.hpp>
 
+#include <string.h>
 #include <exception>
 
 namespace brigid {
@@ -27,6 +31,20 @@ namespace brigid {
     initialize_json(L);
     initialize_stopwatch(L);
     initialize_view(L);
+
+    {
+      stack_guard guard(L);
+      static const char code[] =
+      #include "module.lua"
+      ;
+      if (luaL_loadbuffer(L, code, strlen(code), "=(load)") != 0) {
+        throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
+      }
+      lua_pushvalue(L, -2);
+      if (lua_pcall(L, 1, 0, 0) != 0) {
+        throw BRIGID_LOGIC_ERROR(lua_tostring(L, -1));
+      }
+    }
   }
 }
 

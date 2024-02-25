@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 <dev@brigid.jp>
+# Copyright (c) 2019-2021,2024 <dev@brigid.jp>
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
@@ -52,5 +52,7 @@ AX_LIB_CURL([7.17.0], [
   http_curl=yes
 ])
 AM_CONDITIONAL([HTTP_CURL], [test "X$http_curl" = Xyes])
+
+AC_CHECK_FUNCS([dladdr dlopen])
 
 AC_OUTPUT

@@ -1,4 +1,4 @@
-// Copyright (c) 2019,2021 <dev@brigid.jp>
+// Copyright (c) 2019,2021,2024 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -8,6 +8,7 @@
 #include "function.hpp"
 #include "noncopyable.hpp"
 #include "stdio.hpp"
+#include "writer.hpp"
 
 #include <lua.hpp>
 
@@ -16,7 +17,7 @@
 
 namespace brigid {
   namespace {
-    class file_writer_t : private noncopyable {
+    class file_writer_t : public writer_t, private noncopyable {
     public:
       explicit file_writer_t(const char* path)
         : handle_(open_file_handle(path, "wb")) {}
@@ -29,8 +30,14 @@ namespace brigid {
         handle_.reset();
       }
 
-      void write(const char* data, size_t size) {
+      virtual void write(const char* data, size_t size) {
         if (fwrite(data, 1, size, handle_.get()) != size) {
+          throw BRIGID_SYSTEM_ERROR();
+        }
+      }
+
+      virtual void write(char c) {
+        if (fputc(c, handle_.get()) == EOF) {
           throw BRIGID_SYSTEM_ERROR();
         }
       }
@@ -83,6 +90,10 @@ namespace brigid {
     }
   }
 
+  writer_t* to_writer_file_writer(lua_State* L, int arg) {
+    return to_udata<file_writer_t>(L, arg, "brigid.file_writer");
+  }
+
   void initialize_file_writer(lua_State* L) {
     lua_newtable(L);
     {
@@ -97,6 +108,8 @@ namespace brigid {
       decltype(function<impl_close>())::set_field(L, -1, "close");
       decltype(function<impl_write>())::set_field(L, -1, "write");
       decltype(function<impl_flush>())::set_field(L, -1, "flush");
+
+      initialize_writer(L);
     }
     lua_setfield(L, -2, "file_writer");
   }

@@ -1,4 +1,4 @@
--- Copyright (c) 2021 <dev@brigid.jp>
+-- Copyright (c) 2021,2024 <dev@brigid.jp>
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
@@ -9,7 +9,6 @@ local text_x = 0
 local text_y = 0
 local text_h = 0
 local text_drag
-
 
 function love.load()
   -- cache Java classes on Android
@@ -55,5 +54,11 @@ end
 function love.mousereleased(x, y, button, is_touch, presses)
   if button == 1 then
     text_drag = nil
+  end
+end
+
+function love.keypressed(key)
+  if key == "escape" then
+    love.event.quit()
   end
 end

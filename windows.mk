@@ -31,7 +31,8 @@ OBJS = \
 	src\lua\stopwatch.obj \
 	src\lua\stopwatch_windows.obj \
 	src\lua\thread_reference.obj \
-	src\lua\view.obj
+	src\lua\view.obj \
+	src\lua\writer.obj
 TARGET = brigid.dll
 
 all: $(TARGET)

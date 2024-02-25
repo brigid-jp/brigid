@@ -1,4 +1,4 @@
-// Copyright (c) 2021 <dev@brigid.jp>
+// Copyright (c) 2021,2024 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -284,7 +284,9 @@ namespace brigid {
       }
 
       virtual ~http_session_impl() {
+        // Disabling NSURLSession explicitly results in an "Attempt to use unknown class" error.
         [session_ invalidateAndCancel];
+        // [session_ finishTasksAndInvalidate];
       }
 
       virtual bool request(

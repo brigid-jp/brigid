@@ -45,8 +45,6 @@ namespace brigid {
   }
 
   void cryptor::close() {
-    in_size_ = 0;
-    out_size_ = 0;
     ref_ = thread_reference();
     impl_close();
   }
