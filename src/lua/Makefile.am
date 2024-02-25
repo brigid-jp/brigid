@@ -20,6 +20,7 @@ noinst_HEADERS = \
 	function.hpp \
 	http.hpp \
 	http_impl.hpp \
+	module.lua \
 	noncopyable.hpp \
 	scope_exit.hpp \
 	stack_guard.hpp \
