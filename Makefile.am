@@ -13,6 +13,7 @@ EXTRA_DIST = \
 	brigid-*.rockspec \
 	brigid.def \
 	brigid.hpp \
+	brigid_version.txt \
 	docs \
 	java_home.sh \
 	m4/update.sh \
