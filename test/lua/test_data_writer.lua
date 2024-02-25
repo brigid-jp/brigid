@@ -228,4 +228,19 @@ function suite:test_write_json_number3()
   assert(result == "1e+19,-1e+19,")
 end
 
+function suite:test_write_json()
+  local result = brigid.data_writer():write_json {
+    a = {
+      brigid.json.array();
+      {};
+      { "日本語\n" };
+      { true, false, brigid.null };
+      { 17, 42.0, 69.125 };
+    };
+  }:get_string()
+
+  if debug then print(result) end
+  assert(result == [=[{"a":[[],{},["日本語\n"],[true,false,null],[17,42,69.125]]}]=])
+end
+
 return suite

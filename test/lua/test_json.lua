@@ -6,7 +6,7 @@ local brigid = require "brigid"
 local test_suite = require "test_suite"
 
 local suite = test_suite "test_json"
-local debug = false
+local debug = os.getenv "BRIGID_TEST_DEBUG" == "1"
 
 local function equal(self, that)
   if self == that then
@@ -467,6 +467,27 @@ function suite:test_json_parse_deep_object()
   end
   assert(type(u) == "number")
   assert(u == depth)
+end
+
+function suite:test_json_write_and_parse1()
+  local source = {
+    Image = {
+      Width = 800;
+      Height = 600;
+      Title = "View from 15th Floor";
+      Thumbnail = {
+        Url = "http://www.example.com/image/481989943";
+        Height = 125;
+        Width = 100;
+      },
+      Animated = false;
+      IDs = { 116, 943, 234, 38793 };
+    };
+  }
+
+  local result = brigid.data_writer():write_json(source):get_string()
+  if debug then print(result) end
+  assert(equal(brigid.json.parse(result), source))
 end
 
 return suite
