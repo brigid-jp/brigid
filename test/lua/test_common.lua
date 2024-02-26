@@ -192,4 +192,11 @@ function suite:test_dir2()
   assert(m == n)
 end
 
+function suite:test_dir3()
+  local path = test_cwd.."/no such directory"
+  local result, message = brigid.opendir(path)
+  if debug then print(message) end
+  assert(not result)
+end
+
 return suite
