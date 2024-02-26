@@ -17,9 +17,11 @@
 #include <dlfcn.h>
 #endif
 
+#include <sys/stat.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
+#include <unistd.h>
 #include <limits>
 #include <mutex>
 
@@ -78,6 +80,21 @@ namespace brigid {
 #else
     void impl_dlopen_self(lua_State*) {}
 #endif
+
+    void impl_mkdir(lua_State* L) {
+      const char* path = luaL_checkstring(L, 1);
+      mode_t mode = opt_integer(L, 2, 0777);
+      if (mkdir(path, mode) == -1) {
+        throw BRIGID_SYSTEM_ERROR();
+      }
+    }
+
+    void impl_rmdir(lua_State* L) {
+      const char* path = luaL_checkstring(L, 1);
+      if (rmdir(path) == -1) {
+        throw BRIGID_SYSTEM_ERROR();
+      }
+    }
   }
 
   namespace detail {
@@ -215,5 +232,7 @@ namespace brigid {
     decltype(function<impl_get_lightuserdata_bits>())::set_field(L, -1, "get_lightuserdata_bits");
     decltype(function<impl_get_version>())::set_field(L, -1, "get_version");
     decltype(function<impl_dlopen_self>())::set_field(L, -1, "dlopen_self");
+    decltype(function<impl_mkdir>())::set_field(L, -1, "mkdir");
+    decltype(function<impl_rmdir>())::set_field(L, -1, "rmdir");
   }
 }
