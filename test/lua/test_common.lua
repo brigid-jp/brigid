@@ -154,13 +154,26 @@ function suite:test_version()
   assert(version:find "^%d+%.%d+$")
 end
 
-function suite:test_dir()
+function suite:test_dir1()
   local path = test_cwd.."/foo"
   assert(brigid.mkdir(path))
   local result, message = brigid.mkdir(path)
   if debug then print(message) end
   assert(not result)
   assert(brigid.rmdir(path))
+end
+
+function suite:test_dir2()
+  local path = test_cwd
+  local handle = assert(brigid.opendir(path))
+  while true do
+    local name = handle:read()
+    if not name then
+      break
+    end
+    if debug then print(name) end
+  end
+  assert(handle:close())
 end
 
 return suite
