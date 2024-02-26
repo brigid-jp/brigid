@@ -100,6 +100,41 @@ namespace brigid {
     return luaL_argerror(L, arg, "out of bounds");
   }
 
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) < sizeof(lua_Integer)), nullptr_t> = nullptr>
+  inline T opt_integer(lua_State* L, int arg, T d) {
+    static const lua_Integer max = std::numeric_limits<T>::max();
+    static const lua_Integer min = std::numeric_limits<T>::min();
+    lua_Integer result = luaL_optinteger(L, arg, d);
+    if (min <= result && result <= max) {
+      return static_cast<T>(result);
+    }
+    return luaL_argerror(L, arg, "out of bounds");
+  }
+
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) >= sizeof(lua_Integer)), nullptr_t> = nullptr>
+  inline T opt_integer(lua_State* L, int arg, T d) {
+    return luaL_optinteger(L, arg, d);
+  }
+
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) < sizeof(lua_Integer)), nullptr_t> = nullptr>
+  inline T opt_integer(lua_State* L, int arg, T d) {
+    static const lua_Integer max = std::numeric_limits<T>::max();
+    lua_Integer result = luaL_optinteger(L, arg, d);
+    if (0 <= result && result <= max) {
+      return static_cast<T>(result);
+    }
+    return luaL_argerror(L, arg, "out of bounds");
+  }
+
+  template <class T, enable_if_t<(std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) >= sizeof(lua_Integer)), nullptr_t> = nullptr>
+  inline T opt_integer(lua_State* L, int arg, T d) {
+    lua_Integer result = luaL_optinteger(L, arg, d);
+    if (0 <= result) {
+      return result;
+    }
+    return luaL_argerror(L, arg, "out of bounds");
+  }
+
   template <class T, class... T_args>
   inline T* new_userdata(lua_State* L, const char* name, T_args... args) {
     T* data = static_cast<T*>(lua_newuserdata(L, sizeof(T)));

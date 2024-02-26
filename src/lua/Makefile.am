@@ -16,6 +16,8 @@ noinst_HEADERS = \
 	common_windows.hpp \
 	crypto.hpp \
 	data.hpp \
+	dir_windows.hpp \
+	dir_unix.hpp \
 	error.hpp \
 	function.hpp \
 	http.hpp \
@@ -42,6 +44,7 @@ brigid_la_SOURCES = \
 	cryptor.cpp \
 	data.cpp \
 	data_writer.cpp \
+	dir.cpp \
 	error.cpp \
 	file_writer.cpp \
 	function.cpp \

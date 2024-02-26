@@ -1,4 +1,4 @@
--- Copyright (c) 2019,2021 <dev@brigid.jp>
+-- Copyright (c) 2019,2021,2024 <dev@brigid.jp>
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
@@ -22,7 +22,7 @@ local function dump(source)
 end
 
 local suite = test_suite "test_common"
-local debug = false
+local debug = os.getenv "BRIGID_TEST_DEBUG" == "1"
 
 function suite:test_is_love2d_data()
   local data_writer = brigid.data_writer()
@@ -152,6 +152,51 @@ function suite:test_version()
   local version = brigid.get_version()
   if debug then print(version) end
   assert(version:find "^%d+%.%d+$")
+end
+
+function suite:test_dir1()
+  local path = test_cwd.."/foo"
+  assert(brigid.mkdir(path))
+  local result, message = brigid.mkdir(path)
+  if debug then print(message) end
+  assert(not result)
+  assert(brigid.rmdir(path))
+end
+
+function suite:test_dir2()
+  local path = test_cwd
+
+  local m = 0
+  local n = 0
+
+  local handle = assert(brigid.opendir(path))
+  while true do
+    local name = handle:read()
+    if not name then
+      break
+    end
+    if debug then print(name) end
+    assert(name and #name > 0)
+    m = m + 1
+  end
+  assert(handle:close())
+  assert(handle:close())
+
+  local path = test_cwd
+  for name in assert(brigid.dir(path)) do
+    if debug then print(name) end
+    assert(name and #name > 0)
+    n = n + 1
+  end
+
+  assert(m == n)
+end
+
+function suite:test_dir3()
+  local path = test_cwd.."/no such directory"
+  local result, message = brigid.opendir(path)
+  if debug then print(message) end
+  assert(not result)
 end
 
 return suite
