@@ -11,6 +11,7 @@
 
 #include <sys/stat.h>
 #include <dirent.h>
+#include <errno.h>
 #include <unistd.h>
 #include <memory>
 
@@ -44,10 +45,16 @@ namespace brigid {
       }
 
       const char* read() {
+        errno = 0;
         if (struct dirent* result = readdir(handle_.get())) {
           return result->d_name;
         } else {
-          return nullptr;
+          close();
+          if (errno == 0) {
+            return nullptr;
+          } else {
+            throw BRIGID_SYSTEM_ERROR();
+          }
         }
       }
 
@@ -76,12 +83,16 @@ namespace brigid {
       }
     }
 
-    void impl_call(lua_State* L) {
-    }
-
     void impl_read(lua_State* L) {
       dir_t* self = check_dir(L, 1);
       lua_pushstring(L, self->read());
+      lua_pushnil(L);
+    }
+
+    void impl_call(lua_State* L) {
+      const char* path = luaL_checkstring(L, 2);
+      lua_pushcfunction(L, decltype(function<impl_read>())::value);
+      new_userdata<dir_t>(L, "brigid.dir", path);
     }
 
     void impl_opendir(lua_State* L) {
@@ -105,14 +116,6 @@ namespace brigid {
     }
   }
 
-  /*
-
-    next_dir(handle)
-
-    for handle, name in brigid.dir "." do
-    end
-
-  */
   void initialize_dir(lua_State* L) {
     lua_newtable(L);
     {

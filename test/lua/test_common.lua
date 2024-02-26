@@ -165,6 +165,10 @@ end
 
 function suite:test_dir2()
   local path = test_cwd
+
+  local m = 0
+  local n = 0
+
   local handle = assert(brigid.opendir(path))
   while true do
     local name = handle:read()
@@ -172,8 +176,20 @@ function suite:test_dir2()
       break
     end
     if debug then print(name) end
+    assert(name and #name > 0)
+    m = m + 1
   end
   assert(handle:close())
+  assert(handle:close())
+
+  local path = test_cwd
+  for name in assert(brigid.dir(path)) do
+    if debug then print(name) end
+    assert(name and #name > 0)
+    n = n + 1
+  end
+
+  assert(m == n)
 end
 
 return suite
