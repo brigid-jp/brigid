@@ -21,6 +21,7 @@ OBJS = \
 	cryptor.o \
 	data.o \
 	data_writer.o \
+	dir.o \
 	error.o \
 	file_writer.o \
 	function.o \

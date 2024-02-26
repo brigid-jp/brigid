@@ -3,67 +3,18 @@
 // https://opensource.org/licenses/mit-license.php
 
 #include "common.hpp"
-#include "error.hpp"
 #include "function.hpp"
-#include "noncopyable.hpp"
 
 #include <lua.hpp>
 
-#include <io.h>
-#include <direct.h>
-#include <string>
+#ifdef _MSC_VER
+#include "dir_windows.hpp"
+#else
+#include "dir_unix.hpp"
+#endif
 
 namespace brigid {
   namespace {
-    class dir_t : private noncopyable {
-    public:
-      dir_t(const std::string& path)
-        : first_(true),
-          handle_(-1),
-          data_() {
-        handle_ = _findfirst((path + "\\*").c_str(), &data_);
-        if (handle_ == -1) {
-          throw BRIGID_SYSTEM_ERROR();
-        }
-      }
-
-      ~dir_t() {
-        close();
-      }
-
-      bool closed() const {
-        return handle_ == -1;
-      }
-
-      void close() {
-        if (handle_ != -1) {
-          _findclose(handle_);
-          handle_ = -1;
-        }
-      }
-
-      const char* read() {
-        if (first_) {
-          first_ = false;
-        } else {
-          if (_findnext(handle_, &data_) == -1) {
-            close();
-            if (errno == ENOENT) {
-              return nullptr;
-            } else {
-              throw BRIGID_SYSTEM_ERROR();
-            }
-          }
-        }
-        return data_.name;
-      }
-
-    private:
-      bool first_;
-      intptr_t handle_;
-      _finddata_t data_;
-    };
-
     dir_t* check_dir(lua_State* L, int arg, int validate = check_validate_all) {
       dir_t* self = check_udata<dir_t>(L, arg, "brigid.dir");
       if (validate & check_validate_not_closed) {
@@ -100,20 +51,6 @@ namespace brigid {
     void impl_opendir(lua_State* L) {
       const char* path = luaL_checkstring(L, 1);
       new_userdata<dir_t>(L, "brigid.dir", path);
-    }
-
-    void impl_mkdir(lua_State* L) {
-      const char* path = luaL_checkstring(L, 1);
-      if (_mkdir(path) == -1) {
-        throw BRIGID_SYSTEM_ERROR();
-      }
-    }
-
-    void impl_rmdir(lua_State* L) {
-      const char* path = luaL_checkstring(L, 1);
-      if (_rmdir(path) == -1) {
-        throw BRIGID_SYSTEM_ERROR();
-      }
     }
   }
 

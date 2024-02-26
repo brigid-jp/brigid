@@ -13,7 +13,7 @@ OBJS = \
 	src\lua\cryptor.obj \
 	src\lua\data.obj \
 	src\lua\data_writer.obj \
-	src\lua\dir_windows.obj \
+	src\lua\dir.obj \
 	src\lua\error.obj \
 	src\lua\file_writer.obj \
 	src\lua\function.obj \

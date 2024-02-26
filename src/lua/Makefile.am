@@ -16,6 +16,8 @@ noinst_HEADERS = \
 	common_windows.hpp \
 	crypto.hpp \
 	data.hpp \
+	dir_windows.hpp \
+	dir_unix.hpp \
 	error.hpp \
 	function.hpp \
 	http.hpp \
@@ -42,7 +44,7 @@ brigid_la_SOURCES = \
 	cryptor.cpp \
 	data.cpp \
 	data_writer.cpp \
-	dir_unix.cpp \
+	dir.cpp \
 	error.cpp \
 	file_writer.cpp \
 	function.cpp \
@@ -92,7 +94,6 @@ EXTRA_DIST = \
 	common_windows.cpp \
 	crypto_java.cpp \
 	crypto_windows.cpp \
-	dir_windows.cpp \
 	http_java.cpp \
 	http_windows.cpp \
 	java.mk \
