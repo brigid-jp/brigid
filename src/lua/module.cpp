@@ -14,6 +14,7 @@ namespace brigid {
   void initialize_common(lua_State*);
   void initialize_cryptor(lua_State*);
   void initialize_data_writer(lua_State*);
+  void initialize_dir(lua_State*);
   void initialize_file_writer(lua_State*);
   void initialize_hasher(lua_State*);
   void initialize_http(lua_State*);
@@ -25,6 +26,7 @@ namespace brigid {
     initialize_common(L);
     initialize_cryptor(L);
     initialize_data_writer(L);
+    initialize_dir(L);
     initialize_file_writer(L);
     initialize_hasher(L);
     initialize_http(L);

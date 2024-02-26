@@ -42,6 +42,7 @@ brigid_la_SOURCES = \
 	cryptor.cpp \
 	data.cpp \
 	data_writer.cpp \
+	dir_unix.cpp \
 	error.cpp \
 	file_writer.cpp \
 	function.cpp \
@@ -91,6 +92,7 @@ EXTRA_DIST = \
 	common_windows.cpp \
 	crypto_java.cpp \
 	crypto_windows.cpp \
+	dir_windows.cpp \
 	http_java.cpp \
 	http_windows.cpp \
 	java.mk \
