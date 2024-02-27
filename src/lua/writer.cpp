@@ -65,8 +65,13 @@ namespace brigid {
       }
 #endif
 
+#if LUA_VERSION_NUM >= 502
       int result = 0;
       lua_Number value = lua_tonumberx(L, index, &result);
+#else
+      lua_Number value = lua_tonumber(L, index);
+      int result = value != 0 || lua_isnumber(L, index);
+#endif
       if (!result) {
         throw BRIGID_LOGIC_ERROR("number expected");
       }
