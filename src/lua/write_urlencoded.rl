@@ -9,6 +9,7 @@
 
 #include "data.hpp"
 #include "error.hpp"
+#include "writer.hpp"
 
 #include <stdint.h>
 
@@ -32,8 +33,7 @@ namespace brigid {
       write data noerror nofinal noentry;
     }%%
 
-    template <class T>
-    inline void impl_write_urlencoded(T* self, const data_t& data) {
+    inline void write_urlencoded_impl(writer_t* self, const data_t& data) {
       static const char HEX[] = {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
       };

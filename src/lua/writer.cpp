@@ -106,7 +106,7 @@ namespace brigid {
     void impl_write_urlencoded(lua_State* L) {
       writer_t* self = check_writer(L, 1);
       data_t data = check_data(L, 2);
-      impl_write_urlencoded(self, data);
+      write_urlencoded_impl(self, data);
     }
   }
 

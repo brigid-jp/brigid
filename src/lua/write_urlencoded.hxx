@@ -11,21 +11,21 @@
 
 #include "data.hpp"
 #include "error.hpp"
+#include "writer.hpp"
 
 #include <stdint.h>
 
 namespace brigid {
   namespace {
     
-#line 21 "write_urlencoded.hxx"
+#line 22 "write_urlencoded.hxx"
 static const int urlencoder_start = 0;
 
 
-#line 33 "write_urlencoded.rl"
+#line 34 "write_urlencoded.rl"
 
 
-    template <class T>
-    inline void impl_write_urlencoded(T* self, const data_t& data) {
+    inline void write_urlencoded_impl(writer_t* self, const data_t& data) {
       static const char HEX[] = {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
       };
@@ -52,7 +52,7 @@ static const int urlencoder_start = 0;
 	switch ( cs )
 	{
 tr0:
-#line 25 "write_urlencoded.rl"
+#line 26 "write_urlencoded.rl"
 	{
             uint8_t v = static_cast<uint8_t>((*p));
             const char data[] = { '%', HEX[v >> 4], HEX[v & 0xF] };
@@ -60,11 +60,11 @@ tr0:
           }
 	goto st0;
 tr1:
-#line 23 "write_urlencoded.rl"
+#line 24 "write_urlencoded.rl"
 	{ self->write('+'); }
 	goto st0;
 tr2:
-#line 24 "write_urlencoded.rl"
+#line 25 "write_urlencoded.rl"
 	{ self->write((*p)); }
 	goto st0;
 st0:
