@@ -68,11 +68,6 @@ namespace brigid {
   }
 
   void write_json_string(writer_t* self, const data_t& data) {
-    if (data.size() == 0) {
-      self->write("\"\"", 2);
-      return;
-    }
-
     int cs = 0;
 
     %%write init;

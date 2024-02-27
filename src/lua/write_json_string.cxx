@@ -25,20 +25,15 @@ static const int json_string_encoder_start = 0;
   }
 
   void write_json_string(writer_t* self, const data_t& data) {
-    if (data.size() == 0) {
-      self->write("\"\"", 2);
-      return;
-    }
-
     int cs = 0;
 
     
-#line 37 "write_json_string.cxx"
+#line 32 "write_json_string.cxx"
 	{
 	cs = json_string_encoder_start;
 	}
 
-#line 79 "write_json_string.rl"
+#line 74 "write_json_string.rl"
 
     const char* const pb = data.data();
     const char* p = pb;
@@ -48,7 +43,7 @@ static const int json_string_encoder_start = 0;
 
     self->write('"');
     
-#line 52 "write_json_string.cxx"
+#line 47 "write_json_string.cxx"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -418,7 +413,7 @@ st0:
 	if ( ++p == pe )
 		goto _test_eof0;
 case 0:
-#line 422 "write_json_string.cxx"
+#line 417 "write_json_string.cxx"
 	switch( (*p) ) {
 		case 0: goto tr1;
 		case 1: goto tr2;
@@ -466,7 +461,7 @@ st1:
 	if ( ++p == pe )
 		goto _test_eof1;
 case 1:
-#line 470 "write_json_string.cxx"
+#line 465 "write_json_string.cxx"
 	switch( (*p) ) {
 		case 0: goto tr38;
 		case 1: goto tr39;
@@ -518,13 +513,13 @@ case 1:
 #line 63 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
 	break;
-#line 522 "write_json_string.cxx"
+#line 517 "write_json_string.cxx"
 	}
 	}
 
 	}
 
-#line 88 "write_json_string.rl"
+#line 83 "write_json_string.rl"
     self->write('"');
 
     if (cs >= 0) {
