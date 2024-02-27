@@ -134,16 +134,27 @@ namespace brigid {
           self->write(',');
         }
 
-        lua_pushvalue(L, -2);
-
-        data_t data = to_data(L, guard.top() + 3);
-        if (!data.data()) {
-          throw BRIGID_LOGIC_ERROR("brigid.data expected");
+        if (lua_type(L, -2) == LUA_TSTRING) {
+          size_t size = 0;
+          if (const char* data = lua_tolstring(L, -2, &size)) {
+            write_json_string(self, data_t(data, size));
+          } else {
+            throw BRIGID_LOGIC_ERROR("string expected");
+          }
+          self->write(':');
+          write_json(L, self, guard.top() + 2);
+          lua_pop(L, 1);
+        } else {
+          lua_pushvalue(L, -2);
+          data_t data = to_data(L, guard.top() + 3);
+          if (!data.data()) {
+            throw BRIGID_LOGIC_ERROR("brigid.data expected");
+          }
+          write_json_string(self, data);
+          self->write(':');
+          write_json(L, self, guard.top() + 2);
+          lua_pop(L, 2);
         }
-        write_json_string(self, data);
-        self->write(':');
-        write_json(L, self, guard.top() + 2);
-        lua_pop(L, 2);
       }
 
       self->write('}');
@@ -164,6 +175,17 @@ namespace brigid {
             self->write("true", 4);
           } else {
             self->write("false", 5);
+          }
+          return;
+
+        case LUA_TSTRING:
+          {
+            size_t size = 0;
+            if (const char* data = lua_tolstring(L, index, &size)) {
+              write_json_string(self, data_t(data, size));
+            } else {
+              throw BRIGID_LOGIC_ERROR("string expected");
+            }
           }
           return;
 
