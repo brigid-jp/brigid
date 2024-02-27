@@ -37,21 +37,24 @@ namespace brigid {
       throw BRIGID_LOGIC_ERROR("unreachable");
     }
 
-    void impl_write_json_number(lua_State* L) {
-      char buffer[64] = {};
+    template <class T>
+    int snprintf_wrapper(char* buffer, size_t size, const char* format, T value) {
+#ifdef _MSC_VER
+        return _snprintf_s(buffer, size, size - 1, format, value);
+#else
+        return snprintf(buffer, size, format, value);
+#endif
+    }
 
-      writer_t* self = check_writer(L, 1);
+    void write_json_number(lua_State* L, writer_t* self, int index) {
+      char buffer[64] = {};
 
 #if LUA_VERSION_NUM >= 503
       {
         int result = 0;
-        lua_Integer value = lua_tointegerx(L, 2, &result);
+        lua_Integer value = lua_tointegerx(L, index, &result);
         if (result) {
-#ifdef _MSC_VER
-          int size = _snprintf_s(buffer, sizeof(buffer), sizeof(buffer) - 1, LUA_INTEGER_FMT, value);
-#else
-          int size = snprintf(buffer, sizeof(buffer), LUA_INTEGER_FMT, value);
-#endif
+          int size = snprintf_wrapper(buffer, sizeof(buffer), LUA_INTEGER_FMT, value);
           if (size < 0) {
             throw BRIGID_SYSTEM_ERROR();
           }
@@ -61,24 +64,30 @@ namespace brigid {
       }
 #endif
 
-      lua_Number value = luaL_checknumber(L, 2);
-      if (!isfinite(value)) {
-        throw BRIGID_RUNTIME_ERROR("inf or nan");
+      int result = 0;
+      lua_Number value = lua_tonumberx(L, index, &result);
+      if (!result) {
+        throw BRIGID_LOGIC_ERROR("number expected");
       }
+      if (!isfinite(value)) {
+        throw BRIGID_LOGIC_ERROR("inf or nan");
+      }
+
       if (value == 0) { // check for both zero and minus zero
         self->write('0');
         return;
       }
 
-#ifdef _MSC_VER
-      int size = _snprintf_s(buffer, sizeof(buffer), sizeof(buffer) - 1, "%.17g", value);
-#else
-      int size = snprintf(buffer, sizeof(buffer), "%.17g", value);
-#endif
+      int size = snprintf_wrapper(buffer, sizeof(buffer), "%.17g", value);
       if (size < 0) {
         throw BRIGID_SYSTEM_ERROR();
       }
       self->write(buffer, size);
+    }
+
+    void impl_write_json_number(lua_State* L) {
+      writer_t* self = check_writer(L, 1);
+      write_json_number(L, self, 2);
     }
 
     void impl_write_json_string(lua_State* L) {

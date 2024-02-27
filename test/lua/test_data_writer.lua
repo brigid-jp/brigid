@@ -174,13 +174,23 @@ function suite:test_write_json_number1()
   assert(data_writer:write_json_number(42.0)):write ","
   assert(data_writer:write_json_number(69.125)):write ","
 
+  local result, message = pcall(function ()
+    data_writer:write_json_number "foobarbaz"
+  end)
+  if debug then print(message) end
+  assert(not result)
+
   local inf = 1 / 0
-  local result, message = data_writer:write_json_number(inf)
+  local result, message = pcall(function ()
+    data_writer:write_json_number(inf)
+  end)
   if debug then print(message) end
   assert(not result)
 
   local nan = 0 / 0
-  local result, message = data_writer:write_json_number(nan)
+  local result, message = pcall(function ()
+    data_writer:write_json_number(nan)
+  end)
   if debug then print(message) end
   assert(not result)
 

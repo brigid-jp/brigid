@@ -20,12 +20,12 @@ namespace brigid {
       cryptor* self = check_udata<cryptor>(L, arg, "brigid.cryptor");
       if (validate & check_validate_not_closed) {
         if (self->closed()) {
-          luaL_error(L, "attempt to use a closed brigid.cryptor");
+          luaL_argerror(L, arg, "attempt to use a closed brigid.cryptor");
         }
       }
       if (validate & check_validate_not_running) {
         if (self->running()) {
-          luaL_error(L, "attempt to use a running brigid.cryptor");
+          luaL_argerror(L, arg, "attempt to use a running brigid.cryptor");
         }
       }
       return self;
