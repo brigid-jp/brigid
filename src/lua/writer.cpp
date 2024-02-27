@@ -6,6 +6,7 @@
 #include "data.hpp"
 #include "error.hpp"
 #include "function.hpp"
+#include "stack_guard.hpp"
 #include "writer.hpp"
 
 #include <lua.hpp>
@@ -85,6 +86,97 @@ namespace brigid {
       self->write(buffer, size);
     }
 
+    void write_json(lua_State*, writer_t*, int);
+
+    void write_json_table(lua_State* L, writer_t* self, int index) {
+      {
+        stack_guard guard(L);
+
+        lua_rawgeti(L, index, 1);
+        if (lua_isnil(L, -1)) {
+          if (lua_getmetatable(L, index)) {
+            luaL_getmetatable(L, "brigid.json.array");
+            if (lua_rawequal(L, -1, -2)) {
+              self->write("[]", 2);
+              return;
+            }
+          }
+        } else {
+          self->write('[');
+          write_json(L, self, guard.top() + 1);
+          lua_pop(L, 1);
+
+          for (int i = 2; ; ++i) {
+            lua_rawgeti(L, index, i);
+            if (lua_isnil(L, -1)) {
+              break;
+            }
+            self->write(',');
+            write_json(L, self, guard.top() + 1);
+            lua_pop(L, 1);
+          }
+
+          self->write(']');
+          return;
+        }
+      }
+
+      stack_guard guard(L);
+
+      self->write('{');
+      bool first = true;
+
+      lua_pushnil(L);
+      while (lua_next(L, index)) {
+        if (first) {
+          first = false;
+        } else {
+          self->write(',');
+        }
+
+        lua_pushvalue(L, -2);
+        write_json_string(L, self, guard.top() + 3);
+        self->write(':');
+        write_json(L, self, guard.top() + 2);
+        lua_pop(L, 2);
+      }
+
+      self->write('}');
+    }
+
+    void write_json(lua_State* L, writer_t* self, int index) {
+      switch (lua_type(L, index)) {
+        case LUA_TNIL:
+          self->write("null", 4);
+          return;
+
+        case LUA_TNUMBER:
+          write_json_number(L, self, index);
+          return;
+
+        case LUA_TBOOLEAN:
+          if (lua_toboolean(L, index)) {
+            self->write("true", 4);
+          } else {
+            self->write("false", 5);
+          }
+          return;
+
+        case LUA_TTABLE:
+          write_json_table(L, self, index);
+          return;
+
+        case LUA_TLIGHTUSERDATA:
+          if (!lua_touserdata(L, index)) {
+            self->write("null", 4);
+            return;
+          }
+          break;
+      }
+
+      write_json_string(L, self, index);
+    }
+
     void impl_write_json_number(lua_State* L) {
       writer_t* self = check_writer(L, 1);
       write_json_number(L, self, 2);
@@ -93,6 +185,11 @@ namespace brigid {
     void impl_write_json_string(lua_State* L) {
       writer_t* self = check_writer(L, 1);
       write_json_string(L, self, 2);
+    }
+
+    void impl_write_json(lua_State* L) {
+      writer_t* self = check_writer(L, 1);
+      write_json(L, self, 2);
     }
 
     void impl_write_urlencoded(lua_State* L) {
@@ -107,6 +204,7 @@ namespace brigid {
   void initialize_writer(lua_State* L) {
     decltype(function<impl_write_json_number>())::set_field(L, -1, "write_json_number");
     decltype(function<impl_write_json_string>())::set_field(L, -1, "write_json_string");
+    decltype(function<impl_write_json>())::set_field(L, -1, "write_json");
     decltype(function<impl_write_urlencoded>())::set_field(L, -1, "write_urlencoded");
   }
 }
