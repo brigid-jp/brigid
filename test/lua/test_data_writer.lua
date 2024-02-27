@@ -246,11 +246,12 @@ function suite:test_write_json()
       { "日本語\n" };
       { true, false, brigid.null };
       { 17, 42.0, 69.125 };
+      { "", "あいうえおかきくけこさしすせそ" };
     };
   }:get_string()
 
   if debug then print(result) end
-  assert(result == [=[{"a":[[],{},["日本語\n"],[true,false,null],[17,42,69.125]]}]=])
+  assert(result == [=[{"a":[[],{},["日本語\n"],[true,false,null],[17,42,69.125],["","あいうえおかきくけこさしすせそ"]]}]=])
 end
 
 return suite
