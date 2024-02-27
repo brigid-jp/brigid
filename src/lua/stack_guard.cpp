@@ -14,4 +14,8 @@ namespace brigid {
   stack_guard::~stack_guard() {
     lua_settop(state_, top_);
   }
+
+  int stack_guard::top() const {
+    return top_;
+  }
 }

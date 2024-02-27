@@ -14,6 +14,7 @@ namespace brigid {
   public:
     explicit stack_guard(lua_State*);
     ~stack_guard();
+    int top() const;
   private:
     lua_State* state_;
     int top_;
