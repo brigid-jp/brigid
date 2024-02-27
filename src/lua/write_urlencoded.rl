@@ -9,6 +9,7 @@
 #include "writer.hpp"
 
 #include <stdint.h>
+#include <sstream>
 
 namespace brigid {
   namespace {
@@ -31,7 +32,7 @@ namespace brigid {
     }%%
   }
 
-  void write_urlencoded_impl(writer_t* self, const data_t& data) {
+  void write_urlencoded(writer_t* self, const data_t& data) {
     static const char HEX[] = {
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
     };
