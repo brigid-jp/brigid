@@ -41,6 +41,8 @@ OBJS = \
 	stopwatch_unix.o \
 	thread_reference.o \
 	view.o \
+	write_json_string.o \
+	write_urlencoded.o \
 	writer.o
 TARGET = libbrigid.a
 
