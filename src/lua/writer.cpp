@@ -85,6 +85,14 @@ namespace brigid {
       self->write(buffer, size);
     }
 
+    void write_json_string(lua_State* L, writer_t* self, int index) {
+      data_t data = to_data(L, index);
+      if (!data.data()) {
+        throw BRIGID_LOGIC_ERROR("brigid.data expected");
+      }
+      write_json_string_impl(self, data);
+    }
+
     void impl_write_json_number(lua_State* L) {
       writer_t* self = check_writer(L, 1);
       write_json_number(L, self, 2);
@@ -92,8 +100,7 @@ namespace brigid {
 
     void impl_write_json_string(lua_State* L) {
       writer_t* self = check_writer(L, 1);
-      data_t data = check_data(L, 2);
-      impl_write_json_string(self, data);
+      write_json_string(L, self, 2);
     }
 
     void impl_write_urlencoded(lua_State* L) {
