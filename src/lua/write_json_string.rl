@@ -15,6 +15,7 @@ namespace brigid {
   namespace {
     %%{
       machine json_string_encoder;
+
       main := |*
         0x08 => { self->write("\\b", 2); };
         0x09 => { self->write("\\t", 2); };
@@ -32,13 +33,13 @@ namespace brigid {
         0x2F => { self->write("\\/", 2); };
         0x5C => { self->write("\\\\", 2); };
         0x7F => { self->write("\\u007F", 6); };
-        0xE2 0x80 0xA8 => { self->write("\\u2028", 6); }; # LINE SEPARATOR
-        0xE2 0x80 0xA9 => { self->write("\\u2029", 6); }; # PARAGRAPH SEPARATOR
+        # 0xE2 0x80 0xA8 => { self->write("\\u2028", 6); }; # LINE SEPARATOR
+        # 0xE2 0x80 0xA9 => { self->write("\\u2029", 6); }; # PARAGRAPH SEPARATOR
 
         # Accept not valid UTF-8 characters
         ( 0x20 | 0x21 | 0x23..0x2E | 0x30..0x5B | 0x5D..0x7E
         | 0xC2..0xDF any
-        | 0xE0..0xEF any{2} - 0xE2 0x80 (0xA8 | 0xA9)
+        | 0xE0..0xEF any{2} # - 0xE2 0x80 (0xA8 | 0xA9)
         | 0xF0..0xF4 any{3}
         )+ => { self->write(ts, te - ts); };
       *|;

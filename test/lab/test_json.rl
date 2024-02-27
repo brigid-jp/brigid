@@ -26,7 +26,7 @@ esc
 
 un1 = [cd];
 un2 = [ef] [0-2];
-un3 = [gh] [0-2] [0-2] - esc;
+un3 = [gh] [0-2] [0-2];
 
 # NG: cccg01
 # main :=
@@ -37,17 +37,36 @@ un3 = [gh] [0-2] [0-2] - esc;
 #   )+
 #   ;
 
-main := |*
-  (un1|un2|un3)+ => A;
-  [ab] => X;
-  "g01" => Y;
-  "g02" => Z;
-*|;
+# main := |*
+#   (un1|un2|un3)+ => A;
+#   [ab] => X;
+#   "g01" => Y;
+#   "g02" => Z;
+# *|;
 
 # main := 
 #   ( (un1@A|un2@B|un3@C) (un1|un2|un3)* %F (esc*)
 #   | (esc+)
 #   );
+
+  main :=
+    ( ([a-b] @{
+        if (ps) {
+          std::cout << "?un: " << std::string(ps, fpc) << "\n";
+          ps = nullptr;
+        }
+        std::cout << "esc: " << fc << "\n";
+      })+
+    | ( un1@{ps = fpc;}
+      | un2@{ps = fpc - 1;}
+      | un3@{ps = fpc - 2;}) (un1|un2|un3)* %{
+      if (ps) {
+        std::cout << "!un: " << std::string(ps, fpc) << "\n";
+        ps = nullptr;
+      }
+      }
+    )**
+    ;
 
 }%%
 
