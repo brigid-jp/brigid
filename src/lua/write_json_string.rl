@@ -8,8 +8,6 @@
 #include "error.hpp"
 #include "writer.hpp"
 
-#include <lua.hpp>
-
 #include <stdint.h>
 #include <sstream>
 
@@ -58,15 +56,10 @@ namespace brigid {
     }%%
   }
 
-  void write_json_string(lua_State* L, writer_t* self, int index) {
+  void write_json_string(writer_t* self, const data_t& data) {
     static const char HEX[] = {
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
     };
-
-    data_t data = to_data(L, index);
-    if (!data.data()) {
-      throw BRIGID_LOGIC_ERROR("brigid.data expected");
-    }
 
     int cs = 0;
 
