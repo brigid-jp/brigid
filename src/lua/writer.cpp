@@ -13,10 +13,10 @@
 #include <math.h>
 #include <stdio.h>
 
-#include "write_json_string.hxx"
-#include "write_urlencoded.hxx"
-
 namespace brigid {
+  void write_json_string_impl(writer_t*, const data_t&);
+  void write_urlencoded_impl(writer_t*, const data_t&);
+
   namespace {
     writer_t* check_writer_impl(lua_State* L, int arg) {
       if (writer_t* self = to_writer_data_writer(L, arg)) {

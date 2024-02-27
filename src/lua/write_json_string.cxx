@@ -6,9 +6,6 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#ifndef BRIGID_WRITE_JSON_STRING_HXX
-#define BRIGID_WRITE_JSON_STRING_HXX
-
 #include "data.hpp"
 #include "error.hpp"
 #include "writer.hpp"
@@ -18,62 +15,63 @@
 namespace brigid {
   namespace {
     
-#line 22 "write_json_string.hxx"
+#line 19 "write_json_string.cxx"
 static const int json_string_encoder_start = 9;
 
 
-#line 58 "write_json_string.rl"
+#line 55 "write_json_string.rl"
 
+  }
 
-    inline void write_json_string_impl(writer_t* self, const data_t& data) {
-      static const char HEX[] = {
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
-      };
+  void write_json_string_impl(writer_t* self, const data_t& data) {
+    static const char HEX[] = {
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
+    };
 
-      int cs = 0;
+    int cs = 0;
 
-      
-#line 37 "write_json_string.hxx"
+    
+#line 35 "write_json_string.cxx"
 	{
 	cs = json_string_encoder_start;
 	}
 
-#line 68 "write_json_string.rl"
+#line 66 "write_json_string.rl"
 
-      const char* const pb = data.data();
-      const char* p = pb;
-      const char* const pe = p + data.size();
+    const char* const pb = data.data();
+    const char* p = pb;
+    const char* const pe = p + data.size();
 
-      self->write('"');
-      
-#line 50 "write_json_string.hxx"
+    self->write('"');
+    
+#line 48 "write_json_string.cxx"
 	{
 	if ( p == pe )
 		goto _test_eof;
 	switch ( cs )
 	{
 tr0:
-#line 48 "write_json_string.rl"
+#line 45 "write_json_string.rl"
 	{ self->write(p - 1, 2); }
 	goto st9;
 tr2:
-#line 52 "write_json_string.rl"
+#line 49 "write_json_string.rl"
 	{ self->write(p - 2, 3); }
 	goto st9;
 tr4:
-#line 50 "write_json_string.rl"
+#line 47 "write_json_string.rl"
 	{ self->write("\\u2028", 6); }
 	goto st9;
 tr5:
-#line 51 "write_json_string.rl"
+#line 48 "write_json_string.rl"
 	{ self->write("\\u2029", 6); }
 	goto st9;
 tr8:
-#line 54 "write_json_string.rl"
+#line 51 "write_json_string.rl"
 	{ self->write(p - 3, 4); }
 	goto st9;
 tr14:
-#line 36 "write_json_string.rl"
+#line 33 "write_json_string.rl"
 	{
             uint8_t v = static_cast<uint8_t>((*p));
             const char data[] = { '\\', 'u', '0', '0', HEX[v >> 4], HEX[v & 0xF] };
@@ -81,50 +79,50 @@ tr14:
           }
 	goto st9;
 tr15:
-#line 31 "write_json_string.rl"
+#line 28 "write_json_string.rl"
 	{ self->write("\\b", 2); }
 	goto st9;
 tr16:
-#line 32 "write_json_string.rl"
+#line 29 "write_json_string.rl"
 	{ self->write("\\t", 2); }
 	goto st9;
 tr17:
-#line 33 "write_json_string.rl"
+#line 30 "write_json_string.rl"
 	{ self->write("\\n", 2); }
 	goto st9;
 tr18:
-#line 34 "write_json_string.rl"
+#line 31 "write_json_string.rl"
 	{ self->write("\\f", 2); }
 	goto st9;
 tr19:
-#line 35 "write_json_string.rl"
+#line 32 "write_json_string.rl"
 	{ self->write("\\r", 2); }
 	goto st9;
 tr20:
-#line 46 "write_json_string.rl"
+#line 43 "write_json_string.rl"
 	{ self->write((*p)); }
 	goto st9;
 tr21:
-#line 42 "write_json_string.rl"
+#line 39 "write_json_string.rl"
 	{ self->write("\\\"", 2); }
 	goto st9;
 tr22:
-#line 43 "write_json_string.rl"
+#line 40 "write_json_string.rl"
 	{ self->write("\\/", 2); }
 	goto st9;
 tr23:
-#line 44 "write_json_string.rl"
+#line 41 "write_json_string.rl"
 	{ self->write("\\\\", 2); }
 	goto st9;
 tr24:
-#line 45 "write_json_string.rl"
+#line 42 "write_json_string.rl"
 	{ self->write("\\u007F", 6); }
 	goto st9;
 st9:
 	if ( ++p == pe )
 		goto _test_eof9;
 case 9:
-#line 128 "write_json_string.hxx"
+#line 126 "write_json_string.cxx"
 	switch( (*p) ) {
 		case -30: goto st4;
 		case 8: goto tr15;
@@ -219,18 +217,15 @@ case 8:
 	_out: {}
 	}
 
-#line 75 "write_json_string.rl"
-      self->write('"');
+#line 73 "write_json_string.rl"
+    self->write('"');
 
-      if (cs >= 9) {
-        return;
-      }
-
-      std::ostringstream out;
-      out << "cannot write json string at position " << (p - pb + 1);
-      throw BRIGID_RUNTIME_ERROR(out.str());
+    if (cs >= 9) {
+      return;
     }
+
+    std::ostringstream out;
+    out << "cannot write json string at position " << (p - pb + 1);
+    throw BRIGID_RUNTIME_ERROR(out.str());
   }
 }
-
-#endif

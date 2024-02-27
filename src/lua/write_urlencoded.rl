@@ -4,9 +4,6 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#ifndef BRIGID_WRITE_URLENCODED_HPP
-#define BRIGID_WRITE_URLENCODED_HPP
-
 #include "data.hpp"
 #include "error.hpp"
 #include "writer.hpp"
@@ -32,31 +29,29 @@ namespace brigid {
 
       write data noerror nofinal noentry;
     }%%
+  }
 
-    inline void write_urlencoded_impl(writer_t* self, const data_t& data) {
-      static const char HEX[] = {
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
-      };
+  void write_urlencoded_impl(writer_t* self, const data_t& data) {
+    static const char HEX[] = {
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
+    };
 
-      int cs = 0;
+    int cs = 0;
 
-      %%write init;
+    %%write init;
 
-      const char* const pb = data.data();
-      const char* p = pb;
-      const char* const pe = p + data.size();
+    const char* const pb = data.data();
+    const char* p = pb;
+    const char* const pe = p + data.size();
 
-      %%write exec;
+    %%write exec;
 
-      if (cs >= %%{ write first_final; }%%) {
-        return;
-      }
-
-      std::ostringstream out;
-      out << "cannot write urlencoded at position " << (p - pb + 1);
-      throw BRIGID_RUNTIME_ERROR(out.str());
+    if (cs >= %%{ write first_final; }%%) {
+      return;
     }
+
+    std::ostringstream out;
+    out << "cannot write urlencoded at position " << (p - pb + 1);
+    throw BRIGID_RUNTIME_ERROR(out.str());
   }
 }
-
-#endif
