@@ -51,18 +51,16 @@ un3 = [gh] [0-2] [0-2];
 
   main :=
     ( ([a-b] @{
-        if (ps) {
-          std::cout << "?un: " << std::string(ps, fpc) << "\n";
-          ps = nullptr;
-        }
+        // if (ps) {
+        //   std::cout << "?un: " << std::string(ps, fpc) << "\n";
+        //   ps = nullptr;
+        // }
         std::cout << "esc: " << fc << "\n";
       })+
-    | ( un1@{ps = fpc;}
-      | un2@{ps = fpc - 1;}
-      | un3@{ps = fpc - 2;}) (un1|un2|un3)* %{
+    | (un1|un2|un3)>{ps = fpc;} (un1|un2|un3)* %{
       if (ps) {
         std::cout << "!un: " << std::string(ps, fpc) << "\n";
-        ps = nullptr;
+        // ps = nullptr;
       }
       }
     )**

@@ -151,7 +151,7 @@ function suite:test_write_json_string2()
     0xE2, 0x80, 0xAA) -- U+202A
 
   local source = source1..source2..source2..source3
-  local expect = "\""..source1.."\\u2028\\u2029\\u2028\\u2029"..source3.."\""
+  local expect = "\""..source1..source2..source2..source3.."\""
 
   local data_writer = assert(brigid.data_writer():write_json_string(source))
   local result = assert(data_writer:get_string())

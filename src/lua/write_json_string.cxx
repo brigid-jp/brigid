@@ -17,227 +17,517 @@ namespace brigid {
   namespace {
     
 #line 20 "write_json_string.cxx"
-static const int json_string_encoder_start = 4;
+static const int json_string_encoder_start = 0;
 
 
-#line 48 "write_json_string.rl"
+#line 67 "write_json_string.rl"
 
   }
 
   void write_json_string(writer_t* self, const data_t& data) {
-    static const char HEX[] = {
-      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
-    };
-
     if (data.size() == 0) {
       self->write("\"\"", 2);
       return;
     }
 
     int cs = 0;
-    int act = 0;
-    const char* ts = nullptr;
-    const char* te = nullptr;
 
     
-#line 44 "write_json_string.cxx"
+#line 37 "write_json_string.cxx"
 	{
 	cs = json_string_encoder_start;
-	ts = 0;
-	te = 0;
-	act = 0;
 	}
 
-#line 67 "write_json_string.rl"
+#line 79 "write_json_string.rl"
 
     const char* const pb = data.data();
     const char* p = pb;
     const char* const pe = p + data.size();
     const char* const eof = pe;
+    const char* ps = nullptr;
 
     self->write('"');
     
-#line 61 "write_json_string.cxx"
+#line 52 "write_json_string.cxx"
 	{
 	if ( p == pe )
 		goto _test_eof;
 	switch ( cs )
 	{
-tr0:
-#line 1 "NONE"
-	{	switch( act ) {
-	case 0:
-	{{goto st0;}}
-	break;
-	case 11:
-	{{p = ((te))-1;} self->write(ts, te - ts); }
-	break;
-	}
-	}
-	goto st4;
-tr6:
-#line 26 "write_json_string.rl"
-	{te = p+1;{
-          uint8_t v = static_cast<uint8_t>((*p));
-          const char data[] = { '\\', 'u', '0', '0', HEX[v >> 4], HEX[v & 0xF] };
-          self->write(data, sizeof(data));
-        }}
-	goto st4;
-tr7:
+tr1:
 #line 20 "write_json_string.rl"
-	{te = p+1;{ self->write("\\b", 2); }}
-	goto st4;
-tr8:
+	{ self->write("\\u0000", 6); }
+	goto st0;
+tr2:
 #line 21 "write_json_string.rl"
-	{te = p+1;{ self->write("\\t", 2); }}
-	goto st4;
-tr9:
+	{ self->write("\\u0001", 6); }
+	goto st0;
+tr3:
 #line 22 "write_json_string.rl"
-	{te = p+1;{ self->write("\\n", 2); }}
-	goto st4;
-tr10:
+	{ self->write("\\u0002", 6); }
+	goto st0;
+tr4:
 #line 23 "write_json_string.rl"
-	{te = p+1;{ self->write("\\f", 2); }}
-	goto st4;
-tr11:
+	{ self->write("\\u0003", 6); }
+	goto st0;
+tr5:
 #line 24 "write_json_string.rl"
-	{te = p+1;{ self->write("\\r", 2); }}
-	goto st4;
+	{ self->write("\\u0004", 6); }
+	goto st0;
+tr6:
+#line 25 "write_json_string.rl"
+	{ self->write("\\u0005", 6); }
+	goto st0;
+tr7:
+#line 26 "write_json_string.rl"
+	{ self->write("\\u0006", 6); }
+	goto st0;
+tr8:
+#line 27 "write_json_string.rl"
+	{ self->write("\\u0007", 6); }
+	goto st0;
+tr9:
+#line 28 "write_json_string.rl"
+	{ self->write("\\b", 2); }
+	goto st0;
+tr10:
+#line 29 "write_json_string.rl"
+	{ self->write("\\t", 2); }
+	goto st0;
+tr11:
+#line 30 "write_json_string.rl"
+	{ self->write("\\n", 2); }
+	goto st0;
 tr12:
-#line 32 "write_json_string.rl"
-	{te = p+1;{ self->write("\\\"", 2); }}
-	goto st4;
+#line 31 "write_json_string.rl"
+	{ self->write("\\u000B", 6); }
+	goto st0;
 tr13:
-#line 33 "write_json_string.rl"
-	{te = p+1;{ self->write("\\/", 2); }}
-	goto st4;
+#line 32 "write_json_string.rl"
+	{ self->write("\\f", 2); }
+	goto st0;
 tr14:
-#line 34 "write_json_string.rl"
-	{te = p+1;{ self->write("\\\\", 2); }}
-	goto st4;
+#line 33 "write_json_string.rl"
+	{ self->write("\\r", 2); }
+	goto st0;
 tr15:
-#line 35 "write_json_string.rl"
-	{te = p+1;{ self->write("\\u007F", 6); }}
-	goto st4;
+#line 34 "write_json_string.rl"
+	{ self->write("\\u000E", 6); }
+	goto st0;
 tr16:
+#line 35 "write_json_string.rl"
+	{ self->write("\\u000F", 6); }
+	goto st0;
+tr17:
+#line 36 "write_json_string.rl"
+	{ self->write("\\u0010", 6); }
+	goto st0;
+tr18:
+#line 37 "write_json_string.rl"
+	{ self->write("\\u0011", 6); }
+	goto st0;
+tr19:
+#line 38 "write_json_string.rl"
+	{ self->write("\\u0012", 6); }
+	goto st0;
+tr20:
+#line 39 "write_json_string.rl"
+	{ self->write("\\u0013", 6); }
+	goto st0;
+tr21:
+#line 40 "write_json_string.rl"
+	{ self->write("\\u0014", 6); }
+	goto st0;
+tr22:
+#line 41 "write_json_string.rl"
+	{ self->write("\\u0015", 6); }
+	goto st0;
+tr23:
+#line 42 "write_json_string.rl"
+	{ self->write("\\u0016", 6); }
+	goto st0;
+tr24:
+#line 43 "write_json_string.rl"
+	{ self->write("\\u0017", 6); }
+	goto st0;
+tr25:
 #line 44 "write_json_string.rl"
-	{te = p;p--;{ self->write(ts, te - ts); }}
-	goto st4;
-st4:
-#line 1 "NONE"
-	{ts = 0;}
-#line 1 "NONE"
-	{act = 0;}
-	if ( ++p == pe )
-		goto _test_eof4;
-case 4:
-#line 1 "NONE"
-	{ts = p;}
-#line 137 "write_json_string.cxx"
-	switch( (*p) ) {
-		case 8: goto tr7;
-		case 9: goto tr8;
-		case 10: goto tr9;
-		case 12: goto tr10;
-		case 13: goto tr11;
-		case 34: goto tr12;
-		case 47: goto tr13;
-		case 92: goto tr14;
-		case 127: goto tr15;
-	}
-	if ( (*p) < -32 ) {
-		if ( (*p) > -63 ) {
-			if ( -62 <= (*p) && (*p) <= -33 )
-				goto st1;
-		} else
-			goto st0;
-	} else if ( (*p) > -17 ) {
-		if ( (*p) < -11 ) {
-			if ( -16 <= (*p) && (*p) <= -12 )
-				goto st3;
-		} else if ( (*p) > -1 ) {
-			if ( 0 <= (*p) && (*p) <= 31 )
-				goto tr6;
-		} else
-			goto st0;
-	} else
-		goto st2;
-	goto tr1;
+	{ self->write("\\u0018", 6); }
+	goto st0;
+tr26:
+#line 45 "write_json_string.rl"
+	{ self->write("\\u0019", 6); }
+	goto st0;
+tr27:
+#line 46 "write_json_string.rl"
+	{ self->write("\\u001A", 6); }
+	goto st0;
+tr28:
+#line 47 "write_json_string.rl"
+	{ self->write("\\u001B", 6); }
+	goto st0;
+tr29:
+#line 48 "write_json_string.rl"
+	{ self->write("\\u001C", 6); }
+	goto st0;
+tr30:
+#line 49 "write_json_string.rl"
+	{ self->write("\\u001D", 6); }
+	goto st0;
+tr31:
+#line 50 "write_json_string.rl"
+	{ self->write("\\u001E", 6); }
+	goto st0;
+tr32:
+#line 51 "write_json_string.rl"
+	{ self->write("\\u001F", 6); }
+	goto st0;
+tr33:
+#line 52 "write_json_string.rl"
+	{ self->write("\\\"", 2); }
+	goto st0;
+tr34:
+#line 53 "write_json_string.rl"
+	{ self->write("\\/", 2); }
+	goto st0;
+tr35:
+#line 54 "write_json_string.rl"
+	{ self->write("\\\\", 2); }
+	goto st0;
+tr36:
+#line 55 "write_json_string.rl"
+	{ self->write("\\u007F", 6); }
+	goto st0;
+tr38:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 20 "write_json_string.rl"
+	{ self->write("\\u0000", 6); }
+	goto st0;
+tr39:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 21 "write_json_string.rl"
+	{ self->write("\\u0001", 6); }
+	goto st0;
+tr40:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 22 "write_json_string.rl"
+	{ self->write("\\u0002", 6); }
+	goto st0;
+tr41:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 23 "write_json_string.rl"
+	{ self->write("\\u0003", 6); }
+	goto st0;
+tr42:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 24 "write_json_string.rl"
+	{ self->write("\\u0004", 6); }
+	goto st0;
+tr43:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 25 "write_json_string.rl"
+	{ self->write("\\u0005", 6); }
+	goto st0;
+tr44:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 26 "write_json_string.rl"
+	{ self->write("\\u0006", 6); }
+	goto st0;
+tr45:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 27 "write_json_string.rl"
+	{ self->write("\\u0007", 6); }
+	goto st0;
+tr46:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 28 "write_json_string.rl"
+	{ self->write("\\b", 2); }
+	goto st0;
+tr47:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 29 "write_json_string.rl"
+	{ self->write("\\t", 2); }
+	goto st0;
+tr48:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 30 "write_json_string.rl"
+	{ self->write("\\n", 2); }
+	goto st0;
+tr49:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 31 "write_json_string.rl"
+	{ self->write("\\u000B", 6); }
+	goto st0;
+tr50:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 32 "write_json_string.rl"
+	{ self->write("\\f", 2); }
+	goto st0;
+tr51:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 33 "write_json_string.rl"
+	{ self->write("\\r", 2); }
+	goto st0;
+tr52:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 34 "write_json_string.rl"
+	{ self->write("\\u000E", 6); }
+	goto st0;
+tr53:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 35 "write_json_string.rl"
+	{ self->write("\\u000F", 6); }
+	goto st0;
+tr54:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 36 "write_json_string.rl"
+	{ self->write("\\u0010", 6); }
+	goto st0;
+tr55:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 37 "write_json_string.rl"
+	{ self->write("\\u0011", 6); }
+	goto st0;
+tr56:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 38 "write_json_string.rl"
+	{ self->write("\\u0012", 6); }
+	goto st0;
+tr57:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 39 "write_json_string.rl"
+	{ self->write("\\u0013", 6); }
+	goto st0;
+tr58:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 40 "write_json_string.rl"
+	{ self->write("\\u0014", 6); }
+	goto st0;
+tr59:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 41 "write_json_string.rl"
+	{ self->write("\\u0015", 6); }
+	goto st0;
+tr60:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 42 "write_json_string.rl"
+	{ self->write("\\u0016", 6); }
+	goto st0;
+tr61:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 43 "write_json_string.rl"
+	{ self->write("\\u0017", 6); }
+	goto st0;
+tr62:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 44 "write_json_string.rl"
+	{ self->write("\\u0018", 6); }
+	goto st0;
+tr63:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 45 "write_json_string.rl"
+	{ self->write("\\u0019", 6); }
+	goto st0;
+tr64:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 46 "write_json_string.rl"
+	{ self->write("\\u001A", 6); }
+	goto st0;
+tr65:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 47 "write_json_string.rl"
+	{ self->write("\\u001B", 6); }
+	goto st0;
+tr66:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 48 "write_json_string.rl"
+	{ self->write("\\u001C", 6); }
+	goto st0;
+tr67:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 49 "write_json_string.rl"
+	{ self->write("\\u001D", 6); }
+	goto st0;
+tr68:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 50 "write_json_string.rl"
+	{ self->write("\\u001E", 6); }
+	goto st0;
+tr69:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 51 "write_json_string.rl"
+	{ self->write("\\u001F", 6); }
+	goto st0;
+tr70:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 52 "write_json_string.rl"
+	{ self->write("\\\"", 2); }
+	goto st0;
+tr71:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 53 "write_json_string.rl"
+	{ self->write("\\/", 2); }
+	goto st0;
+tr72:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 54 "write_json_string.rl"
+	{ self->write("\\\\", 2); }
+	goto st0;
+tr73:
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+#line 55 "write_json_string.rl"
+	{ self->write("\\u007F", 6); }
+	goto st0;
 st0:
-cs = 0;
-	goto _out;
+	if ( ++p == pe )
+		goto _test_eof0;
+case 0:
+#line 422 "write_json_string.cxx"
+	switch( (*p) ) {
+		case 0: goto tr1;
+		case 1: goto tr2;
+		case 2: goto tr3;
+		case 3: goto tr4;
+		case 4: goto tr5;
+		case 5: goto tr6;
+		case 6: goto tr7;
+		case 7: goto tr8;
+		case 8: goto tr9;
+		case 9: goto tr10;
+		case 10: goto tr11;
+		case 11: goto tr12;
+		case 12: goto tr13;
+		case 13: goto tr14;
+		case 14: goto tr15;
+		case 15: goto tr16;
+		case 16: goto tr17;
+		case 17: goto tr18;
+		case 18: goto tr19;
+		case 19: goto tr20;
+		case 20: goto tr21;
+		case 21: goto tr22;
+		case 22: goto tr23;
+		case 23: goto tr24;
+		case 24: goto tr25;
+		case 25: goto tr26;
+		case 26: goto tr27;
+		case 27: goto tr28;
+		case 28: goto tr29;
+		case 29: goto tr30;
+		case 30: goto tr31;
+		case 31: goto tr32;
+		case 34: goto tr33;
+		case 47: goto tr34;
+		case 92: goto tr35;
+		case 127: goto tr36;
+	}
+	goto tr0;
+tr0:
+#line 63 "write_json_string.rl"
+	{ ps = p; }
+	goto st1;
 st1:
 	if ( ++p == pe )
 		goto _test_eof1;
 case 1:
-	goto tr1;
-tr1:
-#line 1 "NONE"
-	{te = p+1;}
-#line 44 "write_json_string.rl"
-	{act = 11;}
-	goto st5;
-st5:
-	if ( ++p == pe )
-		goto _test_eof5;
-case 5:
-#line 185 "write_json_string.cxx"
-	if ( (*p) < 32 ) {
-		if ( (*p) < -32 ) {
-			if ( -62 <= (*p) && (*p) <= -33 )
-				goto st1;
-		} else if ( (*p) > -17 ) {
-			if ( -16 <= (*p) && (*p) <= -12 )
-				goto st3;
-		} else
-			goto st2;
-	} else if ( (*p) > 33 ) {
-		if ( (*p) < 48 ) {
-			if ( 35 <= (*p) && (*p) <= 46 )
-				goto tr1;
-		} else if ( (*p) > 91 ) {
-			if ( 93 <= (*p) && (*p) <= 126 )
-				goto tr1;
-		} else
-			goto tr1;
-	} else
-		goto tr1;
-	goto tr16;
-st2:
-	if ( ++p == pe )
-		goto _test_eof2;
-case 2:
-	goto st1;
-st3:
-	if ( ++p == pe )
-		goto _test_eof3;
-case 3:
-	goto st2;
+#line 470 "write_json_string.cxx"
+	switch( (*p) ) {
+		case 0: goto tr38;
+		case 1: goto tr39;
+		case 2: goto tr40;
+		case 3: goto tr41;
+		case 4: goto tr42;
+		case 5: goto tr43;
+		case 6: goto tr44;
+		case 7: goto tr45;
+		case 8: goto tr46;
+		case 9: goto tr47;
+		case 10: goto tr48;
+		case 11: goto tr49;
+		case 12: goto tr50;
+		case 13: goto tr51;
+		case 14: goto tr52;
+		case 15: goto tr53;
+		case 16: goto tr54;
+		case 17: goto tr55;
+		case 18: goto tr56;
+		case 19: goto tr57;
+		case 20: goto tr58;
+		case 21: goto tr59;
+		case 22: goto tr60;
+		case 23: goto tr61;
+		case 24: goto tr62;
+		case 25: goto tr63;
+		case 26: goto tr64;
+		case 27: goto tr65;
+		case 28: goto tr66;
+		case 29: goto tr67;
+		case 30: goto tr68;
+		case 31: goto tr69;
+		case 34: goto tr70;
+		case 47: goto tr71;
+		case 92: goto tr72;
+		case 127: goto tr73;
 	}
-	_test_eof4: cs = 4; goto _test_eof; 
+	goto st1;
+	}
+	_test_eof0: cs = 0; goto _test_eof; 
 	_test_eof1: cs = 1; goto _test_eof; 
-	_test_eof5: cs = 5; goto _test_eof; 
-	_test_eof2: cs = 2; goto _test_eof; 
-	_test_eof3: cs = 3; goto _test_eof; 
 
 	_test_eof: {}
 	if ( p == eof )
 	{
 	switch ( cs ) {
-	case 1: goto tr0;
-	case 5: goto tr16;
-	case 2: goto tr0;
-	case 3: goto tr0;
+	case 1: 
+#line 63 "write_json_string.rl"
+	{ self->write(ps, p - ps); }
+	break;
+#line 522 "write_json_string.cxx"
 	}
 	}
 
-	_out: {}
 	}
 
-#line 75 "write_json_string.rl"
+#line 88 "write_json_string.rl"
     self->write('"');
 
-    if (cs >= 4) {
+    if (cs >= 0) {
       return;
     }
 
