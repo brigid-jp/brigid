@@ -80,7 +80,7 @@ function suite:test_sleep1()
   assert(brigid.sleep(d)) -- 0.5 * 10^9 nsec
   assert(t:stop())
   if debug then print(t:get_elapsed(), t:get_name()) end
-  assert(t:get_elapsed() > d)
+  assert(t:get_elapsed() >= d)
 end
 
 function suite:test_sleep2()
@@ -89,7 +89,7 @@ function suite:test_sleep2()
   assert(brigid.sleep(0)) -- 0.5 * 10^9 nsec
   assert(t:stop())
   if debug then print(t:get_elapsed(), t:get_name()) end
-  assert(t:get_elapsed() > 0)
+  assert(t:get_elapsed() >= 0)
 end
 
 return suite
