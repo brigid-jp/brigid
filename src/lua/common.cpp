@@ -20,8 +20,10 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
+#include <chrono>
 #include <limits>
 #include <mutex>
+#include <thread>
 
 extern "C" int luaopen_brigid(lua_State*);
 
@@ -78,6 +80,11 @@ namespace brigid {
 #else
     void impl_dlopen_self(lua_State*) {}
 #endif
+
+    void impl_sleep(lua_State* L) {
+      int64_t duration = check_integer<int64_t>(L, 1);
+      std::this_thread::sleep_for(std::chrono::nanoseconds(duration));
+    }
   }
 
   namespace detail {
@@ -215,5 +222,6 @@ namespace brigid {
     decltype(function<impl_get_lightuserdata_bits>())::set_field(L, -1, "get_lightuserdata_bits");
     decltype(function<impl_get_version>())::set_field(L, -1, "get_version");
     decltype(function<impl_dlopen_self>())::set_field(L, -1, "dlopen_self");
+    decltype(function<impl_sleep>())::set_field(L, -1, "sleep");
   }
 }
