@@ -155,12 +155,12 @@ namespace brigid {
       http_session_t* self = check_udata<http_session_t>(L, arg, "brigid.http_session");
       if (validate & check_validate_not_closed) {
         if (self->closed()) {
-          luaL_error(L, "attempt to use a closed brigid.http_session");
+          luaL_argerror(L, arg, "attempt to use a closed brigid.http_session");
         }
       }
       if (validate & check_validate_not_running) {
         if (self->running()) {
-          luaL_error(L, "attempt to use a running brigid.http_session");
+          luaL_argerror(L, arg, "attempt to use a running brigid.http_session");
         }
       }
       return self;

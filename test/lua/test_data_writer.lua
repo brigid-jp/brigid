@@ -6,7 +6,7 @@ local brigid = require "brigid"
 local test_suite = require "test_suite"
 
 local suite = test_suite "test_data_writer"
-local debug = os.getenv "BRIGID_TEST_DEBUG" == "1"
+local debug = test_debug()
 
 function suite:test_data_writer1()
   local ffi
@@ -151,7 +151,7 @@ function suite:test_write_json_string2()
     0xE2, 0x80, 0xAA) -- U+202A
 
   local source = source1..source2..source2..source3
-  local expect = "\""..source1.."\\u2028\\u2029\\u2028\\u2029"..source3.."\""
+  local expect = "\""..source1..source2..source2..source3.."\""
 
   local data_writer = assert(brigid.data_writer():write_json_string(source))
   local result = assert(data_writer:get_string())
@@ -174,13 +174,23 @@ function suite:test_write_json_number1()
   assert(data_writer:write_json_number(42.0)):write ","
   assert(data_writer:write_json_number(69.125)):write ","
 
+  local result, message = pcall(function ()
+    data_writer:write_json_number "foobarbaz"
+  end)
+  if debug then print(message) end
+  assert(not result)
+
   local inf = 1 / 0
-  local result, message = data_writer:write_json_number(inf)
+  local result, message = pcall(function ()
+    data_writer:write_json_number(inf)
+  end)
   if debug then print(message) end
   assert(not result)
 
   local nan = 0 / 0
-  local result, message = data_writer:write_json_number(nan)
+  local result, message = pcall(function ()
+    data_writer:write_json_number(nan)
+  end)
   if debug then print(message) end
   assert(not result)
 
@@ -236,11 +246,12 @@ function suite:test_write_json()
       { "日本語\n" };
       { true, false, brigid.null };
       { 17, 42.0, 69.125 };
+      { "", "あいうえおかきくけこさしすせそ" };
     };
   }:get_string()
 
   if debug then print(result) end
-  assert(result == [=[{"a":[[],{},["日本語\n"],[true,false,null],[17,42,69.125]]}]=])
+  assert(result == [=[{"a":[[],{},["日本語\n"],[true,false,null],[17,42,69.125],["","あいうえおかきくけこさしすせそ"]]}]=])
 end
 
 return suite

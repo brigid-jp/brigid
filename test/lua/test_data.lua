@@ -1,4 +1,4 @@
--- Copyright (c) 2021 <dev@brigid.jp>
+-- Copyright (c) 2021,2024 <dev@brigid.jp>
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
@@ -6,7 +6,7 @@ local brigid = require "brigid"
 local test_suite = require "test_suite"
 
 local suite = test_suite "test_data"
-local debug = false
+local debug = test_debug()
 
 function suite:test_data1()
   local data_writer = brigid.data_writer()

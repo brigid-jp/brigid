@@ -1,4 +1,4 @@
--- Copyright (c) 2021 <dev@brigid.jp>
+-- Copyright (c) 2021,2024 <dev@brigid.jp>
 -- This software is released under the MIT License.
 -- https://opensource.org/licenses/mit-license.php
 
@@ -71,6 +71,25 @@ function suite:test_stopwatch7()
   local result, message = pcall(function () brigid.stopwatch "no such name" end)
   if debug then print(message) end
   assert(not result)
+end
+
+function suite:test_sleep1()
+  local d = 500000000 -- 0.5 * 10^0 nsec
+  local t = brigid.stopwatch()
+  assert(t:start())
+  assert(brigid.sleep(d)) -- 0.5 * 10^9 nsec
+  assert(t:stop())
+  if debug then print(t:get_elapsed(), t:get_name()) end
+  assert(t:get_elapsed() >= d)
+end
+
+function suite:test_sleep2()
+  local t = brigid.stopwatch()
+  assert(t:start())
+  assert(brigid.sleep(0)) -- 0.5 * 10^9 nsec
+  assert(t:stop())
+  if debug then print(t:get_elapsed(), t:get_name()) end
+  assert(t:get_elapsed() >= 0)
 end
 
 return suite

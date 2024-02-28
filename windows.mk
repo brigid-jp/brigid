@@ -33,6 +33,8 @@ OBJS = \
 	src\lua\stopwatch_windows.obj \
 	src\lua\thread_reference.obj \
 	src\lua\view.obj \
+	src\lua\write_json_string.obj \
+	src\lua\write_urlencoded.obj \
 	src\lua\writer.obj
 TARGET = brigid.dll
 

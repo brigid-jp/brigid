@@ -6,7 +6,7 @@ local brigid = require "brigid"
 local test_suite = require "test_suite"
 
 local suite = test_suite "test_json"
-local debug = os.getenv "BRIGID_TEST_DEBUG" == "1"
+local debug = test_debug()
 
 local function equal(self, that)
   if self == that then

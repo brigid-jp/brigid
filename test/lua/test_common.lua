@@ -22,7 +22,7 @@ local function dump(source)
 end
 
 local suite = test_suite "test_common"
-local debug = os.getenv "BRIGID_TEST_DEBUG" == "1"
+local debug = test_debug()
 
 function suite:test_is_love2d_data()
   local data_writer = brigid.data_writer()

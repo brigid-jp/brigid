@@ -1,4 +1,4 @@
-// Copyright (c) 2021 <dev@brigid.jp>
+// Copyright (c) 2021,2024 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -13,5 +13,9 @@ namespace brigid {
 
   stack_guard::~stack_guard() {
     lua_settop(state_, top_);
+  }
+
+  int stack_guard::top() const {
+    return top_;
   }
 }

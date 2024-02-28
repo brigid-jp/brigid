@@ -4,85 +4,90 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#ifndef BRIGID_WRITE_JSON_STRING_HXX
-#define BRIGID_WRITE_JSON_STRING_HXX
-
 #include "data.hpp"
 #include "error.hpp"
+#include "writer.hpp"
 
 #include <stdint.h>
+#include <sstream>
 
 namespace brigid {
   namespace {
     %%{
       machine json_string_encoder;
 
-      # Accept not valid UTF-8 characters
-      utf8_1 = 0x00..0x7F;
-      utf8_2 = 0xC2..0xDF any;
-      utf8_3 = 0xE0..0xEF any{2};
-      utf8_4 = 0xF0..0xF4 any{3};
-
-      LINE_SEPARATOR = 0xE2 0x80 0xA8;
-      PARA_SEPARATOR = 0xE2 0x80 0xA9;
-
-      main :=
-        ( 0x08 @{ self->write("\\b", 2); }
+      escaped
+        = 0x00 @{ self->write("\\u0000", 6); }
+        | 0x01 @{ self->write("\\u0001", 6); }
+        | 0x02 @{ self->write("\\u0002", 6); }
+        | 0x03 @{ self->write("\\u0003", 6); }
+        | 0x04 @{ self->write("\\u0004", 6); }
+        | 0x05 @{ self->write("\\u0005", 6); }
+        | 0x06 @{ self->write("\\u0006", 6); }
+        | 0x07 @{ self->write("\\u0007", 6); }
+        | 0x08 @{ self->write("\\b", 2); }
         | 0x09 @{ self->write("\\t", 2); }
         | 0x0A @{ self->write("\\n", 2); }
+        | 0x0B @{ self->write("\\u000B", 6); }
         | 0x0C @{ self->write("\\f", 2); }
         | 0x0D @{ self->write("\\r", 2); }
-        | (0x00..0x07 | 0x0B | 0x0E..0x1F) @{
-            uint8_t v = static_cast<uint8_t>(fc);
-            const char data[] = { '\\', 'u', '0', '0', HEX[v >> 4], HEX[v & 0xF] };
-            self->write(data, sizeof(data));
-          }
-
+        | 0x0E @{ self->write("\\u000E", 6); }
+        | 0x0F @{ self->write("\\u000F", 6); }
+        | 0x10 @{ self->write("\\u0010", 6); }
+        | 0x11 @{ self->write("\\u0011", 6); }
+        | 0x12 @{ self->write("\\u0012", 6); }
+        | 0x13 @{ self->write("\\u0013", 6); }
+        | 0x14 @{ self->write("\\u0014", 6); }
+        | 0x15 @{ self->write("\\u0015", 6); }
+        | 0x16 @{ self->write("\\u0016", 6); }
+        | 0x17 @{ self->write("\\u0017", 6); }
+        | 0x18 @{ self->write("\\u0018", 6); }
+        | 0x19 @{ self->write("\\u0019", 6); }
+        | 0x1A @{ self->write("\\u001A", 6); }
+        | 0x1B @{ self->write("\\u001B", 6); }
+        | 0x1C @{ self->write("\\u001C", 6); }
+        | 0x1D @{ self->write("\\u001D", 6); }
+        | 0x1E @{ self->write("\\u001E", 6); }
+        | 0x1F @{ self->write("\\u001F", 6); }
         | 0x22 @{ self->write("\\\"", 2); }
         | 0x2F @{ self->write("\\/", 2); }
         | 0x5C @{ self->write("\\\\", 2); }
         | 0x7F @{ self->write("\\u007F", 6); }
-        | (0x20 | 0x21 | 0x23..0x2E | 0x30..0x5B | 0x5D..0x7E) @{ self->write(fc); }
+        ;
 
-        | utf8_2 @{ self->write(fpc - 1, 2); }
+      unescaped = any - escaped
+        ;
 
-        | LINE_SEPARATOR @{ self->write("\\u2028", 6); }
-        | PARA_SEPARATOR @{ self->write("\\u2029", 6); }
-        | (utf8_3 - LINE_SEPARATOR - PARA_SEPARATOR) @{ self->write(fpc - 2, 3); }
-
-        | utf8_4 @{ self->write(fpc - 3, 4); }
-        )*;
+      main :=
+        ( escaped+
+        | unescaped+ >{ ps = fpc; } %{ self->write(ps, fpc - ps); }
+        )**;
 
       write data noerror nofinal noentry;
     }%%
+  }
 
-    template <class T>
-    inline void impl_write_json_string(T* self, const data_t& data) {
-      static const char HEX[] = {
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
-      };
+  void write_json_string(writer_t* self, const data_t& data) {
+    int cs = 0;
 
-      int cs = 0;
+    %%write init;
 
-      %%write init;
+    const char* const pb = data.data();
+    const char* p = pb;
+    const char* const pe = p + data.size();
+    const char* const eof = pe;
+    const char* ps = nullptr;
 
-      const char* const pb = data.data();
-      const char* p = pb;
-      const char* const pe = p + data.size();
+    self->write('"');
+    %%write exec;
+    self->write('"');
 
-      self->write('"');
-      %%write exec;
-      self->write('"');
-
-      if (cs >= %%{ write first_final; }%%) {
-        return;
-      }
-
-      std::ostringstream out;
-      out << "cannot write json string at position " << (p - pb + 1);
-      throw BRIGID_RUNTIME_ERROR(out.str());
+    if (cs >= %%{ write first_final; }%%) {
+      return;
     }
+
+    std::ostringstream out;
+    out << "cannot write json string at position " << (p - pb + 1);
+    throw BRIGID_RUNTIME_ERROR(out.str());
   }
 }
-
-#endif
