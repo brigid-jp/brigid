@@ -6,7 +6,7 @@ local brigid = require "brigid"
 local test_suite = require "test_suite"
 
 local suite = test_suite "test_file_writer"
-local debug = false
+local debug = test_debug()
 
 function suite:test_file_writer1()
   local file_writer = assert(brigid.file_writer(test_cwd .. "/test.dat"))

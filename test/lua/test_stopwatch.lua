@@ -73,4 +73,23 @@ function suite:test_stopwatch7()
   assert(not result)
 end
 
+function suite:test_sleep1()
+  local d = 500000000 -- 0.5 * 10^0 nsec
+  local t = brigid.stopwatch()
+  assert(t:start())
+  assert(brigid.sleep(d)) -- 0.5 * 10^9 nsec
+  assert(t:stop())
+  if debug then print(t:get_elapsed(), t:get_name()) end
+  assert(t:get_elapsed() > d)
+end
+
+function suite:test_sleep2()
+  local t = brigid.stopwatch()
+  assert(t:start())
+  assert(brigid.sleep(0)) -- 0.5 * 10^9 nsec
+  assert(t:stop())
+  if debug then print(t:get_elapsed(), t:get_name()) end
+  assert(t:get_elapsed() > 0)
+end
+
 return suite
