@@ -238,7 +238,7 @@ function suite:test_write_json_number3()
   assert(result == "1e+19,-1e+19,")
 end
 
-function suite:test_write_json()
+function suite:test_write_json1()
   local result = brigid.data_writer():write_json {
     a = {
       brigid.json.array();
@@ -252,6 +252,14 @@ function suite:test_write_json()
 
   if debug then print(result) end
   assert(result == [=[{"a":[[],{},["日本語\n"],[true,false,null],[17,42,69.125],["","あいうえおかきくけこさしすせそ"]]}]=])
+end
+
+function suite:test_write_json2()
+  local result = brigid.data_writer():write_json {
+    empty = brigid.data_writer();
+  }:get_string()
+  if debug then print(result) end
+  assert(result == [[{"empty":""}]])
 end
 
 return suite

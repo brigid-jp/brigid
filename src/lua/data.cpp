@@ -33,11 +33,13 @@ namespace brigid {
   abstract_data_t::~abstract_data_t() {}
 
   data_t::data_t()
-    : data_(),
+    : initialized_(),
+      data_(),
       size_() {}
 
   data_t::data_t(const char* data, size_t size)
-    : data_(data),
+    : initialized_(true),
+      data_(data),
       size_(size) {}
 
   const char* data_t::data() const {
@@ -46,6 +48,10 @@ namespace brigid {
 
   size_t data_t::size() const {
     return size_;
+  }
+
+  data_t::operator bool() const {
+    return initialized_;
   }
 
   data_t to_data(lua_State* L, int index) {

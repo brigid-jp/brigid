@@ -152,7 +152,7 @@ namespace brigid {
         } else {
           lua_pushvalue(L, -2);
           data_t data = to_data(L, guard.top() + 3);
-          if (!data.data()) {
+          if (!data) {
             throw BRIGID_LOGIC_ERROR("brigid.data expected");
           }
           write_json_string(self, data);
@@ -207,7 +207,7 @@ namespace brigid {
       }
 
       data_t data = to_data(L, index);
-      if (!data.data()) {
+      if (!data) {
         throw BRIGID_LOGIC_ERROR("brigid.data expected");
       }
       write_json_string(self, data);
