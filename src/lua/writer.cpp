@@ -151,11 +151,11 @@ namespace brigid {
           lua_pop(L, 1);
         } else {
           lua_pushvalue(L, -2);
-          data_t data = to_data(L, guard.top() + 3);
-          if (!data) {
+          if (data_t data = to_data(L, guard.top() + 3)) {
+            write_json_string(self, data);
+          } else {
             throw BRIGID_LOGIC_ERROR("brigid.data expected");
           }
-          write_json_string(self, data);
           self->write(':');
           write_json(L, self, guard.top() + 2, indent, depth + 1);
           lua_pop(L, 2);
@@ -206,11 +206,11 @@ namespace brigid {
           break;
       }
 
-      data_t data = to_data(L, index);
-      if (!data) {
+      if (data_t data = to_data(L, index)) {
+        write_json_string(self, data);
+      } else {
         throw BRIGID_LOGIC_ERROR("brigid.data expected");
       }
-      write_json_string(self, data);
     }
 
     void impl_write_json_number(lua_State* L) {
