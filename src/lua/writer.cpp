@@ -13,6 +13,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <string>
 
 namespace brigid {
   void write_json_string(writer_t*, const data_t&);
@@ -91,6 +92,13 @@ namespace brigid {
       self->write(buffer, size);
     }
 
+    void write_json_indent(writer_t* self, int indent, int depth) {
+      self->write('\n');
+      for (int i = 0; i < indent * depth; ++i) {
+        self->write(' ');
+      }
+    }
+
     void write_json(lua_State*, writer_t*, int, int, int);
 
     void write_json_table(lua_State* L, writer_t* self, int index, int indent, int depth) {
@@ -108,6 +116,9 @@ namespace brigid {
           }
         } else {
           self->write('[');
+          if (indent) {
+            write_json_indent(self, indent, depth + 1);
+          }
           write_json(L, self, guard.top() + 1, indent, depth + 1);
           lua_pop(L, 1);
 
@@ -117,10 +128,16 @@ namespace brigid {
               break;
             }
             self->write(',');
+            if (indent) {
+              write_json_indent(self, indent, depth + 1);
+            }
             write_json(L, self, guard.top() + 1, indent, depth + 1);
             lua_pop(L, 1);
           }
 
+          if (indent) {
+            write_json_indent(self, indent, depth);
+          }
           self->write(']');
           return;
         }
@@ -138,6 +155,9 @@ namespace brigid {
         } else {
           self->write(',');
         }
+        if (indent) {
+          write_json_indent(self, indent, depth + 1);
+        }
 
         if (lua_type(L, -2) == LUA_TSTRING) {
           size_t size = 0;
@@ -147,6 +167,9 @@ namespace brigid {
             throw BRIGID_LOGIC_ERROR("string expected");
           }
           self->write(':');
+          if (indent) {
+            self->write(' ');
+          }
           write_json(L, self, guard.top() + 2, indent, depth + 1);
           lua_pop(L, 1);
         } else {
@@ -157,11 +180,17 @@ namespace brigid {
             throw BRIGID_LOGIC_ERROR("brigid.data expected");
           }
           self->write(':');
+          if (indent) {
+            self->write(' ');
+          }
           write_json(L, self, guard.top() + 2, indent, depth + 1);
           lua_pop(L, 2);
         }
       }
 
+      if (!first && indent) {
+        write_json_indent(self, indent, depth);
+      }
       self->write('}');
     }
 

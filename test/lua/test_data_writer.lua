@@ -262,4 +262,64 @@ function suite:test_write_json2()
   assert(result == [[{"empty":""}]])
 end
 
+function suite:test_write_json3()
+  local result = brigid.data_writer():write_json({
+    a = {
+      brigid.json.array();
+      {};
+      { "日本語\n" };
+      { true, false, brigid.null };
+      { 17, 42.0, 69.125 };
+      { "", "あいうえおかきくけこさしすせそ" };
+      { foo = { bar = { baz = "qux" } } };
+    };
+    b = 666;
+  }, 2):get_string()
+  if debug then print(result) end
+
+  local expect = [=[
+  "a": [
+    [],
+    {},
+    [
+      "日本語\n"
+    ],
+    [
+      true,
+      false,
+      null
+    ],
+    [
+      17,
+      42,
+      69.125
+    ],
+    [
+      "",
+      "あいうえおかきくけこさしすせそ"
+    ],
+    {
+      "foo": {
+        "bar": {
+          "baz": "qux"
+        }
+      }
+    }
+  ]]=]
+
+  local expect1 = [[
+{
+]]..expect..[[,
+  "b": 666
+}]]
+
+  local expect2 = [[
+{
+  "b": 666,
+]]..expect..[[
+
+}]]
+  assert(result == expect1 or result == expect2)
+end
+
 return suite
