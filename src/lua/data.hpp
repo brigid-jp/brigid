@@ -24,7 +24,9 @@ namespace brigid {
     data_t(const char*, size_t);
     const char* data() const;
     size_t size() const;
+    explicit operator bool() const;
   private:
+    bool initialized_;
     const char* data_;
     size_t size_;
   };

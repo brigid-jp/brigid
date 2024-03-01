@@ -13,6 +13,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <string>
 
 namespace brigid {
   void write_json_string(writer_t*, const data_t&);
@@ -91,9 +92,16 @@ namespace brigid {
       self->write(buffer, size);
     }
 
-    void write_json(lua_State*, writer_t*, int);
+    void write_json_indent(writer_t* self, int indent, int depth) {
+      self->write('\n');
+      for (int i = 0; i < indent * depth; ++i) {
+        self->write(' ');
+      }
+    }
 
-    void write_json_table(lua_State* L, writer_t* self, int index) {
+    void write_json(lua_State*, writer_t*, int, int, int);
+
+    void write_json_table(lua_State* L, writer_t* self, int index, int indent, int depth) {
       {
         stack_guard guard(L);
 
@@ -108,7 +116,10 @@ namespace brigid {
           }
         } else {
           self->write('[');
-          write_json(L, self, guard.top() + 1);
+          if (indent) {
+            write_json_indent(self, indent, depth + 1);
+          }
+          write_json(L, self, guard.top() + 1, indent, depth + 1);
           lua_pop(L, 1);
 
           for (int i = 2; ; ++i) {
@@ -117,10 +128,16 @@ namespace brigid {
               break;
             }
             self->write(',');
-            write_json(L, self, guard.top() + 1);
+            if (indent) {
+              write_json_indent(self, indent, depth + 1);
+            }
+            write_json(L, self, guard.top() + 1, indent, depth + 1);
             lua_pop(L, 1);
           }
 
+          if (indent) {
+            write_json_indent(self, indent, depth);
+          }
           self->write(']');
           return;
         }
@@ -138,6 +155,9 @@ namespace brigid {
         } else {
           self->write(',');
         }
+        if (indent) {
+          write_json_indent(self, indent, depth + 1);
+        }
 
         if (lua_type(L, -2) == LUA_TSTRING) {
           size_t size = 0;
@@ -147,25 +167,34 @@ namespace brigid {
             throw BRIGID_LOGIC_ERROR("string expected");
           }
           self->write(':');
-          write_json(L, self, guard.top() + 2);
+          if (indent) {
+            self->write(' ');
+          }
+          write_json(L, self, guard.top() + 2, indent, depth + 1);
           lua_pop(L, 1);
         } else {
           lua_pushvalue(L, -2);
-          data_t data = to_data(L, guard.top() + 3);
-          if (!data.data()) {
+          if (data_t data = to_data(L, guard.top() + 3)) {
+            write_json_string(self, data);
+          } else {
             throw BRIGID_LOGIC_ERROR("brigid.data expected");
           }
-          write_json_string(self, data);
           self->write(':');
-          write_json(L, self, guard.top() + 2);
+          if (indent) {
+            self->write(' ');
+          }
+          write_json(L, self, guard.top() + 2, indent, depth + 1);
           lua_pop(L, 2);
         }
       }
 
+      if (!first && indent) {
+        write_json_indent(self, indent, depth);
+      }
       self->write('}');
     }
 
-    void write_json(lua_State* L, writer_t* self, int index) {
+    void write_json(lua_State* L, writer_t* self, int index, int indent, int depth) {
       switch (lua_type(L, index)) {
         case LUA_TNIL:
           self->write("null", 4);
@@ -195,7 +224,7 @@ namespace brigid {
           return;
 
         case LUA_TTABLE:
-          write_json_table(L, self, index);
+          write_json_table(L, self, index, indent, depth);
           return;
 
         case LUA_TLIGHTUSERDATA:
@@ -206,11 +235,11 @@ namespace brigid {
           break;
       }
 
-      data_t data = to_data(L, index);
-      if (!data.data()) {
+      if (data_t data = to_data(L, index)) {
+        write_json_string(self, data);
+      } else {
         throw BRIGID_LOGIC_ERROR("brigid.data expected");
       }
-      write_json_string(self, data);
     }
 
     void impl_write_json_number(lua_State* L) {
@@ -226,7 +255,8 @@ namespace brigid {
 
     void impl_write_json(lua_State* L) {
       writer_t* self = check_writer(L, 1);
-      write_json(L, self, 2);
+      int indent = opt_integer<int>(L, 3, 0);
+      write_json(L, self, 2, indent, 0);
     }
 
     void impl_write_urlencoded(lua_State* L) {
