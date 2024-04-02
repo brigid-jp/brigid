@@ -6,414 +6,413 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include "data.hpp"
 #include "error.hpp"
 #include "writer.hpp"
 
-#include <stdint.h>
+#include <stddef.h>
 #include <sstream>
 
 namespace brigid {
   namespace {
     
-#line 20 "write_json_string.cxx"
+#line 19 "write_json_string.cxx"
 static const int json_string_encoder_start = 0;
 
 
-#line 67 "write_json_string.rl"
+#line 66 "write_json_string.rl"
 
   }
 
-  void write_json_string(writer_t* self, const data_t& data) {
+  void write_json_string(writer_t* self, const char* data, size_t size) {
     int cs = 0;
 
     
-#line 32 "write_json_string.cxx"
+#line 31 "write_json_string.cxx"
 	{
 	cs = json_string_encoder_start;
 	}
 
-#line 74 "write_json_string.rl"
+#line 73 "write_json_string.rl"
 
-    const char* const pb = data.data();
+    const char* const pb = data;
     const char* p = pb;
-    const char* const pe = p + data.size();
+    const char* const pe = p + size;
     const char* const eof = pe;
     const char* ps = nullptr;
 
     self->write('"');
     
-#line 47 "write_json_string.cxx"
+#line 46 "write_json_string.cxx"
 	{
 	if ( p == pe )
 		goto _test_eof;
 	switch ( cs )
 	{
 tr1:
-#line 20 "write_json_string.rl"
+#line 19 "write_json_string.rl"
 	{ self->write("\\u0000", 6); }
 	goto st0;
 tr2:
-#line 21 "write_json_string.rl"
+#line 20 "write_json_string.rl"
 	{ self->write("\\u0001", 6); }
 	goto st0;
 tr3:
-#line 22 "write_json_string.rl"
+#line 21 "write_json_string.rl"
 	{ self->write("\\u0002", 6); }
 	goto st0;
 tr4:
-#line 23 "write_json_string.rl"
+#line 22 "write_json_string.rl"
 	{ self->write("\\u0003", 6); }
 	goto st0;
 tr5:
-#line 24 "write_json_string.rl"
+#line 23 "write_json_string.rl"
 	{ self->write("\\u0004", 6); }
 	goto st0;
 tr6:
-#line 25 "write_json_string.rl"
+#line 24 "write_json_string.rl"
 	{ self->write("\\u0005", 6); }
 	goto st0;
 tr7:
-#line 26 "write_json_string.rl"
+#line 25 "write_json_string.rl"
 	{ self->write("\\u0006", 6); }
 	goto st0;
 tr8:
-#line 27 "write_json_string.rl"
+#line 26 "write_json_string.rl"
 	{ self->write("\\u0007", 6); }
 	goto st0;
 tr9:
-#line 28 "write_json_string.rl"
+#line 27 "write_json_string.rl"
 	{ self->write("\\b", 2); }
 	goto st0;
 tr10:
-#line 29 "write_json_string.rl"
+#line 28 "write_json_string.rl"
 	{ self->write("\\t", 2); }
 	goto st0;
 tr11:
-#line 30 "write_json_string.rl"
+#line 29 "write_json_string.rl"
 	{ self->write("\\n", 2); }
 	goto st0;
 tr12:
-#line 31 "write_json_string.rl"
+#line 30 "write_json_string.rl"
 	{ self->write("\\u000B", 6); }
 	goto st0;
 tr13:
-#line 32 "write_json_string.rl"
+#line 31 "write_json_string.rl"
 	{ self->write("\\f", 2); }
 	goto st0;
 tr14:
-#line 33 "write_json_string.rl"
+#line 32 "write_json_string.rl"
 	{ self->write("\\r", 2); }
 	goto st0;
 tr15:
-#line 34 "write_json_string.rl"
+#line 33 "write_json_string.rl"
 	{ self->write("\\u000E", 6); }
 	goto st0;
 tr16:
-#line 35 "write_json_string.rl"
+#line 34 "write_json_string.rl"
 	{ self->write("\\u000F", 6); }
 	goto st0;
 tr17:
-#line 36 "write_json_string.rl"
+#line 35 "write_json_string.rl"
 	{ self->write("\\u0010", 6); }
 	goto st0;
 tr18:
-#line 37 "write_json_string.rl"
+#line 36 "write_json_string.rl"
 	{ self->write("\\u0011", 6); }
 	goto st0;
 tr19:
-#line 38 "write_json_string.rl"
+#line 37 "write_json_string.rl"
 	{ self->write("\\u0012", 6); }
 	goto st0;
 tr20:
-#line 39 "write_json_string.rl"
+#line 38 "write_json_string.rl"
 	{ self->write("\\u0013", 6); }
 	goto st0;
 tr21:
-#line 40 "write_json_string.rl"
+#line 39 "write_json_string.rl"
 	{ self->write("\\u0014", 6); }
 	goto st0;
 tr22:
-#line 41 "write_json_string.rl"
+#line 40 "write_json_string.rl"
 	{ self->write("\\u0015", 6); }
 	goto st0;
 tr23:
-#line 42 "write_json_string.rl"
+#line 41 "write_json_string.rl"
 	{ self->write("\\u0016", 6); }
 	goto st0;
 tr24:
-#line 43 "write_json_string.rl"
+#line 42 "write_json_string.rl"
 	{ self->write("\\u0017", 6); }
 	goto st0;
 tr25:
-#line 44 "write_json_string.rl"
+#line 43 "write_json_string.rl"
 	{ self->write("\\u0018", 6); }
 	goto st0;
 tr26:
-#line 45 "write_json_string.rl"
+#line 44 "write_json_string.rl"
 	{ self->write("\\u0019", 6); }
 	goto st0;
 tr27:
-#line 46 "write_json_string.rl"
+#line 45 "write_json_string.rl"
 	{ self->write("\\u001A", 6); }
 	goto st0;
 tr28:
-#line 47 "write_json_string.rl"
+#line 46 "write_json_string.rl"
 	{ self->write("\\u001B", 6); }
 	goto st0;
 tr29:
-#line 48 "write_json_string.rl"
+#line 47 "write_json_string.rl"
 	{ self->write("\\u001C", 6); }
 	goto st0;
 tr30:
-#line 49 "write_json_string.rl"
+#line 48 "write_json_string.rl"
 	{ self->write("\\u001D", 6); }
 	goto st0;
 tr31:
-#line 50 "write_json_string.rl"
+#line 49 "write_json_string.rl"
 	{ self->write("\\u001E", 6); }
 	goto st0;
 tr32:
-#line 51 "write_json_string.rl"
+#line 50 "write_json_string.rl"
 	{ self->write("\\u001F", 6); }
 	goto st0;
 tr33:
-#line 52 "write_json_string.rl"
+#line 51 "write_json_string.rl"
 	{ self->write("\\\"", 2); }
 	goto st0;
 tr34:
-#line 53 "write_json_string.rl"
+#line 52 "write_json_string.rl"
 	{ self->write("\\/", 2); }
 	goto st0;
 tr35:
-#line 54 "write_json_string.rl"
+#line 53 "write_json_string.rl"
 	{ self->write("\\\\", 2); }
 	goto st0;
 tr36:
-#line 55 "write_json_string.rl"
+#line 54 "write_json_string.rl"
 	{ self->write("\\u007F", 6); }
 	goto st0;
 tr38:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 20 "write_json_string.rl"
+#line 19 "write_json_string.rl"
 	{ self->write("\\u0000", 6); }
 	goto st0;
 tr39:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 21 "write_json_string.rl"
+#line 20 "write_json_string.rl"
 	{ self->write("\\u0001", 6); }
 	goto st0;
 tr40:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 22 "write_json_string.rl"
+#line 21 "write_json_string.rl"
 	{ self->write("\\u0002", 6); }
 	goto st0;
 tr41:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 23 "write_json_string.rl"
+#line 22 "write_json_string.rl"
 	{ self->write("\\u0003", 6); }
 	goto st0;
 tr42:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 24 "write_json_string.rl"
+#line 23 "write_json_string.rl"
 	{ self->write("\\u0004", 6); }
 	goto st0;
 tr43:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 25 "write_json_string.rl"
+#line 24 "write_json_string.rl"
 	{ self->write("\\u0005", 6); }
 	goto st0;
 tr44:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 26 "write_json_string.rl"
+#line 25 "write_json_string.rl"
 	{ self->write("\\u0006", 6); }
 	goto st0;
 tr45:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 27 "write_json_string.rl"
+#line 26 "write_json_string.rl"
 	{ self->write("\\u0007", 6); }
 	goto st0;
 tr46:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 28 "write_json_string.rl"
+#line 27 "write_json_string.rl"
 	{ self->write("\\b", 2); }
 	goto st0;
 tr47:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 29 "write_json_string.rl"
+#line 28 "write_json_string.rl"
 	{ self->write("\\t", 2); }
 	goto st0;
 tr48:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 30 "write_json_string.rl"
+#line 29 "write_json_string.rl"
 	{ self->write("\\n", 2); }
 	goto st0;
 tr49:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 31 "write_json_string.rl"
+#line 30 "write_json_string.rl"
 	{ self->write("\\u000B", 6); }
 	goto st0;
 tr50:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 32 "write_json_string.rl"
+#line 31 "write_json_string.rl"
 	{ self->write("\\f", 2); }
 	goto st0;
 tr51:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 33 "write_json_string.rl"
+#line 32 "write_json_string.rl"
 	{ self->write("\\r", 2); }
 	goto st0;
 tr52:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 34 "write_json_string.rl"
+#line 33 "write_json_string.rl"
 	{ self->write("\\u000E", 6); }
 	goto st0;
 tr53:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 35 "write_json_string.rl"
+#line 34 "write_json_string.rl"
 	{ self->write("\\u000F", 6); }
 	goto st0;
 tr54:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 36 "write_json_string.rl"
+#line 35 "write_json_string.rl"
 	{ self->write("\\u0010", 6); }
 	goto st0;
 tr55:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 37 "write_json_string.rl"
+#line 36 "write_json_string.rl"
 	{ self->write("\\u0011", 6); }
 	goto st0;
 tr56:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 38 "write_json_string.rl"
+#line 37 "write_json_string.rl"
 	{ self->write("\\u0012", 6); }
 	goto st0;
 tr57:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 39 "write_json_string.rl"
+#line 38 "write_json_string.rl"
 	{ self->write("\\u0013", 6); }
 	goto st0;
 tr58:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 40 "write_json_string.rl"
+#line 39 "write_json_string.rl"
 	{ self->write("\\u0014", 6); }
 	goto st0;
 tr59:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 41 "write_json_string.rl"
+#line 40 "write_json_string.rl"
 	{ self->write("\\u0015", 6); }
 	goto st0;
 tr60:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 42 "write_json_string.rl"
+#line 41 "write_json_string.rl"
 	{ self->write("\\u0016", 6); }
 	goto st0;
 tr61:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 43 "write_json_string.rl"
+#line 42 "write_json_string.rl"
 	{ self->write("\\u0017", 6); }
 	goto st0;
 tr62:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 44 "write_json_string.rl"
+#line 43 "write_json_string.rl"
 	{ self->write("\\u0018", 6); }
 	goto st0;
 tr63:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 45 "write_json_string.rl"
+#line 44 "write_json_string.rl"
 	{ self->write("\\u0019", 6); }
 	goto st0;
 tr64:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 46 "write_json_string.rl"
+#line 45 "write_json_string.rl"
 	{ self->write("\\u001A", 6); }
 	goto st0;
 tr65:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 47 "write_json_string.rl"
+#line 46 "write_json_string.rl"
 	{ self->write("\\u001B", 6); }
 	goto st0;
 tr66:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 48 "write_json_string.rl"
+#line 47 "write_json_string.rl"
 	{ self->write("\\u001C", 6); }
 	goto st0;
 tr67:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 49 "write_json_string.rl"
+#line 48 "write_json_string.rl"
 	{ self->write("\\u001D", 6); }
 	goto st0;
 tr68:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 50 "write_json_string.rl"
+#line 49 "write_json_string.rl"
 	{ self->write("\\u001E", 6); }
 	goto st0;
 tr69:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 51 "write_json_string.rl"
+#line 50 "write_json_string.rl"
 	{ self->write("\\u001F", 6); }
 	goto st0;
 tr70:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 52 "write_json_string.rl"
+#line 51 "write_json_string.rl"
 	{ self->write("\\\"", 2); }
 	goto st0;
 tr71:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 53 "write_json_string.rl"
+#line 52 "write_json_string.rl"
 	{ self->write("\\/", 2); }
 	goto st0;
 tr72:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 54 "write_json_string.rl"
+#line 53 "write_json_string.rl"
 	{ self->write("\\\\", 2); }
 	goto st0;
 tr73:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
-#line 55 "write_json_string.rl"
+#line 54 "write_json_string.rl"
 	{ self->write("\\u007F", 6); }
 	goto st0;
 st0:
 	if ( ++p == pe )
 		goto _test_eof0;
 case 0:
-#line 417 "write_json_string.cxx"
+#line 416 "write_json_string.cxx"
 	switch( (*p) ) {
 		case 0: goto tr1;
 		case 1: goto tr2;
@@ -454,14 +453,14 @@ case 0:
 	}
 	goto tr0;
 tr0:
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ ps = p; }
 	goto st1;
 st1:
 	if ( ++p == pe )
 		goto _test_eof1;
 case 1:
-#line 465 "write_json_string.cxx"
+#line 464 "write_json_string.cxx"
 	switch( (*p) ) {
 		case 0: goto tr38;
 		case 1: goto tr39;
@@ -510,16 +509,16 @@ case 1:
 	{
 	switch ( cs ) {
 	case 1: 
-#line 63 "write_json_string.rl"
+#line 62 "write_json_string.rl"
 	{ self->write(ps, p - ps); }
 	break;
-#line 517 "write_json_string.cxx"
+#line 516 "write_json_string.cxx"
 	}
 	}
 
 	}
 
-#line 83 "write_json_string.rl"
+#line 82 "write_json_string.rl"
     self->write('"');
 
     if (cs >= 0) {
