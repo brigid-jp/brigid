@@ -239,7 +239,7 @@ function suite:test_write_json_number3()
 end
 
 function suite:test_write_json1()
-  local result = brigid.data_writer():write_json {
+  local source = {
     a = {
       brigid.json.array();
       {};
@@ -248,22 +248,33 @@ function suite:test_write_json1()
       { 17, 42.0, 69.125 };
       { "", "あいうえおかきくけこさしすせそ" };
     };
-  }:get_string()
+  }
 
+  local result = brigid.data_writer():write_json(source):get_string()
+  if debug then print(result) end
+  assert(result == [=[{"a":[[],{},["日本語\n"],[true,false,null],[17,42,69.125],["","あいうえおかきくけこさしすせそ"]]}]=])
+
+  local result = brigid.data_writer():write_json(source, 0, true):get_string()
   if debug then print(result) end
   assert(result == [=[{"a":[[],{},["日本語\n"],[true,false,null],[17,42,69.125],["","あいうえおかきくけこさしすせそ"]]}]=])
 end
 
 function suite:test_write_json2()
-  local result = brigid.data_writer():write_json {
+  local source = {
     [brigid.data_writer():write "empty"] = brigid.data_writer();
-  }:get_string()
+  }
+
+  local result = brigid.data_writer():write_json(source):get_string()
+  if debug then print(result) end
+  assert(result == [[{"empty":""}]])
+
+  local result = brigid.data_writer():write_json(source, 0, true):get_string()
   if debug then print(result) end
   assert(result == [[{"empty":""}]])
 end
 
 function suite:test_write_json3()
-  local result = brigid.data_writer():write_json({
+  local source = {
     a = {
       brigid.json.array();
       {};
@@ -274,8 +285,7 @@ function suite:test_write_json3()
       { foo = { bar = { baz = "qux" } } };
     };
     b = 666;
-  }, 2):get_string()
-  if debug then print(result) end
+  }
 
   local expect = [=[
   "a": [
@@ -319,7 +329,14 @@ function suite:test_write_json3()
 ]]..expect..[[
 
 }]]
+
+  local result = brigid.data_writer():write_json(source, 2):get_string()
+  if debug then print(result) end
   assert(result == expect1 or result == expect2)
+
+  local result = brigid.data_writer():write_json(source, 2, true):get_string()
+  if debug then print(result) end
+  assert(result == expect1)
 end
 
 return suite
