@@ -220,35 +220,50 @@ namespace brigid {
     void write_json_object_stable(lua_State* L, writer_t* self, int index, int indent, int depth, bool stable) {
       stack_guard guard(L);
 
+      self->write('{');
+      bool first = true;
+
       // namesを持ち回る？
       std::vector<name_t> names;
 
       lua_pushnil(L);
       while (lua_next(L, index)) {
-        switch (lua_type(L, guard.top() + 1)) {
-          case LUA_TSTRING:
-            {
-              size_t size = 0;
-              if (const char* data = lua_tolstring(L, guard.top() + 1, &size)) {
-                names.emplace_back(data, size);
-              } else {
-                throw BRIGID_LOGIC_ERROR("string expected");
-              }
-            }
-            break;
-        }
-        lua_pop(L, 1);
-      }
+        if (lua_type(L, guard.top() + 1) == LUA_TSTRING) {
+          size_t size = 0;
+          if (const char* data = lua_tolstring(L, guard.top() + 1, &size)) {
+            names.emplace_back(data, size);
+          } else {
+            throw BRIGID_LOGIC_ERROR("string expected");
+          }
+          lua_pop(L, 1);
+        } else {
+          // 文字列キー以外は出力してしまう
+          if (first) {
+            first = false;
+          } else {
+            self->write(',');
+          }
+          if (indent) {
+            write_json_indent(self, indent, depth + 1);
+          }
 
-      if (names.empty()) {
-        self->write("{}", 2);
-        return;
+          // 数値が文字列に変換される場合を考慮してコピーをスタックに積む。
+          lua_pushvalue(L, guard.top() + 1);
+          if (data_t data = to_data(L, guard.top() + 3)) {
+            write_json_string(self, data.data(), data.size());
+          } else {
+            throw BRIGID_LOGIC_ERROR("brigid.data expected");
+          }
+          self->write(':');
+          if (indent) {
+            self->write(' ');
+          }
+          write_json(L, self, guard.top() + 2, indent, depth + 1, stable);
+          lua_pop(L, 2);
+        }
       }
 
       std::sort(names.begin(), names.end());
-
-      self->write('{');
-      bool first = true;
 
       for (const auto& name : names) {
         if (first) {
