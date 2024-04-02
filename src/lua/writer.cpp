@@ -13,7 +13,6 @@
 
 #include <math.h>
 #include <stdio.h>
-#include <string>
 
 namespace brigid {
   void write_json_string(writer_t*, const data_t&);
@@ -105,8 +104,8 @@ namespace brigid {
       {
         stack_guard guard(L);
 
-        lua_rawgeti(L, index, 1);
-        if (lua_isnil(L, -1)) {
+        size_t size = lua_rawlen(L, index);
+        if (size == 0) {
           if (lua_getmetatable(L, index)) {
             luaL_getmetatable(L, "brigid.json.array");
             if (lua_rawequal(L, -1, -2)) {
@@ -119,18 +118,16 @@ namespace brigid {
           if (indent) {
             write_json_indent(self, indent, depth + 1);
           }
+          lua_rawgeti(L, index, 1);
           write_json(L, self, guard.top() + 1, indent, depth + 1);
           lua_pop(L, 1);
 
-          for (int i = 2; ; ++i) {
-            lua_rawgeti(L, index, i);
-            if (lua_isnil(L, -1)) {
-              break;
-            }
+          for (size_t i = 2; i <= size; ++i) {
             self->write(',');
             if (indent) {
               write_json_indent(self, indent, depth + 1);
             }
+            lua_rawgeti(L, index, i);
             write_json(L, self, guard.top() + 1, indent, depth + 1);
             lua_pop(L, 1);
           }
@@ -173,6 +170,8 @@ namespace brigid {
           write_json(L, self, guard.top() + 2, indent, depth + 1);
           lua_pop(L, 1);
         } else {
+          // lua_tolstringによってnumberがstringに変換される場合を考慮してコピ
+          // ーをスタックに積む。
           lua_pushvalue(L, -2);
           if (data_t data = to_data(L, guard.top() + 3)) {
             write_json_string(self, data);
