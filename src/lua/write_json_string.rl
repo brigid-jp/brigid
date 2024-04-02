@@ -66,12 +66,11 @@ namespace brigid {
     }%%
   }
 
-  void write_json_string(writer_t* self, const char* data, size_t size) {
+  void write_json_string(writer_t* self, const char* pb, size_t size) {
     int cs = 0;
 
     %%write init;
 
-    const char* const pb = data;
     const char* p = pb;
     const char* const pe = p + size;
     const char* const eof = pe;
