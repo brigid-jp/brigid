@@ -129,7 +129,11 @@ namespace brigid {
     bool write_json_array(lua_State* L, writer_t* self, int index, int indent, int depth, json_keys_t* keys) {
       stack_guard guard(L);
 
+#if LUA_VERSION_NUM >= 502
       size_t size = lua_rawlen(L, index);
+#else
+      size_t size = lua_objlen(L, index);
+#endif
       if (size == 0) {
         if (lua_getmetatable(L, index)) {
           luaL_getmetatable(L, "brigid.json.array");
