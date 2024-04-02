@@ -339,4 +339,29 @@ function suite:test_write_json3()
   assert(result == expect1)
 end
 
+function suite:test_write_json4()
+  local source = {
+    { [0] = "foo" };
+    { [0.25] = "bar" };
+  }
+
+  local expect = [=[
+[
+  {
+    "0": "foo"
+  },
+  {
+    "0.25": "bar"
+  }
+]]=]
+
+  local result = brigid.data_writer():write_json(source, 2):get_string()
+  if debug then print(result) end
+  assert(result == expect)
+
+  local result = brigid.data_writer():write_json(source, 2, true):get_string()
+  if debug then print(result) end
+  assert(result == expect)
+end
+
 return suite
