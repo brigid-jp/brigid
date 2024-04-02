@@ -160,37 +160,34 @@ namespace brigid {
           write_json_indent(self, indent, depth + 1);
         }
 
-        switch (lua_type(L, guard.top() + 1)) {
-          case LUA_TSTRING:
-            {
-              size_t size = 0;
-              if (const char* data = lua_tolstring(L, guard.top() + 1, &size)) {
-                write_json_string(self, data, size);
-              } else {
-                throw BRIGID_LOGIC_ERROR("string expected");
-              }
-              self->write(':');
-              if (indent) {
-                self->write(' ');
-              }
-              write_json(L, self, guard.top() + 2, indent, depth + 1, stable);
-            }
-            break;
-
-          case LUA_TUSERDATA:
-            if (data_t data = to_data(L, guard.top() + 1)) {
-              write_json_string(self, data.data(), data.size());
-            } else {
-              throw BRIGID_LOGIC_ERROR("brigid.data expected");
-            }
-            self->write(':');
-            if (indent) {
-              self->write(' ');
-            }
-            write_json(L, self, guard.top() + 2, indent, depth + 1, stable);
-            break;
+        if (lua_type(L, guard.top() + 1) == LUA_TSTRING) {
+          size_t size = 0;
+          if (const char* data = lua_tolstring(L, guard.top() + 1, &size)) {
+            write_json_string(self, data, size);
+          } else {
+            throw BRIGID_LOGIC_ERROR("string expected");
+          }
+          self->write(':');
+          if (indent) {
+            self->write(' ');
+          }
+          write_json(L, self, guard.top() + 2, indent, depth + 1, stable);
+          lua_pop(L, 1);
+        } else {
+          // 数値が文字列に変換される場合を考慮してコピーをスタックに積む。
+          lua_pushvalue(L, guard.top() + 1);
+          if (data_t data = to_data(L, guard.top() + 3)) {
+            write_json_string(self, data.data(), data.size());
+          } else {
+            throw BRIGID_LOGIC_ERROR("brigid.data expected");
+          }
+          self->write(':');
+          if (indent) {
+            self->write(' ');
+          }
+          write_json(L, self, guard.top() + 2, indent, depth + 1, stable);
+          lua_pop(L, 2);
         }
-        lua_pop(L, 1);
       }
 
       if (!first && indent) {
