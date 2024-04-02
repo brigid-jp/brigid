@@ -14,6 +14,8 @@
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <algorithm>
+#include <vector>
 
 namespace brigid {
   void write_json_string(writer_t*, const char* data, size_t size);
@@ -197,11 +199,97 @@ namespace brigid {
       self->write('}');
     }
 
+    class name_t {
+    public:
+      name_t(const char* data, size_t size) : data_(data), size_(size) {}
+
+      const char* data() const {
+        return data_;
+      }
+
+      std::size_t size() const {
+        return size_;
+      }
+
+      bool operator<(const name_t& that) const {
+        return std::lexicographical_compare(data_, data_ + size_, that.data_, that.data_ + that.size_);
+      }
+
+    private:
+      const char* data_;
+      size_t size_;
+    };
+
+    void write_json_object_stable(lua_State* L, writer_t* self, int index, int indent, int depth, bool stable) {
+      stack_guard guard(L);
+
+      // namesを持ち回る？
+      std::vector<name_t> names;
+
+      lua_pushnil(L);
+      while (lua_next(L, index)) {
+        switch (lua_type(L, guard.top() + 1)) {
+          case LUA_TSTRING:
+            {
+              size_t size = 0;
+              if (const char* data = lua_tolstring(L, guard.top() + 1, &size)) {
+                names.emplace_back(data, size);
+              } else {
+                throw BRIGID_LOGIC_ERROR("string expected");
+              }
+            }
+            break;
+        }
+        lua_pop(L, 1);
+      }
+
+      if (names.empty()) {
+        self->write("{}", 2);
+        return;
+      }
+
+      std::sort(names.begin(), names.end());
+
+      self->write('{');
+      bool first = true;
+
+      for (const auto& name : names) {
+        if (first) {
+          first = false;
+        } else {
+          self->write(',');
+        }
+        if (indent) {
+          write_json_indent(self, indent, depth + 1);
+        }
+
+        write_json_string(self, name.data(), name.size());
+        self->write(':');
+        if (indent) {
+          self->write(' ');
+        }
+
+        lua_pushlstring(L, name.data(), name.size());
+        lua_gettable(L, index);
+        write_json(L, self, guard.top() + 1, indent, depth + 1, stable);
+        lua_pop(L, 1);
+      }
+
+      if (!first && indent) {
+        write_json_indent(self, indent, depth);
+      }
+      self->write('}');
+    }
+
     void write_json_table(lua_State* L, writer_t* self, int index, int indent, int depth, bool stable) {
       if (write_json_array(L, self, index, indent, depth, stable)) {
         return;
       }
-      write_json_object(L, self, index, indent, depth, stable);
+      if (stable) {
+        write_json_object_stable(L, self, index, indent, depth, stable);
+      } else {
+        write_json_object(L, self, index, indent, depth, stable);
+      }
     }
 
     void write_json(lua_State* L, writer_t* self, int index, int indent, int depth, bool stable) {
