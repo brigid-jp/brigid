@@ -6,6 +6,7 @@ m4_include([brigid_version.m4])
 AC_INIT([brigid], BRIGID_VERSION, [dev@brigid.jp], [], [https://github.com/brigid-jp/brigid/])
 AM_INIT_AUTOMAKE([foreign])
 LT_INIT
+gl_LD_VERSION_SCRIPT
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
