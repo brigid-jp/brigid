@@ -8,7 +8,7 @@ AM_INIT_AUTOMAKE([foreign])
 LT_INIT
 
 AC_CONFIG_MACRO_DIR([m4])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile src/lua/Makefile test/lua/Makefile])
 
 AC_PROG_CXX
