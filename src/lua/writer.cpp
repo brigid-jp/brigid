@@ -174,6 +174,7 @@ namespace brigid {
               write_json(L, self, guard.top() + 2, indent, depth + 1);
             }
             break;
+
           case LUA_TUSERDATA:
             if (data_t data = to_data(L, guard.top() + 1)) {
               write_json_string(self, data.data(), data.size());
@@ -185,6 +186,7 @@ namespace brigid {
               self->write(' ');
             }
             write_json(L, self, guard.top() + 2, indent, depth + 1);
+            break;
         }
         lua_pop(L, 1);
       }
