@@ -99,9 +99,9 @@ namespace brigid {
       }
     }
 
-    void write_json(lua_State*, writer_t*, int, int, int);
+    void write_json(lua_State*, writer_t*, int, int, int, bool);
 
-    bool write_json_array(lua_State* L, writer_t* self, int index, int indent, int depth) {
+    bool write_json_array(lua_State* L, writer_t* self, int index, int indent, int depth, bool stable) {
       stack_guard guard(L);
 
       size_t size = lua_rawlen(L, index);
@@ -121,7 +121,7 @@ namespace brigid {
         write_json_indent(self, indent, depth + 1);
       }
       lua_rawgeti(L, index, 1);
-      write_json(L, self, guard.top() + 1, indent, depth + 1);
+      write_json(L, self, guard.top() + 1, indent, depth + 1, stable);
       lua_pop(L, 1);
 
       for (size_t i = 2; i <= size; ++i) {
@@ -130,7 +130,7 @@ namespace brigid {
           write_json_indent(self, indent, depth + 1);
         }
         lua_rawgeti(L, index, i);
-        write_json(L, self, guard.top() + 1, indent, depth + 1);
+        write_json(L, self, guard.top() + 1, indent, depth + 1, stable);
         lua_pop(L, 1);
       }
 
@@ -141,7 +141,7 @@ namespace brigid {
       return true;
     }
 
-    void write_json_object(lua_State* L, writer_t* self, int index, int indent, int depth) {
+    void write_json_object(lua_State* L, writer_t* self, int index, int indent, int depth, bool stable) {
       stack_guard guard(L);
 
       self->write('{');
@@ -171,7 +171,7 @@ namespace brigid {
               if (indent) {
                 self->write(' ');
               }
-              write_json(L, self, guard.top() + 2, indent, depth + 1);
+              write_json(L, self, guard.top() + 2, indent, depth + 1, stable);
             }
             break;
 
@@ -185,7 +185,7 @@ namespace brigid {
             if (indent) {
               self->write(' ');
             }
-            write_json(L, self, guard.top() + 2, indent, depth + 1);
+            write_json(L, self, guard.top() + 2, indent, depth + 1, stable);
             break;
         }
         lua_pop(L, 1);
@@ -197,14 +197,14 @@ namespace brigid {
       self->write('}');
     }
 
-    void write_json_table(lua_State* L, writer_t* self, int index, int indent, int depth) {
-      if (write_json_array(L, self, index, indent, depth)) {
+    void write_json_table(lua_State* L, writer_t* self, int index, int indent, int depth, bool stable) {
+      if (write_json_array(L, self, index, indent, depth, stable)) {
         return;
       }
-      write_json_object(L, self, index, indent, depth);
+      write_json_object(L, self, index, indent, depth, stable);
     }
 
-    void write_json(lua_State* L, writer_t* self, int index, int indent, int depth) {
+    void write_json(lua_State* L, writer_t* self, int index, int indent, int depth, bool stable) {
       switch (lua_type(L, index)) {
         case LUA_TNIL:
           self->write("null", 4);
@@ -234,7 +234,7 @@ namespace brigid {
           return;
 
         case LUA_TTABLE:
-          write_json_table(L, self, index, indent, depth);
+          write_json_table(L, self, index, indent, depth, stable);
           return;
 
         case LUA_TLIGHTUSERDATA:
@@ -266,7 +266,8 @@ namespace brigid {
     void impl_write_json(lua_State* L) {
       writer_t* self = check_writer(L, 1);
       int indent = opt_integer<int>(L, 3, 0);
-      write_json(L, self, 2, indent, 0);
+      bool stable = lua_toboolean(L, 4);
+      write_json(L, self, 2, indent, 0, stable);
     }
 
     void impl_write_urlencoded(lua_State* L) {
