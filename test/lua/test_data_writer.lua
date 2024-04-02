@@ -256,7 +256,7 @@ end
 
 function suite:test_write_json2()
   local result = brigid.data_writer():write_json {
-    empty = brigid.data_writer();
+    [brigid.data_writer():write "empty"] = brigid.data_writer();
   }:get_string()
   if debug then print(result) end
   assert(result == [[{"empty":""}]])
