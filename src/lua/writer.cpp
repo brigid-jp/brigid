@@ -101,9 +101,32 @@ namespace brigid {
       }
     }
 
-    void write_json(lua_State*, writer_t*, int, int, int, bool);
+    class json_key_t {
+    public:
+      json_key_t(const char* data, size_t size) : data_(data), size_(size) {}
 
-    bool write_json_array(lua_State* L, writer_t* self, int index, int indent, int depth, bool stable) {
+      const char* data() const {
+        return data_;
+      }
+
+      std::size_t size() const {
+        return size_;
+      }
+
+      bool operator<(const json_key_t& that) const {
+        return std::lexicographical_compare(data_, data_ + size_, that.data_, that.data_ + that.size_);
+      }
+
+    private:
+      const char* data_;
+      size_t size_;
+    };
+
+    using json_keys_t = std::vector<json_key_t>;
+
+    void write_json(lua_State*, writer_t*, int, int, int, json_keys_t*);
+
+    bool write_json_array(lua_State* L, writer_t* self, int index, int indent, int depth, json_keys_t* keys) {
       stack_guard guard(L);
 
       size_t size = lua_rawlen(L, index);
@@ -123,7 +146,7 @@ namespace brigid {
         write_json_indent(self, indent, depth + 1);
       }
       lua_rawgeti(L, index, 1);
-      write_json(L, self, guard.top() + 1, indent, depth + 1, stable);
+      write_json(L, self, guard.top() + 1, indent, depth + 1, keys);
       lua_pop(L, 1);
 
       for (size_t i = 2; i <= size; ++i) {
@@ -132,7 +155,7 @@ namespace brigid {
           write_json_indent(self, indent, depth + 1);
         }
         lua_rawgeti(L, index, i);
-        write_json(L, self, guard.top() + 1, indent, depth + 1, stable);
+        write_json(L, self, guard.top() + 1, indent, depth + 1, keys);
         lua_pop(L, 1);
       }
 
@@ -143,7 +166,7 @@ namespace brigid {
       return true;
     }
 
-    void write_json_object(lua_State* L, writer_t* self, int index, int indent, int depth, bool stable) {
+    void write_json_object(lua_State* L, writer_t* self, int index, int indent, int depth, json_keys_t* keys) {
       stack_guard guard(L);
 
       self->write('{');
@@ -171,7 +194,7 @@ namespace brigid {
           if (indent) {
             self->write(' ');
           }
-          write_json(L, self, guard.top() + 2, indent, depth + 1, stable);
+          write_json(L, self, guard.top() + 2, indent, depth + 1, keys);
           lua_pop(L, 1);
         } else {
           // 数値が文字列に変換される場合を考慮してコピーをスタックに積む。
@@ -185,7 +208,7 @@ namespace brigid {
           if (indent) {
             self->write(' ');
           }
-          write_json(L, self, guard.top() + 2, indent, depth + 1, stable);
+          write_json(L, self, guard.top() + 2, indent, depth + 1, keys);
           lua_pop(L, 2);
         }
       }
@@ -196,42 +219,19 @@ namespace brigid {
       self->write('}');
     }
 
-    class name_t {
-    public:
-      name_t(const char* data, size_t size) : data_(data), size_(size) {}
-
-      const char* data() const {
-        return data_;
-      }
-
-      std::size_t size() const {
-        return size_;
-      }
-
-      bool operator<(const name_t& that) const {
-        return std::lexicographical_compare(data_, data_ + size_, that.data_, that.data_ + that.size_);
-      }
-
-    private:
-      const char* data_;
-      size_t size_;
-    };
-
-    void write_json_object_stable(lua_State* L, writer_t* self, int index, int indent, int depth, bool stable) {
+    void write_json_object_sort_keys(lua_State* L, writer_t* self, int index, int indent, int depth, json_keys_t* keys) {
       stack_guard guard(L);
 
       self->write('{');
       bool first = true;
-
-      // namesを持ち回る？
-      std::vector<name_t> names;
+      keys->clear();
 
       lua_pushnil(L);
       while (lua_next(L, index)) {
         if (lua_type(L, guard.top() + 1) == LUA_TSTRING) {
           size_t size = 0;
           if (const char* data = lua_tolstring(L, guard.top() + 1, &size)) {
-            names.emplace_back(data, size);
+            keys->emplace_back(data, size);
           } else {
             throw BRIGID_LOGIC_ERROR("string expected");
           }
@@ -258,14 +258,14 @@ namespace brigid {
           if (indent) {
             self->write(' ');
           }
-          write_json(L, self, guard.top() + 2, indent, depth + 1, stable);
+          write_json(L, self, guard.top() + 2, indent, depth + 1, keys);
           lua_pop(L, 2);
         }
       }
 
-      std::sort(names.begin(), names.end());
+      std::sort(keys->begin(), keys->end());
 
-      for (const auto& name : names) {
+      for (const auto& key : *keys) {
         if (first) {
           first = false;
         } else {
@@ -275,15 +275,15 @@ namespace brigid {
           write_json_indent(self, indent, depth + 1);
         }
 
-        write_json_string(self, name.data(), name.size());
+        write_json_string(self, key.data(), key.size());
         self->write(':');
         if (indent) {
           self->write(' ');
         }
 
-        lua_pushlstring(L, name.data(), name.size());
+        lua_pushlstring(L, key.data(), key.size());
         lua_gettable(L, index);
-        write_json(L, self, guard.top() + 1, indent, depth + 1, stable);
+        write_json(L, self, guard.top() + 1, indent, depth + 1, keys);
         lua_pop(L, 1);
       }
 
@@ -293,18 +293,18 @@ namespace brigid {
       self->write('}');
     }
 
-    void write_json_table(lua_State* L, writer_t* self, int index, int indent, int depth, bool stable) {
-      if (write_json_array(L, self, index, indent, depth, stable)) {
+    void write_json_table(lua_State* L, writer_t* self, int index, int indent, int depth, json_keys_t* keys) {
+      if (write_json_array(L, self, index, indent, depth, keys)) {
         return;
       }
-      if (stable) {
-        write_json_object_stable(L, self, index, indent, depth, stable);
+      if (keys) {
+        write_json_object_sort_keys(L, self, index, indent, depth, keys);
       } else {
-        write_json_object(L, self, index, indent, depth, stable);
+        write_json_object(L, self, index, indent, depth, keys);
       }
     }
 
-    void write_json(lua_State* L, writer_t* self, int index, int indent, int depth, bool stable) {
+    void write_json(lua_State* L, writer_t* self, int index, int indent, int depth, json_keys_t* keys) {
       switch (lua_type(L, index)) {
         case LUA_TNIL:
           self->write("null", 4);
@@ -334,7 +334,7 @@ namespace brigid {
           return;
 
         case LUA_TTABLE:
-          write_json_table(L, self, index, indent, depth, stable);
+          write_json_table(L, self, index, indent, depth, keys);
           return;
 
         case LUA_TLIGHTUSERDATA:
@@ -366,8 +366,14 @@ namespace brigid {
     void impl_write_json(lua_State* L) {
       writer_t* self = check_writer(L, 1);
       int indent = opt_integer<int>(L, 3, 0);
-      bool stable = lua_toboolean(L, 4);
-      write_json(L, self, 2, indent, 0, stable);
+      bool sort_keys = lua_toboolean(L, 4);
+
+      if (sort_keys) {
+        json_keys_t keys;
+        write_json(L, self, 2, indent, 0, &keys);
+      } else {
+        write_json(L, self, 2, indent, 0, nullptr);
+      }
     }
 
     void impl_write_urlencoded(lua_State* L) {
