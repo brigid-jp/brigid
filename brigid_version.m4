@@ -1,1 +1,1 @@
-m4_define(BRIGID_VERSION,1.13)
+m4_define(BRIGID_VERSION,1.14)
