@@ -11,9 +11,9 @@
 
 #include <lua.hpp>
 
-#include <math.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <cmath>
 #include <algorithm>
 #include <vector>
 
@@ -78,7 +78,7 @@ namespace brigid {
       if (!result) {
         throw BRIGID_LOGIC_ERROR("number expected");
       }
-      if (!isfinite(value)) {
+      if (!(std::isfinite)(value)) {
         throw BRIGID_LOGIC_ERROR("inf or nan");
       }
 
