@@ -86,6 +86,10 @@ brigid_la_SOURCES += http_curl.cpp
 endif
 endif
 
+if HAVE_LD_VERSION_SCRIPT
+brigid_la_LDFLAGS += -Wl,--version-script=module.map
+endif
+
 EXTRA_DIST = \
 	*.rl \
 	common_java.cpp \
@@ -95,4 +99,5 @@ EXTRA_DIST = \
 	http_java.cpp \
 	http_windows.cpp \
 	java.mk \
+	module.map \
 	stopwatch_windows.cpp

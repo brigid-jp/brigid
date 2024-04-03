@@ -1,0 +1,6 @@
+{
+  global:
+    luaopen_brigid;
+  local:
+    *;
+};

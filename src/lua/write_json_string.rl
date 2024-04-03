@@ -4,11 +4,10 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
-#include "data.hpp"
 #include "error.hpp"
 #include "writer.hpp"
 
-#include <stdint.h>
+#include <stddef.h>
 #include <sstream>
 
 namespace brigid {
@@ -67,14 +66,13 @@ namespace brigid {
     }%%
   }
 
-  void write_json_string(writer_t* self, const data_t& data) {
+  void write_json_string(writer_t* self, const char* pb, size_t size) {
     int cs = 0;
 
     %%write init;
 
-    const char* const pb = data.data();
     const char* p = pb;
-    const char* const pe = p + data.size();
+    const char* const pe = p + size;
     const char* const eof = pe;
     const char* ps = nullptr;
 
