@@ -364,4 +364,30 @@ function suite:test_write_json4()
   assert(result == expect)
 end
 
+function suite:test_write_json5()
+  if debug then print(("-"):rep(40)) end
+  local result = brigid.data_writer():write_json({
+    foo = {};
+    bar = { a = 1, b = 2, c = 3, d = 4 };
+  }, 2, true):get_string()
+  -- local data2 = assert(brigid.json.parse(data1))
+  -- data2.foo = brigid.json.array()
+  -- if debug then print(("-"):rep(40)) end
+  -- local result = brigid.data_writer():write_json(data2, 2, true):get_string()
+
+  local expect = [[
+{
+  "bar": {
+    "a": 1,
+    "b": 2,
+    "c": 3,
+    "d": 4
+  },
+  "foo": {}
+}]]
+
+  if debug then print(result) end
+  assert(result == expect)
+end
+
 return suite
