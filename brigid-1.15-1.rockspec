@@ -1,7 +1,7 @@
 package = "brigid"
-version = "1.14-1"
+version = "1.15-1"
 source = {
-  url = "https://github.com/brigid-jp/brigid/releases/download/v1.14/brigid-1.14.tar.gz";
+  url = "https://github.com/brigid-jp/brigid/releases/download/v1.15/brigid-1.15.tar.gz";
 }
 description = {
   summary = "A small but useful module";
