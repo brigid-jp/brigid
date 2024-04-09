@@ -49,7 +49,6 @@ namespace brigid {
         | 0x1E @{ self->write("\\u001E", 6); }
         | 0x1F @{ self->write("\\u001F", 6); }
         | 0x22 @{ self->write("\\\"", 2); }
-        | 0x2F @{ self->write("\\/", 2); }
         | 0x5C @{ self->write("\\\\", 2); }
         | 0x7F @{ self->write("\\u007F", 6); }
         ;
