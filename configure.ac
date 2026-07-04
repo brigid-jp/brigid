@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021,2024 <dev@brigid.jp>
+# Copyright (c) 2019-2021,2024,2026 <dev@brigid.jp>
 # This software is released under the MIT License.
 # https://opensource.org/licenses/mit-license.php
 
@@ -25,6 +25,7 @@ case X$HAVE_CXX11 in
 esac
 AC_PROG_OBJCXX
 
+AM_CONDITIONAL([LUAJIT], [false])
 AX_PROG_LUA([5.1], [], [], [AC_MSG_ERROR([could not find lua])])
 AX_LUA_HEADERS([], [AC_MSG_ERROR([could not find lua])])
 
