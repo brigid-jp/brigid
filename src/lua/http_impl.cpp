@@ -1,4 +1,4 @@
-// Copyright (c) 2021 <dev@brigid.jp>
+// Copyright (c) 2021,2026 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -94,7 +94,18 @@ namespace brigid {
           case  4: s = c == 'P'    ?  5 :  0; break;
           case  5: s = c == '/'    ?  6 :  0; break;
           case  6: s = is_digit(c) ?  7 : -1; break;
-          case  7: s = c == '.'    ?  8 : -1; break;
+
+          case  7:
+            // curlが`HTTP/2 200`を渡すのに対応
+            if (c == '.') {
+              s = 8;
+            } else if (c == ' ') {
+              s = 10;
+            } else {
+              s = -1;
+            }
+            break;
+
           case  8: s = is_digit(c) ?  9 : -1; break;
           case  9: s = c == ' '    ? 10 : -1; break;
           case 10: s = is_digit(c) ? 11 : -1; break;
