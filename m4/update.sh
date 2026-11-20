@@ -6,7 +6,6 @@
 
 for i in ax_check_openssl.m4 ax_compare_version.m4 ax_cxx_compile_stdcxx.m4 ax_lib_curl.m4 ax_lua.m4 ax_path_generic.m4
 do
-  # curl -L "https://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/$i" >"$i"
   curl -LO "https://raw.githubusercontent.com/autoconf-archive/autoconf-archive/refs/heads/master/m4/$i"
 done
 

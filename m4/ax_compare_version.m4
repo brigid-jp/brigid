@@ -70,6 +70,13 @@
 #   portions necessary to perform the specific comparison specified by the
 #   OP argument in the final configure script.
 #
+# BUGS
+#
+#   The lt and ge comparisons use unanchored sed substitutions. When
+#   VERSION_A is a component prefix of VERSION_B, A's pattern also matches
+#   B's line and the result is always false. For example, 1 lt 1.1 and 2 lt
+#   2.0.1 are false, and so is 1 ge 1.0. [Rating: major]
+#
 # LICENSE
 #
 #   Copyright (c) 2008 Tim Toolan <toolan@ele.uri.edu>
@@ -79,10 +86,13 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 13
+#serial 15
 
 dnl #########################################################################
 AC_DEFUN([AX_COMPARE_VERSION], [
+  m4_warn([syntax],
+    [$0: lt and ge comparisons can return false for versions sharing
+     leading components.])
   AC_REQUIRE([AC_PROG_AWK])
 
   # Used to indicate true or false condition
