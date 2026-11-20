@@ -1,6 +1,6 @@
 // vim: syntax=ragel:
 
-// Copyright (c) 2021 <dev@brigid.jp>
+// Copyright (c) 2021,2026 <dev@brigid.jp>
 // This software is released under the MIT License.
 // https://opensource.org/licenses/mit-license.php
 
@@ -12,6 +12,7 @@
 #include <lua.hpp>
 
 #include <locale.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits>
