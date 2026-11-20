@@ -14,6 +14,7 @@
 #include <lua.hpp>
 
 #include <locale.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits>
@@ -29,11 +30,11 @@ namespace brigid {
     static const lua_unsigned_t integer_max_mod10 = std::numeric_limits<lua_Integer>::max() % 10;
 
     
-#line 33 "json_parse.cxx"
+#line 34 "json_parse.cxx"
 static const int json_parser_start = 1;
 
 
-#line 220 "json_parse.rl"
+#line 221 "json_parse.rl"
 
 
 #ifdef __GNUC__
@@ -52,13 +53,13 @@ static const int json_parser_start = 1;
       int array_index = top + 1;
 
       
-#line 56 "json_parse.cxx"
+#line 57 "json_parse.cxx"
 	{
 	cs = json_parser_start;
 	top = 0;
 	}
 
-#line 238 "json_parse.rl"
+#line 239 "json_parse.rl"
 
       const char* const pb = data.data();
       const char* p = pb;
@@ -74,7 +75,7 @@ static const int json_parser_start = 1;
       uint32_t u = 0;         // unicode escape sequence
 
       
-#line 78 "json_parse.cxx"
+#line 79 "json_parse.cxx"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -212,14 +213,14 @@ st0:
 cs = 0;
 	goto _out;
 tr2:
-#line 194 "json_parse.rl"
+#line 195 "json_parse.rl"
 	{ ps = p + 1; }
 	goto st2;
 st2:
 	if ( ++p == pe )
 		goto _test_eof2;
 case 2:
-#line 223 "json_parse.cxx"
+#line 224 "json_parse.cxx"
 	switch( (*p) ) {
 		case 34: goto tr12;
 		case 92: goto tr13;
@@ -235,43 +236,43 @@ case 3:
 	}
 	goto st3;
 tr6:
-#line 208 "json_parse.rl"
+#line 209 "json_parse.rl"
 	{ lua_checkstack(L, 2); lua_createtable(L, 8, 0); array_stack.push_back(0); { stack.push_back(0); {stack[top++] = 88;goto st64;}} }
 	goto st88;
 tr10:
-#line 207 "json_parse.rl"
+#line 208 "json_parse.rl"
 	{ lua_checkstack(L, 3); lua_createtable(L, 0, 8); { stack.push_back(0); {stack[top++] = 88;goto st36;}} }
 	goto st88;
 tr12:
-#line 195 "json_parse.rl"
+#line 196 "json_parse.rl"
 	{ lua_pushlstring(L, ps, 0); }
 	goto st88;
 tr13:
-#line 200 "json_parse.rl"
+#line 201 "json_parse.rl"
 	{ buffer.clear(); { stack.push_back(0); {stack[top++] = 88;goto st18;}} }
 	goto st88;
 tr14:
-#line 197 "json_parse.rl"
+#line 198 "json_parse.rl"
 	{ lua_pushlstring(L, ps, p - ps); }
 	goto st88;
 tr15:
-#line 198 "json_parse.rl"
+#line 199 "json_parse.rl"
 	{ size_t n = p - ps; buffer.resize(n); memcpy(buffer.data(), ps, n); { stack.push_back(0); {stack[top++] = 88;goto st18;}} }
 	goto st88;
 tr24:
-#line 204 "json_parse.rl"
+#line 205 "json_parse.rl"
 	{ lua_pushboolean(L, false); }
 	goto st88;
 tr27:
-#line 205 "json_parse.rl"
+#line 206 "json_parse.rl"
 	{ if (null_index) { lua_pushvalue(L, null_index); } else { lua_pushnil(L); } }
 	goto st88;
 tr30:
-#line 206 "json_parse.rl"
+#line 207 "json_parse.rl"
 	{ lua_pushboolean(L, true); }
 	goto st88;
 tr180:
-#line 43 "json_parse.rl"
+#line 44 "json_parse.rl"
 	{
             lua_unsigned_t v = 0;
             lua_unsigned_t negative = 0;
@@ -361,7 +362,7 @@ st88:
 	if ( ++p == pe )
 		goto _test_eof88;
 case 88:
-#line 365 "json_parse.cxx"
+#line 366 "json_parse.cxx"
 	switch( (*p) ) {
 		case 13: goto st88;
 		case 32: goto st88;
@@ -370,28 +371,28 @@ case 88:
 		goto st88;
 	goto st0;
 tr3:
-#line 42 "json_parse.rl"
+#line 43 "json_parse.rl"
 	{ ps = p; is_int = true; }
 	goto st4;
 st4:
 	if ( ++p == pe )
 		goto _test_eof4;
 case 4:
-#line 381 "json_parse.cxx"
+#line 382 "json_parse.cxx"
 	if ( (*p) == 48 )
 		goto st89;
 	if ( 49 <= (*p) && (*p) <= 57 )
 		goto st92;
 	goto st0;
 tr4:
-#line 42 "json_parse.rl"
+#line 43 "json_parse.rl"
 	{ ps = p; is_int = true; }
 	goto st89;
 st89:
 	if ( ++p == pe )
 		goto _test_eof89;
 case 89:
-#line 395 "json_parse.cxx"
+#line 396 "json_parse.cxx"
 	switch( (*p) ) {
 		case 13: goto tr180;
 		case 32: goto tr180;
@@ -403,14 +404,14 @@ case 89:
 		goto tr180;
 	goto st0;
 tr181:
-#line 39 "json_parse.rl"
+#line 40 "json_parse.rl"
 	{ is_int = false; }
 	goto st5;
 st5:
 	if ( ++p == pe )
 		goto _test_eof5;
 case 5:
-#line 414 "json_parse.cxx"
+#line 415 "json_parse.cxx"
 	if ( 48 <= (*p) && (*p) <= 57 )
 		goto st90;
 	goto st0;
@@ -431,14 +432,14 @@ case 90:
 		goto tr180;
 	goto st0;
 tr182:
-#line 40 "json_parse.rl"
+#line 41 "json_parse.rl"
 	{ is_int = false; }
 	goto st6;
 st6:
 	if ( ++p == pe )
 		goto _test_eof6;
 case 6:
-#line 442 "json_parse.cxx"
+#line 443 "json_parse.cxx"
 	switch( (*p) ) {
 		case 43: goto st7;
 		case 45: goto st7;
@@ -468,14 +469,14 @@ case 91:
 		goto tr180;
 	goto st0;
 tr5:
-#line 42 "json_parse.rl"
+#line 43 "json_parse.rl"
 	{ ps = p; is_int = true; }
 	goto st92;
 st92:
 	if ( ++p == pe )
 		goto _test_eof92;
 case 92:
-#line 479 "json_parse.cxx"
+#line 480 "json_parse.cxx"
 	switch( (*p) ) {
 		case 13: goto tr180;
 		case 32: goto tr180;
@@ -576,53 +577,53 @@ case 18:
 	}
 	goto st0;
 tr31:
-#line 172 "json_parse.rl"
+#line 173 "json_parse.rl"
 	{ buffer.push_back('"'); }
 	goto st19;
 tr32:
-#line 174 "json_parse.rl"
+#line 175 "json_parse.rl"
 	{ buffer.push_back('/'); }
 	goto st19;
 tr33:
-#line 173 "json_parse.rl"
+#line 174 "json_parse.rl"
 	{ buffer.push_back('\\'); }
 	goto st19;
 tr34:
-#line 175 "json_parse.rl"
+#line 176 "json_parse.rl"
 	{ buffer.push_back('\b'); }
 	goto st19;
 tr35:
-#line 176 "json_parse.rl"
+#line 177 "json_parse.rl"
 	{ buffer.push_back('\f'); }
 	goto st19;
 tr36:
-#line 177 "json_parse.rl"
+#line 178 "json_parse.rl"
 	{ buffer.push_back('\n'); }
 	goto st19;
 tr37:
-#line 178 "json_parse.rl"
+#line 179 "json_parse.rl"
 	{ buffer.push_back('\r'); }
 	goto st19;
 tr38:
-#line 179 "json_parse.rl"
+#line 180 "json_parse.rl"
 	{ buffer.push_back('\t'); }
 	goto st19;
 st19:
 	if ( ++p == pe )
 		goto _test_eof19;
 case 19:
-#line 615 "json_parse.cxx"
+#line 616 "json_parse.cxx"
 	switch( (*p) ) {
 		case 34: goto tr41;
 		case 92: goto tr42;
 	}
 	goto tr40;
 tr40:
-#line 184 "json_parse.rl"
+#line 185 "json_parse.rl"
 	{ ps = p; }
 	goto st20;
 tr60:
-#line 142 "json_parse.rl"
+#line 143 "json_parse.rl"
 	{
               if (u <= 0x007F) {
                 buffer.push_back(u);
@@ -638,11 +639,11 @@ tr60:
                 buffer.push_back(u3 | 0x80);
               }
             }
-#line 184 "json_parse.rl"
+#line 185 "json_parse.rl"
 	{ ps = p; }
 	goto st20;
 tr84:
-#line 159 "json_parse.rl"
+#line 160 "json_parse.rl"
 	{
               u = ((u >> 16) - 0xD800) << 10 | ((u & 0xFFFF) - 0xDC00) | 0x010000;
               uint8_t u4 = u & 0x3F; u >>= 6;
@@ -653,41 +654,41 @@ tr84:
               buffer.push_back(u3 | 0x80);
               buffer.push_back(u4 | 0x80);
             }
-#line 184 "json_parse.rl"
+#line 185 "json_parse.rl"
 	{ ps = p; }
 	goto st20;
 st20:
 	if ( ++p == pe )
 		goto _test_eof20;
 case 20:
-#line 664 "json_parse.cxx"
+#line 665 "json_parse.cxx"
 	switch( (*p) ) {
 		case 34: goto tr44;
 		case 92: goto tr45;
 	}
 	goto st20;
 tr41:
-#line 184 "json_parse.rl"
-	{ ps = p; }
 #line 185 "json_parse.rl"
+	{ ps = p; }
+#line 186 "json_parse.rl"
 	{ lua_pushlstring(L, buffer.data(), buffer.size()); {cs = stack[--top];{ stack.pop_back(); }goto _again;} }
 	goto st93;
 tr42:
-#line 184 "json_parse.rl"
+#line 185 "json_parse.rl"
 	{ ps = p; }
-#line 190 "json_parse.rl"
+#line 191 "json_parse.rl"
 	{ {goto st18;} }
 	goto st93;
 tr44:
-#line 187 "json_parse.rl"
+#line 188 "json_parse.rl"
 	{ size_t m = buffer.size(); size_t n = p - ps; buffer.resize(m + n); char* ptr = buffer.data(); memcpy(ptr + m, ps, n); lua_pushlstring(L, ptr, m + n); {cs = stack[--top];{ stack.pop_back(); }goto _again;} }
 	goto st93;
 tr45:
-#line 188 "json_parse.rl"
+#line 189 "json_parse.rl"
 	{ size_t m = buffer.size(); size_t n = p - ps; buffer.resize(m + n); memcpy(buffer.data() + m, ps, n); {goto st18;} }
 	goto st93;
 tr61:
-#line 142 "json_parse.rl"
+#line 143 "json_parse.rl"
 	{
               if (u <= 0x007F) {
                 buffer.push_back(u);
@@ -703,13 +704,13 @@ tr61:
                 buffer.push_back(u3 | 0x80);
               }
             }
-#line 184 "json_parse.rl"
-	{ ps = p; }
 #line 185 "json_parse.rl"
+	{ ps = p; }
+#line 186 "json_parse.rl"
 	{ lua_pushlstring(L, buffer.data(), buffer.size()); {cs = stack[--top];{ stack.pop_back(); }goto _again;} }
 	goto st93;
 tr62:
-#line 142 "json_parse.rl"
+#line 143 "json_parse.rl"
 	{
               if (u <= 0x007F) {
                 buffer.push_back(u);
@@ -725,13 +726,13 @@ tr62:
                 buffer.push_back(u3 | 0x80);
               }
             }
-#line 184 "json_parse.rl"
+#line 185 "json_parse.rl"
 	{ ps = p; }
-#line 190 "json_parse.rl"
+#line 191 "json_parse.rl"
 	{ {goto st18;} }
 	goto st93;
 tr85:
-#line 159 "json_parse.rl"
+#line 160 "json_parse.rl"
 	{
               u = ((u >> 16) - 0xD800) << 10 | ((u & 0xFFFF) - 0xDC00) | 0x010000;
               uint8_t u4 = u & 0x3F; u >>= 6;
@@ -742,13 +743,13 @@ tr85:
               buffer.push_back(u3 | 0x80);
               buffer.push_back(u4 | 0x80);
             }
-#line 184 "json_parse.rl"
-	{ ps = p; }
 #line 185 "json_parse.rl"
+	{ ps = p; }
+#line 186 "json_parse.rl"
 	{ lua_pushlstring(L, buffer.data(), buffer.size()); {cs = stack[--top];{ stack.pop_back(); }goto _again;} }
 	goto st93;
 tr86:
-#line 159 "json_parse.rl"
+#line 160 "json_parse.rl"
 	{
               u = ((u >> 16) - 0xD800) << 10 | ((u & 0xFFFF) - 0xDC00) | 0x010000;
               uint8_t u4 = u & 0x3F; u >>= 6;
@@ -759,26 +760,26 @@ tr86:
               buffer.push_back(u3 | 0x80);
               buffer.push_back(u4 | 0x80);
             }
-#line 184 "json_parse.rl"
+#line 185 "json_parse.rl"
 	{ ps = p; }
-#line 190 "json_parse.rl"
+#line 191 "json_parse.rl"
 	{ {goto st18;} }
 	goto st93;
 st93:
 	if ( ++p == pe )
 		goto _test_eof93;
 case 93:
-#line 772 "json_parse.cxx"
+#line 773 "json_parse.cxx"
 	goto st0;
 tr39:
-#line 140 "json_parse.rl"
+#line 141 "json_parse.rl"
 	{ u = 0; }
 	goto st21;
 st21:
 	if ( ++p == pe )
 		goto _test_eof21;
 case 21:
-#line 782 "json_parse.cxx"
+#line 783 "json_parse.cxx"
 	switch( (*p) ) {
 		case 68: goto tr48;
 		case 100: goto tr50;
@@ -793,22 +794,22 @@ case 21:
 		goto tr47;
 	goto st0;
 tr46:
-#line 134 "json_parse.rl"
+#line 135 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - '0'; }
 	goto st22;
 tr47:
-#line 135 "json_parse.rl"
+#line 136 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'A' + 10; }
 	goto st22;
 tr49:
-#line 136 "json_parse.rl"
+#line 137 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'a' + 10; }
 	goto st22;
 st22:
 	if ( ++p == pe )
 		goto _test_eof22;
 case 22:
-#line 812 "json_parse.cxx"
+#line 813 "json_parse.cxx"
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
 			goto tr51;
@@ -819,22 +820,22 @@ case 22:
 		goto tr52;
 	goto st0;
 tr51:
-#line 134 "json_parse.rl"
+#line 135 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - '0'; }
 	goto st23;
 tr52:
-#line 135 "json_parse.rl"
+#line 136 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'A' + 10; }
 	goto st23;
 tr53:
-#line 136 "json_parse.rl"
+#line 137 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'a' + 10; }
 	goto st23;
 st23:
 	if ( ++p == pe )
 		goto _test_eof23;
 case 23:
-#line 838 "json_parse.cxx"
+#line 839 "json_parse.cxx"
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
 			goto tr54;
@@ -845,22 +846,22 @@ case 23:
 		goto tr55;
 	goto st0;
 tr54:
-#line 134 "json_parse.rl"
+#line 135 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - '0'; }
 	goto st24;
 tr55:
-#line 135 "json_parse.rl"
+#line 136 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'A' + 10; }
 	goto st24;
 tr56:
-#line 136 "json_parse.rl"
+#line 137 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'a' + 10; }
 	goto st24;
 st24:
 	if ( ++p == pe )
 		goto _test_eof24;
 case 24:
-#line 864 "json_parse.cxx"
+#line 865 "json_parse.cxx"
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
 			goto tr57;
@@ -871,40 +872,40 @@ case 24:
 		goto tr58;
 	goto st0;
 tr57:
-#line 134 "json_parse.rl"
+#line 135 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - '0'; }
 	goto st25;
 tr58:
-#line 135 "json_parse.rl"
+#line 136 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'A' + 10; }
 	goto st25;
 tr59:
-#line 136 "json_parse.rl"
+#line 137 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'a' + 10; }
 	goto st25;
 st25:
 	if ( ++p == pe )
 		goto _test_eof25;
 case 25:
-#line 890 "json_parse.cxx"
+#line 891 "json_parse.cxx"
 	switch( (*p) ) {
 		case 34: goto tr61;
 		case 92: goto tr62;
 	}
 	goto tr60;
 tr48:
-#line 135 "json_parse.rl"
+#line 136 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'A' + 10; }
 	goto st26;
 tr50:
-#line 136 "json_parse.rl"
+#line 137 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'a' + 10; }
 	goto st26;
 st26:
 	if ( ++p == pe )
 		goto _test_eof26;
 case 26:
-#line 908 "json_parse.cxx"
+#line 909 "json_parse.cxx"
 	if ( (*p) < 56 ) {
 		if ( 48 <= (*p) && (*p) <= 55 )
 			goto tr51;
@@ -918,22 +919,22 @@ case 26:
 		goto tr63;
 	goto st0;
 tr63:
-#line 134 "json_parse.rl"
+#line 135 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - '0'; }
 	goto st27;
 tr64:
-#line 135 "json_parse.rl"
+#line 136 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'A' + 10; }
 	goto st27;
 tr65:
-#line 136 "json_parse.rl"
+#line 137 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'a' + 10; }
 	goto st27;
 st27:
 	if ( ++p == pe )
 		goto _test_eof27;
 case 27:
-#line 937 "json_parse.cxx"
+#line 938 "json_parse.cxx"
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
 			goto tr66;
@@ -944,22 +945,22 @@ case 27:
 		goto tr67;
 	goto st0;
 tr66:
-#line 134 "json_parse.rl"
+#line 135 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - '0'; }
 	goto st28;
 tr67:
-#line 135 "json_parse.rl"
+#line 136 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'A' + 10; }
 	goto st28;
 tr68:
-#line 136 "json_parse.rl"
+#line 137 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'a' + 10; }
 	goto st28;
 st28:
 	if ( ++p == pe )
 		goto _test_eof28;
 case 28:
-#line 963 "json_parse.cxx"
+#line 964 "json_parse.cxx"
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
 			goto tr69;
@@ -970,22 +971,22 @@ case 28:
 		goto tr70;
 	goto st0;
 tr69:
-#line 134 "json_parse.rl"
+#line 135 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - '0'; }
 	goto st29;
 tr70:
-#line 135 "json_parse.rl"
+#line 136 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'A' + 10; }
 	goto st29;
 tr71:
-#line 136 "json_parse.rl"
+#line 137 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'a' + 10; }
 	goto st29;
 st29:
 	if ( ++p == pe )
 		goto _test_eof29;
 case 29:
-#line 989 "json_parse.cxx"
+#line 990 "json_parse.cxx"
 	if ( (*p) == 92 )
 		goto st30;
 	goto st0;
@@ -1006,18 +1007,18 @@ case 31:
 	}
 	goto st0;
 tr74:
-#line 135 "json_parse.rl"
+#line 136 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'A' + 10; }
 	goto st32;
 tr75:
-#line 136 "json_parse.rl"
+#line 137 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'a' + 10; }
 	goto st32;
 st32:
 	if ( ++p == pe )
 		goto _test_eof32;
 case 32:
-#line 1021 "json_parse.cxx"
+#line 1022 "json_parse.cxx"
 	if ( (*p) > 70 ) {
 		if ( 99 <= (*p) && (*p) <= 102 )
 			goto tr77;
@@ -1025,18 +1026,18 @@ case 32:
 		goto tr76;
 	goto st0;
 tr76:
-#line 135 "json_parse.rl"
+#line 136 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'A' + 10; }
 	goto st33;
 tr77:
-#line 136 "json_parse.rl"
+#line 137 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'a' + 10; }
 	goto st33;
 st33:
 	if ( ++p == pe )
 		goto _test_eof33;
 case 33:
-#line 1040 "json_parse.cxx"
+#line 1041 "json_parse.cxx"
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
 			goto tr78;
@@ -1047,22 +1048,22 @@ case 33:
 		goto tr79;
 	goto st0;
 tr78:
-#line 134 "json_parse.rl"
+#line 135 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - '0'; }
 	goto st34;
 tr79:
-#line 135 "json_parse.rl"
+#line 136 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'A' + 10; }
 	goto st34;
 tr80:
-#line 136 "json_parse.rl"
+#line 137 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'a' + 10; }
 	goto st34;
 st34:
 	if ( ++p == pe )
 		goto _test_eof34;
 case 34:
-#line 1066 "json_parse.cxx"
+#line 1067 "json_parse.cxx"
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
 			goto tr81;
@@ -1073,22 +1074,22 @@ case 34:
 		goto tr82;
 	goto st0;
 tr81:
-#line 134 "json_parse.rl"
+#line 135 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - '0'; }
 	goto st35;
 tr82:
-#line 135 "json_parse.rl"
+#line 136 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'A' + 10; }
 	goto st35;
 tr83:
-#line 136 "json_parse.rl"
+#line 137 "json_parse.rl"
 	{ u <<= 4; u |= (*p) - 'a' + 10; }
 	goto st35;
 st35:
 	if ( ++p == pe )
 		goto _test_eof35;
 case 35:
-#line 1092 "json_parse.cxx"
+#line 1093 "json_parse.cxx"
 	switch( (*p) ) {
 		case 34: goto tr85;
 		case 92: goto tr86;
@@ -1108,14 +1109,14 @@ case 36:
 		goto st36;
 	goto st0;
 tr88:
-#line 194 "json_parse.rl"
+#line 195 "json_parse.rl"
 	{ ps = p + 1; }
 	goto st37;
 st37:
 	if ( ++p == pe )
 		goto _test_eof37;
 case 37:
-#line 1119 "json_parse.cxx"
+#line 1120 "json_parse.cxx"
 	switch( (*p) ) {
 		case 34: goto tr91;
 		case 92: goto tr92;
@@ -1131,26 +1132,26 @@ case 38:
 	}
 	goto st38;
 tr91:
-#line 195 "json_parse.rl"
+#line 196 "json_parse.rl"
 	{ lua_pushlstring(L, ps, 0); }
 	goto st39;
 tr92:
-#line 200 "json_parse.rl"
+#line 201 "json_parse.rl"
 	{ buffer.clear(); { stack.push_back(0); {stack[top++] = 39;goto st18;}} }
 	goto st39;
 tr93:
-#line 197 "json_parse.rl"
+#line 198 "json_parse.rl"
 	{ lua_pushlstring(L, ps, p - ps); }
 	goto st39;
 tr94:
-#line 198 "json_parse.rl"
+#line 199 "json_parse.rl"
 	{ size_t n = p - ps; buffer.resize(n); memcpy(buffer.data(), ps, n); { stack.push_back(0); {stack[top++] = 39;goto st18;}} }
 	goto st39;
 st39:
 	if ( ++p == pe )
 		goto _test_eof39;
 case 39:
-#line 1154 "json_parse.cxx"
+#line 1155 "json_parse.cxx"
 	switch( (*p) ) {
 		case 13: goto st39;
 		case 32: goto st39;
@@ -1182,14 +1183,14 @@ case 40:
 		goto st40;
 	goto st0;
 tr97:
-#line 194 "json_parse.rl"
+#line 195 "json_parse.rl"
 	{ ps = p + 1; }
 	goto st41;
 st41:
 	if ( ++p == pe )
 		goto _test_eof41;
 case 41:
-#line 1193 "json_parse.cxx"
+#line 1194 "json_parse.cxx"
 	switch( (*p) ) {
 		case 34: goto tr107;
 		case 92: goto tr108;
@@ -1205,46 +1206,46 @@ case 42:
 	}
 	goto st42;
 tr101:
-#line 208 "json_parse.rl"
+#line 209 "json_parse.rl"
 	{ lua_checkstack(L, 2); lua_createtable(L, 8, 0); array_stack.push_back(0); { stack.push_back(0); {stack[top++] = 43;goto st64;}} }
 	goto st43;
 tr105:
-#line 207 "json_parse.rl"
+#line 208 "json_parse.rl"
 	{ lua_checkstack(L, 3); lua_createtable(L, 0, 8); { stack.push_back(0); {stack[top++] = 43;goto st36;}} }
 	goto st43;
 tr107:
-#line 195 "json_parse.rl"
+#line 196 "json_parse.rl"
 	{ lua_pushlstring(L, ps, 0); }
 	goto st43;
 tr108:
-#line 200 "json_parse.rl"
+#line 201 "json_parse.rl"
 	{ buffer.clear(); { stack.push_back(0); {stack[top++] = 43;goto st18;}} }
 	goto st43;
 tr109:
-#line 197 "json_parse.rl"
+#line 198 "json_parse.rl"
 	{ lua_pushlstring(L, ps, p - ps); }
 	goto st43;
 tr110:
-#line 198 "json_parse.rl"
+#line 199 "json_parse.rl"
 	{ size_t n = p - ps; buffer.resize(n); memcpy(buffer.data(), ps, n); { stack.push_back(0); {stack[top++] = 43;goto st18;}} }
 	goto st43;
 tr130:
-#line 204 "json_parse.rl"
+#line 205 "json_parse.rl"
 	{ lua_pushboolean(L, false); }
 	goto st43;
 tr133:
-#line 205 "json_parse.rl"
+#line 206 "json_parse.rl"
 	{ if (null_index) { lua_pushvalue(L, null_index); } else { lua_pushnil(L); } }
 	goto st43;
 tr136:
-#line 206 "json_parse.rl"
+#line 207 "json_parse.rl"
 	{ lua_pushboolean(L, true); }
 	goto st43;
 st43:
 	if ( ++p == pe )
 		goto _test_eof43;
 case 43:
-#line 1248 "json_parse.cxx"
+#line 1249 "json_parse.cxx"
 	switch( (*p) ) {
 		case 13: goto tr111;
 		case 32: goto tr111;
@@ -1255,11 +1256,11 @@ case 43:
 		goto tr111;
 	goto st0;
 tr111:
-#line 213 "json_parse.rl"
+#line 214 "json_parse.rl"
 	{ lua_rawset(L, -3); }
 	goto st44;
 tr118:
-#line 43 "json_parse.rl"
+#line 44 "json_parse.rl"
 	{
             lua_unsigned_t v = 0;
             lua_unsigned_t negative = 0;
@@ -1344,14 +1345,14 @@ tr118:
               } while (false);
             }
           }
-#line 213 "json_parse.rl"
+#line 214 "json_parse.rl"
 	{ lua_rawset(L, -3); }
 	goto st44;
 st44:
 	if ( ++p == pe )
 		goto _test_eof44;
 case 44:
-#line 1355 "json_parse.cxx"
+#line 1356 "json_parse.cxx"
 	switch( (*p) ) {
 		case 13: goto st44;
 		case 32: goto st44;
@@ -1362,11 +1363,11 @@ case 44:
 		goto st44;
 	goto st0;
 tr112:
-#line 213 "json_parse.rl"
+#line 214 "json_parse.rl"
 	{ lua_rawset(L, -3); }
 	goto st45;
 tr119:
-#line 43 "json_parse.rl"
+#line 44 "json_parse.rl"
 	{
             lua_unsigned_t v = 0;
             lua_unsigned_t negative = 0;
@@ -1451,14 +1452,14 @@ tr119:
               } while (false);
             }
           }
-#line 213 "json_parse.rl"
+#line 214 "json_parse.rl"
 	{ lua_rawset(L, -3); }
 	goto st45;
 st45:
 	if ( ++p == pe )
 		goto _test_eof45;
 case 45:
-#line 1462 "json_parse.cxx"
+#line 1463 "json_parse.cxx"
 	switch( (*p) ) {
 		case 13: goto st45;
 		case 32: goto st45;
@@ -1468,17 +1469,17 @@ case 45:
 		goto st45;
 	goto st0;
 tr89:
-#line 214 "json_parse.rl"
+#line 215 "json_parse.rl"
 	{ {cs = stack[--top];{ stack.pop_back(); }goto _again;} }
 	goto st94;
 tr113:
-#line 213 "json_parse.rl"
-	{ lua_rawset(L, -3); }
 #line 214 "json_parse.rl"
+	{ lua_rawset(L, -3); }
+#line 215 "json_parse.rl"
 	{ {cs = stack[--top];{ stack.pop_back(); }goto _again;} }
 	goto st94;
 tr122:
-#line 43 "json_parse.rl"
+#line 44 "json_parse.rl"
 	{
             lua_unsigned_t v = 0;
             lua_unsigned_t negative = 0;
@@ -1563,40 +1564,40 @@ tr122:
               } while (false);
             }
           }
-#line 213 "json_parse.rl"
-	{ lua_rawset(L, -3); }
 #line 214 "json_parse.rl"
+	{ lua_rawset(L, -3); }
+#line 215 "json_parse.rl"
 	{ {cs = stack[--top];{ stack.pop_back(); }goto _again;} }
 	goto st94;
 st94:
 	if ( ++p == pe )
 		goto _test_eof94;
 case 94:
-#line 1576 "json_parse.cxx"
+#line 1577 "json_parse.cxx"
 	goto st0;
 tr98:
-#line 42 "json_parse.rl"
+#line 43 "json_parse.rl"
 	{ ps = p; is_int = true; }
 	goto st46;
 st46:
 	if ( ++p == pe )
 		goto _test_eof46;
 case 46:
-#line 1586 "json_parse.cxx"
+#line 1587 "json_parse.cxx"
 	if ( (*p) == 48 )
 		goto st47;
 	if ( 49 <= (*p) && (*p) <= 57 )
 		goto st53;
 	goto st0;
 tr99:
-#line 42 "json_parse.rl"
+#line 43 "json_parse.rl"
 	{ ps = p; is_int = true; }
 	goto st47;
 st47:
 	if ( ++p == pe )
 		goto _test_eof47;
 case 47:
-#line 1600 "json_parse.cxx"
+#line 1601 "json_parse.cxx"
 	switch( (*p) ) {
 		case 13: goto tr118;
 		case 32: goto tr118;
@@ -1610,14 +1611,14 @@ case 47:
 		goto tr118;
 	goto st0;
 tr120:
-#line 39 "json_parse.rl"
+#line 40 "json_parse.rl"
 	{ is_int = false; }
 	goto st48;
 st48:
 	if ( ++p == pe )
 		goto _test_eof48;
 case 48:
-#line 1621 "json_parse.cxx"
+#line 1622 "json_parse.cxx"
 	if ( 48 <= (*p) && (*p) <= 57 )
 		goto st49;
 	goto st0;
@@ -1640,14 +1641,14 @@ case 49:
 		goto tr118;
 	goto st0;
 tr121:
-#line 40 "json_parse.rl"
+#line 41 "json_parse.rl"
 	{ is_int = false; }
 	goto st50;
 st50:
 	if ( ++p == pe )
 		goto _test_eof50;
 case 50:
-#line 1651 "json_parse.cxx"
+#line 1652 "json_parse.cxx"
 	switch( (*p) ) {
 		case 43: goto st51;
 		case 45: goto st51;
@@ -1679,14 +1680,14 @@ case 52:
 		goto tr118;
 	goto st0;
 tr100:
-#line 42 "json_parse.rl"
+#line 43 "json_parse.rl"
 	{ ps = p; is_int = true; }
 	goto st53;
 st53:
 	if ( ++p == pe )
 		goto _test_eof53;
 case 53:
-#line 1690 "json_parse.cxx"
+#line 1691 "json_parse.cxx"
 	switch( (*p) ) {
 		case 13: goto tr118;
 		case 32: goto tr118;
@@ -1796,14 +1797,14 @@ case 64:
 		goto st64;
 	goto st0;
 tr138:
-#line 194 "json_parse.rl"
+#line 195 "json_parse.rl"
 	{ ps = p + 1; }
 	goto st65;
 st65:
 	if ( ++p == pe )
 		goto _test_eof65;
 case 65:
-#line 1807 "json_parse.cxx"
+#line 1808 "json_parse.cxx"
 	switch( (*p) ) {
 		case 34: goto tr149;
 		case 92: goto tr150;
@@ -1819,46 +1820,46 @@ case 66:
 	}
 	goto st66;
 tr142:
-#line 208 "json_parse.rl"
+#line 209 "json_parse.rl"
 	{ lua_checkstack(L, 2); lua_createtable(L, 8, 0); array_stack.push_back(0); { stack.push_back(0); {stack[top++] = 67;goto st64;}} }
 	goto st67;
 tr147:
-#line 207 "json_parse.rl"
+#line 208 "json_parse.rl"
 	{ lua_checkstack(L, 3); lua_createtable(L, 0, 8); { stack.push_back(0); {stack[top++] = 67;goto st36;}} }
 	goto st67;
 tr149:
-#line 195 "json_parse.rl"
+#line 196 "json_parse.rl"
 	{ lua_pushlstring(L, ps, 0); }
 	goto st67;
 tr150:
-#line 200 "json_parse.rl"
+#line 201 "json_parse.rl"
 	{ buffer.clear(); { stack.push_back(0); {stack[top++] = 67;goto st18;}} }
 	goto st67;
 tr151:
-#line 197 "json_parse.rl"
+#line 198 "json_parse.rl"
 	{ lua_pushlstring(L, ps, p - ps); }
 	goto st67;
 tr152:
-#line 198 "json_parse.rl"
+#line 199 "json_parse.rl"
 	{ size_t n = p - ps; buffer.resize(n); memcpy(buffer.data(), ps, n); { stack.push_back(0); {stack[top++] = 67;goto st18;}} }
 	goto st67;
 tr172:
-#line 204 "json_parse.rl"
+#line 205 "json_parse.rl"
 	{ lua_pushboolean(L, false); }
 	goto st67;
 tr175:
-#line 205 "json_parse.rl"
+#line 206 "json_parse.rl"
 	{ if (null_index) { lua_pushvalue(L, null_index); } else { lua_pushnil(L); } }
 	goto st67;
 tr178:
-#line 206 "json_parse.rl"
+#line 207 "json_parse.rl"
 	{ lua_pushboolean(L, true); }
 	goto st67;
 st67:
 	if ( ++p == pe )
 		goto _test_eof67;
 case 67:
-#line 1862 "json_parse.cxx"
+#line 1863 "json_parse.cxx"
 	switch( (*p) ) {
 		case 13: goto tr153;
 		case 32: goto tr153;
@@ -1869,11 +1870,11 @@ case 67:
 		goto tr153;
 	goto st0;
 tr153:
-#line 215 "json_parse.rl"
+#line 216 "json_parse.rl"
 	{ lua_rawseti(L, -2, ++array_stack.back()); }
 	goto st68;
 tr160:
-#line 43 "json_parse.rl"
+#line 44 "json_parse.rl"
 	{
             lua_unsigned_t v = 0;
             lua_unsigned_t negative = 0;
@@ -1958,14 +1959,14 @@ tr160:
               } while (false);
             }
           }
-#line 215 "json_parse.rl"
+#line 216 "json_parse.rl"
 	{ lua_rawseti(L, -2, ++array_stack.back()); }
 	goto st68;
 st68:
 	if ( ++p == pe )
 		goto _test_eof68;
 case 68:
-#line 1969 "json_parse.cxx"
+#line 1970 "json_parse.cxx"
 	switch( (*p) ) {
 		case 13: goto st68;
 		case 32: goto st68;
@@ -1976,11 +1977,11 @@ case 68:
 		goto st68;
 	goto st0;
 tr154:
-#line 215 "json_parse.rl"
+#line 216 "json_parse.rl"
 	{ lua_rawseti(L, -2, ++array_stack.back()); }
 	goto st69;
 tr161:
-#line 43 "json_parse.rl"
+#line 44 "json_parse.rl"
 	{
             lua_unsigned_t v = 0;
             lua_unsigned_t negative = 0;
@@ -2065,14 +2066,14 @@ tr161:
               } while (false);
             }
           }
-#line 215 "json_parse.rl"
+#line 216 "json_parse.rl"
 	{ lua_rawseti(L, -2, ++array_stack.back()); }
 	goto st69;
 st69:
 	if ( ++p == pe )
 		goto _test_eof69;
 case 69:
-#line 2076 "json_parse.cxx"
+#line 2077 "json_parse.cxx"
 	switch( (*p) ) {
 		case 13: goto st69;
 		case 32: goto st69;
@@ -2092,28 +2093,28 @@ case 69:
 		goto st69;
 	goto st0;
 tr139:
-#line 42 "json_parse.rl"
+#line 43 "json_parse.rl"
 	{ ps = p; is_int = true; }
 	goto st70;
 st70:
 	if ( ++p == pe )
 		goto _test_eof70;
 case 70:
-#line 2103 "json_parse.cxx"
+#line 2104 "json_parse.cxx"
 	if ( (*p) == 48 )
 		goto st71;
 	if ( 49 <= (*p) && (*p) <= 57 )
 		goto st77;
 	goto st0;
 tr140:
-#line 42 "json_parse.rl"
+#line 43 "json_parse.rl"
 	{ ps = p; is_int = true; }
 	goto st71;
 st71:
 	if ( ++p == pe )
 		goto _test_eof71;
 case 71:
-#line 2117 "json_parse.cxx"
+#line 2118 "json_parse.cxx"
 	switch( (*p) ) {
 		case 13: goto tr160;
 		case 32: goto tr160;
@@ -2127,14 +2128,14 @@ case 71:
 		goto tr160;
 	goto st0;
 tr162:
-#line 39 "json_parse.rl"
+#line 40 "json_parse.rl"
 	{ is_int = false; }
 	goto st72;
 st72:
 	if ( ++p == pe )
 		goto _test_eof72;
 case 72:
-#line 2138 "json_parse.cxx"
+#line 2139 "json_parse.cxx"
 	if ( 48 <= (*p) && (*p) <= 57 )
 		goto st73;
 	goto st0;
@@ -2157,14 +2158,14 @@ case 73:
 		goto tr160;
 	goto st0;
 tr163:
-#line 40 "json_parse.rl"
+#line 41 "json_parse.rl"
 	{ is_int = false; }
 	goto st74;
 st74:
 	if ( ++p == pe )
 		goto _test_eof74;
 case 74:
-#line 2168 "json_parse.cxx"
+#line 2169 "json_parse.cxx"
 	switch( (*p) ) {
 		case 43: goto st75;
 		case 45: goto st75;
@@ -2196,17 +2197,17 @@ case 76:
 		goto tr160;
 	goto st0;
 tr143:
-#line 216 "json_parse.rl"
+#line 217 "json_parse.rl"
 	{ lua_pushvalue(L, array_index); lua_setmetatable(L, -2); array_stack.pop_back(); {cs = stack[--top];{ stack.pop_back(); }goto _again;} }
 	goto st95;
 tr155:
-#line 215 "json_parse.rl"
-	{ lua_rawseti(L, -2, ++array_stack.back()); }
 #line 216 "json_parse.rl"
+	{ lua_rawseti(L, -2, ++array_stack.back()); }
+#line 217 "json_parse.rl"
 	{ lua_pushvalue(L, array_index); lua_setmetatable(L, -2); array_stack.pop_back(); {cs = stack[--top];{ stack.pop_back(); }goto _again;} }
 	goto st95;
 tr164:
-#line 43 "json_parse.rl"
+#line 44 "json_parse.rl"
 	{
             lua_unsigned_t v = 0;
             lua_unsigned_t negative = 0;
@@ -2291,26 +2292,26 @@ tr164:
               } while (false);
             }
           }
-#line 215 "json_parse.rl"
-	{ lua_rawseti(L, -2, ++array_stack.back()); }
 #line 216 "json_parse.rl"
+	{ lua_rawseti(L, -2, ++array_stack.back()); }
+#line 217 "json_parse.rl"
 	{ lua_pushvalue(L, array_index); lua_setmetatable(L, -2); array_stack.pop_back(); {cs = stack[--top];{ stack.pop_back(); }goto _again;} }
 	goto st95;
 st95:
 	if ( ++p == pe )
 		goto _test_eof95;
 case 95:
-#line 2304 "json_parse.cxx"
+#line 2305 "json_parse.cxx"
 	goto st0;
 tr141:
-#line 42 "json_parse.rl"
+#line 43 "json_parse.rl"
 	{ ps = p; is_int = true; }
 	goto st77;
 st77:
 	if ( ++p == pe )
 		goto _test_eof77;
 case 77:
-#line 2314 "json_parse.cxx"
+#line 2315 "json_parse.cxx"
 	switch( (*p) ) {
 		case 13: goto tr160;
 		case 32: goto tr160;
@@ -2501,7 +2502,7 @@ case 87:
 	case 90: 
 	case 91: 
 	case 92: 
-#line 43 "json_parse.rl"
+#line 44 "json_parse.rl"
 	{
             lua_unsigned_t v = 0;
             lua_unsigned_t negative = 0;
@@ -2587,14 +2588,14 @@ case 87:
             }
           }
 	break;
-#line 2591 "json_parse.cxx"
+#line 2592 "json_parse.cxx"
 	}
 	}
 
 	_out: {}
 	}
 
-#line 253 "json_parse.rl"
+#line 254 "json_parse.rl"
 
       if (cs >= 88 && stack.empty()) {
         return 1;
